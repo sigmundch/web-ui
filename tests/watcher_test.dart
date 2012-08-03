@@ -5,7 +5,7 @@
 /** Tests for the watcher library. */
 #library('watcher_test');
 
-#import('lib/unittest/unittest.dart');
+#import('package:unittest/unittest.dart');
 
 main() {
   test('simple watcher ', () {
