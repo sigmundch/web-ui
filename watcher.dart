@@ -90,6 +90,8 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
         exp = target;
       }
     } catch(var e, var trace) { // in case target() throws some error
+      // TODO(sigmund): use logging instead of print when logger is in the SDK
+      // and available via pub (see dartbug.com/4363)
       print('error: evaluating ${debugName != null ? debugName : "<unnamed>"} '
             'watcher threw error ($e, $trace)');
       exp = target;
