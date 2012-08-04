@@ -89,9 +89,9 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
       } else {
         exp = target;
       }
-    } catch(var e) { // in case target() throws some error
+    } catch(var e, var trace) { // in case target() throws some error
       print('error: evaluating ${debugName != null ? debugName : "<unnamed>"} '
-            'watcher threw error ($e)');
+            'watcher threw error ($e, $trace)');
       exp = target;
     }
   } else if (target is List) {
@@ -176,7 +176,8 @@ void dispatch() {
         try {
           newValue = watcher._getter();
         } catch (var e, var trace) {
-          print('error: evaluating $watcher watcher threw an exception ($e)');
+          print('error: evaluating $watcher watcher threw an exception '
+              '($e, $trace)');
           newValue = oldValue;
         }
         if (oldValue != newValue) {
