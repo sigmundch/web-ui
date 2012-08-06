@@ -6,8 +6,8 @@
 
 #import('dart:html');
 
-class BodyComponent {
-  BodyComponent();
+class MainComponent {
+  MainComponent();
 
   bool isVisible(Todo todo) => todo != null &&
       ((showIncomplete && !todo.done) || (showDone && todo.done));
@@ -19,10 +19,10 @@ class BodyComponent {
   bool get hasElements() => app.todos.length > 0;
 }
 
-BodyComponent _viewModel;
-BodyComponent get viewModel() {
+MainComponent _viewModel;
+MainComponent get viewModel() {
   if (_viewModel == null) {
-    _viewModel = new BodyComponent();
+    _viewModel = new MainComponent();
   }
   return _viewModel;
 }

@@ -38,6 +38,6 @@ class _FormComponent extends Component {
   }
 
   void removed() {
-    element.on.submit.remove(_listener1);
+    element.on.change.remove(_listener1);
   }
 }

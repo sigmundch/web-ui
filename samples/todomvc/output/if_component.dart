@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('generic_if');
+#library('if_component');
 
 #import('dart:html');
 #import('component.dart');
@@ -14,18 +14,21 @@
  * This component is provided with our library and tools.
  */
 // TODO(sigmund): move to a shared location.
-class GenericIfComponent extends Component {
+class IfComponent extends Component {
   IfCondition shouldShow;
   Element _childTemplate;
   Element _parent;
   Element _child;
   String _childId;
+  WatcherDisposer _stopWatcher;
 
-  GenericIfComponent(root, elem)
-    : super('generic-if', root, elem);
+  IfComponent(root, elem)
+    : super('if', root, elem);
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.
+    // TODO(sigmund): use logging and not assertions.
+    assert(element.elements.length == 1);
     _childTemplate = element.elements[0];
     _childId = _childTemplate.id;
     if (_childId != null && _childId != '') {
@@ -35,11 +38,9 @@ class GenericIfComponent extends Component {
     element.nodes.clear();
   }
 
-  Function _stop1;
-
   void inserted() {
-    _stop1 = bind(() => shouldShow(scopedVariables), (_) {
-      bool showNow = shouldShow(scopedVariables);
+    _stopWatcher = bind(() => shouldShow(scopedVariables), (e) {
+      bool showNow = e.newValue;
       if (_child != null && !showNow) {
         _child.remove();
         _child = null;
@@ -58,7 +59,7 @@ class GenericIfComponent extends Component {
   }
 
   void removed() {
-    _stop1();
+    _stopWatcher();
     if (_child != null) {
       _child.remove();
     }

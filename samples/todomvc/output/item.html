@@ -4,6 +4,7 @@
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles>
   <template>
+    <!-- TODO(sigmund): are arbitrary expressions like this allowed in MDV? -->
     <div id='todo-item' class="{{_editing ? 'editing' : (todo.done ? 'completed' : '')}}">
       <div class="view" data-on-dblclick="edit()">
         <input id="checkbox" class="toggle" type="checkbox" checked={{todo.done}}>

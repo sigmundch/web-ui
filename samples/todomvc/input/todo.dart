@@ -6,13 +6,6 @@
 
 #import('dart:html');
 
-#import('footer.dart');
-#import('generic_list.dart');
-#import('generic_if.dart');
-#import('newform.dart');
-#import('item.dart');
-#import('toggleall.dart');
-
 #import('model.dart');
 #import('watcher.dart');
 

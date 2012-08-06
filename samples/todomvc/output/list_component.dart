@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('generic_list');
+#library('list_component');
 
 #import('dart:html');
 #import('component.dart');
@@ -14,15 +14,14 @@
  * provided with our library and tools.
  */
 // TODO(sigmund): move to a shared location.
-class GenericListComponent extends Component {
+class ListComponent extends Component {
   Getter<List> items;
-  String loopVar;
+  final String _loopVar;
 
-  GenericListComponent(root, elem) : super('list', root, elem) {
-    var loopExp = elem.attributes['iterate'];
-    // TODO(sigmund): assert loopExp matches "{{something in something}}"
-    loopVar = loopExp.split(' ')[0].substring(2);
-  }
+  ListComponent(root, elem)
+    : super('list', root, elem),
+      _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
+          elem.attributes['iterate']).group(1);
 
   Element _childTemplate;
   Element _parent;
@@ -30,6 +29,8 @@ class GenericListComponent extends Component {
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.
+    // TODO(sigmund): use logging and not assertions.
+    assert(element.elements.length == 1);
     _childTemplate = element.elements[0];
     element.nodes.clear();
     _parent = element.parent;
@@ -37,7 +38,22 @@ class GenericListComponent extends Component {
 
   void inserted() {
     root.nodes.clear();
-    _stop1 = bind(items, (_) => regenerateList());
+    _stop1 = bind(items, (_) {
+      for (var n in _parent.elements) {
+        var wrapper = manager[n];
+        if (wrapper != this) {
+          if (wrapper != null) wrapper.removed();
+          n.remove();
+        }
+      }
+      for (var x in items()) {
+        var child = _childTemplate.clone(true);
+        var component = manager.expandElement(child);
+        component.scopedVariables = new Map.from(scopedVariables);
+        component.scopedVariables[_loopVar] = x;
+        _parent.nodes.add(child);
+      }
+    });
   }
 
   void removed() {
@@ -47,24 +63,6 @@ class GenericListComponent extends Component {
       if (wrapper != null && wrapper != this) {
         wrapper.removed();
       }
-    }
-  }
-
-  void regenerateList() {
-    for (var n in _parent.elements) {
-      var wrapper = manager[n];
-      if (wrapper != this) {
-        if (wrapper != null) wrapper.removed();
-        n.remove();
-      }
-    }
-    for (var x in items()) {
-      var child = _childTemplate.clone(true);
-      var component = manager.expandElement(child);
-      component.scopedVariables =
-          new Map<String, Dynamic>.from(scopedVariables);
-      component.scopedVariables[loopVar] = x;
-      _parent.nodes.add(child);
     }
   }
 }

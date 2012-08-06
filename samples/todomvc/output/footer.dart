@@ -84,14 +84,14 @@ class _FooterComponent extends Component {
       _clearCompleted = root.query('#clear-completed');
       if (_clearCompleted != null) {
         _clearCompleted.on.click.add(_listener1);
-        _stop1 = bind(() => doneCount, (_) {
-          _clearCompleted.innerHTML = 'Clear completed $doneCount';
+        _stop1 = bind(() => doneCount, (e) {
+          _clearCompleted.innerHTML = 'Clear completed ${e.newValue}';
         });
       }
     });
 
-    _stop2 = bind(() => remaining, (_) {
-      _todoCount.innerHTML = '<strong>$remaining</strong>';
+    _stop2 = bind(() => remaining, (e) {
+      _todoCount.innerHTML = '<strong>${e.newValue}</strong>';
     });
 
     _stop3 = bind(() => window.location.hash, (_) {

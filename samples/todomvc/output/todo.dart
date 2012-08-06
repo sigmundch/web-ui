@@ -18,8 +18,8 @@
 
 // Code from components
 #import('footer.dart');
-#import('generic_list.dart');
-#import('generic_if.dart');
+#import('list_component.dart');
+#import('if_component.dart');
 #import('newform.dart');
 #import('item.dart');
 #import('toggleall.dart');
@@ -48,7 +48,7 @@ void _appSetUp() {
   manager.expandDeclarations(body);
 
   // attach model where needed.
-  manager[body.query("[is=x-generic-list]")].items = () => app.todos;
+  manager[body.query("[is=x-list]")].items = () => app.todos;
 
   // attach view to the document.
   document.body.nodes.add(body);
@@ -61,9 +61,9 @@ void _componentsSetUp() {
     'x-todo-footer': (root, elem) => new FooterComponent(root, elem),
     'x-todo-form': (root, elem) => new FormComponent(root, elem),
     'x-toggle-all': (root, elem) => new ToggleComponent(root, elem),
-    'x-generic-list': (root, elem) => new GenericListComponent(root, elem),
-    'x-generic-if': (root, elem) {
-      var res = new GenericIfComponent(root, elem);
+    'x-list': (root, elem) => new ListComponent(root, elem),
+    'x-if': (root, elem) {
+      var res = new IfComponent(root, elem);
       var condition = elem.attributes['instantiate'].substring('if '.length);
       if (condition == 'viewModel.hasElements') {
         res.shouldShow = (_) => viewModel.hasElements;
@@ -87,14 +87,14 @@ final INITIAL_PAGE = """
     <section id="main">
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
-        <template iterate="{{x in app.todos}}" is="x-generic-list">
-          <template instantiate="if viewModel.isVisible(x)" is="x-generic-if">
+        <template iterate="{{x in app.todos}}" is="x-list">
+          <template instantiate="if viewModel.isVisible(x)" is="x-if">
             <li is="x-todo-row" data-todo="x"></li>
           </template>
         </template>
       </ul>
     </section>
-    <template instantiate="if viewModel.hasElements" is="x-generic-if">
+    <template instantiate="if viewModel.hasElements" is="x-if">
       <footer is="x-todo-footer" id="footer"></footer>
     </template>
   </section>

@@ -39,8 +39,8 @@ class _ToggleComponent extends Component {
       dispatch();
     };
     _toggleAll.on.click.add(_listener1);
-    _stop1 = bind(() => allChecked, (_) {
-      _toggleAll.checked = allChecked;
+    _stop1 = bind(() => allChecked, (e) {
+      _toggleAll.checked = e.newValue;
     });
   }
 
