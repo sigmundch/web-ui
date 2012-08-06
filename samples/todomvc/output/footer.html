@@ -1,0 +1,20 @@
+<html>
+<body>
+<element name="x-todo-footer" extends="footer" constructor="FooterComponent"
+         apply-author-styles>
+  <template>
+    <span id="todo-count"><strong>{{remaining}}</strong></span>
+    <ul id="filters">
+      <li> <a id="a1" class="{{allClass}}" href="#/">All</a> </li>
+      <li> <a id="a2" class="{{activeClass}}" href="#/active">Active</a> </li>
+      <li> <a id="a3" class="{{completedClass}}" href="#/completed">Completed</a> </li>
+    </ul>
+    <template instantiate="if anyDone" is="x-generic-if" id='condition'>
+      <button id="clear-completed" data-on-click="clearDone()">
+        Clear completed ({{doneCount}})
+      </button>
+    </template>
+  </template>
+</element>
+</body>
+</html>

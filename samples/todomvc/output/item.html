@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<body>
+<element name="x-todo-row" extends="li" constructor="TodoItemComponent"
+         apply-author-styles>
+  <template>
+    <div id='todo-item' class="{{_editing ? 'editing' : (todo.done ? 'completed' : '')}}">
+      <div class="view" data-on-dblclick="edit()">
+        <input id="checkbox" class="toggle" type="checkbox" checked={{todo.done}}>
+        <label id="label">{{todo.task}}</label>
+        <button class="destroy" data-on-click="delete()"></button>
+      </div>
+      <form data-on-submit="update()">
+        <input class="edit" data-bind-model="{{todo.task}}"
+               data-on-blur="update()" autofocus>
+      </form>
+    </div>
+  </template>
+</element>
+</body>
+</html>

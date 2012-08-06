@@ -1,0 +1,22 @@
+<html>
+<body>
+<element name="x-toggle-all" extends="div" constructor="ToggleComponent"
+         apply-author-styles>
+  <template>
+    <input id="toggle-all" type="checkbox"
+           checked="{{allChecked}}" data-on-click="markAll()">
+    <label for="toggle-all">Mark all as complete</label>
+  </template>
+  <script>
+    #library('toggleall');
+    #import('model.dart');
+
+    class ToggleComponent {
+      bool get allChecked () => app.todos.length > 0 && 
+          app.todos.every((t) => t.done);
+      void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+    }
+  </script>
+</element>
+</body>
+</html>
