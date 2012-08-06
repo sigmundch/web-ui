@@ -20,8 +20,8 @@
 main() {
   // listen on changes to #hash in the URL
   window.on.popState.add((_) {
-    viewmodel.showIncomplete = window.location.hash != '#/completed';
-    viewmodel.showDone = window.location.hash != '#/active';
+    viewModel.showIncomplete = window.location.hash != '#/completed';
+    viewModel.showDone = window.location.hash != '#/active';
     dispatch();
   });
 }

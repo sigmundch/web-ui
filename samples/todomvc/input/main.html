@@ -24,13 +24,13 @@
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
         <template iterate="{{x in app.todos}}" is="x-generic-list">
-          <template instantiate="if viewmodel.isVisible(x)" is="x-generic-if">
+          <template instantiate="if viewModel.isVisible(x)" is="x-generic-if">
             <li is="x-todo-row" data-todo="x"></li>
           </template>
         </template>
       </ul>
     </section>
-    <template instantiate="if viewmodel.hasElements" is="x-generic-if">
+    <template instantiate="if viewModel.hasElements" is="x-generic-if">
       <footer is="x-todo-footer" id="footer"></footer>
     </template>
   </section>

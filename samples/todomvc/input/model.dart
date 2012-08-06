@@ -19,12 +19,12 @@ class BodyComponent {
   bool get hasElements() => app.todos.length > 0;
 }
 
-BodyComponent _viewmodel;
-BodyComponent get viewmodel() {
-  if (_viewmodel == null) {
-    _viewmodel = new BodyComponent();
+BodyComponent _viewModel;
+BodyComponent get viewModel() {
+  if (_viewModel == null) {
+    _viewModel = new BodyComponent();
   }
-  return _viewmodel;
+  return _viewModel;
 }
 
 // The real model:

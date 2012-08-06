@@ -33,8 +33,8 @@ main() {
 
   // listen on changes to #hash in the URL
   window.on.popState.add((_) {
-    viewmodel.showIncomplete = window.location.hash != '#/completed';
-    viewmodel.showDone = window.location.hash != '#/active';
+    viewModel.showIncomplete = window.location.hash != '#/completed';
+    viewModel.showDone = window.location.hash != '#/active';
     dispatch();
   });
 }
@@ -65,10 +65,10 @@ void _componentsSetUp() {
     'x-generic-if': (root, elem) {
       var res = new GenericIfComponent(root, elem);
       var condition = elem.attributes['instantiate'].substring('if '.length);
-      if (condition == 'viewmodel.hasElements') {
-        res.shouldShow = (_) => viewmodel.hasElements;
-      } else if (condition == 'viewmodel.isVisible(x)') {
-        res.shouldShow = (vars) => viewmodel.isVisible(vars['x']);
+      if (condition == 'viewModel.hasElements') {
+        res.shouldShow = (_) => viewModel.hasElements;
+      } else if (condition == 'viewModel.isVisible(x)') {
+        res.shouldShow = (vars) => viewModel.isVisible(vars['x']);
       }
       return res;
     },
@@ -88,13 +88,13 @@ final INITIAL_PAGE = """
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
         <template iterate="{{x in app.todos}}" is="x-generic-list">
-          <template instantiate="if viewmodel.isVisible(x)" is="x-generic-if">
+          <template instantiate="if viewModel.isVisible(x)" is="x-generic-if">
             <li is="x-todo-row" data-todo="x"></li>
           </template>
         </template>
       </ul>
     </section>
-    <template instantiate="if viewmodel.hasElements" is="x-generic-if">
+    <template instantiate="if viewModel.hasElements" is="x-generic-if">
       <footer is="x-todo-footer" id="footer"></footer>
     </template>
   </section>
