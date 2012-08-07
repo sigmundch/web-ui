@@ -46,6 +46,7 @@ class ListComponent extends Component {
       for (var x in items()) {
         var child = _childTemplate.clone(true);
         var component = manager.expandElement(child);
+        // TODO(jmesserly): should support children that aren't WebComponents
         component.scopedVariables = new Map.from(scopedVariables);
         component.scopedVariables[_loopVar] = x;
         _parent.nodes.add(child);

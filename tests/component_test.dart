@@ -14,8 +14,12 @@
 #import('../webcomponents.dart');
 #import('../watcher.dart');
 
+class Item {
+  bool visible = true;
+}
+
 class AppModel {
-  List items;
+  final List<Item> items;
   bool showFooter = false;
 
   AppModel() : items = [];
@@ -64,8 +68,24 @@ main() {
   });
 
   test('list responds to state change', () {
+    app.items.add(new Item());
+    app.items.add(new Item());
+    app.items.add(new Item());
 
+    var ul = query('#cool-list-host');
+    expect(queryAll('.cool-item').length, 0);
     dispatch();
+    // TODO(jmesserly): investigate why this only updates async
+    window.setTimeout(expectAsync0(() {
+      expect(queryAll('.cool-item').length, 3);
+      app.items[1].visible = false;
+      dispatch();
+      expect(queryAll('.cool-item').length, 2);
+
+      app.items.clear();
+      dispatch();
+      expect(queryAll('.cool-item').length, 0);
+    }), 0);
   });
 }
 
@@ -94,8 +114,8 @@ void _componentsSetUp() {
       var condition = elem.attributes['instantiate'].substring('if '.length);
       if (condition == 'app.showFooter') {
         res.shouldShow = (_) => app.showFooter;
-      } else if (condition == 'item.isVisible') {
-        res.shouldShow = (vars) => vars['item'].isVisible;
+      } else if (condition == 'item.visible') {
+        res.shouldShow = (vars) => vars['item'].visible;
       }
       return res;
     },
@@ -105,11 +125,13 @@ void _componentsSetUp() {
 
 /** DOM describing the initial view of the app (will be auto-generated). */
 final INITIAL_PAGE = """
-  <template iterate="{{item in app.items}}" is="x-list" id="cool-list">
-    <template instantiate="if item.visible" is="x-if">
-      <li class="cool-item">some cool data</li>
+  <ul id="cool-list-host">
+    <template iterate="{{item in app.items}}" is="x-list" id="cool-list">
+      <template instantiate="if item.visible" is="x-if">
+        <li class="cool-item">some cool data</li>
+      </template>
     </template>
-  </template>
+  </ul>
   <template instantiate="if app.showFooter" is="x-if" id="cool-if">
     <footer id="cool-footer"></footer>
   </template>
