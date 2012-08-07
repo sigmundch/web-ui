@@ -18,7 +18,18 @@ We believe that:
 
 This library is under construction. More coming soon!
 
+
+Running Tests
+-------------
+
+Dependencies are installed using the [Pub Package Manager][pub].
+
+    pub install
+    tests/run.sh
+
+
 [wc]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html
 [mdv]: http://code.google.com/p/mdv/
 [d]: http://www.dartlang.org
 [mb]: http://www.dartlang.org/support/faq.html#what-browsers-supported
+[pub]: http://www.dartlang.org/docs/pub-package-manager/
