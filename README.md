@@ -25,10 +25,14 @@ Running Tests
 Dependencies are installed using the [Pub Package Manager][pub].
 
     pub install
-    tests/run.sh                   # command line tests
-    dumprendertree tests/run.html  # browser tests
 
-You can run `tests/run.html` from [Dartium][] with
+    # Run command line tests
+    tests/run.sh
+
+    # Run browser tests
+    dartium --allow-file-access-from-files browser_tests.html
+
+You can run `browser_tests.html` from [Dartium][] launched with
 `--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][],
 which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build these from the
