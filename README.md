@@ -27,9 +27,11 @@ Dependencies are installed using the [Pub Package Manager][pub].
     pub install
 
     # Run command line tests
+    #export DART_SDK=path/to/dart/sdk
     tests/run.sh
 
     # Run browser tests
+    export DART_PACKAGE_ROOT=file://`pwd`/packages
     dartium --allow-file-access-from-files browser_tests.html
 
 You can run `browser_tests.html` from [Dartium][Dartium] launched with

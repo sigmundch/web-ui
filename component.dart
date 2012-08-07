@@ -58,7 +58,8 @@ class Component extends WebComponent {
   /** Adds a watcher for [exp], and executes [callback] immediately. */
   WatcherDisposer bind(exp, callback, [debugName]) {
     var res = watch(exp, callback, debugName);
-    if (exp is Getter) {
+    // TODO(jmesserly): this should be "is Getter" once dart2js bug is fixed.
+    if (exp is Function) {
       callback(new WatchEvent(null, exp()));
     } else {
       callback(new WatchEvent(null, exp));

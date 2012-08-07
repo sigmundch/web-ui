@@ -3,8 +3,10 @@
 // BSD-style license that can be found in the LICENSE file.
 
 // TODO(jmesserly): need a lot more tests here
+// TODO(jmesserly): using the _tests suffix to prevent run.sh from running this
+// Ideally this would be called component_test.
 /** Basic sanity test for [IfComponent] and [ListComponent]. */
-#library('component_test');
+#library('browser_tests');
 
 #import('dart:html');
 #import('package:unittest/unittest.dart');
@@ -39,9 +41,9 @@ main() {
     var ifComp = manager[ifEl];
     expect(ifComp, isNotNull);
     app.showFooter = true;
-    expect(ifComp.shouldShow(null), true);
+    expect(ifComp.shouldShow(null));
     app.showFooter = false;
-    expect(ifComp.shouldShow(null), false);
+    expect(!ifComp.shouldShow(null));
   });
 
   test('if responds to state change', () {
@@ -50,7 +52,12 @@ main() {
     app.showFooter = true;
     expect(query('#cool-footer'), isNull);
     dispatch();
-    expect(query('#cool-footer'), isNotNull);
+    var footer = query('#cool-footer');
+    expect(footer, isNotNull);
+    expect(footer.parent, equals(ifEl.parent));
+
+    var children = footer.parent.nodes;
+    expect(children.indexOf(footer), greaterThan(children.indexOf(ifEl)));
 
     app.showFooter = false;
     expect(query('#cool-footer'), isNotNull);
@@ -78,6 +85,9 @@ main() {
     // TODO(jmesserly): investigate why this only updates async
     window.setTimeout(expectAsync0(() {
       expect(queryAll('.cool-item').length, 3);
+      var items = queryAll('.cool-item');
+      expect(items[0].parent, equals(ul));
+
       app.items[1].visible = false;
       dispatch();
       expect(queryAll('.cool-item').length, 2);
