@@ -20,7 +20,7 @@
 
 #import('dart:html');
 
-#source('list_map.dart');
+#source('lib/list_map.dart');
 
 // typedefs
 typedef WebComponent WebComponentFactory (ShadowRoot shadowRoot, Element elt);
