@@ -52,10 +52,10 @@ class _FooterComponent extends Component {
   AnchorElement _completedLink;
   ButtonElement _clearCompleted;
 
-  Function _stop1;
-  Function _stop2;
-  Function _stop3;
-  Function _stop4;
+  WatcherDisposer _stopWatcher1;
+  WatcherDisposer _stopWatcher2;
+  WatcherDisposer _stopWatcher3;
+  WatcherDisposer _stopWatcher4;
   EventListener _listener1;
 
   void created() {
@@ -72,10 +72,10 @@ class _FooterComponent extends Component {
       dispatch();
     };
 
-    _stop4 = bind(() => anyDone, (_) {
+    _stopWatcher4 = bind(() => anyDone, (_) {
       if (_clearCompleted != null) {
         _clearCompleted.on.click.remove(_listener1);
-        _stop1();
+        _stopWatcher1();
       }
       // TODO(sigmund): this feels too hacky. This node is under a conditional,
       // but it is not a component. We should probably wrap it in an artificial
@@ -84,17 +84,17 @@ class _FooterComponent extends Component {
       _clearCompleted = root.query('#clear-completed');
       if (_clearCompleted != null) {
         _clearCompleted.on.click.add(_listener1);
-        _stop1 = bind(() => doneCount, (e) {
+        _stopWatcher1 = bind(() => doneCount, (e) {
           _clearCompleted.innerHTML = 'Clear completed ${e.newValue}';
         });
       }
     });
 
-    _stop2 = bind(() => remaining, (e) {
+    _stopWatcher2 = bind(() => remaining, (e) {
       _todoCount.innerHTML = '<strong>${e.newValue}</strong>';
     });
 
-    _stop3 = bind(() => window.location.hash, (_) {
+    _stopWatcher3 = bind(() => window.location.hash, (_) {
       _allLink.classes.clear();
       _activeLink.classes.clear();
       _completedLink.classes.clear();
@@ -107,10 +107,10 @@ class _FooterComponent extends Component {
   void removed() {
     if (_clearCompleted != null) {
       _clearCompleted.on.click.remove(_listener1);
-      _stop1();
+      _stopWatcher1();
     }
-    _stop2();
-    _stop3();
-    _stop4();
+    _stopWatcher2();
+    _stopWatcher3();
+    _stopWatcher4();
   }
 }

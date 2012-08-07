@@ -42,16 +42,16 @@ class _TodoItemComponent extends Component {
     todo = scopedVariables[element.attributes['data-todo']];
   }
 
-  Function _stop1;
-  Function _stop2;
-  Function _stop3;
+  WatcherDisposer _stopWatcher1;
+  WatcherDisposer _stopWatcher2;
+  WatcherDisposer _stopWatcher3;
   EventListener _listener1;
   EventListener _listener2;
   EventListener _listener3;
   EventListener _listener4;
   void inserted() {
-    _stop1 = bind(() => todo.task, (_) { label.innerHTML = todo.task; });
-    _stop2 = bind(() => todo.done, (_) {
+    _stopWatcher1 = bind(() => todo.task, (_) { label.innerHTML = todo.task; });
+    _stopWatcher2 = bind(() => todo.done, (_) {
       checkbox.checked = todo.done;
       if (todo.done) {
         root.query('#todo-item').classes.add('completed');
@@ -76,7 +76,7 @@ class _TodoItemComponent extends Component {
     };
     destroy.on.click.add(_listener2);
 
-    _stop3 = bind(() => _editing, (_) {
+    _stopWatcher3 = bind(() => _editing, (_) {
       if (_editing) {
         root.query('#todo-item').classes.add('editing');
       } else {
@@ -102,9 +102,9 @@ class _TodoItemComponent extends Component {
   }
 
   void removed() {
-    _stop1();
-    _stop2();
-    _stop3();
+    _stopWatcher1();
+    _stopWatcher2();
+    _stopWatcher3();
     checkbox.on.click.remove(_listener1);
     destroy.on.click.remove(_listener2);
     topDiv.on.doubleClick.remove(_listener3);

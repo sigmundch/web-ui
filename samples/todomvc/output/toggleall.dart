@@ -25,7 +25,7 @@ class _ToggleComponent extends Component {
   _ToggleComponent(root, elem) : super('toggleall', root, elem);
 
   InputElement _toggleAll; // Name generated from the id from the element.
-  Function _stop1;
+  WatcherDisposer _stopWatcher1;
   EventListener _listener1;
 
   void created()  {
@@ -39,13 +39,13 @@ class _ToggleComponent extends Component {
       dispatch();
     };
     _toggleAll.on.click.add(_listener1);
-    _stop1 = bind(() => allChecked, (e) {
+    _stopWatcher1 = bind(() => allChecked, (e) {
       _toggleAll.checked = e.newValue;
     });
   }
 
   void removed() {
     _toggleAll.on.click.remove(_listener1);
-    _stop1();
+    _stopWatcher1();
   }
 }

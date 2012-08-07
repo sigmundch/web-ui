@@ -25,7 +25,7 @@ class ListComponent extends Component {
 
   Element _childTemplate;
   Element _parent;
-  Function _stop1;
+  WatcherDisposer _stopWatcher;
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.
@@ -38,7 +38,7 @@ class ListComponent extends Component {
 
   void inserted() {
     root.nodes.clear();
-    _stop1 = bind(items, (_) {
+    _stopWatcher = bind(items, (_) {
       for (var n in _parent.elements) {
         var wrapper = manager[n];
         if (wrapper != this) {
@@ -57,7 +57,7 @@ class ListComponent extends Component {
   }
 
   void removed() {
-    _stop1();
+    _stopWatcher();
     for (var n in _parent.elements) {
       var wrapper = manager[n];
       if (wrapper != null && wrapper != this) {
