@@ -1,0 +1,52 @@
+<html>
+<body>
+<element name="x-todo-footer" extends="footer" constructor="FooterComponent"
+         apply-author-styles>
+  <template>
+    <span id="todo-count"><strong>{{remaining}}</strong></span>
+    <ul id="filters">
+      <li> <a id="a1" class="{{allClass}}" href="#/">All</a> </li>
+      <li> <a id="a2" class="{{activeClass}}" href="#/active">Active</a> </li>
+      <li> <a id="a3" class="{{completedClass}}" href="#/completed">Completed</a> </li>
+    </ul>
+    <template instantiate="if anyDone" is="x-if" id='condition'>
+      <button id="clear-completed" data-on-click="clearDone()">
+        Clear completed ({{doneCount}})
+      </button>
+    </template>
+  </template>
+  <script type='application/dart'>
+    #library('footer');
+
+    class FooterComponent {
+      int get doneCount() {
+        int res = 0;
+        app.todos.forEach((t) { if (t.done) res++; });
+        return res;
+      }
+
+      int get remaining() => app.todos.length - doneCount;
+
+      String get allClass() {
+        if (window.location.hash == '' || window.location.hash == '#/') {
+          return 'selected';
+        } else {
+          return null;
+        }
+      }
+      String get activeClass() =>
+          window.location.hash == '#/active' ?  'selected' : null;
+
+      String get completedClass() =>
+          window.location.hash == '#/completed' ?  'selected' : null;
+
+      void clearDone() {
+        app.todos = app.todos.filter((t) => !t.done);
+      }
+
+      bool get anyDone() => doneCount > 0;
+    }
+  </script>
+</element>
+</body>
+</html>

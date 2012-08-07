@@ -1,0 +1,15 @@
+TodoMVC sample application written with web-components and manually bound
+models. This example illustrates what the executable code would look like for
+an application written using Dart-adapted MDV-style templates. It can also be
+used as a guideline for how our tools will generate code from the template
+input.
+
+See the sibling 'input' directory to visualize what users would write to get the
+code (manually) generated here.
+
+To run this code, load it on Dartium, but executing Dartium with the following
+flags:
+  --enable-shadow-dom
+  --enable-scoped-style
+  --allow-file-access-from-files
+  --enable-devtools-experiments
