@@ -35,7 +35,7 @@ Dependencies are installed using the [Pub Package Manager][pub].
     dartium --allow-file-access-from-files browser_tests.html
 
 You can run `browser_tests.html` from [Dartium][Dartium] launched with
-`--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][],
+`--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][drt],
 which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build these from the
 [Dartium and DRT sources][drtsrc].
@@ -47,6 +47,7 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [mb]: http://www.dartlang.org/support/faq.html#what-browsers-supported
 [pub]: http://www.dartlang.org/docs/pub-package-manager/
 [Dartium]: http://www.dartlang.org/dartium/index.html
+[drt]: http://www.chromium.org/developers/testing/webkit-layout-tests
 [drtlucid]: http://gsdview.appspot.com/dartium-archive/continuous/drt-lucid64.zip
 [drtmac]: http://gsdview.appspot.com/dartium-archive/continuous/drt-mac.zip
 [drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
