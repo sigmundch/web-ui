@@ -13,8 +13,9 @@ To run this code, launch [Dartium][] with `--enable-shadow-dom`
 
 Please note that this sample is intended to work on all [modern browsers][m] but
 at the moment we rely on features like scoped styles and shadow DOM that have
-only been implemented in Chrome, and we have not yet tested this using the
-[dart2js][] compiler.
+only been implemented in Chrome. It will also run in normal Chrome using the
+[dart2js][] compiler. Firefox support is blocked on a
+[bug in matchesSelector](http://dartbug.com/4401).
 
 [Dartium]: http://www.dartlang.org/dartium/
 [dart2js]: http://www.dartlang.org/docs/dart2js/
