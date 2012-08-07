@@ -32,7 +32,7 @@ Dependencies are installed using the [Pub Package Manager][pub].
     # Run browser tests
     dartium --allow-file-access-from-files browser_tests.html
 
-You can run `browser_tests.html` from [Dartium][] launched with
+You can run `browser_tests.html` from [Dartium][Dartium] launched with
 `--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][],
 which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build these from the
