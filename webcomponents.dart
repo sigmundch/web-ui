@@ -198,6 +198,7 @@ class CustomElementsManager {
   /** Expand [element], assuming it is a webcomponent. */
   WebComponent expandElement(Element element) {
     var declaration = _customDeclarations[element.attributes['is']];
+    // TODO(jmesserly): this should throw an Exception
     if (declaration == null) throw 'No such custom element declaration';
     return declaration.morph(element);
   }

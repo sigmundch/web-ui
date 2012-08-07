@@ -4,14 +4,14 @@
 
 #library('toggleall');
 #import('dart:html');
-#import('component.dart');
-#import('model.dart');
+#import('../../../component.dart');
 #import('../../../watcher.dart');
+#import('model.dart');
 
 /** The component associated with 'toggleall.html' (written by user). */
 class ToggleComponent extends _ToggleComponent {
 
-  bool get allChecked () => app.todos.length > 0 && 
+  bool get allChecked () => app.todos.length > 0 &&
       app.todos.every((t) => t.done);
 
   ToggleComponent(root, elem) : super(root, elem);

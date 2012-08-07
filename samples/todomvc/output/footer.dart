@@ -4,10 +4,10 @@
 
 #library('footer');
 #import('dart:html');
-#import('component.dart');
-#import('model.dart');
+#import('../../../component.dart');
 #import('../../../watcher.dart');
 #import('../../../webcomponents.dart');
+#import('model.dart');
 
 /** The component associated with 'footer.html' (written by user). */
 class FooterComponent extends _FooterComponent {
