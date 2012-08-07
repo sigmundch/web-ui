@@ -2,10 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+/**
+ * This library has the base class for data-bound components.
+ * It uses [watch] and [WebComponent] to implement [Component], and in
+ * particular [Component.bind].
+ */
 #library('component');
+
 #import('dart:html');
-#import('../../../watcher.dart');
-#import('../../../webcomponents.dart');
+#import('watcher.dart');
+#import('webcomponents.dart');
 
 /**
  * Base component that has some common functionality used by our components.
@@ -49,10 +55,10 @@ class Component extends WebComponent {
     print("$id-change on ${this.name}.$name $oldValue $newValue");
   }
 
-  /** Adds a watcher for [exp], and executes it immediately. */
-  Function bind(exp, callback, [debugName]) {
+  /** Adds a watcher for [exp], and executes [callback] immediately. */
+  WatcherDisposer bind(exp, callback, [debugName]) {
     var res = watch(exp, callback, debugName);
-    if (exp is Function) {
+    if (exp is Getter) {
       callback(new WatchEvent(null, exp()));
     } else {
       callback(new WatchEvent(null, exp));

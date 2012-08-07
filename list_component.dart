@@ -6,26 +6,23 @@
 
 #import('dart:html');
 #import('component.dart');
-#import('../../../watcher.dart');
-#import('../../../webcomponents.dart');
+#import('watcher.dart');
+#import('webcomponents.dart');
 
 /**
- * A generic list component implementing 'template iterate'. This component is
- * provided with our library and tools.
+ * A web component implementing `<template iterate=...>`.
  */
-// TODO(sigmund): move to a shared location.
 class ListComponent extends Component {
   Getter<List> items;
   final String _loopVar;
+  Element _childTemplate;
+  Element _parent;
+  WatcherDisposer _stopWatcher;
 
   ListComponent(root, elem)
     : super('list', root, elem),
       _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
           elem.attributes['iterate']).group(1);
-
-  Element _childTemplate;
-  Element _parent;
-  WatcherDisposer _stopWatcher;
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.

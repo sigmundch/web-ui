@@ -8,7 +8,7 @@
  * an application written using Dart-adapted MDV-style templates. It can also be
  * used as a guideline for how our tools will generate code from the template
  * input.
- * 
+ *
  * See the sibling 'input' directory to visualize what users would write to get
  * the code (manually) generated here.
  */
@@ -18,11 +18,12 @@
 
 // Code from components
 #import('footer.dart');
-#import('list_component.dart');
-#import('if_component.dart');
 #import('newform.dart');
 #import('item.dart');
 #import('toggleall.dart');
+// TODO(jmesserly): ideally these would be package: imports
+#import('../../../list_component.dart');
+#import('../../../if_component.dart');
 
 #import('model.dart');
 #import('../../../watcher.dart');

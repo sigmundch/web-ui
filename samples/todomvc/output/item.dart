@@ -4,9 +4,9 @@
 
 #library('todoitem');
 #import('dart:html');
-#import('component.dart');
-#import('model.dart');
+#import('../../../component.dart');
 #import('../../../watcher.dart');
+#import('model.dart');
 
 /** The component associated with 'item.html' (written by user). */
 class TodoItemComponent extends _TodoItemComponent {

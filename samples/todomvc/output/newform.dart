@@ -4,9 +4,9 @@
 
 #library('newform');
 #import('dart:html');
-#import('component.dart');
-#import('model.dart');
+#import('../../../component.dart');
 #import('../../../watcher.dart');
+#import('model.dart');
 
 /** The component associated with 'newform.html' (written by user). */
 class FormComponent extends _FormComponent {

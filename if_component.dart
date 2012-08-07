@@ -6,14 +6,12 @@
 
 #import('dart:html');
 #import('component.dart');
-#import('../../../watcher.dart');
-#import('../../../webcomponents.dart');
+#import('watcher.dart');
+#import('webcomponents.dart');
 
 /**
- * A generic list component implementing 'template instantiate="if ..."'.
- * This component is provided with our library and tools.
+ * A web component implementing `<template instantiate="if ...">`.
  */
-// TODO(sigmund): move to a shared location.
 class IfComponent extends Component {
   IfCondition shouldShow;
   Element _childTemplate;
@@ -66,7 +64,7 @@ class IfComponent extends Component {
   }
 }
 
-/** 
+/**
  * A condition whether the children of a '<template instantitate="if ...">' tag
  * should be displayed or not.
  */
