@@ -57,25 +57,17 @@ void _appSetUp() {
 
 /** Set up components used by this application (will be auto-generated). */
 void _componentsSetUp() {
-  // use mirrors when they become available.
-  Map<String, Function> map = {
-    'x-todo-footer': (root, elem) => new FooterComponent(root, elem),
-    'x-todo-form': (root, elem) => new FormComponent(root, elem),
-    'x-toggle-all': (root, elem) => new ToggleComponent(root, elem),
-    'x-list': (root, elem) => new ListComponent(root, elem),
-    'x-if': (root, elem) {
-      var res = new IfComponent(root, elem);
+  initializeComponents((WebComponent comp) {
+    if (comp is IfComponent) {
+      var elem = comp.element;
       var condition = elem.attributes['instantiate'].substring('if '.length);
       if (condition == 'viewModel.hasElements') {
-        res.shouldShow = (_) => viewModel.hasElements;
+        comp.shouldShow = (_) => viewModel.hasElements;
       } else if (condition == 'viewModel.isVisible(x)') {
-        res.shouldShow = (vars) => viewModel.isVisible(vars['x']);
+        comp.shouldShow = (vars) => viewModel.isVisible(vars['x']);
       }
-      return res;
-    },
-    'x-todo-row': (root, elem) => new TodoItemComponent(root, elem),
-  };
-  initializeComponents((String name) => map[name]);
+    }
+  });
 }
 
 /** DOM describing the initial view of the app (will be auto-generated). */

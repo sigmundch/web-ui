@@ -19,20 +19,22 @@
 #library('webcomponents');
 
 #import('dart:html');
+#import('dart:mirrors');
 
 #source('lib/list_map.dart');
 
 // typedefs
-typedef WebComponent WebComponentFactory (ShadowRoot shadowRoot, Element elt);
-typedef WebComponentFactory RegistryLookupFunction(String tagName);
+typedef WebComponent WebComponentFactory(ShadowRoot shadowRoot, Element elt);
+// TODO(jmesserly): remove the need for this
+typedef void OnComponentCreate(WebComponent component);
 
 // Globals
 final int REQUEST_DONE = 4;
 CustomElementsManager _manager;
 CustomElementsManager get manager() => _manager;
 
-void initializeComponents(RegistryLookupFunction lookup) {
-  _manager = new CustomElementsManager._internal(lookup);
+void initializeComponents(OnComponentCreate onCreate) {
+  _manager = new CustomElementsManager._(onCreate);
   manager._loadComponents();
 }
 
@@ -68,11 +70,11 @@ class CustomElementsManager {
   /** Maps DOM elements to the user-defiend corresponding dart objects. */
   ListMap<Element, WebComponent> _customElements;
 
-  RegistryLookupFunction _lookup;
-
   MutationObserver _insertionObserver;
 
-  CustomElementsManager._internal(this._lookup) {
+  OnComponentCreate _onCreate;
+
+  CustomElementsManager._(this._onCreate) {
     // TODO(samhop): check for ShadowDOM support
     _customDeclarations = <_CustomDeclaration>{};
     // We use a ListMap because DOM objects aren't hashable right now.
@@ -254,11 +256,41 @@ bool get hasShadowRoot() {
   return _hasShadowRoot;
 }
 
+WebComponentFactory _findWebComponentCtor(String ctorName) {
+  var names = ctorName.split('.');
+  // TODO(jmesserly): can we support library prefixes? Doesn't seem feasible
+  // unless we track the declaring library.
+  if (names.length > 2) {
+    throw new UnsupportedOperationException(
+        'constructor name has too many dots: $ctorName');
+  }
+  var typeName = names[0];
+  ctorName = (names.length > 1) ? names[1] : '';
+
+  var mirror = currentMirrorSystem();
+  for (var lib in mirror.libraries().getValues()) {
+    var cls = lib.classes()[typeName];
+    if (cls != null) {
+      return (ShadowRoot shadowRoot, Element elt) {
+
+        var future = cls.newInstance(ctorName,
+            [mirror.mirrorOf(shadowRoot), mirror.mirrorOf(elt)]);
+        // type check, use "as" when available.
+        WebComponent comp = future.value.reflectee;
+        return comp;
+      };
+    }
+  }
+}
+
 class _CustomDeclaration {
   String name;
   String extendz;
+  String constructor;
   Element template;
   bool applyAuthorStyles;
+
+  WebComponentFactory _createInstance;
 
   _CustomDeclaration(Element element) {
     name = element.attributes['name'];
@@ -268,17 +300,23 @@ class _CustomDeclaration {
       window.console.error('name attribute is required');
       return;
     }
+    constructor = element.attributes['constructor'];
+    if (constructor == null || constructor.length == 0) {
+      window.console.error('constructor attribute is required');
+      return;
+    }
     extendz = element.attributes['extends'];
     if (extendz == null || extendz.length == 0) {
       window.console.error('extends attribute is required');
       return;
     }
     template = element.query('template');
+
+    // Find and cache the constructor function:
+    _createInstance = _findWebComponentCtor(constructor);
   }
 
-  int hashCode() {
-    return name.hashCode();
-  }
+  int hashCode() => name.hashCode();
 
   operator ==(other) {
     if (other is! _CustomDeclaration) {
@@ -286,6 +324,7 @@ class _CustomDeclaration {
     } else {
       return other.name == name &&
              other.extendz == extendz &&
+             other.constructor == constructor &&
              other.template == template;
     }
   }
@@ -319,7 +358,9 @@ class _CustomDeclaration {
     }
 
     template.nodes.forEach((node) => shadowRoot.nodes.add(node.clone(true)));
-    var newCustomElement = manager._lookup(this.name)(shadowRoot, e);
+
+    var newCustomElement = _createInstance(shadowRoot, e);
+    manager._onCreate(newCustomElement);
     manager._customElements[e] = newCustomElement;
     manager._expandDeclarations(shadowRoot, insert: false);
     newCustomElement.created();
