@@ -1,16 +1,16 @@
-// Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-/** 
+/**
  * ListMap class so that we have a dictionary usable with non-hashable keys.
- * Note: this class does NOT yet have full Map functionality 
+ * Note: this class does NOT yet have full Map functionality
  */
 class ListMap<K, V> {
 
   List<_Pair<K, V>> _list;
 
-  ListMap() 
+  ListMap()
     : _list = new List<_Pair<K, V>>() { }
 
   void operator []=(K key, V value) {

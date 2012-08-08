@@ -11,7 +11,7 @@
 /** The component associated with 'toggleall.html' (written by user). */
 class ToggleComponent extends _ToggleComponent {
 
-  bool get allChecked () => app.todos.length > 0 &&
+  bool get allChecked() => app.todos.length > 0 &&
       app.todos.every((t) => t.done);
 
   ToggleComponent(root, elem) : super(root, elem);
@@ -29,23 +29,19 @@ class _ToggleComponent extends Component {
   EventListener _listener1;
 
   void created()  {
+    super.created();
     _toggleAll = root.query("#toggle-all");
   }
 
   void inserted() {
-    _listener1 = (_) {
-      markAll();
-      _toggleAll.checked = allChecked;
-      dispatch();
-    };
-    _toggleAll.on.click.add(_listener1);
+    super.inserted();
     _stopWatcher1 = bind(() => allChecked, (e) {
       _toggleAll.checked = e.newValue;
     });
   }
 
   void removed() {
-    _toggleAll.on.click.remove(_listener1);
+    super.removed();
     _stopWatcher1();
   }
 }

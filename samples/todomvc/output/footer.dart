@@ -28,6 +28,7 @@ class FooterComponent extends _FooterComponent {
       return null;
     }
   }
+
   String get activeClass() =>
       window.location.hash == '#/active' ?  'selected' : null;
 
@@ -56,9 +57,9 @@ class _FooterComponent extends Component {
   WatcherDisposer _stopWatcher2;
   WatcherDisposer _stopWatcher3;
   WatcherDisposer _stopWatcher4;
-  EventListener _listener1;
 
   void created() {
+    super.created();
     _todoCount = root.query('#todo-count');
     _allLink = root.query('#a1');
     _activeLink = root.query('#a2');
@@ -67,14 +68,9 @@ class _FooterComponent extends Component {
   }
 
   void inserted() {
-    _listener1 = (_) {
-      clearDone();
-      dispatch();
-    };
-
+    super.inserted();
     _stopWatcher4 = bind(() => anyDone, (_) {
       if (_clearCompleted != null) {
-        _clearCompleted.on.click.remove(_listener1);
         _stopWatcher1();
       }
       // TODO(sigmund): this feels too hacky. This node is under a conditional,
@@ -83,7 +79,6 @@ class _FooterComponent extends Component {
       // and [removed] on it.
       _clearCompleted = root.query('#clear-completed');
       if (_clearCompleted != null) {
-        _clearCompleted.on.click.add(_listener1);
         _stopWatcher1 = bind(() => doneCount, (e) {
           _clearCompleted.innerHTML = 'Clear completed ${e.newValue}';
         });
@@ -105,8 +100,8 @@ class _FooterComponent extends Component {
   }
 
   void removed() {
+    super.removed();
     if (_clearCompleted != null) {
-      _clearCompleted.on.click.remove(_listener1);
       _stopWatcher1();
     }
     _stopWatcher2();

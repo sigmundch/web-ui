@@ -33,6 +33,7 @@ final int REQUEST_DONE = 4;
 CustomElementsManager _manager;
 CustomElementsManager get manager() => _manager;
 
+// TODO(jmesserly): we should probably
 void initializeComponents(OnComponentCreate onCreate) {
   _manager = new CustomElementsManager._(onCreate);
   manager._loadComponents();

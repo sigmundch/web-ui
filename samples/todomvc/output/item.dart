@@ -15,12 +15,23 @@ class TodoItemComponent extends _TodoItemComponent {
 
   TodoItemComponent(root, elem) : super(root, elem);
 
+  String get itemClass() =>
+      _editing ? 'editing' : (todo.done ? 'completed' : '');
+
   void edit() {
     _editing = true;
   }
 
   void update() {
     _editing = false;
+  }
+
+  void delete() {
+    var list = app.todos;
+    var index = list.indexOf(todo);
+    if (index != -1) {
+      list.removeRange(index, 1);
+    }
   }
 }
 
@@ -34,6 +45,7 @@ class _TodoItemComponent extends Component {
   ButtonElement destroy;
   InputElement editbox;
   void created() {
+    super.created();
     label = root.query('#label');
     checkbox = root.query('#checkbox');
     destroy = root.query('button.destroy');
@@ -46,10 +58,10 @@ class _TodoItemComponent extends Component {
   WatcherDisposer _stopWatcher2;
   WatcherDisposer _stopWatcher3;
   EventListener _listener1;
-  EventListener _listener2;
   EventListener _listener3;
   EventListener _listener4;
   void inserted() {
+    super.inserted();
     _stopWatcher1 = bind(() => todo.task, (_) { label.innerHTML = todo.task; });
     _stopWatcher2 = bind(() => todo.done, (_) {
       checkbox.checked = todo.done;
@@ -66,16 +78,6 @@ class _TodoItemComponent extends Component {
     };
     checkbox.on.click.add(_listener1);
 
-    _listener2 = (_) {
-      var list = app.todos;
-      var index = list.indexOf(todo);
-      if (index != -1) {
-        list.removeRange(index, 1);
-        dispatch();
-      }
-    };
-    destroy.on.click.add(_listener2);
-
     _stopWatcher3 = bind(() => _editing, (_) {
       if (_editing) {
         root.query('#todo-item').classes.add('editing');
@@ -86,12 +88,8 @@ class _TodoItemComponent extends Component {
 
     _listener3 = (_) {
       editbox.value = todo.task;
-      _editing = true;
       _listener4 = (_) {
-        update();
         todo.task = editbox.value;
-        editbox.on.blur.remove(_listener4);
-        editbox.on.change.remove(_listener4);
         dispatch();
       };
       editbox.on.blur.add(_listener4);
@@ -102,11 +100,11 @@ class _TodoItemComponent extends Component {
   }
 
   void removed() {
+    super.removed();
     _stopWatcher1();
     _stopWatcher2();
     _stopWatcher3();
     checkbox.on.click.remove(_listener1);
-    destroy.on.click.remove(_listener2);
     topDiv.on.doubleClick.remove(_listener3);
   }
 }
