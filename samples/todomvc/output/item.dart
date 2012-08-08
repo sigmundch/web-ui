@@ -59,13 +59,11 @@ class _TodoItemComponent extends Component {
     topDiv = root.query('#todo-item');
   }
 
-  WatcherDisposer _stopWatcher1;
   EventListener _listener1;
   EventListener _listener3;
   EventListener _listener4;
   void inserted() {
     super.inserted();
-    _stopWatcher1 = bind(() => todo.task, (_) { label.innerHTML = todo.task; });
 
     _listener1 = (_) {
       todo.done = checkbox.checked;
@@ -88,7 +86,6 @@ class _TodoItemComponent extends Component {
 
   void removed() {
     super.removed();
-    _stopWatcher1();
     checkbox.on.click.remove(_listener1);
     topDiv.on.doubleClick.remove(_listener3);
   }

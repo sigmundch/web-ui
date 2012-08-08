@@ -111,7 +111,7 @@ class Component extends WebComponent {
 
     _bindEvents(node);
     _bindAttributes(node);
-    // TODO(jmesserly): _bindText(node);
+    _bindText(node);
   }
 
   void _bindEvents(Element node) {
@@ -178,6 +178,27 @@ class Component extends WebComponent {
 
     node.attributes.forEach(bindAttr);
     node.dataAttributes.forEach(bindAttr);
+  }
+
+  void _bindText(Element node) {
+    // TODO(jmesserly): support text nodes mixed in with elements
+    if (node.elements.length > 0) return;
+
+    var re = const RegExp('{{(.*)}}');
+    // TODO(jmesserly): support multiple expressions
+    var pattern = node.text;
+    var match = re.firstMatch(pattern);
+    if (match == null) return;
+
+    var expr = match[1];
+    var names = expr.split('.');
+
+    WatcherDisposer disposer = null;
+    lifecycleAction(() {
+      disposer = bind(() => _mirrorGet(names), (e) {
+        node.text = pattern.replaceFirst(re, '${e.newValue}');
+      });
+    }, () => disposer());
   }
 
   _mirrorGet(List<String> names) {
