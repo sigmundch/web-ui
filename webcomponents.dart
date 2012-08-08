@@ -349,6 +349,8 @@ class _CustomDeclaration {
     } else {
       // Remove the old ShadowRoot, if any
       // TODO(jmesserly): can we avoid morphing the same node twice?
+      // In any case, removal is not the right behavior. For inherited
+      // components you can have more than one ShadowRoot.
       shadowRoot = e.query('.shadowroot');
       if (shadowRoot != null && shadowRoot.parent == e) shadowRoot.remove();
 
