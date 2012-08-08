@@ -9,7 +9,7 @@
 #import('../../../webcomponents.dart');
 #import('model.dart');
 
-/** The component associated with 'footer.html' (written by user). */
+/** The component associated with 'footer.html'. */
 class FooterComponent extends Component {
   FooterComponent(root, elem) : super('footer', root, elem);
 
