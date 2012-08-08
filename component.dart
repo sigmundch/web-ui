@@ -13,7 +13,6 @@
 #import('dart:html');
 #import('watcher.dart');
 #import('webcomponents.dart');
-#import('lib/mdv_polyfill.dart', prefix: 'mdv');
 
 typedef void Action();
 
@@ -54,7 +53,9 @@ class Component extends WebComponent {
         _insertActions = [],
         _removeActions = [] {
     scopedVariables = {'this': this};
-    _bindEvents(_root);
+    // TODO(jmesserly): need to support things that are dynamically added
+    // And ensure we're properly scoped.
+    _bindData(_root);
   }
 
   // TODO(jmesserly): rename these shadowRoot and host?
@@ -104,41 +105,84 @@ class Component extends WebComponent {
     return res;
   }
 
-  void _bindEvents(Element node) {
-    // TODO(jmesserly): this requires a full tree walk
-    for (var child in node.elements) _bindEvents(child);
+  void _bindData(Element node) {
+    // TODO(jmesserly): this full tree walk is problematic
+    for (var child in node.elements) _bindData(child);
 
+    _bindEvents(node);
+    _bindAttributes(node);
+    // TODO(jmesserly): _bindText(node);
+  }
+
+  void _bindEvents(Element node) {
     // TODO(jmesserly): not sure if these should be data- attributes or
     // something else. Maybe we should use normal JS event bindings.
     var mirror = currentMirrorSystem();
-    for (var key in node.dataAttributes.getKeys()) {
-      if (key.startsWith('on-')) {
-        var method = node.dataAttributes[key].trim();
-        key = key.substring(3);
-        if (!method.endsWith('()')) {
-          throw new UnsupportedOperationException(
-              'event handler $method for $key must be method call');
-        } else {
-          method = method.substring(0, method.length - 2);
-        }
-        var event = node.on[key];
-        if (event == null) {
-          throw new UnsupportedOperationException(
-              'event $key not found on $node');
-        }
+    node.dataAttributes.forEach((key, method) {
+      if (!key.startsWith('on-')) return;
 
-        var self = mirror.mirrorOf(this);
-        var caller = (e) {
-          print('$name $id on-$key fired');
-          // TODO(jmesserly): shouldn't we pass in event args somehow?
-          // var args = [mirror.mirrorOf(e)];
-          var future = self.invoke(method, []);
-          dispatch();
-          return future.value.reflectee;
-        };
-
-        lifecycleAction(() => event.add(caller), () => event.remove(caller));
+      key = key.substring(3);
+      method = method.trim();
+      if (!method.endsWith('()')) {
+        throw new UnsupportedOperationException(
+            'event handler $method for $key must be method call');
+      } else {
+        method = method.substring(0, method.length - 2);
       }
+      var event = node.on[key];
+      if (event == null) {
+        throw new UnsupportedOperationException(
+            'event $key not found on $node');
+      }
+
+      var self = mirror.mirrorOf(this);
+      var caller = (e) {
+        print('$name $id on-$key fired');
+        // TODO(jmesserly): shouldn't we pass in event args somehow?
+        // var args = [mirror.mirrorOf(e)];
+        var future = self.invoke(method, []);
+        dispatch();
+        return future.value.reflectee;
+      };
+
+      lifecycleAction(() => event.add(caller), () => event.remove(caller));
+    });
+  }
+
+  void _bindAttributes(Element node) {
+    if (node.tagName == 'TEMPLATE') {
+      // Skip <template> nodes for now, they have more sophisticated attribute
+      // grammar.
+      return;
     }
+
+    void bindAttr(key, value) {
+      // TODO(jmesserly): we should support nesting {{ }} in strings
+      if (!value.startsWith('{{') || !value.endsWith('}}')) return;
+
+      value = value.substring(2, value.length - 2);
+      var names = value.split('.');
+
+      WatcherDisposer disposer = null;
+      lifecycleAction(() {
+        // TODO(jmesserly): what about two way binding? Mutation observers?
+        // ??? initial state is wrong for checkbox
+        disposer = bind(() => _mirrorGet(names), (e) {
+          node.attributes[key] = e.newValue;
+        });
+      }, () => disposer());
+    }
+
+    node.attributes.forEach(bindAttr);
+    node.dataAttributes.forEach(bindAttr);
+  }
+
+  _mirrorGet(List<String> names) {
+    var mirror = currentMirrorSystem();
+    var self = mirror.mirrorOf(this);
+    for (var name in names) {
+      self = self.invoke('get:$name', []).value;
+    }
+    return self.reflectee;
   }
 }

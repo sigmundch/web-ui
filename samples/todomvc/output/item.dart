@@ -18,6 +18,12 @@ class TodoItemComponent extends _TodoItemComponent {
   String get itemClass() =>
       _editing ? 'editing' : (todo.done ? 'completed' : '');
 
+  void created() {
+    super.created();
+    // TODO(jmesserly): bind this automatically
+    todo = scopedVariables[element.attributes['data-todo']];
+  }
+
   void edit() {
     _editing = true;
   }
@@ -51,40 +57,21 @@ class _TodoItemComponent extends Component {
     destroy = root.query('button.destroy');
     editbox = root.query('input.edit');
     topDiv = root.query('#todo-item');
-    todo = scopedVariables[element.attributes['data-todo']];
   }
 
   WatcherDisposer _stopWatcher1;
-  WatcherDisposer _stopWatcher2;
-  WatcherDisposer _stopWatcher3;
   EventListener _listener1;
   EventListener _listener3;
   EventListener _listener4;
   void inserted() {
     super.inserted();
     _stopWatcher1 = bind(() => todo.task, (_) { label.innerHTML = todo.task; });
-    _stopWatcher2 = bind(() => todo.done, (_) {
-      checkbox.checked = todo.done;
-      if (todo.done) {
-        root.query('#todo-item').classes.add('completed');
-      } else {
-        root.query('#todo-item').classes.remove('completed');
-      }
-    });
 
     _listener1 = (_) {
       todo.done = checkbox.checked;
       dispatch();
     };
     checkbox.on.click.add(_listener1);
-
-    _stopWatcher3 = bind(() => _editing, (_) {
-      if (_editing) {
-        root.query('#todo-item').classes.add('editing');
-      } else {
-        root.query('#todo-item').classes.remove('editing');
-      }
-    });
 
     _listener3 = (_) {
       editbox.value = todo.task;
@@ -102,8 +89,6 @@ class _TodoItemComponent extends Component {
   void removed() {
     super.removed();
     _stopWatcher1();
-    _stopWatcher2();
-    _stopWatcher3();
     checkbox.on.click.remove(_listener1);
     topDiv.on.doubleClick.remove(_listener3);
   }

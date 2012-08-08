@@ -55,7 +55,6 @@ class _FooterComponent extends Component {
 
   WatcherDisposer _stopWatcher1;
   WatcherDisposer _stopWatcher2;
-  WatcherDisposer _stopWatcher3;
   WatcherDisposer _stopWatcher4;
 
   void created() {
@@ -88,15 +87,6 @@ class _FooterComponent extends Component {
     _stopWatcher2 = bind(() => remaining, (e) {
       _todoCount.innerHTML = '<strong>${e.newValue}</strong>';
     });
-
-    _stopWatcher3 = bind(() => window.location.hash, (_) {
-      _allLink.classes.clear();
-      _activeLink.classes.clear();
-      _completedLink.classes.clear();
-      if (allClass != null) _allLink.classes.add(allClass);
-      if (activeClass != null) _activeLink.classes.add(activeClass);
-      if (completedClass != null) _completedLink.classes.add(completedClass);
-    });
   }
 
   void removed() {
@@ -105,7 +95,6 @@ class _FooterComponent extends Component {
       _stopWatcher1();
     }
     _stopWatcher2();
-    _stopWatcher3();
     _stopWatcher4();
   }
 }
