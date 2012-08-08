@@ -166,9 +166,12 @@ class Component extends WebComponent {
       WatcherDisposer disposer = null;
       lifecycleAction(() {
         // TODO(jmesserly): what about two way binding? Mutation observers?
-        // ??? initial state is wrong for checkbox
         disposer = bind(() => _mirrorGet(names), (e) {
-          node.attributes[key] = e.newValue;
+          if (key == "checked") {
+            node.dynamic.checked = e.newValue;
+          } else {
+            node.attributes[key] = e.newValue;
+          }
         });
       }, () => disposer());
     }
@@ -181,6 +184,8 @@ class Component extends WebComponent {
     var mirror = currentMirrorSystem();
     var self = mirror.mirrorOf(this);
     for (var name in names) {
+      // TODO(jmesserly): is this sensible behavior?
+      //if (self.reflectee == null) break;
       self = self.invoke('get:$name', []).value;
     }
     return self.reflectee;

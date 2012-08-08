@@ -16,5 +16,7 @@ class ToggleComponent extends Component {
 
   ToggleComponent(root, elem) : super('toggleall', root, elem);
 
+  get _toggleAll() => root.query('#toggle-all');
+
   void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
 }
