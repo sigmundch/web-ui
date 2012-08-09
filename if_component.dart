@@ -13,15 +13,16 @@
  * A web component implementing `<template instantiate="if ...">`.
  */
 class IfComponent extends Component {
-  IfCondition shouldShow;
   Element _childTemplate;
   Element _parent;
   Element _child;
   String _childId;
   WatcherDisposer _stopWatcher;
+  String condition;
 
-  IfComponent(root, elem)
-    : super('if', root, elem);
+  IfComponent(root, elem) : super('if', root, elem) {
+    condition = elem.attributes['instantiate'].substring('if '.length);
+  }
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.
@@ -34,6 +35,19 @@ class IfComponent extends Component {
     }
     element.style.display = 'none';
     element.nodes.clear();
+  }
+
+  // TODO(jmesserly): need to bind to the correct controller.
+  bool shouldShow(variables) {
+    var names = condition.split('.');
+    var instance = variables[names[0]];
+    if (instance != null) {
+      names.removeRange(0, 1);
+    } else {
+      instance = this;
+    }
+    print('lookup $condition on $instance');
+    return mirrorGet(instance, names);
   }
 
   void inserted() {

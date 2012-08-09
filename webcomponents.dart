@@ -25,17 +25,16 @@
 
 // typedefs
 typedef WebComponent WebComponentFactory(ShadowRoot shadowRoot, Element elt);
-// TODO(jmesserly): remove the need for this
-typedef void OnComponentCreate(WebComponent component);
 
 // Globals
 final int REQUEST_DONE = 4;
 CustomElementsManager _manager;
 CustomElementsManager get manager() => _manager;
 
-// TODO(jmesserly): we should probably
-void initializeComponents(OnComponentCreate onCreate) {
-  _manager = new CustomElementsManager._(onCreate);
+// TODO(jmesserly): we should probably return something here that supports
+// dispose, to unregister the mutation observer.
+void initializeComponents() {
+  _manager = new CustomElementsManager._();
   manager._loadComponents();
 }
 
@@ -73,9 +72,7 @@ class CustomElementsManager {
 
   MutationObserver _insertionObserver;
 
-  OnComponentCreate _onCreate;
-
-  CustomElementsManager._(this._onCreate) {
+  CustomElementsManager._() {
     // TODO(samhop): check for ShadowDOM support
     _customDeclarations = <_CustomDeclaration>{};
     // We use a ListMap because DOM objects aren't hashable right now.
@@ -273,7 +270,6 @@ WebComponentFactory _findWebComponentCtor(String ctorName) {
     var cls = lib.classes()[typeName];
     if (cls != null) {
       return (ShadowRoot shadowRoot, Element elt) {
-
         var future = cls.newInstance(ctorName,
             [mirror.mirrorOf(shadowRoot), mirror.mirrorOf(elt)]);
         // type check, use "as" when available.
@@ -363,7 +359,6 @@ class _CustomDeclaration {
     template.nodes.forEach((node) => shadowRoot.nodes.add(node.clone(true)));
 
     var newCustomElement = _createInstance(shadowRoot, e);
-    manager._onCreate(newCustomElement);
     manager._customElements[e] = newCustomElement;
     manager._expandDeclarations(shadowRoot, insert: false);
     newCustomElement.created();

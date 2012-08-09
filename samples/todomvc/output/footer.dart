@@ -21,12 +21,6 @@ class FooterComponent extends Component {
 
   int get remaining() => app.todos.length - doneCount;
 
-  void created() {
-    super.created();
-    // TODO(jmesserly): bind this automatically
-    manager[root.query("#condition")].shouldShow = (_) => anyDone;
-  }
-
   String get allClass() {
     if (window.location.hash == '' || window.location.hash == '#/') {
       return 'selected';

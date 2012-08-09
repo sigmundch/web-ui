@@ -16,6 +16,41 @@
 
 typedef void Action();
 
+// TODO(jmesserly): public so IfComponent can use it
+mirrorGet(Object instance, List<String> names) {
+  var mirror = currentMirrorSystem();
+  // Is it top level?
+  var global = mirrorGetGlobal(names[0]);
+  if (global != null) {
+    instance = global.reflectee;
+    names.removeRange(0, 1);
+  }
+
+  var self = mirror.mirrorOf(instance);
+  // Or is it implicit this?
+  for (var name in names) {
+    // TODO(jmesserly): is this sensible behavior?
+    //if (self.reflectee == null) break;
+    self = self.invoke('get:$name', []).value;
+  }
+  return self.reflectee;
+}
+
+ObjectMirror mirrorGetGlobal(String name) {
+  // TODO(jmesserly): this isn't the right way to search for globals... we need
+  // to know what Dart library we're starting the search from, so we handle
+  // library prefixes and imports properly.
+  // In general the template polyfill needs a scoping mechanism
+  var mirror = currentMirrorSystem();
+  for (var lib in mirror.libraries().getValues()) {
+    var member = lib.members()[name];
+    if (member != null) {
+      return lib.invoke('get:$name', []).value;
+    }
+  }
+  return null;
+}
+
 /**
  * Base component that has some common functionality used by our components.
  * Eventually the code for [bind] should be baked into every custom element
@@ -190,7 +225,7 @@ class Component extends WebComponent {
       WatcherDisposer disposer = null;
       lifecycleAction(() {
         // TODO(jmesserly): what about two way binding? Mutation observers?
-        disposer = bind(() => _mirrorGet(names), (e) {
+        disposer = bind(() => mirrorGet(this, names), (e) {
           if (key == "checked") {
             node.dynamic.checked = e.newValue;
           } else {
@@ -219,20 +254,9 @@ class Component extends WebComponent {
 
     WatcherDisposer disposer = null;
     lifecycleAction(() {
-      disposer = bind(() => _mirrorGet(names), (e) {
+      disposer = bind(() => mirrorGet(names), (e) {
         node.text = pattern.replaceFirst(re, '${e.newValue}');
       });
     }, () => disposer());
-  }
-
-  _mirrorGet(List<String> names) {
-    var mirror = currentMirrorSystem();
-    var self = mirror.mirrorOf(this);
-    for (var name in names) {
-      // TODO(jmesserly): is this sensible behavior?
-      //if (self.reflectee == null) break;
-      self = self.invoke('get:$name', []).value;
-    }
-    return self.reflectee;
   }
 }

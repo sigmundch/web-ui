@@ -42,7 +42,7 @@ main() {
 
 /** Create the views and bind them to models (will be auto-generated). */
 void _appSetUp() {
-  _componentsSetUp();
+  initializeComponents();
 
   // create view.
   var body = new DocumentFragment.html(INITIAL_PAGE);
@@ -53,21 +53,6 @@ void _appSetUp() {
 
   // attach view to the document.
   document.body.nodes.add(body);
-}
-
-/** Set up components used by this application (will be auto-generated). */
-void _componentsSetUp() {
-  initializeComponents((WebComponent comp) {
-    if (comp is IfComponent) {
-      var elem = comp.element;
-      var condition = elem.attributes['instantiate'].substring('if '.length);
-      if (condition == 'viewModel.hasElements') {
-        comp.shouldShow = (_) => viewModel.hasElements;
-      } else if (condition == 'viewModel.isVisible(x)') {
-        comp.shouldShow = (vars) => viewModel.isVisible(vars['x']);
-      }
-    }
-  });
 }
 
 /** DOM describing the initial view of the app (will be auto-generated). */
@@ -81,7 +66,7 @@ final INITIAL_PAGE = """
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
         <template iterate="{{x in app.todos}}" is="x-list">
-          <template instantiate="if viewModel.isVisible(x)" is="x-if">
+          <template instantiate="if x.isVisible" is="x-if">
             <li is="x-todo-row" data-todo="x"></li>
           </template>
         </template>
