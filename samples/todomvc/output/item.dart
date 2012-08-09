@@ -18,12 +18,6 @@ class TodoItemComponent extends Component {
   String get itemClass() =>
       _editing ? 'editing' : (todo.done ? 'completed' : '');
 
-  void created() {
-    super.created();
-    // TODO(jmesserly): bind this automatically
-    todo = scopedVariables[element.attributes['data-todo']];
-  }
-
   void edit() {
     _editing = true;
   }

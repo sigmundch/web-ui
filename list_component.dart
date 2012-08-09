@@ -4,6 +4,7 @@
 
 #library('list_component');
 
+#import('dart:mirrors');
 #import('dart:html');
 #import('component.dart');
 #import('watcher.dart');
@@ -43,13 +44,25 @@ class ListComponent extends Component {
           n.remove();
         }
       }
-      for (var x in items()) {
+      for (var item in items()) {
         var child = _childTemplate.clone(true);
-        var component = manager.expandElement(child);
         // TODO(jmesserly): should support children that aren't WebComponents
-        component.scopedVariables = new Map.from(scopedVariables);
-        component.scopedVariables[_loopVar] = x;
+        manager.expandElement(child);
+        _expandLoopVariable(child, item);
+
         _parent.nodes.add(child);
+      }
+    });
+  }
+
+  void _expandLoopVariable(Element node, Object item) {
+    for (var child in node.elements) _expandLoopVariable(child);
+
+    node.dataAttributes.forEach((key, value) {
+      if (key.startsWith('bind-') && value == _loopVar) {
+        var component = manager[node];
+        String name = key.substring('bind-'.length);
+        currentMirrorSystem().mirrorOf(component).setField(name, item);
       }
     });
   }

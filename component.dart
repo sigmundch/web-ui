@@ -16,40 +16,6 @@
 
 typedef void Action();
 
-// TODO(jmesserly): public so IfComponent can use it
-mirrorGet(Object instance, List<String> names) {
-  var mirror = currentMirrorSystem();
-  // Is it top level?
-  var global = mirrorGetGlobal(names[0]);
-  if (global != null) {
-    instance = global.reflectee;
-    names.removeRange(0, 1);
-  }
-
-  var self = mirror.mirrorOf(instance);
-  // Or is it implicit this?
-  for (var name in names) {
-    // TODO(jmesserly): is this sensible behavior?
-    //if (self.reflectee == null) break;
-    self = self.invoke('get:$name', []).value;
-  }
-  return self.reflectee;
-}
-
-ObjectMirror mirrorGetGlobal(String name) {
-  // TODO(jmesserly): this isn't the right way to search for globals... we need
-  // to know what Dart library we're starting the search from, so we handle
-  // library prefixes and imports properly.
-  // In general the template polyfill needs a scoping mechanism
-  var mirror = currentMirrorSystem();
-  for (var lib in mirror.libraries().getValues()) {
-    var member = lib.members()[name];
-    if (member != null) {
-      return lib.invoke('get:$name', []).value;
-    }
-  }
-  return null;
-}
 
 /**
  * Base component that has some common functionality used by our components.
@@ -80,17 +46,17 @@ class Component extends WebComponent {
   MutationObserver _observer;
 
   /**
-   * Names in the declared scope of this component in a template, and their
-   * corresponding values.
+   * The component that we use to lookup bindings. Generally this is the
+   * component corresponding to the lexically enclosing `<element>` tag. For the
+   * application this is the controller class.
    */
-  Map<String, Dynamic> scopedVariables;
+  var declaringScope;
 
   Component(this.name, this._root, this._element)
       : id = _id++,
         // TODO(jmesserly): initialize lazily
         _insertActions = [],
         _removeActions = [] {
-    scopedVariables = {'this': this};
   }
 
   // TODO(jmesserly): rename these shadowRoot and host?
@@ -254,9 +220,42 @@ class Component extends WebComponent {
 
     WatcherDisposer disposer = null;
     lifecycleAction(() {
-      disposer = bind(() => mirrorGet(names), (e) {
+      disposer = bind(() => mirrorGet(this, names), (e) {
         node.text = pattern.replaceFirst(re, '${e.newValue}');
       });
     }, () => disposer());
+  }
+
+  // TODO(jmesserly): public so IfComponent can use it
+  mirrorGet(scope, List<String> names) {
+    var mirror = currentMirrorSystem();
+    // Is it declared at the top level?
+    var global = _mirrorGetGlobal(names[0]);
+    if (global != null) {
+      scope = global.reflectee;
+      names.removeRange(0, 1);
+    }
+
+    var self = mirror.mirrorOf(scope);
+    // Or is it implicit this?
+    for (var name in names) {
+      self = self.getField(name).value;
+    }
+    return self.reflectee;
+  }
+
+  static ObjectMirror _mirrorGetGlobal(String name) {
+    // TODO(jmesserly): this isn't the right way to search for globals... we need
+    // to know what Dart library we're starting the search from, so we handle
+    // library prefixes and imports properly.
+    // In general the template polyfill needs a scoping mechanism
+    var mirror = currentMirrorSystem();
+    for (var lib in mirror.libraries().getValues()) {
+      var member = lib.members()[name];
+      if (member != null) {
+        return lib.getField(name).value;
+      }
+    }
+    return null;
   }
 }

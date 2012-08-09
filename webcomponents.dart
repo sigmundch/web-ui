@@ -21,6 +21,11 @@
 #import('dart:html');
 #import('dart:mirrors');
 
+// TODO(jmesserly): this is here so we can set up the lexical scopes.
+// A component needs a way of knowing the <element> tag that was in scope for
+// template expansions.
+#import('component.dart');
+
 #source('lib/list_map.dart');
 
 // typedefs
@@ -134,8 +139,19 @@ class CustomElementsManager {
    * This calls the [created] event on a webcomponent, but it will not insert
    * the component in the DOM tree (and hence it won't call [inserted].
    */
-  List expandDeclarations(Element root) =>
-      _expandDeclarations(root, insert: false);
+  List expandDeclarations(Element root, declaringScope) {
+    var components = _expandDeclarations(root, insert: false);
+    for (var comp in components) {
+      // TODO(jmesserly): it's unfortunate we need to handle databinding here.
+      // I think this is a consequence of using custom elements as our
+      // controller.
+      if (comp is Component) {
+        print('setting $comp scope to: $declaringScope');
+        comp.declaringScope = declaringScope;
+      }
+    }
+    return components;
+  }
 
   /** Look for all custom elements uses and expand them appropriately. */
   List _expandDeclarations([Element root, bool insert = true]) {
@@ -360,7 +376,7 @@ class _CustomDeclaration {
 
     var newCustomElement = _createInstance(shadowRoot, e);
     manager._customElements[e] = newCustomElement;
-    manager._expandDeclarations(shadowRoot, insert: false);
+    manager.expandDeclarations(shadowRoot, newCustomElement);
     newCustomElement.created();
     manager._expandDeclarations(shadowRoot, insert: true);
 

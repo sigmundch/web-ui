@@ -37,18 +37,7 @@ class IfComponent extends Component {
     element.nodes.clear();
   }
 
-  // TODO(jmesserly): need to bind to the correct controller.
-  bool shouldShow() {
-    var names = condition.split('.');
-    /* !!!
-    var instance = scopedVariables[names[0]];
-    if (instance != null) {
-      names.removeRange(0, 1);
-    } else {
-      instance = this;
-    }*/
-    return mirrorGet(this, names);
-  }
+  bool shouldShow() => mirrorGet(declaringScope, condition.split('.'));
 
   void inserted() {
     _stopWatcher = bind(() => shouldShow(), (e) {
@@ -61,10 +50,9 @@ class IfComponent extends Component {
         if (_childId != null && _childId != '') {
           _child.id = _childId;
         }
-        manager.expandDeclarations(_child).forEach((component) {
-          component.scopedVariables = scopedVariables;
-          component.created();
-        });
+        for (var c in manager.expandDeclarations(_child, declaringScope)) {
+          c.created(); // ???
+        }
         element.parent.nodes.add(_child);
       }
     });
@@ -76,6 +64,8 @@ class IfComponent extends Component {
       _child.remove();
     }
   }
+
+  String toString() => "Component $name <$id>";
 }
 
 /**

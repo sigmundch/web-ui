@@ -46,7 +46,7 @@ void _appSetUp() {
 
   // create view.
   var body = new DocumentFragment.html(INITIAL_PAGE);
-  manager.expandDeclarations(body);
+  manager.expandDeclarations(body, viewModel);
 
   // attach model where needed.
   manager[body.query("[is=x-list]")].items = () => app.todos;
@@ -67,7 +67,7 @@ final INITIAL_PAGE = """
       <ul id="todo-list">
         <template iterate="{{x in app.todos}}" is="x-list">
           <template instantiate="if x.isVisible" is="x-if">
-            <li is="x-todo-row" data-todo="x"></li>
+            <li is="x-todo-row" data-bind-todo="x"></li>
           </template>
         </template>
       </ul>
