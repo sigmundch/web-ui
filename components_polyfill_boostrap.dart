@@ -19,12 +19,9 @@
 #library('webcomponents_bootstrap');
 
 #import('dart:html');
+#import('dart:uri');
 
-// TODO(jacobr): this is a complete hack.  Figure out the correct relative URL or
-// embed the polyfill script directly in this script.
-//String polyfilLibraryLocation = "../../../../dart-web-components/webcomponents.dart";
-
-String polyfilLibraryLocation = "http://127.0.0.1:3030/Users/jacobr/src/dart-web-components/webcomponents.dart";
+final POLYFILL_LIBRARY_PACKAGE = "package:webcomponents/webcomponents.dart";
 
 final int REQUEST_DONE = 4;
 
@@ -247,7 +244,7 @@ var PROXY_ELEMENT_MEMBERS = """
   List<Element> queryAll(String selectors) => _r.queryAll(selectors);
 """;
 
-Function afterN(Function callback, int count) {
+Function _afterN(Function callback, int count) {
   return () {
     assert(count > 0);
     count--;
@@ -266,9 +263,9 @@ void loadComponents() {
 
   var components = queryAll('link[rel=components]');
 
-  var callback = afterN(() { runComponents(declarations); }, components.length);
+  var callback = _afterN(() { runComponents(declarations); }, components.length);
   for(var link in components) {
-    var request = new XMLHttpRequest();
+    var request = new HttpRequest();
     request
       ..open('GET', link.href, async: true)
       ..on.readyStateChange.add((Event e) {
@@ -311,7 +308,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
   var sb = new StringBuffer()
     ..add("""
 #import("dart:html");
-#import("$polyfilLibraryLocation", prefix: "polyfill");
+#import("$POLYFILL_LIBRARY_PACKAGE", prefix: "polyfill");
 """);
 
   var sbMain = new StringBuffer()..add("void main() {");
@@ -331,10 +328,11 @@ void runComponents(List<CustomElementDeclaration> declarations) {
     }
 
     String libraryName =
-        const RegExp(@"([^/.]+)([^/]+)$").firstMatch(declaration.url).group(1);
+        const RegExp(@"([^/.]+)([^/]+)$").firstMatch(
+            new Uri(declaration.url).path).group(1);
     sbLibrary
       ..add('#library("$libraryName");\n')
-      ..add('#import("$polyfilLibraryLocation", prefix: "polyfill");\n')
+      ..add('#import("$POLYFILL_LIBRARY_PACKAGE", prefix: "polyfill");\n')
       ..add(sbLibraryHeader)..add("\n");
 
 
@@ -343,7 +341,8 @@ void runComponents(List<CustomElementDeclaration> declarations) {
       String tag = element.attributes['name'];
       String className = element.attributes['constructor'];
 
-      bool applyAuthorStyles = element.attributes.containsKey('apply-author-styles');
+      bool applyAuthorStyles = element.attributes.containsKey(
+          'apply-author-styles');
       if (tag == null || tag.length == 0) {
         // TODO(samhop): friendlier errors
         window.console.error('name attribute is required');
@@ -368,7 +367,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
       }
       numDartCustomElements++;
       var classBody = script.text;
-      sbLibrary..add("""
+      sbLibrary.add("""
 class $className extends polyfill.WebComponent implements ${_tagToClassName[extendz]} {
   
   // Raw element the component is associated with.
@@ -427,7 +426,7 @@ $sbMain
        ..type = "application/dart")
     ..add(
       new ScriptElement()
-        ..src = "http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"
+        ..src = "//dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"
         ..type = "application/javascript");
 
 }
