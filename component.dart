@@ -37,9 +37,12 @@ class Component extends WebComponent {
 
   List<Action> _insertActions;
   List<Action> _removeActions;
+
   // TODO(jmesserly): you can also compute this from the DOM by walking the
   // parent chain.
   bool _inDocument = false;
+
+  MutationObserver _observer;
 
   /**
    * Names in the declared scope of this component in a template, and their
@@ -53,9 +56,6 @@ class Component extends WebComponent {
         _insertActions = [],
         _removeActions = [] {
     scopedVariables = {'this': this};
-    // TODO(jmesserly): need to support things that are dynamically added
-    // And ensure we're properly scoped.
-    _bindData(_root);
   }
 
   // TODO(jmesserly): rename these shadowRoot and host?
@@ -66,12 +66,30 @@ class Component extends WebComponent {
   void created() => print('$name $id-created');
 
   void inserted() {
+    // TODO(jmesserly): is this too late to bind data? If we bind it any
+    // earlier, we won't have mutation observer set up, and might miss changes.
+    _bindDataRecursive(_root);
+
+    _observer = new MutationObserver((mutations, observer) {
+      for (var mutation in mutations) {
+        // TODO(samhop): remove this test if it turns out that it always passes
+        if (mutation.type == 'childList') {
+          for (var node in mutation.addedNodes) {
+            if (node is Element) _bindData(node);
+          }
+        }
+      }
+    });
+    _observer.observe(_root, childList: true, subtree: true);
+
     for (var action in _insertActions) action();
     print('$name $id-inserted');
     _inDocument = true;
   }
 
   void removed() {
+    _observer.disconnect();
+
     for (var action in _removeActions) action();
     print('$name $id-removed');
     _inDocument = false;
@@ -105,10 +123,16 @@ class Component extends WebComponent {
     return res;
   }
 
-  void _bindData(Element node) {
-    // TODO(jmesserly): this full tree walk is problematic
-    for (var child in node.elements) _bindData(child);
+  void _bindDataRecursive(Element node) {
+    if (manager[node] != null) return;
 
+    // TODO(jmesserly): this full tree walk is problematic
+    for (var child in node.elements) _bindDataRecursive(child);
+
+    _bindData(node);
+  }
+
+  void _bindData(Element node) {
     _bindEvents(node);
     _bindAttributes(node);
     _bindText(node);
