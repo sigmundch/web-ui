@@ -38,9 +38,13 @@ CustomElementsManager get manager() => _manager;
 
 // TODO(jmesserly): we should probably return something here that supports
 // dispose, to unregister the mutation observer.
-void initializeComponents() {
+/**
+ * Initialize web components, optionally with the controller to use for data
+ * binding.
+ */
+void initializeComponents([controller]) {
   _manager = new CustomElementsManager._();
-  manager._loadComponents();
+  manager._loadComponents(controller);
 }
 
 /** A Dart wrapper for a web component. */
@@ -90,9 +94,10 @@ class CustomElementsManager {
    * Locate all external component files, load each of them, and expand
    * declarations.
    */
-  void _loadComponents() {
+  void _loadComponents(declaringScope) {
     queryAll('link[rel=components]').forEach((link) => _load(link.href));
-    _expandDeclarations();
+    expandDeclarations(null, declaringScope);
+    manager._expandDeclarations(null, insert: true);
   }
 
   /**
@@ -158,7 +163,7 @@ class CustomElementsManager {
     var target;
     var rootUnderTemplate = false;
     if (root == null) {
-      target = document;
+      target = document.body;
     } else {
       target = root;
       rootUnderTemplate = root.matchesSelector('template *');
