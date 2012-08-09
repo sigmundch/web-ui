@@ -38,20 +38,20 @@ class IfComponent extends Component {
   }
 
   // TODO(jmesserly): need to bind to the correct controller.
-  bool shouldShow(variables) {
+  bool shouldShow() {
     var names = condition.split('.');
-    var instance = variables[names[0]];
+    /* !!!
+    var instance = scopedVariables[names[0]];
     if (instance != null) {
       names.removeRange(0, 1);
     } else {
       instance = this;
-    }
-    print('lookup $condition on $instance');
-    return mirrorGet(instance, names);
+    }*/
+    return mirrorGet(this, names);
   }
 
   void inserted() {
-    _stopWatcher = bind(() => shouldShow(scopedVariables), (e) {
+    _stopWatcher = bind(() => shouldShow(), (e) {
       bool showNow = e.newValue;
       if (_child != null && !showNow) {
         _child.remove();
