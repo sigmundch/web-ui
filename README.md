@@ -40,15 +40,11 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build these from the
 [Dartium and DRT sources][drtsrc].
 
+    # To compile the mdv one template example
+    tools/tool template samples/mdv_one/mdv_one/views.tmpl
 
 [wc]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html
 [mdv]: http://code.google.com/p/mdv/
 [d]: http://www.dartlang.org
 [mb]: http://www.dartlang.org/support/faq.html#what-browsers-supported
 [pub]: http://www.dartlang.org/docs/pub-package-manager/
-[Dartium]: http://www.dartlang.org/dartium/index.html
-[drt]: http://www.chromium.org/developers/testing/webkit-layout-tests
-[drtlucid]: http://gsdview.appspot.com/dartium-archive/continuous/drt-lucid64.zip
-[drtmac]: http://gsdview.appspot.com/dartium-archive/continuous/drt-mac.zip
-[drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
-[drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium

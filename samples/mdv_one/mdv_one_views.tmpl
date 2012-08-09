@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>Forms Validation</title>
+  </head>
+  <body data-controller="FormController">
+    <form>
+      <template instantiate>
+        <button disabled="{{ invalid }}">Submit</button><br>
+        Email <input type="text" value="{{ email }}" autofocus="autofocus"><br>
+        Repeat Email: <input type="text" value="{{ repeatEmail }}"><br>
+        <input type="checkbox" checked="{{ agree }}"> I agree<br>
+        <button disabled="{{ invalid }}">Submit</button>
+      </template>
+    </form>
+  </body>
+</html>
