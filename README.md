@@ -12,7 +12,7 @@ We believe that:
 - Web Components are on their way, we should start using them now.
 - Cool new features should be made available to [modern browsers][mb] that
   haven't yet implemented them.
-- Write/Reload is just as important as write/compile/minimize/ship.
+- Write/reload is just as important as write/compile/minimize/ship.
 - Working in open source is the way to go.
 - Developers from all backgrounds should be building awesome modern web apps.
 
