@@ -48,9 +48,6 @@ void _appSetUp() {
   var body = new DocumentFragment.html(INITIAL_PAGE);
   manager.expandDeclarations(body, viewModel);
 
-  // attach model where needed.
-  manager[body.query("[is=x-list]")].items = () => app.todos;
-
   // attach view to the document.
   document.body.nodes.add(body);
 }

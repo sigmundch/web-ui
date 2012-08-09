@@ -16,6 +16,27 @@
 
 typedef void Action();
 
+// TODO(jmesserly): I don't like having this scope class, but we can't fake a
+// Dart object declaring this variable due to dartbug.com/4424.
+class ComponentScope {
+  final parent;
+  final Map variables;
+
+  ComponentScope(parent, this.variables)
+      : parent = parent is ComponentScope ? parent.dynamic.parent : parent {
+
+    if (parent is ComponentScope) {
+      // add variables from parent unless it's shadowed.
+      ComponentScope scope = parent;
+      scope.forEach((key, value) {
+        if (!variables.contains(key)) {
+          variables[key] = value;
+        }
+      });
+    }
+  }
+}
+
 
 /**
  * Base component that has some common functionality used by our components.
@@ -67,6 +88,10 @@ class Component extends WebComponent {
   void created() => print('$name $id-created');
 
   void inserted() {
+    print('$name $id-inserted');
+
+    _bindFields();
+
     // TODO(jmesserly): is this too late to bind data? If we bind it any
     // earlier, we won't have mutation observer set up, and might miss changes.
     _bindDataRecursive(_root);
@@ -84,15 +109,15 @@ class Component extends WebComponent {
     _observer.observe(_root, childList: true, subtree: true);
 
     for (var action in _insertActions) action();
-    print('$name $id-inserted');
     _inDocument = true;
   }
 
   void removed() {
+    print('$name $id-removed');
+
     _observer.disconnect();
 
     for (var action in _removeActions) action();
-    print('$name $id-removed');
     _inDocument = false;
   }
 
@@ -134,6 +159,7 @@ class Component extends WebComponent {
   }
 
   void _bindData(Element node) {
+    // TODO(jmesserly): all of these guys share the same basic structure.
     _bindEvents(node);
     _bindAttributes(node);
     _bindText(node);
@@ -162,7 +188,6 @@ class Component extends WebComponent {
 
       var self = mirror.mirrorOf(this);
       var caller = (e) {
-        print('$name $id on-$key fired');
         // TODO(jmesserly): shouldn't we pass in event args somehow?
         // var args = [mirror.mirrorOf(e)];
         var future = self.invoke(method, []);
@@ -186,12 +211,11 @@ class Component extends WebComponent {
       if (!value.startsWith('{{') || !value.endsWith('}}')) return;
 
       value = value.substring(2, value.length - 2);
-      var names = value.split('.');
 
       WatcherDisposer disposer = null;
       lifecycleAction(() {
         // TODO(jmesserly): what about two way binding? Mutation observers?
-        disposer = bind(() => mirrorGet(this, names), (e) {
+        disposer = bind(() => mirrorGet(this, value).reflectee, (e) {
           if (key == "checked") {
             node.dynamic.checked = e.newValue;
           } else {
@@ -216,39 +240,76 @@ class Component extends WebComponent {
     if (match == null) return;
 
     var expr = match[1];
-    var names = expr.split('.');
 
     WatcherDisposer disposer = null;
     lifecycleAction(() {
-      disposer = bind(() => mirrorGet(this, names), (e) {
+      disposer = bind(() => mirrorGet(this, expr).reflectee, (e) {
         node.text = pattern.replaceFirst(re, '${e.newValue}');
       });
     }, () => disposer());
   }
 
+  void _bindFields() {
+    element.dataAttributes.forEach((key, value) {
+      if (key.startsWith('bind-')) {
+        String name = key.substring('bind-'.length);
+
+        var self = currentMirrorSystem().mirrorOf(this);
+        self.setField(name, mirrorGet(declaringScope, value));
+
+        // TODO(jmesserly): watcher is overkill for the common case of a loop
+        // variable.
+        WatcherDisposer disposer = null;
+        lifecycleAction(() {
+          disposer = watch(() => mirrorGet(declaringScope, value), (e) {
+            self.setField(name, e.newValue);
+          });
+        }, () => disposer());
+      }
+    });
+  }
+
   // TODO(jmesserly): public so IfComponent can use it
-  mirrorGet(scope, List<String> names) {
+  InstanceMirror mirrorGet(scope, String identifier) {
+    var names = identifier.split('.');
+
+    // TODO(jmesserly): search order is wrong. Loop vars should be first
+    // (they're the nearest enclosing scope), then controller class,
+    // then global, then controller superclasses (Dart is lexical before
+    // inherited scope).
     var mirror = currentMirrorSystem();
+
+    // Is it a loop variable?
+    var item = null;
+    if (scope is ComponentScope) {
+      item = scope.dynamic.variables[names[0]];
+      if (item != null) {
+        scope = item;
+        names.removeRange(0, 1);
+      }
+    }
+
     // Is it declared at the top level?
-    var global = _mirrorGetGlobal(names[0]);
-    if (global != null) {
-      scope = global.reflectee;
-      names.removeRange(0, 1);
+    if (item == null) {
+      var global = _mirrorGetGlobal(names[0]);
+      if (global != null) {
+        scope = global.reflectee;
+        names.removeRange(0, 1);
+      }
     }
 
     var self = mirror.mirrorOf(scope);
-    // Or is it implicit this?
     for (var name in names) {
       self = self.getField(name).value;
     }
-    return self.reflectee;
+    return self;
   }
 
   static ObjectMirror _mirrorGetGlobal(String name) {
-    // TODO(jmesserly): this isn't the right way to search for globals... we need
-    // to know what Dart library we're starting the search from, so we handle
-    // library prefixes and imports properly.
-    // In general the template polyfill needs a scoping mechanism
+    // TODO(jmesserly): this isn't the right way to search for globals... we
+    // need to know what Dart library we're starting the search from, so we
+    // handle library prefixes and imports properly.
+    // In general the template polyfill needs a scoping mechanism.
     var mirror = currentMirrorSystem();
     for (var lib in mirror.libraries().getValues()) {
       var member = lib.members()[name];

@@ -14,16 +14,21 @@
  * A web component implementing `<template iterate=...>`.
  */
 class ListComponent extends Component {
-  Getter<List> items;
-  final String _loopVar;
+  String _loopVar;
+  String _loopItems;
   Element _childTemplate;
   Element _parent;
   WatcherDisposer _stopWatcher;
 
   ListComponent(root, elem)
-    : super('list', root, elem),
-      _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
-          elem.attributes['iterate']).group(1);
+      : super('list', root, elem) {
+    var match = const RegExp(@"{{(.*) in (.*)}}").firstMatch(
+          elem.attributes['iterate']);
+    _loopVar = match.group(1);
+    _loopItems = match.group(2);
+  }
+
+  List items() => mirrorGet(declaringScope, _loopItems).reflectee;
 
   void created() {
     // TODO(sigmund): support document fragments, not just a single child.
@@ -47,22 +52,10 @@ class ListComponent extends Component {
       for (var item in items()) {
         var child = _childTemplate.clone(true);
         // TODO(jmesserly): should support children that aren't WebComponents
-        manager.expandElement(child);
-        _expandLoopVariable(child, item);
+        manager.expandDeclarations(child,
+            new ComponentScope(declaringScope, new Map()..[_loopVar] = item));
 
         _parent.nodes.add(child);
-      }
-    });
-  }
-
-  void _expandLoopVariable(Element node, Object item) {
-    for (var child in node.elements) _expandLoopVariable(child);
-
-    node.dataAttributes.forEach((key, value) {
-      if (key.startsWith('bind-') && value == _loopVar) {
-        var component = manager[node];
-        String name = key.substring('bind-'.length);
-        currentMirrorSystem().mirrorOf(component).setField(name, item);
       }
     });
   }

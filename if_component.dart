@@ -37,7 +37,7 @@ class IfComponent extends Component {
     element.nodes.clear();
   }
 
-  bool shouldShow() => mirrorGet(declaringScope, condition.split('.'));
+  bool shouldShow() => mirrorGet(declaringScope, condition).reflectee;
 
   void inserted() {
     _stopWatcher = bind(() => shouldShow(), (e) {
@@ -50,9 +50,7 @@ class IfComponent extends Component {
         if (_childId != null && _childId != '') {
           _child.id = _childId;
         }
-        for (var c in manager.expandDeclarations(_child, declaringScope)) {
-          c.created(); // ???
-        }
+        manager.expandDeclarations(_child, declaringScope);
         element.parent.nodes.add(_child);
       }
     });

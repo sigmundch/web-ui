@@ -146,7 +146,6 @@ class CustomElementsManager {
       // I think this is a consequence of using custom elements as our
       // controller.
       if (comp is Component) {
-        print('setting $comp scope to: $declaringScope');
         comp.declaringScope = declaringScope;
       }
     }
