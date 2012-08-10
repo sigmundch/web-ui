@@ -1,0 +1,67 @@
+#!/bin/bash
+# Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+# for details. All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
+
+# Script to run all tests in the webcomponents package. For this script to run
+# correctly, you need to have a SDK installation and set the following
+# environment variable:
+#   > export DART_SDK=<SDK location>
+#
+# If you already have a dart_lang checkout, you can build the SDK directly.
+
+DART=$DART_SDK/bin/dart
+
+# Minimum/Maximum number of arguments
+MINARGS=2
+MAXARGS=3
+
+# get the number of command-line arguments given
+ARGC=$#
+
+SRCFILE=
+OUTFILE=
+
+# check to make sure enough arguments were given or exit
+if [[ $ARGC -eq $MINARGS ]]; then
+  SRCFILE=$PWD/$2
+  IDX=`expr index "$SRCFILE" .` 
+  if [[ $IDX -eq 0 ]]; then
+    # No extension
+    SRCFILE="$SRCFILE.tmpl"
+    OUTFILE="$SRCFILE.tmpl.dart"
+  else
+    SRCFILE="$SRCFILE"
+    OUTFILE="$SRCFILE.dart"
+  fi
+elif [[ $ARGC -eq 3 ]]; then
+  SRCFILE="$PWD/$2"
+  OUTFILE="$PWD/$3"
+elif [[ $ARGC -lt $MINARGS ]]; then
+  echo -e "\033[31mToo few arguments given (Minimum $MINARGS argument)\033[0m"
+  echo -e ""
+  echo -e "  Format is ./tools/run-tool toolName sourceFile [outputFile] where"
+  echo -e "     toolName is template"
+  exit 1
+elif [[ $ARGC -gt $MAXARGS ]]; then
+  echo -e "\033[31mToo many arguments\033[0m"
+  exit 1
+fi
+
+if [ "$SRCFILE" = "$OUTFILE" ]; then
+  echo -e "\033[31msource file must be different from the output file \033[0m"
+  echo -e "source file: $SRCFILE"
+  echo -e "output file: $OUTFILE"
+  exit 1
+fi
+
+if [ "$1" = "template" ]; then
+  # Path of this bash script.
+  BASE_DIR=`cd $(dirname $0) && pwd`
+
+  # Pre-process the file
+  $DART --package-root=packages/ $BASE_DIR/$1/tool.dart $SRCFILE $OUTFILE
+else
+  echo -e "\033[31mOnly template tool supported. \033[0m"
+fi
+
