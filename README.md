@@ -34,9 +34,6 @@ Dependencies are installed using the [Pub Package Manager][pub].
     export DART_PACKAGE_ROOT=file://`pwd`/packages
     dartium --allow-file-access-from-files browser_tests.html
 
-    # To compile the mdv one template example
-    tools/tool template samples/mdv_one/mdv_one/views.tmpl
-
 You can run `browser_tests.html` from [Dartium][Dartium] launched with
 `--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][drt],
 which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
@@ -48,3 +45,5 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [d]: http://www.dartlang.org
 [mb]: http://www.dartlang.org/support/faq.html#what-browsers-supported
 [pub]: http://www.dartlang.org/docs/pub-package-manager/
+[Dartium]: http://www.dartlang.org/dartium/index.html
+[drt]: http://www.chromium.org/developers/testing/webkit-layout-tests

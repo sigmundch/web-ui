@@ -44,7 +44,7 @@ elif [[ $ARGC -lt $MINARGS ]];
 then
   echo -e "\033[31mToo few arguments given (Minimum $MINARGS argument)\033[0m"
   echo -e ""
-  echo -e "  Format is ./tools/tool toolName sourceFile [outputFile] where"
+  echo -e "  Format is ./tools/run-tool toolName sourceFile [outputFile] where"
   echo -e "     toolName is template"
   exit 1
 elif [[ $ARGC -gt $MAXARGS ]];
