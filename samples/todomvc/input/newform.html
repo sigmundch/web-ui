@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
 <body>
+<script type='application/dart'>
+  #library('newform');
+  #import('model.dart');
+</script>
 <element name="x-todo-form" extends="div" constructor="FormComponent"
          apply-author-styles>
   <template>
@@ -14,10 +18,6 @@
     }
   </script>
 </element>
-<script>
-  #library('newform');
-  #import('model.dart');
-</script>
 </body>
 </html>
 

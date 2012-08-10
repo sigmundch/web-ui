@@ -1,5 +1,9 @@
 <html>
 <body>
+<script type='application/dart'>
+  #library('toggleall');
+  #import('model.dart');
+</script>
 <element name="x-toggle-all" extends="div" constructor="ToggleComponent"
          apply-author-styles>
   <template>
@@ -14,9 +18,5 @@
     void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
   </script>
 </element>
-<script>
-  #library('toggleall');
-  #import('model.dart');
-</script>
 </body>
 </html>

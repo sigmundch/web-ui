@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
 <body>
+<script type='application/dart'>
+  #library('todoitem');
+  #import('model.dart');
+</script>
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles>
   <template>
@@ -30,9 +34,5 @@
     }
   </script>
 </element>
-<script>
-  #library('todoitem');
-  #import('model.dart');
-</script>
 </body>
 </html>
