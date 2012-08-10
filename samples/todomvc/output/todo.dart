@@ -5,12 +5,7 @@
 /**
  * TodoMVC sample application written with web-components and manually bound
  * models. This example illustrates what the executable code would look like for
- * an application written using Dart-adapted MDV-style templates. It can also be
- * used as a guideline for how our tools will generate code from the template
- * input.
- *
- * See the sibling 'input' directory to visualize what users would write to get
- * the code (manually) generated here.
+ * an application written using Dart-adapted MDV-style templates.
  */
 #library('output_todo');
 
