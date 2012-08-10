@@ -1,5 +1,9 @@
 <html>
 <body>
+<script type='application/dart'>
+  #library('toggleall');
+  #import('model.dart');
+</script>
 <element name="x-toggle-all" extends="div" constructor="ToggleComponent"
          apply-author-styles>
   <template>
@@ -8,15 +12,10 @@
     <label for="toggle-all">Mark all as complete</label>
   </template>
   <script>
-    #library('toggleall');
-    #import('model.dart');
+    bool get allChecked () => app.todos.length > 0 && 
+        app.todos.every((t) => t.done);
 
-    class ToggleComponent {
-      bool get allChecked () => app.todos.length > 0 && 
-          app.todos.every((t) => t.done);
-
-      void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
-    }
+    void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
   </script>
 </element>
 </body>

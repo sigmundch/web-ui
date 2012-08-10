@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
 <body>
+<script type='application/dart'>
+  #library('todoitem');
+  #import('model.dart');
+</script>
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles>
   <template>
@@ -18,20 +22,15 @@
     </div>
   </template>
   <script>
-    #library('todoitem');
-    #import('model.dart');
-    
-    class TodoItemComponent extends Component {
-      Todo todo;
-      bool _editing = false;
+    Todo todo;
+    bool _editing = false;
 
-      void edit() {
-        _editing = true;
-      }
+    void edit() {
+      _editing = true;
+    }
 
-      void update() {
-        _editing = false;
-      }
+    void update() {
+      _editing = false;
     }
   </script>
 </element>
