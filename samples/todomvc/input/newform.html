@@ -8,17 +8,16 @@
            data-on-change="{{addTodo}}">
   <template>
   <script>
-    #library('newform');
-    #import('model.dart');
-
-    class FormComponent {
-      void addTodo() {
-        app.todos.add(new Todo(_newTodo.value));
-        _newTodo.value = '';
-      }
+    void addTodo() {
+      app.todos.add(new Todo(_newTodo.value));
+      _newTodo.value = '';
     }
   </script>
 </element>
+<script>
+  #library('newform');
+  #import('model.dart');
+</script>
 </body>
 </html>
 
