@@ -4,15 +4,15 @@
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles>
   <template>
-    <!-- TODO(sigmund): are arbitrary expressions like this allowed in MDV? -->
-    <div id='todo-item' class="{{_editing ? 'editing' : (todo.done ? 'completed' : '')}}">
+    <div id='todo-item' class="{{itemClass}}">
       <div class="view" data-on-dblclick="edit()">
-        <input id="checkbox" class="toggle" type="checkbox" checked={{todo.done}}>
+        <input id="checkbox" class="toggle" type="checkbox"
+            checked="{{todo.done}}" data-on-click="markDone()">
         <label id="label">{{todo.task}}</label>
         <button class="destroy" data-on-click="delete()"></button>
       </div>
       <form data-on-submit="update()">
-        <input class="edit" data-bind-model="{{todo.task}}"
+        <input class="edit" value="{{todo.task}}"
                data-on-blur="update()" autofocus>
       </form>
     </div>
