@@ -27,7 +27,7 @@ Dependencies are installed using the [Pub Package Manager][pub].
     pub install
 
     # Run command line tests
-    #export DART_SDK=path/to/dart/sdk
+    # If needed: export DART_SDK=path/to/dart/sdk
     tests/run.sh
 
     # Run browser tests
