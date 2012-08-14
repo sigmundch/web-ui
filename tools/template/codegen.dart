@@ -2,6 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+#library('codegen');
+
+#import('../css/css.dart', prefix:'css');
+#import('../lib/world.dart');
+#import('tokenkind.dart');
+#import('htmltree.dart');
+
 /**
  * CodeGen block used for a set of statements to be emited wrapped around a
  * template control that implies a block (e.g., iterate, with, etc.).  The

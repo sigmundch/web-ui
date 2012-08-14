@@ -11,7 +11,10 @@
 #import('../lib/world.dart');
 #import('../lib/source.dart');
 #import('../lib/cmd_options.dart');
+
 #import('template.dart');
+#import('codegen.dart');
+#import('htmltree.dart');
 
 FileSystem files;
 
