@@ -6,8 +6,8 @@
 
 #import('../css/css.dart', prefix:'css');
 #import('../lib/world.dart');
-#import('tokenkind.dart');
 #import('htmltree.dart');
+#import('tokenkind.dart');
 
 /**
  * CodeGen block used for a set of statements to be emited wrapped around a

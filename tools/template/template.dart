@@ -6,10 +6,11 @@
 
 #import('dart:coreimpl');
 #import('package:args/args.dart');
-#import('../lib/file_system_memory.dart');
-#import('../lib/world.dart');
-#import('../lib/source.dart');
+
 #import('../lib/cmd_options.dart');
+#import('../lib/file_system_memory.dart');
+#import('../lib/source.dart');
+#import('../lib/world.dart');
 
 #import('parser.dart');
 #import('htmltree.dart');

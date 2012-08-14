@@ -1,13 +1,13 @@
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 
-#library('htmlparser');
+#library('html5parser');
 
 #import('../css/css.dart', prefix:'css');
 #import('../lib/source.dart');
+#import('htmltree.dart');
 #import('tokenizer.dart');
 #import('tokenkind.dart');
-#import('htmltree.dart');
 
 class TagStack {
   List<TreeNode> _stack;

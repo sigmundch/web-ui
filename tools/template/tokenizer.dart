@@ -5,6 +5,7 @@
 #library('tokenizer');
 
 #import('tokenkind.dart');
+
 #source('token.dart');
 #source('tokenizer_base.dart');
 
