@@ -6,13 +6,14 @@
 
 #import('dart:coreimpl');
 #import('package:args/args.dart');
+#import('../../lib/html5parser/parser.dart');
+#import('../lib/cmd_options.dart');
 #import('../lib/file_system_memory.dart');
-#import('../lib/world.dart');
 #import('../lib/source.dart');
 #import('../lib/cmd_options.dart');
-#import('../../lib/html5parser/html5parser.dart');
+#import('../lib/world.dart');
+#import('codegen.dart');
 
-#source('codegen.dart');
 #source('utils.dart');
 
 ArgParser commandOptions() {

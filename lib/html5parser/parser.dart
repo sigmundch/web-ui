@@ -2,6 +2,29 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+/**
+ * An HTML5 parser written in Dart. Intended for tools and server side usage.
+ *
+ * Eventually this should parse all valid html documents using the
+ * [html5 parsing algorithm][p], although it doesn't do this yet.
+ *
+ * Also, the parse tree should eventually look like the DOM in the `dart:html`
+ * library, and support the subset of operations that make sense without a
+ * browser environment.
+ *
+ * [p]: http://dev.w3.org/html5/spec/parsing.html#parsing
+ */
+// TODO(jmesserly): we might want a more general name along the lines
+// of http://code.google.com/p/html5lib/, because this may eventually support
+// more than just parsing.
+#library('html5parser');
+
+#import('../../tools/css/css.dart', prefix:'css');
+#import('../../tools/lib/source.dart');
+#import('htmltree.dart');
+#import('tokenizer.dart');
+#import('tokenkind.dart');
+
 class TagStack {
   List<TreeNode> _stack;
 

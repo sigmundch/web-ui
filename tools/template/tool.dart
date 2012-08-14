@@ -6,11 +6,13 @@
 
 #import('dart:io');
 #import('package:args/args.dart');
+
+#import('../lib/cmd_options.dart');
 #import('../lib/file_system.dart');
 #import('../lib/file_system_vm.dart');
-#import('../lib/world.dart');
 #import('../lib/source.dart');
-#import('../lib/cmd_options.dart');
+#import('../lib/world.dart');
+#import('codegen.dart');
 #import('template.dart');
 
 FileSystem files;
@@ -47,6 +49,14 @@ void main() {
     return;
   }
 
+  files = new VMFileSystem();
+
+  // TODO(terry): Cleanup options handling need common options between template
+  //              and CSS parsers also cleanup above cruft.
+
+  // TODO(terry): Pass on switches.
+  initHtmlWorld(parseOptions(results, files));
+
   // argument 0 - sourcefile full path
   // argument 1 - outputfile full path
   String sourceFullFn = results.rest[0];
@@ -55,7 +65,7 @@ void main() {
   File fileSrc = new File(sourceFullFn);
 
   if (!fileSrc.existsSync()) {
-    world.fatal("Source file doesn't exist - sourceFullFn");
+    world.fatal("Source file doesn't exist - $sourceFullFn");
   }
 
   Directory sourcePath = fileSrc.directorySync();
@@ -74,14 +84,6 @@ void main() {
 
   String outFileNameNoExt =
       outPath.filenameWithoutExtension.replaceAll('.', '_');
-
-  files = new VMFileSystem();
-
-  // TODO(terry): Cleanup options handling need common options between template
-  //              and CSS parsers also cleanup above cruft.
-
-  // TODO(terry): Pass on switches.
-  initHtmlWorld(parseOptions(results, files));
 
   if (!files.fileExists(sourceFullFn)) {
     // Display colored error message if file is missing.
