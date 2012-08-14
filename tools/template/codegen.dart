@@ -4,10 +4,10 @@
 
 #library('codegen');
 
+#import('../../lib/html5parser/tokenkind.dart');
+#import('../../lib/html5parser/htmltree.dart');
 #import('../css/css.dart', prefix:'css');
 #import('../lib/world.dart');
-#import('htmltree.dart');
-#import('tokenkind.dart');
 
 /**
  * CodeGen block used for a set of statements to be emited wrapped around a

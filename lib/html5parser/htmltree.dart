@@ -5,7 +5,7 @@
 
 #library('htmltree');
 
-#import('../lib/source.dart');
+#import('../../tools/lib/source.dart');
 #import('tokenkind.dart');
 
 #source('tree.dart');
