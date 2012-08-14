@@ -19,7 +19,6 @@
 // more than just parsing.
 #library('html5parser');
 
-#import('../../tools/css/css.dart', prefix:'css');
 #import('../../tools/lib/source.dart');
 #import('htmltree.dart');
 #import('tokenizer.dart');
@@ -219,26 +218,6 @@ class Parser {
     }
   }
 
-  css.Stylesheet processCSS() {
-    // Is there a CSS block?
-    if (_peekIdentifier('css')) {
-      _next();
-
-      int start = _peekToken.start;
-      _eat(TokenKind.LBRACE);
-
-      css.Stylesheet cssCtx = processCSSContent(source, tokenizer.startIndex);
-
-      // TODO(terry): Hack, restart template parser where CSS parser stopped.
-      tokenizer.index = lastCSSIndexParsed;
-     _next(false);
-
-      _eat(TokenKind.RBRACE);       // close } of css block
-
-      return cssCtx;
-    }
-  }
-
   // TODO(terry): get should be able to use all template control flow but return
   //              a string instead of a node.  Maybe expose both html and get
   //              e.g.,
@@ -324,26 +303,6 @@ class Parser {
     }
 
     return getters;
-  }
-
-  int lastCSSIndexParsed;       // TODO(terry): Hack, last good CSS parsed.
-
-  css.Stylesheet processCSSContent(var cssSource, int start) {
-    try {
-      SourceFile sf = new SourceFile(SourceFile.IN_MEMORY_FILE, cssSource.text);
-      css.Parser parser = new css.Parser(sf, start);
-
-      css.Stylesheet stylesheet = parser.parse(false, new ErrorMsgRedirector());
-
-      var lastParsedChar = parser.tokenizer.startIndex;
-
-      lastCSSIndexParsed = lastParsedChar;
-
-      return stylesheet;
-    } catch (final cssParseException) {
-      // TODO(terry): Need SourceSpan from CSS parser to pass onto _error.
-      _error("Unexcepted CSS error: ${cssParseException.toString()}");
-    }
   }
 
   processHTML(HTMLElement root) {
