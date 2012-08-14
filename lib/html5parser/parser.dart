@@ -45,18 +45,6 @@ class TagStack {
   }
 }
 
-// TODO(terry): Cleanup returning errors from CSS to common World error
-//              handler.
-class ErrorMsgRedirector {
-  void displayError(String msg) {
-    if (world.printHandler != null) {
-      world.printHandler(msg);
-    } else {
-      print("Unhandler Error: ${msg}");
-    }
-    world.errors++;
-  }
-}
 
 /**
  * A simple recursive descent parser for HTML.
@@ -421,7 +409,7 @@ class Parser {
    * find the var attribute.
    */
   Map<String, HTMLAttribute> processAttributes() {
-    Map<String, HTMLAttribute> attrs = new Map();
+    var attrs = new Map<String, HTMLAttribute>();
 
     int start = _peekToken.start;
     String elemName;
@@ -468,7 +456,7 @@ class Parser {
 
   identifier() {
     var tok = _next();
-    if (tok.kind == TokenKind.IDENTIFIER) {
+    if (tok.kind != TokenKind.IDENTIFIER) {
       _error('expected identifier, but found $tok', tok.span);
     }
 
