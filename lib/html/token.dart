@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /**
- * A single token in the Dart language.
+ * A single token for html5 parsing
  */
 class Token {
   /** A member of [TokenKind] specifying what kind of token this is. */

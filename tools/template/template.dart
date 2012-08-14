@@ -11,16 +11,10 @@
 #import('../lib/world.dart');
 #import('../lib/source.dart');
 #import('../lib/cmd_options.dart');
+#import('../../lib/html5parser/html5parser.dart');
 
-#source('tokenkind.dart');
-#source('token.dart');
-#source('tokenizer_base.dart');
-#source('tokenizer.dart');
-#source('tree.dart');
 #source('codegen.dart');
-#source('htmltree.dart');
 #source('utils.dart');
-#source('parser.dart');
 
 ArgParser commandOptions() {
   var args = new ArgParser();
