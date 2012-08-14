@@ -6,7 +6,6 @@
 
 #import('dart:coreimpl');
 #import('package:args/args.dart');
-#import('../css/css.dart', prefix:'css');
 #import('../lib/file_system_memory.dart');
 #import('../lib/world.dart');
 #import('../lib/source.dart');
