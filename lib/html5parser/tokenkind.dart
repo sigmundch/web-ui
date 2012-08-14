@@ -188,185 +188,131 @@ class TokenKind {
   static final int END_HTML_ELEMENT = VAR_ELEMENT;    // Last valid tag name.
 
   static bool validTagName(int tokId) {
-    return tokId >= START_HTML_ELEMENT &&
-      tokId <= END_HTML_ELEMENT;
+    return tokId >= START_HTML_ELEMENT && tokId <= END_HTML_ELEMENT;
   }
-
-  static final List<Map> _KEYWORDS = const [
-    const {'type': TEMPLATE_KEYWORD, 'value' : 'template'},
-  ];
-
-  static final List<int> _NON_SCOPED_ELEMENTS = const [
-    BR_ELEMENT,
-    INPUT_ELEMENT,
-  ];
 
   // tag values starting with a minus sign implies tag can be unscoped e.g.,
   // <br> is valid without <br></br> or <br/>
-  static final List<Map> _ELEMENTS = const [
-    const {'type': TokenKind.A_ELEMENT, 'value' : 'a'},
-    const {'type': TokenKind.ABBR_ELEMENT, 'value' : 'abbr'},
-    const {'type': TokenKind.ACRONYM_ELEMENT, 'value' : 'acronym'},
-    const {'type': TokenKind.ADDRESS_ELEMENT, 'value' : 'address'},
-    const {'type': TokenKind.APPLET_ELEMENT, 'value' : 'applet'},
-    const {'type': TokenKind.AREA_ELEMENT, 'value' : 'area'},
-    const {'type': TokenKind.B_ELEMENT, 'value' : 'b'},
-    const {'type': TokenKind.BASE_ELEMENT, 'value' : 'base'},
-    const {'type': TokenKind.BASEFONT_ELEMENT, 'value' : 'basefont'},
-    const {'type': TokenKind.BDO_ELEMENT, 'value' : 'bdo'},
-    const {'type': TokenKind.BIG_ELEMENT, 'value' : 'big'},
-    const {'type': TokenKind.BLOCKQUOTE_ELEMENT, 'value' : 'blockquote'},
-    const {'type': TokenKind.BODY_ELEMENT, 'value' : 'body'},
-    const {'type': TokenKind.BR_ELEMENT, 'value' : 'br'},
-    const {'type': TokenKind.BUTTON_ELEMENT, 'value' : 'button'},
-    const {'type': TokenKind.CAPTION_ELEMENT, 'value' : 'caption'},
-    const {'type': TokenKind.CENTER_ELEMENT, 'value' : 'center'},
-    const {'type': TokenKind.CITE_ELEMENT, 'value' : 'cite'},
-    const {'type': TokenKind.CODE_ELEMENT, 'value' : 'code'},
-    const {'type': TokenKind.COL_ELEMENT, 'value' : 'col'},
-    const {'type': TokenKind.COLGROUP_ELEMENT, 'value' : 'colgroup'},
-    const {'type': TokenKind.DD_ELEMENT, 'value' : 'dd'},
-    const {'type': TokenKind.DEL_ELEMENT, 'value' : 'del'},
-    const {'type': TokenKind.DFN_ELEMENT, 'value' : 'dfn'},
-    const {'type': TokenKind.DIR_ELEMENT, 'value' : 'dir'},
-    const {'type': TokenKind.DIV_ELEMENT, 'value' : 'div'},
-    const {'type': TokenKind.DL_ELEMENT, 'value' : 'dl'},
-    const {'type': TokenKind.DT_ELEMENT, 'value' : 'dt'},
-    const {'type': TokenKind.EM_ELEMENT, 'value' : 'em'},
-    const {'type': TokenKind.FIELDSET_ELEMENT, 'value' : 'fieldset'},
-    const {'type': TokenKind.FONT_ELEMENT, 'value' : 'font'},
-    const {'type': TokenKind.FORM_ELEMENT, 'value' : 'form'},
-    const {'type': TokenKind.FRAME_ELEMENT, 'value' : 'frame'},
-    const {'type': TokenKind.FRAMESET_ELEMENT, 'value' : 'frameset'},
-    const {'type': TokenKind.H1_ELEMENT, 'value' : 'h1'},
-    const {'type': TokenKind.H2_ELEMENT, 'value' : 'h2'},
-    const {'type': TokenKind.H3_ELEMENT, 'value' : 'h3'},
-    const {'type': TokenKind.H4_ELEMENT, 'value' : 'h4'},
-    const {'type': TokenKind.H5_ELEMENT, 'value' : 'h5'},
-    const {'type': TokenKind.H6_ELEMENT, 'value' : 'h6'},
-    const {'type': TokenKind.HEAD_ELEMENT, 'value' : 'head'},
-    const {'type': TokenKind.HR_ELEMENT, 'value' : 'hr'},
-    const {'type': TokenKind.HTML_ELEMENT, 'value' : 'html'},
-    const {'type': TokenKind.I_ELEMENT, 'value' : 'i'},
-    const {'type': TokenKind.IFRAME_ELEMENT, 'value' : 'iframe'},
-    const {'type': TokenKind.IMG_ELEMENT, 'value' : 'img'},
-    const {'type': TokenKind.INPUT_ELEMENT, 'value' : 'input'},
-    const {'type': TokenKind.INS_ELEMENT, 'value' : 'ins'},
-    const {'type': TokenKind.ISINDEX_ELEMENT, 'value' : 'isindex'},
-    const {'type': TokenKind.KBD_ELEMENT, 'value' : 'kbd'},
-    const {'type': TokenKind.LABEL_ELEMENT, 'value' : 'label'},
-    const {'type': TokenKind.LEGEND_ELEMENT, 'value' : 'legend'},
-    const {'type': TokenKind.LI_ELEMENT, 'value' : 'li'},
-    const {'type': TokenKind.LINK_ELEMENT, 'value' : 'link'},
-    const {'type': TokenKind.MAP_ELEMENT, 'value' : 'map'},
-    const {'type': TokenKind.MENU_ELEMENT, 'value' : 'menu'},
-    const {'type': TokenKind.META_ELEMENT, 'value' : 'meta'},
-    const {'type': TokenKind.NOFRAMES_ELEMENT, 'value' : 'noframes'},
-    const {'type': TokenKind.NOSCRIPT_ELEMENT, 'value' : 'noscript'},
-    const {'type': TokenKind.OBJECT_ELEMENT, 'value' : 'object'},
-    const {'type': TokenKind.OL_ELEMENT, 'value' : 'ol'},
-    const {'type': TokenKind.OPTGROUP_ELEMENT, 'value' : 'optgroup'},
-    const {'type': TokenKind.OPTION_ELEMENT, 'value' : 'option'},
-    const {'type': TokenKind.P_ELEMENT, 'value' : 'p'},
-    const {'type': TokenKind.PARAM_ELEMENT, 'value' : 'param'},
-    const {'type': TokenKind.PRE_ELEMENT, 'value' : 'pre'},
-    const {'type': TokenKind.Q_ELEMENT, 'value' : 'q'},
-    const {'type': TokenKind.S_ELEMENT, 'value' : 's'},
-    const {'type': TokenKind.SAMP_ELEMENT, 'value' : 'samp'},
-    const {'type': TokenKind.SCRIPT_ELEMENT, 'value' : 'script'},
-    const {'type': TokenKind.SELECT_ELEMENT, 'value' : 'select'},
-    const {'type': TokenKind.SMALL_ELEMENT, 'value' : 'small'},
-    const {'type': TokenKind.SPAN_ELEMENT, 'value' : 'span'},
-    const {'type': TokenKind.STRIKE_ELEMENT, 'value' : 'strike'},
-    const {'type': TokenKind.STRONG_ELEMENT, 'value' : 'strong'},
-    const {'type': TokenKind.STYLE_ELEMENT, 'value' : 'style'},
-    const {'type': TokenKind.SUB_ELEMENT, 'value' : 'sub'},
-    const {'type': TokenKind.SUP_ELEMENT, 'value' : 'sup'},
-    const {'type': TokenKind.TABLE_ELEMENT, 'value' : 'table'},
-    const {'type': TokenKind.TBODY_ELEMENT, 'value' : 'tbody'},
-    const {'type': TokenKind.TD_ELEMENT, 'value' : 'td'},
-    const {'type': TokenKind.TEMPLATE, 'value' : 'template'},
-    const {'type': TokenKind.TEXTAREA_ELEMENT, 'value' : 'textarea'},
-    const {'type': TokenKind.TFOOT_ELEMENT, 'value' : 'tfoot'},
-    const {'type': TokenKind.TH_ELEMENT, 'value' : 'th'},
-    const {'type': TokenKind.THEAD_ELEMENT, 'value' : 'thead'},
-    const {'type': TokenKind.TITLE_ELEMENT, 'value' : 'title'},
-    const {'type': TokenKind.TR_ELEMENT, 'value' : 'tr'},
-    const {'type': TokenKind.TT_ELEMENT, 'value' : 'tt'},
-    const {'type': TokenKind.U_ELEMENT, 'value' : 'u'},
-    const {'type': TokenKind.UL_ELEMENT, 'value' : 'ul'},
-    const {'type': TokenKind.VAR_ELEMENT, 'value' : 'var'},
+  static final List<String> _ELEMENTS = const [
+    'a',
+    'abbr',
+    'acronym',
+    'address',
+    'applet',
+    'area',
+    'b',
+    'base',
+    'basefont',
+    'bdo',
+    'big',
+    'blockquote',
+    'body',
+    'br',
+    'button',
+    'caption',
+    'center',
+    'cite',
+    'code',
+    'col',
+    'colgroup',
+    'dd',
+    'del',
+    'dfn',
+    'dir',
+    'div',
+    'dl',
+    'dt',
+    'em',
+    'fieldset',
+    'font',
+    'form',
+    'frame',
+    'frameset',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'head',
+    'hr',
+    'html',
+    'i',
+    'iframe',
+    'img',
+    'input',
+    'ins',
+    'isindex',
+    'kbd',
+    'label',
+    'legend',
+    'li',
+    'link',
+    'map',
+    'menu',
+    'meta',
+    'noframes',
+    'noscript',
+    'object',
+    'ol',
+    'optgroup',
+    'option',
+    'p',
+    'param',
+    'pre',
+    'q',
+    's',
+    'samp',
+    'script',
+    'select',
+    'small',
+    'span',
+    'strike',
+    'strong',
+    'style',
+    'sub',
+    'sup',
+    'table',
+    'tbody',
+    'td',
+    'template',
+    'textarea',
+    'tfoot',
+    'th',
+    'thead',
+    'title',
+    'tr',
+    'tt',
+    'u',
+    'ul',
+    'var',
   ];
 
   // Some more constants:
   static final int ASCII_UPPER_A = 65;    // ASCII value for uppercase A
   static final int ASCII_UPPER_Z = 90;    // ASCII value for uppercase Z
 
-  List<int> tokens;
-
-  /*
-   * Return the token that matches the unit ident found.
-   */
-  static int matchList(var identList, String tokenField, String text,
-                       int offset, int length) {
-    for (final entry in identList) {
-      String ident = entry['value'];
-      if (length == ident.length) {
-        int idx = offset;
-        bool match = true;
-        // TODO(terry): Consider eliminating this loop; call toLowerCase on the
-        //              identifier to compare.  toLowerCase calls native func
-        //              probably more efficient.
-        for (int identIdx = 0; identIdx < ident.length; identIdx++) {
-          int identChar = ident.charCodeAt(identIdx);
-          int char = text.charCodeAt(idx++);
-          // Compare lowercase to lowercase then check if char is uppercase.
-          match = match && (char == identChar ||
-              ((char >= ASCII_UPPER_A && char <= ASCII_UPPER_Z) &&
-               (char + 32) == identChar));
-          if (!match) {
-            break;
-          }
-        }
-
-        if (match) {
-          // Completely matched; return the token for this unit.
-          return entry[tokenField];
-        }
-      }
-    }
-
-    return -1;  // Not a unit token.
-  }
-
-  /*
+  /**
    * Return the token that matches the element ident found.
    */
   static int matchElements(String text, int offset, int length) {
-    return matchList(_ELEMENTS, 'type', text, offset, length);
+    // TODO(jmesserly): this isn't very efficient. It'd be better to handle
+    // these in the main tokenizer loop by switching on charcodes.
+    var search = text.substring(offset, length + offset).toLowerCase();
+    var match = _ELEMENTS.indexOf(search);
+    if (match < 0) return match;
+    return match + START_HTML_ELEMENT;
   }
 
   static String tagNameFromTokenId(int tagTokenId) {
     if (validTagName(tagTokenId)) {
-      var baseId = _ELEMENTS[0]['type'];
-
-      // Tags are in TokenId order; canonicalize to zero.
-      return _ELEMENTS[tagTokenId - baseId]['value'];
+      return _ELEMENTS[tagTokenId - START_HTML_ELEMENT];
     }
+    return null;
   }
 
-  static bool unscopedTag(int tagTokenId) {
-    for (final tagId in TokenKind._NON_SCOPED_ELEMENTS) {
-      if (tagId == tagTokenId) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  static int matchKeywords(String text, int offset, int length) {
-    return matchList(_KEYWORDS, 'type', text, offset, length);
+  static bool unscopedTag(int tokenId) {
+    return tokenId == BR_ELEMENT || tokenId == INPUT_ELEMENT;
   }
 
   static String kindToString(int kind) {
@@ -419,47 +365,33 @@ class TokenKind {
         throw "Unknown TOKEN";
     }
   }
-
-  // TODO(terry): JMesserly might have made change to external code, to fix
-  //              warnings/errors in the editor and dart2js (about using
-  //              non-const exprs in switch)?
-  TokenKind() {
-    tokens = [];
-
-    // All tokens must be in TokenKind order.
-    tokens.add(-1);                 // TokenKind.UNUSED
-    tokens.add(0);                  // TokenKind.END_OF_FILE match base
-    tokens.add(TokenKind.kindToString(TokenKind.LPAREN).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.RPAREN).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.LBRACK).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.RBRACK).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.LBRACE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.RBRACE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.DOT).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.SEMICOLON).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.SPACE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.TAB).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.NEWLINE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.RETURN).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.COMMA).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.LESS_THAN).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.GREATER_THAN).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.SLASH).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.DOLLAR).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.HASH).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.MINUS).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.EQUAL).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.DOUBLE_QUOTE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.SINGLE_QUOTE).charCodeAt(0));
-    tokens.add(TokenKind.kindToString(TokenKind.ASTERISK).charCodeAt(0));
-
-    assert(tokens.length == TokenKind.END_TOKENS);
-  }
-
-  static bool isIdentifier(int kind) {
-    return kind == IDENTIFIER;
-  }
 }
+
+// Note: these names should match TokenKind names
+// TODO(jmesserly): we could just make these values match TokenKind, then
+// we'd only need one enum.
+class TokenChar {
+  static final int UNUSED = -1;
+  static final int END_OF_FILE = 0;
+  static final int LPAREN = 0x28; // "(".charCodeAt(0)
+  static final int RPAREN = 0x29; // ")".charCodeAt(0)
+  static final int LBRACE = 0x7b; // "{".charCodeAt(0)
+  static final int RBRACE = 0x7d; // "}".charCodeAt(0)
+  static final int SPACE = 0x20; // " ".charCodeAt(0)
+  static final int TAB = 0x9; // "\t".charCodeAt(0)
+  static final int NEWLINE = 0xa; // "\n".charCodeAt(0)
+  static final int RETURN = 0xd; // "\r".charCodeAt(0)
+  static final int COMMA = 0x2c; // ",".charCodeAt(0)
+  static final int LESS_THAN = 0x3c; // "<".charCodeAt(0)
+  static final int GREATER_THAN = 0x3e; // ">".charCodeAt(0)
+  static final int SLASH = 0x2f; // "/".charCodeAt(0)
+  static final int MINUS = 0x2d; // "-".charCodeAt(0)
+  static final int EQUAL = 0x3d; // "=".charCodeAt(0)
+  static final int DOUBLE_QUOTE = 0x22; // '"'.charCodeAt(0)
+  static final int SINGLE_QUOTE = 0x27; // "'".charCodeAt(0)
+  static final int ASTERISK = 0x2a; // "*".charCodeAt(0)
+}
+
 
 class NoElementMatchException implements Exception {
   String _tagName;

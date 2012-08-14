@@ -20,6 +20,7 @@
 #library('html5parser');
 
 #import('../../tools/lib/source.dart');
+#import('../../tools/lib/world.dart');
 #import('htmltree.dart');
 #import('tokenizer.dart');
 #import('tokenkind.dart');
@@ -122,8 +123,8 @@ class Parser {
   }
 
   /* Is the next token a legal identifier?  This includes pseudo-keywords. */
-  bool _peekIdentifier([String name = null]) {
-    if (TokenKind.isIdentifier(_peekToken.kind)) {
+  bool _peekIdentifier([String name]) {
+    if (_peekToken.kind == TokenKind.IDENTIFIER) {
       return (name != null) ? _peekToken.text == name : true;
     }
 
@@ -467,7 +468,7 @@ class Parser {
 
   identifier() {
     var tok = _next();
-    if (!TokenKind.isIdentifier(tok.kind)) {
+    if (tok.kind == TokenKind.IDENTIFIER) {
       _error('expected identifier, but found $tok', tok.span);
     }
 
