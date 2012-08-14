@@ -8,27 +8,6 @@ interface TokenSource {
   Token next();
 }
 
-// TODO(terry): Remove InterpStack need for multi-line strings and string
-//              interpolation.
-class InterpStack {
-  InterpStack next, previous;
-  final int quote;
-  final bool isMultiline;
-  int depth;
-
-  InterpStack(this.previous, this.quote, this.isMultiline): depth = -1;
-
-  InterpStack pop() {
-    return this.previous;
-  }
-
-  static InterpStack push(InterpStack stack, int quote, bool isMultiline) {
-    var newStack = new InterpStack(stack, quote, isMultiline);
-    if (stack != null) newStack.previous = stack;
-    return newStack;
-  }
-}
-
 /**
  * The base class for our tokenizer. The hand coded parts are in this file, with
  * the generated parts in the subclass Tokenizer.
@@ -40,9 +19,6 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
 
   int _index;
   int _startIndex;
-
-  /** Keeps track of string interpolation state. */
-  InterpStack _interpStack;
 
   TokenizerBase(this._source, this._skipWhitespace, [index = 0])
       : this._index = index {
@@ -245,8 +221,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
 
   Token _makeStringToken(List<int> buf, bool isPart) {
     final s = new String.fromCharCodes(buf);
-    final kind = isPart ? TokenKind.STRING_PART : TokenKind.STRING;
-    return new LiteralToken(kind, _source, _startIndex, _index, s);
+    return new LiteralToken(TokenKind.STRING, _source, _startIndex, _index, s);
   }
 
   Token _makeRawStringToken(bool isMultiline) {
@@ -276,11 +251,6 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
           buf.add(quote);
         }
         buf.add(quote);
-      } else if (ch == 36/*$*/) {
-        // TODO(terry): Remove string interpolation.
-        // start of string interp
-        _interpStack = InterpStack.push(_interpStack, quote, true);
-        return _makeStringToken(buf, true);
       } else if (ch == 92/*\*/) {
         var escapeVal = readEscapeSequence();
         if (escapeVal == -1) {
@@ -294,25 +264,9 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
     }
   }
 
-  Token _finishOpenBrace() {
-    if (_interpStack != null) {
-      if (_interpStack.depth == -1) {
-        _interpStack.depth = 1;
-      } else {
-        assert(_interpStack.depth >= 0);
-        _interpStack.depth += 1;
-      }
-    }
-    return _finishToken(TokenKind.LBRACE);
-  }
+  Token _finishOpenBrace() => _finishToken(TokenKind.LBRACE);
 
-  Token _finishCloseBrace() {
-    if (_interpStack != null) {
-      _interpStack.depth -= 1;
-      assert(_interpStack.depth >= 0);
-    }
-    return _finishToken(TokenKind.RBRACE);
-  }
+  Token _finishCloseBrace() => _finishToken(TokenKind.RBRACE);
 
   Token finishString(int quote) {
     if (_maybeEatChar(quote)) {
@@ -321,7 +275,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
         _maybeEatChar(10/*'\n'*/);
         return finishMultilineString(quote);
       } else {
-        return _makeStringToken(new List<int>(), false);
+        return _makeStringToken(<int>[]);
       }
     }
     return finishStringBody(quote);
@@ -332,7 +286,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
       if (_maybeEatChar(quote)) {
         return finishMultilineRawString(quote);
       } else {
-        return _makeStringToken(<int>[], false);
+        return _makeStringToken(<int>[]);
       }
     }
     while (true) {
@@ -361,11 +315,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
     while (true) {
       int ch = _nextChar();
       if (ch == quote) {
-        return _makeStringToken(buf, false);
-      } else if (ch == 36/*$*/) {
-        // start of string interp
-        _interpStack = InterpStack.push(_interpStack, quote, false);
-        return _makeStringToken(buf, true);
+        return _makeStringToken(buf);
       } else if (ch == 0) {
         return _errorToken();
       } else if (ch == 92/*\*/) {
@@ -440,29 +390,13 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
   }
 
   Token finishIdentifier() {
-    if (_interpStack != null && _interpStack.depth == -1) {
-      _interpStack.depth = 0;
-      while (_index < _text.length) {
-        if (!TokenizerHelpers.isInterpIdentifierPart(
-            _text.charCodeAt(_index++))) {
-          _index--;
-          break;
-        }
-      }
-    } else {
-      while (_index < _text.length) {
-        if (!TokenizerHelpers.isIdentifierPart(_text.charCodeAt(_index++))) {
-          _index--;
-          break;
-        }
+    while (_index < _text.length) {
+      if (!TokenizerHelpers.isIdentifierPart(_text.charCodeAt(_index++))) {
+        _index--;
+        break;
       }
     }
-    int kind = getIdentifierKind();
-    if (kind == TokenKind.IDENTIFIER) {
-      return _finishToken(TokenKind.IDENTIFIER);
-    } else {
-      return _finishToken(kind);
-    }
+    return _finishToken(getIdentifierKind());
   }
 }
 
