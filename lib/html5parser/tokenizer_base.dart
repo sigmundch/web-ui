@@ -275,7 +275,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
         _maybeEatChar(10/*'\n'*/);
         return finishMultilineString(quote);
       } else {
-        return _makeStringToken(<int>[]);
+        return _makeStringToken(const []);
       }
     }
     return finishStringBody(quote);
@@ -286,7 +286,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
       if (_maybeEatChar(quote)) {
         return finishMultilineRawString(quote);
       } else {
-        return _makeStringToken(<int>[]);
+        return _makeStringToken(const []);
       }
     }
     while (true) {
@@ -372,7 +372,7 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
     // are not legal Unicode values.
     if (hexValue < 0xD800 || hexValue > 0xDFFF && hexValue <= 0xFFFF) {
       return hexValue;
-    } else if (hexValue <= 0x10FFFF){
+    } else if (hexValue <= 0x10FFFF) {
       world.fatal('unicode values greater than 2 bytes not implemented yet');
       return -1;
     } else {
