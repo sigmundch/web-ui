@@ -12,6 +12,8 @@
 
 #import('dart:html');
 #import('template.dart');
+#import('codegen.dart');
+#import('htmltree.dart');
 #import('../lib/file_system_memory.dart');
 #import('../lib/world.dart');
 #import('../lib/source.dart');

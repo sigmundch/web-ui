@@ -6,21 +6,14 @@
 
 #import('dart:coreimpl');
 #import('package:args/args.dart');
-#import('../css/css.dart', prefix:'css');
-#import('../lib/file_system_memory.dart');
-#import('../lib/world.dart');
-#import('../lib/source.dart');
-#import('../lib/cmd_options.dart');
 
-#source('tokenkind.dart');
-#source('token.dart');
-#source('tokenizer_base.dart');
-#source('tokenizer.dart');
-#source('tree.dart');
-#source('codegen.dart');
-#source('htmltree.dart');
-#source('utils.dart');
-#source('parser.dart');
+#import('../lib/cmd_options.dart');
+#import('../lib/file_system_memory.dart');
+#import('../lib/source.dart');
+#import('../lib/world.dart');
+
+#import('parser.dart');
+#import('htmltree.dart');
 
 ArgParser commandOptions() {
   var args = new ArgParser();
