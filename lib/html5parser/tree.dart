@@ -6,7 +6,7 @@
  * The base type for all nodes in a dart abstract syntax tree.
  */
 class TreeNode implements Hashable, Comparable {
-  /** The source code this [ASTNode] represents. */
+  /** The source code this [TreeNode] represents. */
   SourceSpan span;
 
   TreeNode(this.span) {}
@@ -22,7 +22,7 @@ class TreeNode implements Hashable, Comparable {
     return to.buf.toString();
   }
 
-  int hashCode() => span.start << 7 ^ start.end;
+  int hashCode() => span.start << 7 ^ span.end;
 
   int compareTo(TreeNode other) => span.compareTo(other.span);
 }
