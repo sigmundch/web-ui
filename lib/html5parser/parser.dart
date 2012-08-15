@@ -316,7 +316,7 @@ class Parser {
 
           Token tagToken = _next();
 
-          Map<String, HTMLAttribute> attrs = processAttributes();
+          var attrs = processAttributes();
 
           String varName;
           if (attrs.containsKey('var')) {
@@ -409,7 +409,7 @@ class Parser {
    * find the var attribute.
    */
   Map<String, HTMLAttribute> processAttributes() {
-    var attrs = new Map<String, HTMLAttribute>();
+    var attrs = <HTMLAttribute>{};
 
     int start = _peekToken.start;
     String elemName;
