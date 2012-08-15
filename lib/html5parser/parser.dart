@@ -19,8 +19,8 @@
 // more than just parsing.
 #library('html5parser');
 
-#import('../../tools/css/css.dart', prefix:'css');
 #import('../../tools/lib/source.dart');
+#import('../../tools/lib/world.dart');
 #import('htmltree.dart');
 #import('tokenizer.dart');
 #import('tokenkind.dart');
@@ -45,18 +45,6 @@ class TagStack {
   }
 }
 
-// TODO(terry): Cleanup returning errors from CSS to common World error
-//              handler.
-class ErrorMsgRedirector {
-  void displayError(String msg) {
-    if (world.printHandler != null) {
-      world.printHandler(msg);
-    } else {
-      print("Unhandler Error: ${msg}");
-    }
-    world.errors++;
-  }
-}
 
 /**
  * A simple recursive descent parser for HTML.
@@ -123,8 +111,8 @@ class Parser {
   }
 
   /* Is the next token a legal identifier?  This includes pseudo-keywords. */
-  bool _peekIdentifier([String name = null]) {
-    if (TokenKind.isIdentifier(_peekToken.kind)) {
+  bool _peekIdentifier([String name]) {
+    if (_peekToken.kind == TokenKind.IDENTIFIER) {
       return (name != null) ? _peekToken.text == name : true;
     }
 
@@ -219,26 +207,6 @@ class Parser {
     }
   }
 
-  css.Stylesheet processCSS() {
-    // Is there a CSS block?
-    if (_peekIdentifier('css')) {
-      _next();
-
-      int start = _peekToken.start;
-      _eat(TokenKind.LBRACE);
-
-      css.Stylesheet cssCtx = processCSSContent(source, tokenizer.startIndex);
-
-      // TODO(terry): Hack, restart template parser where CSS parser stopped.
-      tokenizer.index = lastCSSIndexParsed;
-     _next(false);
-
-      _eat(TokenKind.RBRACE);       // close } of css block
-
-      return cssCtx;
-    }
-  }
-
   // TODO(terry): get should be able to use all template control flow but return
   //              a string instead of a node.  Maybe expose both html and get
   //              e.g.,
@@ -326,26 +294,6 @@ class Parser {
     return getters;
   }
 
-  int lastCSSIndexParsed;       // TODO(terry): Hack, last good CSS parsed.
-
-  css.Stylesheet processCSSContent(var cssSource, int start) {
-    try {
-      SourceFile sf = new SourceFile(SourceFile.IN_MEMORY_FILE, cssSource.text);
-      css.Parser parser = new css.Parser(sf, start);
-
-      css.Stylesheet stylesheet = parser.parse(false, new ErrorMsgRedirector());
-
-      var lastParsedChar = parser.tokenizer.startIndex;
-
-      lastCSSIndexParsed = lastParsedChar;
-
-      return stylesheet;
-    } catch (final cssParseException) {
-      // TODO(terry): Need SourceSpan from CSS parser to pass onto _error.
-      _error("Unexcepted CSS error: ${cssParseException.toString()}");
-    }
-  }
-
   processHTML(HTMLElement root) {
     assert(root.isFragment);
 
@@ -368,7 +316,7 @@ class Parser {
 
           Token tagToken = _next();
 
-          Map<String, HTMLAttribute> attrs = processAttributes();
+          var attrs = processAttributes();
 
           String varName;
           if (attrs.containsKey('var')) {
@@ -461,7 +409,7 @@ class Parser {
    * find the var attribute.
    */
   Map<String, HTMLAttribute> processAttributes() {
-    Map<String, HTMLAttribute> attrs = new Map();
+    var attrs = <HTMLAttribute>{};
 
     int start = _peekToken.start;
     String elemName;
@@ -508,7 +456,7 @@ class Parser {
 
   identifier() {
     var tok = _next();
-    if (!TokenKind.isIdentifier(tok.kind)) {
+    if (tok.kind != TokenKind.IDENTIFIER) {
       _error('expected identifier, but found $tok', tok.span);
     }
 

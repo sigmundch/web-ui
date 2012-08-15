@@ -4,6 +4,7 @@
 
 #library('tokenizer');
 
+#import('../../tools/lib/source.dart');
 #import('tokenkind.dart');
 
 #source('token.dart');
@@ -28,49 +29,36 @@ class Tokenizer extends TokenizerBase {
     // keep track of our starting position
     _startIndex = _index;
 
-    if (_interpStack != null && _interpStack.depth == 0) {
-      var istack = _interpStack;
-      _interpStack = _interpStack.pop();
-
-      /* TODO(terry): Enable for variable and string interpolation.
-       * if (istack.isMultiline) {
-       *   return finishMultilineStringBody(istack.quote);
-       * } else {
-       *   return finishStringBody(istack.quote);
-       * }
-       */
-    }
-
     int ch;
     ch = _nextChar();
     switch(ch) {
       case 0:
         return _finishToken(TokenKind.END_OF_FILE);
-      case tmplTokens.tokens[TokenKind.SPACE]:
-      case tmplTokens.tokens[TokenKind.TAB]:
-      case tmplTokens.tokens[TokenKind.NEWLINE]:
-      case tmplTokens.tokens[TokenKind.RETURN]:
+      case TokenChar.SPACE:
+      case TokenChar.TAB:
+      case TokenChar.NEWLINE:
+      case TokenChar.RETURN:
         if (inTag) {
           return finishWhitespace();
         } else {
           return _finishToken(TokenKind.WHITESPACE);
         }
-      case tmplTokens.tokens[TokenKind.END_OF_FILE]:
+      case TokenChar.END_OF_FILE:
         return _finishToken(TokenKind.END_OF_FILE);
-      case tmplTokens.tokens[TokenKind.LPAREN]:
+      case TokenChar.LPAREN:
         return _finishToken(TokenKind.LPAREN);
-      case tmplTokens.tokens[TokenKind.RPAREN]:
+      case TokenChar.RPAREN:
         return _finishToken(TokenKind.RPAREN);
-      case tmplTokens.tokens[TokenKind.COMMA]:
+      case TokenChar.COMMA:
         return _finishToken(TokenKind.COMMA);
-      case tmplTokens.tokens[TokenKind.LESS_THAN]:
+      case TokenChar.LESS_THAN:
         return _finishToken(TokenKind.LESS_THAN);
-      case tmplTokens.tokens[TokenKind.GREATER_THAN]:
+      case TokenChar.GREATER_THAN:
         return _finishToken(TokenKind.GREATER_THAN);
-      case tmplTokens.tokens[TokenKind.EQUAL]:
+      case TokenChar.EQUAL:
         if (inTag) {
-          int singleQuote = tmplTokens.tokens[TokenKind.SINGLE_QUOTE];
-          int doubleQuote = tmplTokens.tokens[TokenKind.DOUBLE_QUOTE];
+          int singleQuote = TokenChar.SINGLE_QUOTE;
+          int doubleQuote = TokenChar.DOUBLE_QUOTE;
           if (_maybeEatChar(singleQuote)) {
             return finishQuotedAttrValue(singleQuote);
           } else if (_maybeEatChar(doubleQuote)) {
@@ -80,21 +68,21 @@ class Tokenizer extends TokenizerBase {
           }
         }
         return _finishToken(TokenKind.EQUAL);
-      case tmplTokens.tokens[TokenKind.SLASH]:
-        if (_maybeEatChar(tmplTokens.tokens[TokenKind.GREATER_THAN])) {
+      case TokenChar.SLASH:
+        if (_maybeEatChar(TokenChar.GREATER_THAN)) {
           return _finishToken(TokenKind.END_NO_SCOPE_TAG);        // />
-        } else if (_maybeEatChar(tmplTokens.tokens[TokenKind.ASTERISK])) {
+        } else if (_maybeEatChar(TokenChar.ASTERISK)) {
           return finishMultiLineComment();
         } else {
           return _finishToken(TokenKind.SLASH);
         }
-      case tmplTokens.tokens[TokenKind.LBRACE]:
-        if (_maybeEatChar(tmplTokens.tokens[TokenKind.LBRACE])) {
+      case TokenChar.LBRACE:
+        if (_maybeEatChar(TokenChar.LBRACE)) {
           return finishExpression();
         } else {
           return _finishToken(TokenKind.LBRACE);
         }
-      case tmplTokens.tokens[TokenKind.RBRACE]:
+      case TokenChar.RBRACE:
         return _finishToken(TokenKind.RBRACE);
 
       default:
@@ -110,7 +98,7 @@ class Tokenizer extends TokenizerBase {
 
   // TODO(jmesserly): we need a way to emit human readable error messages from
   // the tokenizer.
-  Token _errorToken([String message = null]) {
+  Token _errorToken([String message]) {
     return _finishToken(TokenKind.ERROR);
   }
 
@@ -118,9 +106,6 @@ class Tokenizer extends TokenizerBase {
     // Is the identifier an element?
     int tokId = TokenKind.matchElements(_text, _startIndex,
       _index - _startIndex);
-    if (tokId == -1) {
-      tokId = TokenKind.matchKeywords(_text, _startIndex, _index - _startIndex);
-    }
 
     return tokId >= 0 ? tokId : TokenKind.IDENTIFIER;
   }
@@ -134,15 +119,7 @@ class Tokenizer extends TokenizerBase {
         _index += 1;
       }
     }
-    if (_interpStack != null && _interpStack.depth == -1) {
-      _interpStack.depth = 0;
-    }
-    int kind = getIdentifierKind();
-    if (kind == TokenKind.IDENTIFIER) {
-      return _finishToken(TokenKind.IDENTIFIER);
-    } else {
-      return _finishToken(kind);
-    }
+    return _finishToken(getIdentifierKind());
   }
 
   Token _makeAttributeValueToken(List<int> buf) {
@@ -317,10 +294,10 @@ class Tokenizer extends TokenizerBase {
             return _finishToken(TokenKind.COMMENT);
           }
         }
-      } else if (ch == tmplTokens.tokens[TokenKind.MINUS]) {
+      } else if (ch == TokenChar.MINUS) {
         /* Check if close part of Comment Definition --> (CDC). */
-        if (_maybeEatChar(tmplTokens.tokens[TokenKind.MINUS])) {
-          if (_maybeEatChar(tmplTokens.tokens[TokenKind.GREATER_THAN])) {
+        if (_maybeEatChar(TokenChar.MINUS)) {
+          if (_maybeEatChar(TokenChar.GREATER_THAN)) {
             if (_skipWhitespace) {
               return next();
             } else {

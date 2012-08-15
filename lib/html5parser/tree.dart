@@ -1,10 +1,11 @@
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+
 /**
  * The base type for all nodes in a dart abstract syntax tree.
  */
-class TreeNode {
+class TreeNode implements Hashable, Comparable {
   /** The source code this [ASTNode] represents. */
   SourceSpan span;
 
@@ -20,6 +21,10 @@ class TreeNode {
     this.visit(tp);
     return to.buf.toString();
   }
+
+  int hashCode() => span.start << 7 ^ start.end;
+
+  int compareTo(TreeNode other) => span.compareTo(other.span);
 }
 
 // TODO(jimhug): Clean-up and factor out of core.

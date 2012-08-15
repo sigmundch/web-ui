@@ -18,12 +18,10 @@ class Token {
   Token(this.kind, this.source, this.start, this.end) {}
 
   Token.fake(this.kind, span)
-    : this.source = span.file, this.start = span.start, this.end = span.end;
+      : this.source = span.file, this.start = span.start, this.end = span.end;
 
   /** Returns the source text corresponding to this [Token]. */
-  String get text() {
-    return source.text.substring(start, end);
-  }
+  String get text() => source.text.substring(start, end);
 
   /** Returns a pretty representation of this token for error messages. **/
   String toString() {
@@ -40,9 +38,7 @@ class Token {
   }
 
   /** Returns a [SourceSpan] representing the source location. */
-  SourceSpan get span() {
-    return new SourceSpan(source, start, end);
-  }
+  SourceSpan get span() => new SourceSpan(source, start, end);
 }
 
 /** A token containing a parsed literal value. */
