@@ -1,7 +1,13 @@
-<html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<!doctype html>
+<html lang="en">
 <body>
-<element name="x-todo-footer" extends="footer" constructor="FooterComponent"
-         apply-author-styles>
+<script type="application/dart" src='model.dart'></script>
+<element name="x-todo-footer" constructor="FooterComponent" apply-author-styles>
   <template>
     <span id="todo-count"><strong>{{remaining}}</strong></span>
     <ul id="filters">

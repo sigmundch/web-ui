@@ -1,4 +1,9 @@
 <!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -6,14 +11,13 @@
   <link rel="components" href="footer.html">
   <link rel="components" href="newform.html">
   <link rel="components" href="toggleall.html">
-  <link rel="components" href="if_component.html">
-  <link rel="components" href="list_component.html">
   <link rel="components" href="item.html">
   <link rel="stylesheet" href="../base.css">
   <title>dart - TodoMVC</title>
   <script type="application/dart" src='todo.dart'></script>
+  <script type="application/dart" src='model.dart'></script>
 </head>
-<body constructor="MainComponent">
+<body>
   <section id="todoapp">
     <header id="header">
       <h1 class='title'>todos</h1>
@@ -22,14 +26,14 @@
     <section id="main">
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
-        <template iterate="{{x in app.todos}}" is="x-list">
-          <template instantiate="if viewModel.isVisible(x)" is="x-if">
+        <template iterate="{{x in app.todos}}">
+          <template instantiate="if viewModel.isVisible(x)">
             <li is="x-todo-row" data-todo="x"></li>
           </template>
         </template>
       </ul>
     </section>
-    <template instantiate="if viewModel.hasElements" is="x-if">
+    <template instantiate="if viewModel.hasElements">
       <footer is="x-todo-footer" id="footer"></footer>
     </template>
   </section>

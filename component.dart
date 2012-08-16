@@ -51,8 +51,8 @@ class Component extends WebComponent {
   void inserted() => print('$name $id-inserted');
   void removed() => print('$name $id-removed');
 
-  void attributeChanged(String name, String oldValue, String newValue) {
-    print("$id-change on ${this.name}.$name $oldValue $newValue");
+  void attributeChanged(String attribute, String oldValue, String newValue) {
+    print("$id-change on ${this.name}.$attribute $oldValue $newValue");
   }
 
   /** Adds a watcher for [exp], and executes [callback] immediately. */

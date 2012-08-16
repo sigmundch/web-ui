@@ -7,6 +7,7 @@
 #import('dart:io');
 #import('package:args/args.dart');
 
+#import('../../lib/html5parser/htmltree.dart');
 #import('../lib/cmd_options.dart');
 #import('../lib/file_system.dart');
 #import('../lib/file_system_vm.dart');

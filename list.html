@@ -1,3 +1,12 @@
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<!doctype html>
+<html lang="en">
+<body>
+<script data-complete="true">
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -64,3 +73,14 @@ class ListComponent extends Component {
     }
   }
 }
+</script>
+<element name="x-list" extends="template" constructor="ListComponent"
+         apply-author-styles>
+  <template>
+    <template iterate="i in items">
+      <content></content>
+    </template>
+  </template>
+</element>
+</body>
+</html>

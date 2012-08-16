@@ -5,6 +5,8 @@
 #library('tokenizer');
 
 #import('../../tools/lib/source.dart');
+#import('../../tools/lib/world.dart');
+
 #import('tokenkind.dart');
 
 #source('token.dart');
@@ -98,7 +100,7 @@ class Tokenizer extends TokenizerBase {
 
   // TODO(jmesserly): we need a way to emit human readable error messages from
   // the tokenizer.
-  Token _errorToken([String message]) {
+  Token _errorToken([String message = null]) {
     return _finishToken(TokenKind.ERROR);
   }
 

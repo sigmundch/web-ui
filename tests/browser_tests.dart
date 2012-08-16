@@ -11,8 +11,8 @@
 #import('dart:html');
 #import('package:unittest/unittest.dart');
 #import('package:unittest/html_config.dart');
-#import('../if_component.dart');
-#import('../list_component.dart');
+#import('../if.html.dart');
+#import('../list.html.dart');
 #import('../webcomponents.dart');
 #import('../watcher.dart');
 
@@ -108,7 +108,8 @@ void _appSetUp() {
   manager.expandDeclarations(body);
 
   // attach model where needed.
-  manager[body.query("[is=x-list]")].items = () => app.items;
+  var lists = manager[body.query("[is=x-list]")];
+  lists.items = () => app.items;
 
   // attach view to the document.
   document.body.nodes.add(body);
