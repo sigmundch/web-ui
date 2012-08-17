@@ -35,9 +35,10 @@ class TokenizerBase extends TokenizerHelpers implements TokenSource {
     }
   }
 
-  int _peekChar() {
-    if (_index < _text.length) {
-      return _text.charCodeAt(_index);
+  // TODO(terry): Added arbitrary lookahead for <!-- should re-look at this.
+  int _peekChar([int offset = 0]) {
+    if ((_index + offset) < _text.length) {
+      return _text.charCodeAt(_index + offset);
     } else {
       return 0;
     }

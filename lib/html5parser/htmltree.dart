@@ -162,6 +162,12 @@ class HTMLDocument extends HTMLChildren {
   visit(TreeVisitor visitor) => visitor.visitHTMLDocument(this);
 }
 
+/** Token id for a fragment. */
+const int TAG_FRAGMENT = -1;
+
+/** Token id for an unknown tag. */
+const int TAG_XTAG = -2;
+
 class HTMLElement extends HTMLChildren {
   int tagTokenId;
   List<HTMLAttribute> attributes;
@@ -169,12 +175,13 @@ class HTMLElement extends HTMLChildren {
 
   HTMLElement(this.tagTokenId, SourceSpan span): super.empty(span);
   HTMLElement.fragment(SourceSpan span) : super.empty(span),
-      tagTokenId = -1;
+      tagTokenId = TAG_FRAGMENT;
   HTMLElement.attributes(this.tagTokenId, this.attributes, this._varName,
     SourceSpan span): super.empty(span);
 
-  bool get isFragment() => tagTokenId == -1;
+  bool get isFragment() => tagTokenId == TAG_FRAGMENT;
   bool get anyAttributes() => attributes != null;
+  bool get isXTag() => false;
 
   visit(TreeVisitor visitor) => visitor.visitHTMLElement(this);
 
@@ -232,6 +239,25 @@ class HTMLElement extends HTMLChildren {
 
     return buff.toString();
   }
+}
+
+/** XTag */
+class HTMLUnknownElement extends HTMLElement {
+  String xTag;
+
+  HTMLUnknownElement(this.xTag, SourceSpan span): super(TAG_XTAG, span);
+  HTMLUnknownElement.fragment(SourceSpan span) : super.fragment(span);
+  HTMLUnknownElement.attributes(this.xTag, List<HTMLAttribute> attrs,
+      String varName, SourceSpan span)
+      : super.attributes(TAG_XTAG, attrs, varName, span);
+
+  bool get isXTag() => true;
+
+  String get tagName() => isXTag ? xTag : 'root';
+
+  bool get scoped() => true;
+
+  visit(TreeVisitor visitor) => visitor.visitHTMLUnknownElement(this);
 }
 
 class HTMLAttribute extends TreeNode {
@@ -299,6 +325,7 @@ interface TreeVisitor {
   void visitHTMLChildren(HTMLChildren node);
   void visitHTMLDocument(HTMLDocument node);
   void visitHTMLElement(HTMLElement node);
+  void visitHTMLUnknownElement(HTMLUnknownElement node);
   void visitHTMLAttribute(HTMLAttribute node);
   void visitTemplateAttributeExpression(TemplateAttributeExpression node);
   void visitHTMLText(HTMLText node);
@@ -358,7 +385,7 @@ class TreePrinter implements TreeVisitor {
     output.depth++;
     // TODO(terry): Ugly use dynamic[0] instead children[0] to surpress warning.
     assert(node.children.length == 1 &&
-        node.children.dynamic[0].tagTokenId == -1);
+        node.children.dynamic[0].tagTokenId == TAG_FRAGMENT);
     output.writeValue("dataController", node.dataController);
     output.writeNodeList("document", node.children);
     output.depth--;
@@ -366,6 +393,17 @@ class TreePrinter implements TreeVisitor {
 
   void visitHTMLElement(HTMLElement node) {
     output.heading('Element', node.span);
+    output.depth++;
+    output.writeValue('tag', node.tagName);
+    if (node.attributes != null && (node.attributes.length > 0)) {
+      output.writeNodeList("attributes", node.attributes);
+    }
+    visitHTMLChildren(node);
+    output.depth--;
+  }
+
+  void visitHTMLUnknownElement(HTMLElement node) {
+    output.heading('Unknown Element', node.span);
     output.depth++;
     output.writeValue('tag', node.tagName);
     if (node.attributes != null && (node.attributes.length > 0)) {

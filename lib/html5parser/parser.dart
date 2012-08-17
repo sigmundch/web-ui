@@ -311,7 +311,8 @@ class Parser {
         start = _peekToken.start;
 
         int token = _peek();
-        if (TokenKind.validTagName(token)) {
+        bool xtag = token == TokenKind.IDENTIFIER;
+        if (TokenKind.validTagName(token) || xtag) {
           bool templateTag = token == TokenKind.TEMPLATE;
 
           Token tagToken = _next();
@@ -336,6 +337,8 @@ class Parser {
             scopeType = TokenKind.unscopedTag(tagToken.kind) ? 2 : 1;
           } else if (_maybeEat(TokenKind.END_NO_SCOPE_TAG)) {
             scopeType = 2;
+          } else if (xtag) {
+            scopeType = 1;
           }
 
           if (scopeType > 0) {
@@ -344,11 +347,17 @@ class Parser {
               // Process template
               // TODO(terry): Template attributes instantiate, iterate, etc.
               elem = new Template("", _makeSpan(start));
-            } else {
+            } else if (!xtag) {
               elem = new HTMLElement.attributes(tagToken.kind,
-                                                    attrs.getValues(),
-                                                    varName,
-                                                    _makeSpan(start));
+                                                attrs.getValues(),
+                                                varName,
+                                                _makeSpan(start));
+            } else {
+              // XTag
+              elem = new HTMLUnknownElement.attributes(_peekToken.text,
+                  attrs.getValues(),
+                  varName,
+                  _makeSpan(start));
             }
 
             stack.top().add(elem);
@@ -394,11 +403,11 @@ class Parser {
     }
 
     // TODO(terry): Need to enable this check.
-    /*
+/*
     if (elems.children.length != 1) {
       print("ERROR: No closing end-tag for elems ${elems[elems.length - 1]}");
     }
-    */
+*/
 
     var docChildren = new List<TreeNode>();
     docChildren.add(stack.pop());

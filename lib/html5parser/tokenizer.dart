@@ -54,6 +54,15 @@ class Tokenizer extends TokenizerBase {
       case TokenChar.COMMA:
         return _finishToken(TokenKind.COMMA);
       case TokenChar.LESS_THAN:
+        if (_peekChar() == TokenChar.EXCLAMATION &&
+            _peekChar(1) == TokenChar.MINUS &&
+            _peekChar(2) == TokenChar.MINUS) {
+          if (_maybeEatChar(TokenChar.EXCLAMATION) &&
+              _maybeEatChar(TokenChar.MINUS) &&
+              _maybeEatChar(TokenChar.MINUS)) {
+            return finishCDATA();
+          }
+        }
         return _finishToken(TokenKind.LESS_THAN);
       case TokenChar.GREATER_THAN:
         return _finishToken(TokenKind.GREATER_THAN);
@@ -86,7 +95,8 @@ class Tokenizer extends TokenizerBase {
         }
       case TokenChar.RBRACE:
         return _finishToken(TokenKind.RBRACE);
-
+      case TokenChar.EXCLAMATION:
+        return this.finishIdentifier();
       default:
         if (TokenizerHelpers.isIdentifierStart(ch)) {
           return this.finishIdentifier();
@@ -296,6 +306,16 @@ class Tokenizer extends TokenizerBase {
             return _finishToken(TokenKind.COMMENT);
           }
         }
+      }
+    }
+    return _errorToken();
+  }
+
+  Token finishCDATA() {
+    while (true) {
+      int ch = _nextChar();
+      if (ch == 0) {
+        return _finishToken(TokenKind.INCOMPLETE_COMMENT);
       } else if (ch == TokenChar.MINUS) {
         /* Check if close part of Comment Definition --> (CDC). */
         if (_maybeEatChar(TokenChar.MINUS)) {
@@ -311,7 +331,6 @@ class Tokenizer extends TokenizerBase {
     }
     return _errorToken();
   }
-
 }
 
 

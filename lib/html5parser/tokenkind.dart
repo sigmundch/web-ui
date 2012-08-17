@@ -37,6 +37,7 @@ class TokenKind {
   static final int DOUBLE_QUOTE = 22;           // "
   static final int SINGLE_QUOTE = 23;           // '
   static final int ASTERISK = 24;               // *
+  static final int EXCLAMATION = 25;            // ! (for doctype)
 
   // WARNING: END_TOKENS must be 1 greater than the last token above (last
   //          character in our list).  Also add to kindToString function and the
@@ -185,7 +186,12 @@ class TokenKind {
   static final int U_ELEMENT = 689;
   static final int UL_ELEMENT = 690;
   static final int VAR_ELEMENT = 691;
-  static final int END_HTML_ELEMENT = VAR_ELEMENT;    // Last valid tag name.
+  static final int DOC_TYPE = 692;                    //<!doctype>
+  // HTML5 tags below:
+  static final int SECTION_TYPE = 693;
+  static final int FOOTER_TYPE = 694;
+  static final int HEADER_TYPE = 695;
+  static final int END_HTML_ELEMENT = HEADER_TYPE;       // Last valid tag name.
 
   static bool validTagName(int tokId) {
     return tokId >= START_HTML_ELEMENT && tokId <= END_HTML_ELEMENT;
@@ -286,6 +292,10 @@ class TokenKind {
     'u',
     'ul',
     'var',
+    '!doctype',
+    'section',
+    'footer',
+    'header',
   ];
 
   // Some more constants:
@@ -312,7 +322,11 @@ class TokenKind {
   }
 
   static bool unscopedTag(int tokenId) {
-    return tokenId == BR_ELEMENT || tokenId == INPUT_ELEMENT;
+    return tokenId == BR_ELEMENT ||
+        tokenId == INPUT_ELEMENT ||
+        tokenId == LINK_ELEMENT ||
+        tokenId == META_ELEMENT ||
+        tokenId == DOC_TYPE;
   }
 
   static String kindToString(int kind) {
@@ -390,6 +404,7 @@ class TokenChar {
   static final int DOUBLE_QUOTE = 0x22; // '"'.charCodeAt(0)
   static final int SINGLE_QUOTE = 0x27; // "'".charCodeAt(0)
   static final int ASTERISK = 0x2a; // "*".charCodeAt(0)
+  static final int EXCLAMATION = 0x21; // "!".charCodeAt(0)
 }
 
 
