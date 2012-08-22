@@ -9,7 +9,8 @@
  * JavaScript.
  * This script only works with properly with dartium however to use it you must
  * compiled it to JavasScript due to a bug with injecting additional dart
- * scripts into a page after dart code has already run (b/4636).
+ * scripts into a page after dart code has already run
+ * [bug 4636](http://dartbug.com/4636).
  *
  * The script does an XMLHTTP request, so
  * to test using locally defined custom elements you must run chrome with the
