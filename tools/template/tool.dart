@@ -34,17 +34,15 @@ printStats(String phase, num elapsed, [String filename = '']) {
   print('${phase} ${GREEN_COLOR}${filename}${NO_COLOR} in ${elapsed} msec.');
 }
 
-/**
- * Run from the `utils/css` directory.
- */
-void main() {
-  // tool.dart [options...] <sourcefile fullpath> <outputfile fullpath>
-  var args = commandOptions();
-  ArgResults results = args.parse(new Options().arguments);
+void main() => run(new Options().arguments);
 
+/** tool.dart [options...] <sourcefile fullpath> <outputfile fullpath> */
+void run(List<String> args) {
+  var argParser = commandOptions();
+  ArgResults results = argParser.parse(args);
   if (results['help']) {
     print('Usage: [options...] sourcefile outputfile\n');
-    print(args.getUsage());
+    print(argParser.getUsage());
     print("       sourcefile - template file filename.tmpl");
     print("       outputfile - generated dart source file filename.dart");
     return;

@@ -25,7 +25,7 @@ OUTFILE=
 # check to make sure enough arguments were given or exit
 if [[ $ARGC -eq $MINARGS ]]; then
   SRCFILE=$PWD/$2
-  IDX=`expr index "$SRCFILE" .` 
+  IDX=`expr index "$SRCFILE" .`
   if [[ $IDX -eq 0 ]]; then
     # No extension
     SRCFILE="$SRCFILE.tmpl"
