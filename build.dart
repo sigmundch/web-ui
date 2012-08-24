@@ -14,15 +14,8 @@ List<String> removedFiles;
 /**
  * This build script is invoked automatically by the Editor whenever a file
  * in the project changes. It must be placed in the root of a project and named
- * 'build.dart'. The legal command-line parameters are:
- *
- * * <none>: a full build is requested
- * * --clean: remove any build artifacts
- * * --changed=one.foo: the file has changed since the last build
- * * --removed=one.foo: the file has been removed since the last build
- *
- * Any error code other then 0 returned by the script is considered an error.
- * The error, and any stdout or stderr text, will by printed to the console.
+ * 'build.dart'. See the source code of [processArgs] for information about the
+ * legal command line options.
  */
 void main() {
   print("running build.dart...");
@@ -39,7 +32,7 @@ void main() {
 }
 
 /**
- * Handle the -clean and -changed command-line args.
+ * Handle the --changed, --removed, --clean and --help command-line args.
  */
 void processArgs() {
   var parser = new ArgParser();
@@ -61,16 +54,14 @@ void processArgs() {
   fullBuild = changedFiles.isEmpty() && removedFiles.isEmpty() && !cleanBuild;
 }
 
-/**
- * Delete all generated .foobar files.
- */
+/** Delete all generated files. */
 void handleCleanCommand() {
   Directory current = new Directory.current();
   current.list(true).onFile = _maybeClean;
 }
 
 /**
- * Recursively scan the current directory looking for .foo files to process.
+ * Recursively scan the current directory looking for template files to process.
  */
 void handleFullBuild() {
   var files = <String>[];
@@ -79,19 +70,13 @@ void handleFullBuild() {
   lister.onDone = (_) => handleChangedFiles(files);
 }
 
-/**
- * Process the given list of changed files.
- */
+/** Process the given list of changed files. */
 void handleChangedFiles(List<String> files) => files.forEach(_processFile);
 
-/**
- * Process the given list of removed files.
- */
+/** Process the given list of removed files. */
 void handleRemovedFiles(List<String> files) => files.forEach(_maybeClean);
 
-/**
- * Convert a .foo file to a .foobar file.
- */
+/** Compile .tmpl files with the template tool. */
 void _processFile(String arg) {
   if (arg.endsWith(".tmpl")) {
     print("processing: ${arg}");
@@ -99,6 +84,7 @@ void _processFile(String arg) {
   }
 }
 
+/** If this file is a generated file (based on the extension), delete it. */
 void _maybeClean(String file) {
   if (file.endsWith(".tmpl.dart")) {
     new File(file).delete();
