@@ -11,17 +11,11 @@
 #import('dart:html');
 
 // Code from components
-#import('footer.dart');
-#import('newform.dart');
-#import('item.dart');
-#import('toggleall.dart');
 // TODO(jmesserly): ideally these would be package: imports
-#import('../../../list_component.dart');
-#import('../../../if_component.dart');
 
 #import('model.dart');
-#import('../../../watcher.dart');
-#import('../../../webcomponents.dart');
+#import("package:webcomponents/watcher.dart");
+#import("package:webcomponents/webcomponents.dart");
 
 main() {
   initializeComponents(viewModel);

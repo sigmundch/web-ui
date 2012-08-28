@@ -24,7 +24,7 @@
 // TODO(jmesserly): this is here so we can set up the lexical scopes.
 // A component needs a way of knowing the <element> tag that was in scope for
 // template expansions.
-#import('component.dart');
+#import("package:webcomponents/component.dart");
 
 #source('lib/list_map.dart');
 
@@ -75,7 +75,7 @@ abstract class WebComponent {
 
 /** Loads and manages the custom elements on a page. */
 class CustomElementsManager {
-  final bool _USE_EXPANDO = true;
+  static final bool _USE_EXPANDO = true;
   /**
    * Maps tag names to our internal dart representation of the custom element.
    */
@@ -153,7 +153,7 @@ class CustomElementsManager {
       var selector = '${declaration.extendz}[is=${declaration.name}], ${declaration.name}';
       var all = target.queryAll(selector);
       // templates are innert and should not be expanded.
-      var activeElements = all.filter(
+      List activeElements = all.filter(
           (e) => !e.matchesSelector('template *'));
       if (root != null && root.matchesSelector(selector)
          && !rootUnderTemplate) {
@@ -328,7 +328,6 @@ class CustomDeclaration {
         shadowRoot.applyAuthorStyles = true;
       }
     } else {
-      print("XXX warning... very incomplete shadow root polyfill!");
       // Remove the old ShadowRoot, if any
       // TODO(jmesserly): can we avoid morphing the same node twice?
       // In any case, removal is not the right behavior. For inherited

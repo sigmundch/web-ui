@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
 <body>
+<script type="application/dart">
+#import('dart:html');
+#import("package:webcomponents/component.dart");
+#import("package:webcomponents/watcher.dart");
+
+#import('model.dart');
+</script>
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles>
   <template>
@@ -17,6 +24,36 @@
       </form>
     </div>
   </template>
+  <script type="application/dart">
+  Todo todo;
+  bool _editing = false;
+
+  String get itemClass() =>
+      _editing ? 'editing' : (todo.done ? 'completed' : '');
+
+  void edit() {
+    _editing = true;
+  }
+
+  void update() {
+    // TODO(jmesserly): do the two way binding automatically
+    todo.task = root.query('input.edit').value;
+    _editing = false;
+  }
+
+  void delete() {
+    var list = app.todos;
+    var index = list.indexOf(todo);
+    if (index != -1) {
+      list.removeRange(index, 1);
+    }
+  }
+
+  void markDone() {
+    // TODO(jmesserly): do the two way binding automatically
+    todo.done = root.query('#checkbox').checked;
+  }
+  </script>
 </element>
 </body>
 </html>

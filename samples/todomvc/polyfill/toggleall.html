@@ -1,5 +1,11 @@
 <html>
 <body>
+<script type="application/dart">
+#import('dart:html');
+#import("package:webcomponents/component.dart");
+#import("package:webcomponents/watcher.dart");
+#import('model.dart');
+</script>
 <element name="x-toggle-all" extends="div" constructor="ToggleComponent"
          apply-author-styles>
   <template>
@@ -7,6 +13,14 @@
            checked="{{allChecked}}" data-on-click="markAll()">
     <label for="toggle-all">Mark all as complete</label>
   </template>
+  <script type="application/dart">
+  bool get allChecked() => app.todos.length > 0 &&
+      app.todos.every((t) => t.done);
+
+  get _toggleAll() => root.query('#toggle-all');
+
+  void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+  </script>
 </element>
 </body>
 </html>

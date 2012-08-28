@@ -22,8 +22,6 @@
 #import('item.dart');
 #import('toggleall.dart');
 // TODO(jmesserly): ideally these would be package: imports
-#import('../../../list_component.dart');
-#import('../../../if_component.dart');
 
 #import('model.dart');
 #import('../../../watcher.dart');

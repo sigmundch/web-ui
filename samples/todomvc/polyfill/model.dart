@@ -4,8 +4,6 @@
 
 #library('model');
 
-#import('dart:html');
-
 class MainComponent {
   MainComponent();
 

@@ -11,8 +11,8 @@
 
 #import('dart:mirrors');
 #import('dart:html');
-#import('watcher.dart');
-#import('webcomponents.dart');
+#import("package:webcomponents/webcomponents.dart");
+#import("package:webcomponents/watcher.dart");
 
 typedef void Action();
 
@@ -47,7 +47,7 @@ class Component extends WebComponent {
    * Counter associated with this component, currently only used for debugging
    * purposes.
    */
-  int id;
+  int componentId;
 
   /** Name for the kind of component, currently only used for debugging. */
   String name;
@@ -75,7 +75,7 @@ class Component extends WebComponent {
   var declaringScope;
 
   Component(this.name, this._element)
-      : id = _id++,
+      : componentId = _id++,
         // TODO(jmesserly): initialize lazily
         _insertActions = [],
         _removeActions = [] {
@@ -88,17 +88,21 @@ class Component extends WebComponent {
   // TODO(sigmund): delete print statements or use logging library.
   void created(ShadowRoot root) {
     _root = root;
-    print('$name $id-created');
+    print('$name $componentId-created');
   }
 
   void inserted() {
-    print('$name $id-inserted');
+    print('$name $componentId-inserted');
 
     _bindFields();
 
     // TODO(jmesserly): is this too late to bind data? If we bind it any
     // earlier, we won't have mutation observer set up, and might miss changes.
-    _bindDataRecursive(_root);
+    if (_root != null) {
+      for (var child in _root.elements) {
+        _bindDataRecursive(child);
+      }
+    }
 
     _observer = new MutationObserver((mutations, observer) {
       for (var mutation in mutations) {
@@ -110,7 +114,9 @@ class Component extends WebComponent {
         }
       }
     });
-    _observer.observe(_root, childList: true, subtree: true);
+    if (_root != null) {
+      _observer.observe(_root, childList: true, subtree: true);
+    }
 
     for (var action in _insertActions) action();
     _inDocument = true;
@@ -119,7 +125,9 @@ class Component extends WebComponent {
   void removed() {
     print('$name $id-removed');
 
-    _observer.disconnect();
+    if (_observer != null) {
+      _observer.disconnect();
+    }
 
     for (var action in _removeActions) action();
     _inDocument = false;
@@ -190,10 +198,10 @@ class Component extends WebComponent {
             'event $key not found on $node');
       }
 
-      var self = mirror.mirrorOf(this);
+      var self = reflect(this);
       var caller = (e) {
         // TODO(jmesserly): shouldn't we pass in event args somehow?
-        // var args = [mirror.mirrorOf(e)];
+        // var args = [reflect(e)];
         var future = self.invoke(method, []);
         dispatch();
         return future.value.reflectee;
@@ -258,7 +266,7 @@ class Component extends WebComponent {
       if (key.startsWith('bind-')) {
         String name = key.substring('bind-'.length);
 
-        var self = currentMirrorSystem().mirrorOf(this);
+        var self = reflect(this);
         self.setField(name, mirrorGet(declaringScope, value));
 
         // TODO(jmesserly): watcher is overkill for the common case of a loop
@@ -302,7 +310,7 @@ class Component extends WebComponent {
       }
     }
 
-    var self = mirror.mirrorOf(scope);
+    var self = reflect(scope);
     for (var name in names) {
       self = self.getField(name).value;
     }
@@ -315,12 +323,168 @@ class Component extends WebComponent {
     // handle library prefixes and imports properly.
     // In general the template polyfill needs a scoping mechanism.
     var mirror = currentMirrorSystem();
-    for (var lib in mirror.libraries().getValues()) {
-      var member = lib.members()[name];
+    for (var lib in mirror.libraries.getValues()) {
+      var member = lib.members[name];
       if (member != null) {
         return lib.getField(name).value;
       }
     }
     return null;
   }
+
+  // This is a temporary hack until Dart supports subclassing elements.
+  // TODO(jacobr): use mirrors instead.
+
+  NodeList get nodes() => _element.nodes;
+
+  void set nodes(Collection<Node> value) { _element.nodes = value; }
+
+  /**
+   * Replaces this node with another node.
+   */
+  Node replaceWith(Node otherNode) { _element.replaceWith(otherNode); }
+
+  /**
+   * Removes this node from the DOM.
+   */
+  Node remove() { _element.remove(); }
+  Node get nextNode() => _element.nextNode;
+
+  Document get document() => _element.document;
+
+  Node get previousNode() => _element.previousNode;
+
+  String get text() => _element.text;
+
+  void set text(String v) { _element.text = v; }
+
+  bool contains(Node other) => _element.contains(other);
+
+  bool hasChildNodes() => _element.hasChildNodes();
+
+  Node insertBefore(Node newChild, Node refChild) =>
+    _element.insertBefore(newChild, refChild);
+
+  AttributeMap get attributes() => _element.attributes;
+  void set attributes(Map<String, String> value) {
+    _element.attributes = value;
+  }
+
+  ElementList get elements() => _element.elements;
+
+  void set elements(Collection<Element> value) {
+    _element.elements = value;
+  }
+
+  Set<String> get classes() => _element.classes;
+
+  void set classes(Collection<String> value) {
+    _element.classes = value;
+  }
+
+  AttributeMap get dataAttributes() => _element.dataAttributes;
+  void set dataAttributes(Map<String, String> value) {
+    _element.dataAttributes = value;
+  }
+
+  Future<ElementRect> get rect() => r.rect;
+
+  Future<CSSStyleDeclaration> get computedStyle() => r.computedStyle;
+
+  Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
+    => r.getComputedStyle(pseudoElement);
+
+  Element clone(bool deep) => _element.clone(deep);
+
+  Element get parent() => _element.parent;
+
+  ElementEvents get on() => _element.on;
+
+  String get contentEditable() => _element.contentEditable;
+
+  String get dir() => _element.dir;
+
+  bool get draggable() => _element.draggable;
+
+  bool get hidden() => _element.hidden;
+
+  String get id() => _element.id;
+
+  String get innerHTML() => _element.innerHTML;
+
+  bool get isContentEditable() => _element.isContentEditable;
+
+  String get lang() => _element.lang;
+
+  String get outerHTML() => _element.outerHTML;
+
+  bool get spellcheck() => _element.spellcheck;
+
+  int get tabIndex() => _element.tabIndex;
+
+  String get title() => _element.title;
+
+  bool get translate() => _element.translate;
+
+  String get webkitdropzone() => _element.webkitdropzone;
+
+  void click() { _element.click(); }
+
+  Element insertAdjacentElement(String where, Element element) =>
+    _element.insertAdjacentElement(where, element);
+
+  void insertAdjacentHTML(String where, String html) {
+    _element.insertAdjacentHTML(where, html);
+  }
+
+  void insertAdjacentText(String where, String text) {
+    _element.insertAdjacentText(where, text);
+  }
+
+  Map<String, String> get dataset() => _element.dataset;
+
+  Element get nextElementSibling() => _element.nextElementSibling;
+
+  Element get offsetParent() => _element.offsetParent;
+
+  Element get previousElementSibling() => _element.previousElementSibling;
+
+  CSSStyleDeclaration get style() => _element.style;
+
+  String get tagName() => _element.tagName;
+  String set tagName(String v) => _element.tagName = v;
+
+  String get webkitRegionOverflow() => _element.webkitRegionOverflow;
+
+  void blur() { _element.blur(); }
+
+  void focus() { _element.focus(); }
+
+  void scrollByLines(int lines) {
+    _element.scrollByLines(lines);
+  }
+
+  void scrollByPages(int pages) {
+    _element.scrollByPages(pages);
+  }
+
+  void scrollIntoView([bool centerIfNeeded]) {
+    if (centerIfNeeded == null) {
+      _element.scrollIntoView();
+    } else {
+      _element.scrollIntoView(centerIfNeeded);
+    }
+  }
+
+  bool matchesSelector(String selectors) => _element.matchesSelector(selectors);
+
+  void webkitRequestFullScreen(int flags) { _element.webkitRequestFullScreen(flags); }
+
+  void webkitRequestFullscreen() { _element.webkitRequestFullscreen(); }
+
+  void webkitRequestPointerLock() { _element.webkitRequestPointerLock(); }
+
+  Element query(String selectors) => _element.query(selectors);
+
+  List<Element> queryAll(String selectors) => _element.queryAll(selectors);
 }
