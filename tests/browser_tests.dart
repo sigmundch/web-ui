@@ -11,10 +11,9 @@
 #import('dart:html');
 #import('package:unittest/unittest.dart');
 #import('package:unittest/html_config.dart');
-#import('../if_component.dart');
-#import('../list_component.dart');
-#import('../webcomponents.dart');
-#import('../watcher.dart');
+#import("package:webcomponents/webcomponents.dart");
+#import("package:webcomponents/component.dart");
+#import("package:webcomponents/watcher.dart");
 
 class Item {
   bool visible = true;
@@ -41,18 +40,21 @@ main() {
     var ifComp = manager[ifEl];
     expect(ifComp, isNotNull);
     app.showFooter = true;
-    expect(ifComp.shouldShow(null));
+    expect(ifComp.shouldShow());
     app.showFooter = false;
-    expect(!ifComp.shouldShow(null));
+    expect(!ifComp.shouldShow());
   });
 
   test('if responds to state change', () {
     var ifEl = query('#cool-if');
     var ifComp = manager[ifEl];
+    expect(!ifComp.shouldShow());
     app.showFooter = true;
     expect(query('#cool-footer'), isNull);
     dispatch();
+    expect(ifComp.shouldShow());
     var footer = query('#cool-footer');
+
     expect(footer, isNotNull);
     expect(footer.parent, equals(ifEl.parent));
 
@@ -101,37 +103,15 @@ main() {
 
 /** Create the views and bind them to models (will be auto-generated). */
 void _appSetUp() {
-  _componentsSetUp();
-
   // create view.
   var body = new DocumentFragment.html(INITIAL_PAGE);
-  manager.expandDeclarations(body);
+  // Use mirrors when they become available.
+  // TODO(jacobr): handle x-if
 
-  // attach model where needed.
-  manager[body.query("[is=x-list]")].items = () => app.items;
+  manager.expandDeclarations(body, app);
 
   // attach view to the document.
   document.body.nodes.add(body);
-}
-
-/** Set up components used by this application (will be auto-generated). */
-void _componentsSetUp() {
-  // Use mirrors when they become available.
-  var map = {
-    'x-list': (elem) => new ListComponent(elem),
-    'x-if': (elem) {
-      var res = new IfComponent(elem);
-      var condition = elem.attributes['instantiate'].substring('if '.length);
-      if (condition == 'app.showFooter') {
-        res.shouldShow = (_) => app.showFooter;
-      } else if (condition == 'item.visible') {
-        res.shouldShow = (vars) => vars['item'].visible;
-      }
-      return res;
-    },
-  };
-
-  initializeComponents((name) => map[name]);
 }
 
 /** DOM describing the initial view of the app (will be auto-generated). */

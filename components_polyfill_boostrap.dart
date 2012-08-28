@@ -5,7 +5,7 @@
 /**
  * Bootstrap polyfill script for custom elements.
  * This script enables defining custom elements with blocks of dart code
- * embedded within an html page juast as you would define web components using
+ * embedded within an html page just as you would define web components using
  * JavaScript.
  * This script only works with properly with dartium however to use it you must
  * compiled it to JavasScript due to a bug with injecting additional dart
@@ -21,8 +21,6 @@
 
 #import('dart:html');
 #import('dart:uri');
-
-final POLYFILL_LIBRARY_PACKAGE = "package:webcomponents/webcomponents.dart";
 
 final int REQUEST_DONE = 4;
 
@@ -42,6 +40,7 @@ final _tagToClassName = const {
     'div': 'DivElement',
     'embed': 'EmbedElement',
     'fieldset': 'FieldSetElement',
+    'footer': 'Element',
     'form': 'Form',
     'hr': 'HRElement',
     'head': 'HeadElement',
@@ -53,7 +52,7 @@ final _tagToClassName = const {
     'h6': 'HeadingElement',
     'html': 'HtmlElement',
     'iframe': 'IFrameElement',
-    'ImageElement':' img',
+    'img':' ImageElement',
     'input': 'InputElement',
     'keygen': 'KeygenElement',
     'li': 'LIElement',
@@ -82,168 +81,12 @@ final _tagToClassName = const {
     'table': 'TableElement',
     'tr': 'TableRowElement',
     // 'TableSectionElement'  <thead> <tbody> <tfoot>
+    'template': 'Element', // TODO(jacobr): this is wrong.
     'textarea': 'TextAreaElement',
     'title': 'TitleElement',
     'track': 'TrackElement',
     'ul': 'UListElement',
     'video': 'VideoElement'};
-
-var PROXY_ELEMENT_MEMBERS = """
-  // This is a temporary hack until Dart supports subclassing elements.
-  // TODO(jacobr): use mirrors instead.
-
-  NodeList get nodes() => _r.nodes;
-
-  void set nodes(Collection<Node> value) { _r.nodes = value; }
-
-  /**
-   * Replaces this node with another node.
-   */
-  Node replaceWith(Node otherNode) { _r.replaceWith(otherNode); }
-
-  /**
-   * Removes this node from the DOM.
-   */
-  Node remove() { _r.remove(); }
-  Node get nextNode() => _r.nextNode; 
-
-  Document get document() => _r.document;
-
-  Node get previousNode() => _r.previousNode;
-
-  String get text() => _r.text;
-  void set text(String v) => _r.text;
-
-  bool contains(Node other) => _r.contains(other);
-
-  bool hasChildNodes() => _r.hasChildNodes();
-
-  Node insertBefore(Node newChild, Node refChild) =>
-    _r.insertBefore(newChild, refChild);
-
-  AttributeMap get attributes() => _r.attributes;
-  void set attributes(Map<String, String> value) {
-    _r.attributes = value;
-  }
-
-  ElementList get elements() => _r.elements;
-
-  void set elements(Collection<Element> value) {
-    _r.elements = value;
-  }
-
-  Set<String> get classes() => _r.classes;
-
-  void set classes(Collection<String> value) {
-    _r.classes = value;
-  }
-
-  AttributeMap get dataAttributes() => _r.dataAttributes;
-  void set dataAttributes(Map<String, String> value) {
-    _r.dataAttributes = value;
-  }
-
-  Future<ElementRect> get rect() => r.rect;
-
-  Future<CSSStyleDeclaration> get computedStyle() => r.computedStyle;
-
-  Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
-    => r.getComputedStyle(pseudoElement);
-
-  Element clone(bool deep) => _r.clone(deep);
-
-  Element get parent() => _r.parent;
-
-  ElementEvents get on() => _r.on;
-
-  String get contentEditable() => _r.contentEditable;
-
-  String get dir() => _r.dir;
-
-  bool get draggable() => _r.draggable;
-
-  bool get hidden() => _r.hidden;
-
-  String get id() => _r.id;
-
-  String get innerHTML() => _r.innerHTML;
-
-  bool get isContentEditable() => _r.isContentEditable;
-
-  String get lang() => _r.lang;
-
-  String get outerHTML() => _r.outerHTML;
-
-  bool get spellcheck() => _r.spellcheck;
-
-  int get tabIndex() => _r.tabIndex;
-
-  String get title() => _r.title;
-
-  bool get translate() => _r.translate;
-
-  String get webkitdropzone() => _r.webkitdropzone;
-
-  void click() { _r.click(); }
-
-  Element insertAdjacentElement(String where, Element element) =>
-    _r.insertAdjacentElement(where, element);
-
-  void insertAdjacentHTML(String where, String html) {
-    _r.insertAdjacentHTML(where, html);
-  }
-
-  void insertAdjacentText(String where, String text) {
-    _r.insertAdjacentText(where, text);
-  }
-
-  Map<String, String> get dataset() => _r.dataset;
-
-  Element get nextElementSibling() => _r.nextElementSibling;
-
-  Element get offsetParent() => _r.offsetParent;
-
-  Element get previousElementSibling() => _r.previousElementSibling;
-
-  CSSStyleDeclaration get style() => _r.style;
-
-  String get tagName() => _r.tagName;
-  String set tagName(String v) => _r.tagName = v;
-
-  String get webkitRegionOverflow() => _r.webkitRegionOverflow;
-
-  void blur() { _r.blur(); }
-
-  void focus() { _r.focus(); }
-
-  void scrollByLines(int lines) {
-    _r.scrollByLines(lines);
-  }
-
-  void scrollByPages(int pages) {
-    _r.scrollByPages(pages);
-  }
-
-  void scrollIntoView([bool centerIfNeeded]) {
-    if (centerIfNeeded == null) {
-      _r.scrollIntoView();
-    } else {
-      _r.scrollIntoView(centerIfNeeded);
-    }
-  }
-
-  bool matchesSelector(String selectors) => _r.matchesSelector(selectors);
-
-  void webkitRequestFullScreen(int flags) { _r.webkitRequestFullScreen(flags); }
-
-  void webkitRequestFullscreen() { _r.webkitRequestFullscreen(); }
-
-  void webkitRequestPointerLock() { _r.webkitRequestPointerLock(); }
-
-  Element query(String selectors) => _r.query(selectors);
-
-  List<Element> queryAll(String selectors) => _r.queryAll(selectors);
-""";
 
 Function _afterN(Function callback, int count) {
   return () {
@@ -290,10 +133,29 @@ void loadComponents() {
   }
 }
 
+String rewritePaths(String script, String url) {
+  var location = new Uri.fromString(window.location.href);
+  var scriptLocation = location.resolve(url);
+
+  var sb = new StringBuffer();
+  for (String line in script.split(new RegExp('\n'))) {
+    Match match = const RegExp(@"""^(#import[(]["'])([^"']+)(["'][)];)$""")
+        .firstMatch(line);
+    if (match != null) {
+      var absLocation = scriptLocation.resolve(match.group(2));
+      line = "${match.group(1)}$absLocation${match.group(3)}";
+    }
+    sb..add(line)..add('\n');
+  }
+  return sb.toString();
+}
+
 /// Declaration defining one or more custom elements.
 class CustomElementDeclaration {
-   /// Url the declaration was loaded from.
+
+  /** Url the declaration was loaded from. */
   final String url;
+
   /**
    * Html containing all custom element definitions specified as part of the
    * script.
@@ -303,39 +165,64 @@ class CustomElementDeclaration {
   CustomElementDeclaration(this.url, this.html);
 }
 
+int _uniqueId = 0;
+String uniqueLibPrefix(String url) {
+  // TODO(jacobr): use url.
+  _uniqueId++;
+  return "lib$_uniqueId";
+}
+
 /// Build up a dart file that when executed laads all components on the page.
 void runComponents(List<CustomElementDeclaration> declarations) {
   var sbHeader = new StringBuffer();
   var sb = new StringBuffer()
     ..add("""
 #import("dart:html");
-#import("$POLYFILL_LIBRARY_PACKAGE", prefix: "polyfill");
+#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");
 """);
 
   var sbMain = new StringBuffer()..add("void main() {");
+  var sbMainFooter = new StringBuffer();
+  // TODO(jacobr): this assumes each script imported is a library.
+  for (ScriptElement script in queryAll('script[type="application/dart"]')) {
+    // TODO(jacobr): fix this hack to keep the scripts from running.
+    script.type = "application/dart_MERGED_INTO_ISOLATE";
+    if (!script.src.isEmpty()) {
+      String url = script.src;
+      var libPrefix = uniqueLibPrefix(url);
+      // TODO(jacobr): proper escaping.
+      sb.add('#import("$url", prefix: "$libPrefix");\n');
+      sbMainFooter.add("""
+  // TODO(jacobr): enclose in try-catch block.
+  $libPrefix.main();
+""");
+    }
+  }
 
   for(CustomElementDeclaration declaration in declarations) {
     var sbLibrary = new StringBuffer();
     var sbLibraryHeader = new StringBuffer();
 
-    var topLevelScripts = declaration.html.queryAll('script').filter(
+    var topLevelScripts = declaration.html.queryAll(
+        'script[type="application/dart"]').filter(
         (Element e) => e.parent.tagName != "ELEMENT");
     // For simplicity we assume at most one top level script.
     assert(topLevelScripts.length <= 1);
     for (ScriptElement script in topLevelScripts) {
       sbLibraryHeader
-        ..add(script.text)
+        ..add(rewritePaths(script.text, declaration.url))
         ..add("\n");
     }
 
     String libraryName =
         const RegExp(@"([^/.]+)([^/]+)$").firstMatch(
             new Uri(declaration.url).path).group(1);
-    sbLibrary
-      ..add('#library("$libraryName");\n')
-      ..add('#import("$POLYFILL_LIBRARY_PACKAGE", prefix: "polyfill");\n')
-      ..add(sbLibraryHeader)..add("\n");
-
+    sbLibrary.add("""
+#library("$libraryName");
+#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");
+#import("package:webcomponents/component.dart", prefix: "polyfill");
+$sbLibraryHeader
+""");
 
     int numDartCustomElements = 0;
     for(Element element in declaration.html.queryAll('element')) {
@@ -369,16 +256,11 @@ void runComponents(List<CustomElementDeclaration> declarations) {
       numDartCustomElements++;
       var classBody = script.text;
       sbLibrary.add("""
-class $className extends polyfill.WebComponent implements ${_tagToClassName[extendz]} {
-  
-  // Raw element the component is associated with.
-  final Element _r;
-  
-  $className(this._r);
+class $className extends polyfill.Component implements ${_tagToClassName[extendz]} {
+    
+  $className(element) : super('$className', element);
 
 $classBody
-
-$PROXY_ELEMENT_MEMBERS
 }
 
 // TODO(jacobr): support more than one component per library.
@@ -401,9 +283,9 @@ void register() {
     // TODO(jacobr): remove this once b/4344 is fixed. This script tag is
     // inserted into the page to make the debugging experience tollerable.
    document.head.nodes
-    .add(
-      new ScriptElement()
-        ..text = """
+     .add(
+       new ScriptElement()
+         ..text = """
 $sbLibrary
 
 void main() {
@@ -416,6 +298,7 @@ void main() {
   sb.add("""
 $sbMain
   polyfill.initializeComponents();
+$sbMainFooter
 }
 """);
 
