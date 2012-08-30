@@ -22,6 +22,9 @@
 
 #source('lib/list_map.dart');
 
+/** Should we use prototype rewiring and the new WebComponent interface? */
+final bool _USE_PROTO_REWIRING = false;
+
 // typedefs
 typedef WebComponent WebComponentFactory (ShadowRoot shadowRoot, Element elt);
 typedef WebComponentFactory RegistryLookupFunction(String tagName);
@@ -29,20 +32,21 @@ typedef WebComponentFactory RegistryLookupFunction(String tagName);
 // Globals
 final int REQUEST_DONE = 4;
 CustomElementsManager _manager;
-CustomElementsManager get manager() => _manager;
+CustomElementsManager get manager => _manager;
 
 void initializeComponents(RegistryLookupFunction lookup) {
   _manager = new CustomElementsManager._internal(lookup);
   manager._loadComponents();
 }
 
-/** A Dart wrapper for a web component. */
+/** A Dart web component. */
 abstract class WebComponent {
   /** The web component element wrapped by this class. */
+  // Does not exist if _USE_PROTO_REWIRING
   abstract Element get element();
 
   /** Invoked when this component gets created. */
-  abstract void created();
+  abstract void created([ShadowRoot root]);
 
   /** Invoked when this component gets inserted in the DOM tree. */
   abstract void inserted();
@@ -63,9 +67,10 @@ class CustomElementsManager {
    */
   Map<String, _CustomDeclaration> _customDeclarations;
 
-  // TODO(samhop): evaluate possibility of using vsm's trick of storing
-  // arbitrary Dart objects directly on DOM objects rather than this map.
-  /** Maps DOM elements to the user-defiend corresponding dart objects. */
+  /** 
+   * Maps DOM elements to the user-defiend corresponding dart objects. 
+   * Not used if _USE_PROTO_REWIRING.
+   */
   ListMap<Element, WebComponent> _customElements;
 
   RegistryLookupFunction _lookup;
@@ -75,9 +80,11 @@ class CustomElementsManager {
   CustomElementsManager._internal(this._lookup) {
     // TODO(samhop): check for ShadowDOM support
     _customDeclarations = <_CustomDeclaration>{};
-    // We use a ListMap because DOM objects aren't hashable right now.
-    // TODO(samhop): DOM objects (and everything else) should be hashable
-    _customElements = new ListMap<Element, WebComponent>();
+    if (!_USE_PROTO_REWIRING) {
+      // We use a ListMap because DOM objects aren't hashable right now.
+      // TODO(samhop): DOM objects (and everything else) should be hashable
+      _customElements = new ListMap<Element, WebComponent>();
+    }
     initializeInsertedRemovedCallbacks(document);
   }
 
@@ -159,13 +166,29 @@ class CustomElementsManager {
         activeElements.add(root);
       }
       for (var e in activeElements) {
-        var component = _customElements[e];
-        if (component == null) {
-          component = declaration.morph(e);
-          newCustomElements.add(component);
+        // More of this logic could probably be shared, but readibility is
+        // improved if we keep the paths seperate.
+        var component;
+        var new_component;
+        if (!_USE_PROTO_REWIRING) {
+          component = _customElements[e];
+          if (component == null) {
+            component = declaration.morph(e);
+            newCustomElements.add(component);
+          }
+        } else {
+          new_component = e;
+          if (e is! WebComponent) {
+            new_component = declaration.morph(e);
+            e.parent.$dom_replaceChild(new_component, e);
+            for (var node in e.nodes) {
+              new_component.nodes.add(node.clone(true));
+            }
+            new_component.classes = e.classes;
+          }
         }
         if (insert) {
-          component.inserted();
+          (_USE_PROTO_REWIRING ? new_component : component).inserted();
         }
       }
     }
@@ -177,10 +200,16 @@ class CustomElementsManager {
   void _removeComponents(Element root) {
     for (var decl in _customDeclarations.getValues()) {
       for (var e in root.queryAll('${decl.extendz}[is=${decl.name}]')) {
-        if (_customElements[e] != null) _customElements[e].removed();
+        if ((_USE_PROTO_REWIRING ? 
+            e is WebComponent : _customElements[e] != null)) {
+          _customElements[e].removed();
+        }
       }
       if (root.matchesSelector('${decl.extendz}[is=${decl.name}]')) {
-        if (_customElements[root] != null) _customElements[root].removed();
+        if ((_USE_PROTO_REWIRING ?
+            root is WebComponent : _customElements[root] != null)) {
+          _customElements[root].removed();
+        }
       }
     }
   }
@@ -203,7 +232,12 @@ class CustomElementsManager {
     return declaration.morph(element);
   }
 
-  WebComponent operator [](Element element) => _customElements[element];
+  /** 
+   * Returns null if _USE_PROTO_REWIRING, otherwise returns the dart wrapper
+   * for [element].
+   */
+  WebComponent operator [](Element element) => 
+      (_USE_PROTO_REWIRING ? null : _customElements[element]);
 
   // Initializes management of inserted and removed
   // callbacks for WebComponents below root in the DOM. We need one of these
@@ -234,7 +268,7 @@ bool _hasShadowRoot;
  * See the [Shadow DOM spec](http://www.w3.org/TR/shadow-dom/) for more
  * information about the ShadowRoot.
  */
-bool get hasShadowRoot() {
+bool get hasShadowRoot {
   if (_hasShadowRoot == null) {
     try {
       // TODO(jmesserly): it'd be nice if we could check this without causing
@@ -301,8 +335,9 @@ class _CustomDeclaration {
     }
 
     var shadowRoot;
+    var target = (_USE_PROTO_REWIRING ? manager._lookup(this.name)() : e);
     if (hasShadowRoot) {
-      shadowRoot = new ShadowRoot(e);
+      shadowRoot = new ShadowRoot(target);
       shadowRoot.resetStyleInheritance = false;
       if (applyAuthorStyles) {
         shadowRoot.applyAuthorStyles = true;
@@ -315,14 +350,23 @@ class _CustomDeclaration {
 
       // TODO(jmesserly): distribute children to insertion points.
       shadowRoot = new Element.html('<div class="shadowroot"></div>');
-      e.nodes.add(shadowRoot);
+      target.nodes.add(shadowRoot);
     }
 
     template.nodes.forEach((node) => shadowRoot.nodes.add(node.clone(true)));
-    var newCustomElement = manager._lookup(this.name)(shadowRoot, e);
-    manager._customElements[e] = newCustomElement;
+    var newCustomElement;
+    if (!_USE_PROTO_REWIRING) {
+      newCustomElement = manager._lookup(this.name)(shadowRoot, e);
+      manager._customElements[e] = newCustomElement;
+    } else {
+      newCustomElement = target;
+    }
     manager._expandDeclarations(shadowRoot, insert: false);
-    newCustomElement.created();
+    if (_USE_PROTO_REWIRING) {
+      newCustomElement.created(shadowRoot);
+    } else {
+      newCustomElement.created();
+    }
     manager._expandDeclarations(shadowRoot, insert: true);
 
     // TODO(samhop): investigate refactoring/redesigning the API so that
