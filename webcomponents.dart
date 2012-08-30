@@ -169,7 +169,6 @@ class CustomElementsManager {
         // More of this logic could probably be shared, but readibility is
         // improved if we keep the paths seperate.
         var component;
-        var new_component;
         if (!_USE_PROTO_REWIRING) {
           component = _customElements[e];
           if (component == null) {
@@ -177,18 +176,18 @@ class CustomElementsManager {
             newCustomElements.add(component);
           }
         } else {
-          new_component = e;
-          if (e is! WebComponent) {
-            new_component = declaration.morph(e);
-            e.parent.$dom_replaceChild(new_component, e);
+          component = e;
+          if (component is! WebComponent) {
+            component = declaration.morph(e);
+            e.parent.$dom_replaceChild(component, e);
             for (var node in e.nodes) {
-              new_component.nodes.add(node.clone(true));
+              component.nodes.add(node.clone(true));
             }
-            new_component.classes = e.classes;
+            component.classes = e.classes;
           }
         }
         if (insert) {
-          (_USE_PROTO_REWIRING ? new_component : component).inserted();
+          component.inserted();
         }
       }
     }
