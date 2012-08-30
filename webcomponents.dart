@@ -41,8 +41,11 @@ void initializeComponents(RegistryLookupFunction lookup) {
 
 /** A Dart web component. */
 abstract class WebComponent {
-  /** The web component element wrapped by this class. */
-  // Does not exist if _USE_PROTO_REWIRING
+  /** 
+   * The web component element wrapped by this class.
+   * Does not exist if _USE_PROTO_REWIRING because in that case we don't use
+   * wrappers.
+   */
   abstract Element get element();
 
   /** Invoked when this component gets created. */
@@ -199,16 +202,12 @@ class CustomElementsManager {
   void _removeComponents(Element root) {
     for (var decl in _customDeclarations.getValues()) {
       for (var e in root.queryAll('${decl.extendz}[is=${decl.name}]')) {
-        if ((_USE_PROTO_REWIRING ? 
-            e is WebComponent : _customElements[e] != null)) {
-          _customElements[e].removed();
-        }
+        var component = this[e];
+        if (component is WebComponent) component.removed();
       }
       if (root.matchesSelector('${decl.extendz}[is=${decl.name}]')) {
-        if ((_USE_PROTO_REWIRING ?
-            root is WebComponent : _customElements[root] != null)) {
-          _customElements[root].removed();
-        }
+        var component = this[root];
+        if (component is WebComponent) component.removed();
       }
     }
   }
@@ -232,11 +231,11 @@ class CustomElementsManager {
   }
 
   /** 
-   * Returns null if _USE_PROTO_REWIRING, otherwise returns the dart wrapper
+   * Returns [element] if _USE_PROTO_REWIRING, otherwise returns the dart wrapper
    * for [element].
    */
   WebComponent operator [](Element element) => 
-      (_USE_PROTO_REWIRING ? null : _customElements[element]);
+      (_USE_PROTO_REWIRING ? element : _customElements[element]);
 
   // Initializes management of inserted and removed
   // callbacks for WebComponents below root in the DOM. We need one of these
