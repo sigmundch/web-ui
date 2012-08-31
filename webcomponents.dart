@@ -23,7 +23,7 @@
 #source('lib/list_map.dart');
 
 /** Should we use prototype rewiring and the new WebComponent interface? */
-bool usePrototypeRewiring;
+bool _usePrototypeRewiring;
 
 // typedefs
 typedef WebComponent WebComponentFactory (ShadowRoot shadowRoot, Element elt);
@@ -35,17 +35,17 @@ CustomElementsManager _manager;
 CustomElementsManager get manager => _manager;
 
 void initializeComponents(RegistryLookupFunction lookup, [bool
-    prototypeRewiring = false]) {
+    usePrototypeRewiring = false]) {
+  _usePrototypeRewiring = prototypeRewiring;
   _manager = new CustomElementsManager._internal(lookup);
   manager._loadComponents();
-  usePrototypeRewiring = prototypeRewiring;
 }
 
 /** A Dart web component. */
 abstract class WebComponent {
   /** 
    * The web component element wrapped by this class.
-   * Does not exist if usePrototypeRewiring because in that case we don't use
+   * Does not exist if _usePrototypeRewiring because in that case we don't use
    * wrappers.
    */
   abstract Element get element;
@@ -75,7 +75,7 @@ class CustomElementsManager {
 
   /** 
    * Maps DOM elements to the user-defiend corresponding dart objects. 
-   * Not used if usePrototypeRewiring.
+   * Not used if _usePrototypeRewiring.
    */
   ListMap<Element, WebComponent> _customElements;
 
@@ -86,7 +86,7 @@ class CustomElementsManager {
   CustomElementsManager._internal(this._lookup) {
     // TODO(samhop): check for ShadowDOM support
     _customDeclarations = <_CustomDeclaration>{};
-    if (!usePrototypeRewiring) {
+    if (!_usePrototypeRewiring) {
       // We use a ListMap because DOM objects aren't hashable right now.
       // TODO(samhop): DOM objects (and everything else) should be hashable
       _customElements = new ListMap<Element, WebComponent>();
@@ -175,7 +175,7 @@ class CustomElementsManager {
         // More of this logic could probably be shared, but readibility is
         // improved if we keep the paths seperate.
         var component;
-        if (!usePrototypeRewiring) {
+        if (!_usePrototypeRewiring) {
           component = _customElements[e];
           if (component == null) {
             component = declaration.morph(e);
@@ -233,11 +233,11 @@ class CustomElementsManager {
   }
 
   /** 
-   * Returns [element] if usePrototypeRewiring, otherwise returns the dart
+   * Returns [element] if _usePrototypeRewiring, otherwise returns the dart
    * wrapper for [element].
    */
   WebComponent operator [](Element element) => 
-      (usePrototypeRewiring? element : _customElements[element]);
+      (_usePrototypeRewiring? element : _customElements[element]);
 
   // Initializes management of inserted and removed
   // callbacks for WebComponents below root in the DOM. We need one of these
@@ -335,7 +335,7 @@ class _CustomDeclaration {
     }
 
     var shadowRoot;
-    var target = (usePrototypeRewiring ? manager._lookup(this.name)() : e);
+    var target = (_usePrototypeRewiring ? manager._lookup(this.name)() : e);
     if (hasShadowRoot) {
       shadowRoot = new ShadowRoot(target);
       shadowRoot.resetStyleInheritance = false;
@@ -355,7 +355,7 @@ class _CustomDeclaration {
 
     template.nodes.forEach((node) => shadowRoot.nodes.add(node.clone(true)));
     var newCustomElement;
-    if (!usePrototypeRewiring) {
+    if (!_usePrototypeRewiring) {
       newCustomElement = manager._lookup(this.name)();
       newCustomElement.element = e;
       manager._customElements[e] = newCustomElement;
