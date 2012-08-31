@@ -11,8 +11,8 @@
 
 #import('dart:mirrors');
 #import('dart:html');
-#import("package:webcomponents/webcomponents.dart");
-#import("package:webcomponents/watcher.dart");
+#import("package:web_components/web_components.dart");
+#import("package:web_components/watcher.dart");
 
 typedef void Action();
 
