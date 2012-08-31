@@ -42,7 +42,7 @@ class ComponentScope {
  * Eventually the code for [bind] should be baked into every custom element
  * (maybe in dart:html's Element class?).
  */
-class Component extends WebComponent {
+class Component extends WebComponent implements Element {
   /**
    * Counter associated with this component, currently only used for debugging
    * purposes.

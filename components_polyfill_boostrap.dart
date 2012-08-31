@@ -246,23 +246,36 @@ $sbLibraryHeader
         window.console.error('constructor attribute required for now');
         continue;
       }
-      Element template = element.query('template');
-      Element script = element.query('script[type="application/dart"]');
+      var template = element.query('template');
+      ScriptElement script = element.query('script[type="application/dart"]');
       if (script == null) {
         // TODO(jacobr): relax this requirement.
         window.console.warn("Skipped $className as no script body specified");
         continue;
       }
       numDartCustomElements++;
-      var classBody = script.text;
-      sbLibrary.add("""
+      if (script.src.isEmpty()) {
+        var classBody = script.text;
+        sbLibrary.add("""
 class $className extends polyfill.Component implements ${_tagToClassName[extendz]} {
     
   $className(element) : super('$className', element);
 
 $classBody
 }
+""");
+      } else {
+        // TODO(jacobr): move these 3 lines into a helper method.
+        var location = new Uri.fromString(window.location.href);
+        var scriptLocation = location.resolve(declaration.url);
+        var absLocation = scriptLocation.resolve(script.src);
+        sbLibrary.add("""
+#import('dart:html');
+#import("$absLocation");
+""");
+      }
 
+      sbLibrary.add("""
 // TODO(jacobr): support more than one component per library.
 void register() {
   polyfill.registerComponent(new polyfill.CustomDeclaration("$tag", "$extendz",
