@@ -19,5 +19,4 @@ void _componentsSetup() {
     'x-not-a-wrapper' : () => new NotAWrapper.component()
   };
   initializeComponents((String name) => map[name], true);
-  print('components initialized');
 }
