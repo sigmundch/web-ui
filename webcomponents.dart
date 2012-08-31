@@ -233,8 +233,8 @@ class CustomElementsManager {
   }
 
   /** 
-   * Returns [element] if usePrototypeRewiring, otherwise returns the dart wrapper
-   * for [element].
+   * Returns [element] if usePrototypeRewiring, otherwise returns the dart
+   * wrapper for [element].
    */
   WebComponent operator [](Element element) => 
       (usePrototypeRewiring? element : _customElements[element]);

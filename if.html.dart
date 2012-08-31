@@ -43,14 +43,12 @@ class IfComponent extends Component {
   }
 
   void inserted() {
-    // TODO(samhop): this is also not such a good pattern. It's needed because 
-    // Component.element isn't currently available at the right time. This will be
-    // alleviated when we move away from wrappers, since Component.element will
-    // become Component;
+    // TODO(samhop): this is also not such a good pattern. It's needed because
+    // Component.element isn't currently available at the right time. This will
+    // be alleviated when we move away from wrappers, since Component.element
+    // will become Component;
     var condition = element.attributes['instantiate'].substring('if '.length);
     conditionInitializer(condition);
-    print(shouldShow);
-    print(scopedVariables);
 
     _stopWatcher = bind(() => shouldShow(scopedVariables), (e) {
       bool showNow = e.newValue;
