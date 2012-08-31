@@ -178,7 +178,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
   var sb = new StringBuffer()
     ..add("""
 #import("dart:html");
-#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");
+#import("package:web_components/web_components.dart", prefix: "polyfill");
 """);
 
   var sbMain = new StringBuffer()..add("void main() {");
@@ -219,8 +219,8 @@ void runComponents(List<CustomElementDeclaration> declarations) {
             new Uri(declaration.url).path).group(1);
     sbLibrary.add("""
 #library("$libraryName");
-#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");
-#import("package:webcomponents/component.dart", prefix: "polyfill");
+#import("package:web_components/web_components.dart", prefix: "polyfill");
+#import("package:web_components/component.dart", prefix: "polyfill");
 $sbLibraryHeader
 """);
 

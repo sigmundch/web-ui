@@ -3,8 +3,8 @@
 <body>
 <script type="application/dart">
 #import('dart:html');
-#import("package:webcomponents/component.dart");
-#import("package:webcomponents/watcher.dart");
+#import("package:web_components/component.dart");
+#import("package:web_components/watcher.dart");
 
 #import('model.dart');
 </script>
@@ -18,7 +18,9 @@
   get _newTodo() => root.query("#new-todo");
 
   void addTodo() {
+    if (_newTodo.value == '') return;
     app.todos.add(new Todo(_newTodo.value));
+    print('!!! addTodo ${_newTodo.value}');
     _newTodo.value = '';
   }
   </script>

@@ -11,9 +11,9 @@
 #import('dart:html');
 #import('package:unittest/unittest.dart');
 #import('package:unittest/html_config.dart');
-#import("package:webcomponents/webcomponents.dart");
-#import("package:webcomponents/component.dart");
-#import("package:webcomponents/watcher.dart");
+#import("package:web_components/web_components.dart");
+#import("package:web_components/component.dart");
+#import("package:web_components/watcher.dart");
 
 class Item {
   bool visible = true;
