@@ -16,7 +16,7 @@
  * Other helpful Chrome flags are:
  * `--enable-shadow-dom --enable-scoped-style --enable-devtools-experiments`
  */
-#library('webcomponents');
+#library('web_components');
 
 #import('dart:html');
 #import('dart:mirrors');
@@ -24,7 +24,7 @@
 // TODO(jmesserly): this is here so we can set up the lexical scopes.
 // A component needs a way of knowing the <element> tag that was in scope for
 // template expansions.
-#import("package:webcomponents/component.dart");
+#import("package:web_components/component.dart");
 
 #source('lib/list_map.dart');
 
