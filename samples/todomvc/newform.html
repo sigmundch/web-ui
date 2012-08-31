@@ -20,7 +20,6 @@
   void addTodo() {
     if (_newTodo.value == '') return;
     app.todos.add(new Todo(_newTodo.value));
-    print('!!! addTodo ${_newTodo.value}');
     _newTodo.value = '';
   }
   </script>
