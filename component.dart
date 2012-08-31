@@ -133,8 +133,8 @@ class Component extends WebComponent implements Element {
     _inDocument = false;
   }
 
-  void attributeChanged(String name, String oldValue, String newValue) {
-    print("$id-change on ${this.name}.$name $oldValue $newValue");
+  void attributeChanged(String attribute, String oldValue, String newValue) {
+    print("$id-change on ${this.name}.$attribute $oldValue $newValue");
   }
 
   // TODO(jmesserly): evaluate these APIs to ensure they make sense
