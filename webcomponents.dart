@@ -36,9 +36,9 @@ CustomElementsManager get manager => _manager;
 
 void initializeComponents(RegistryLookupFunction lookup, [bool
     prototypeRewiring = false]) {
+  usePrototypeRewiring = prototypeRewiring;
   _manager = new CustomElementsManager._internal(lookup);
   manager._loadComponents();
-  usePrototypeRewiring = prototypeRewiring;
 }
 
 /** A Dart web component. */

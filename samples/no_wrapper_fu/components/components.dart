@@ -4,84 +4,49 @@
 
 typedef WebComponent ComponentConstructorThunk();
 
-class Cell extends DivElementImpl implements WebComponent {
-  Set<Cell> neighbors;
+class NotAWrapper extends DivElementImpl implements WebComponent {
   ShadowRoot _root;
-  CellCoordinator coordinator;
-
-  bool get alive => this.classes.contains('alive');
-
-  void step() {
-    print('component ${this.id} steps');
-  }
 
   static ComponentConstructorThunk _$constr;
-  factory Cell.component() {
+  factory NotAWrapper.component() {
     if(_$constr == null) {
-      _$constr = () => new Cell._internal();
+      _$constr = () => new NotAWrapper._internal();
     }
     var t1 = new DivElement();
-    rewirePrototypeChain(t1, _$constr, 'Cell');
+    rewirePrototypeChain(t1, _$constr, 'NotAWrapper');
     return t1;
   }
 
-  factory Cell() {
-    return manager.expandHtml('<div is="x-cell"></div>');
+  factory NotAWrapper() {
+    return manager.expandHtml('<div is="x-not-a-wrapper"></div>');
   }
 
-  Cell._internal();
+  NotAWrapper._internal();
 
   void created(ShadowRoot root) {
     _root = root;
-    neighbors = new HashSet<Cell>();
-    this.classes.add('cell');
+    _idiomCount = 0;
   }
 
-  void inserted() { }
-
-  void bound() {
-    this.on.click.add((event) => this.classes.toggle('alive'));
-    coordinator.on.next.add(step);
-
-    // find neighbors
-    var parsedCoordinates = this.id.substring(1).split('y');
-    var x = Math.parseInt(parsedCoordinates[0]);
-    var y = Math.parseInt(parsedCoordinates[1]);
+  void inserted() { 
+    _root.on.click.add((e) => _root.innerHTML = '<p>${generateIdiom()}</p>');
+    print('[samhop] NotAWrapper inserted');
   }
 
   void attributeChanged(String name, String oldValue, String newValue) { }
 
   void removed() { }
 
-}
-
-class ControlPanel extends DivElementImpl implements WebComponent {
-  ShadowRoot _root;
-  CellCoordinator coordinator;
-
-  static ComponentConstructorThunk _$constr;
-  factory ControlPanel.component() {
-    if(_$constr == null) {
-      _$constr = () => new ControlPanel._internal();
+  int _idiomCount;
+  String generateIdiom() {
+    _idiomCount++;
+    if (_idiomCount > 2) {
+      _idiomCount = 0;
     }
-    var t1 = new DivElement();
-    rewirePrototypeChain(t1, _$constr, 'ControlPanel');
-    return t1;
+    switch(_idiomCount) {
+      case 0 : return 'When it rains, it pours!';
+      case 1 : return "There's no such thing as bad publicity.";
+      case 2 : return "I don't think we're in Kansas anymore, Toto.";
+    };
   }
-
-  factory ControlPanel() {
-    return manager.expandHtml('<div is="x-control-panel"></div>');
-  }
-
-  ControlPanel._internal();
-
-  void created(ShadowRoot root) {
-    _root = root;
-  }
-
-  void inserted() { }
-
-  void attributeChanged(String name, String oldValue, String newValue) { }
-
-  void removed() { }
 }
