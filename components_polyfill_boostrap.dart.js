@@ -3626,7 +3626,7 @@ return document;
 $.runComponents = function(declarations) {
   $.StringBufferImpl$('');
   var sb = $.StringBufferImpl$('');
-  sb.add$1('#import("dart:html");\n#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");\n');
+  sb.add$1('#import("dart:html");\n#import("package:web_components/web_components.dart", prefix: "polyfill");\n');
   var sbMain = $.StringBufferImpl$('');
   sbMain.add$1('void main() {');
   var sbMainFooter = $.StringBufferImpl$('');
@@ -3649,7 +3649,7 @@ $.runComponents = function(declarations) {
       sbLibraryHeader.add$1('\n');
     }
     var libraryName = $.CTC17.firstMatch$1($.Uri$(t2.get$url()).path).group$1(1);
-    sbLibrary.add$1('#library("' + $.S(libraryName) + '");\n#import("package:webcomponents/webcomponents.dart", prefix: "polyfill");\n#import("package:webcomponents/component.dart", prefix: "polyfill");\n' + $.S(sbLibraryHeader) + '\n');
+    sbLibrary.add$1('#library("' + $.S(libraryName) + '");\n#import("package:web_components/web_components.dart", prefix: "polyfill");\n#import("package:web_components/component.dart", prefix: "polyfill");\n' + $.S(sbLibraryHeader) + '\n');
     for (var t3 = $.iterator(t2.get$html().queryAll$1('element')), numDartCustomElements = 0; t3.hasNext$0() === true;) {
       var t4 = t3.next$0();
       var tag = $.index(t4.get$attributes(), 'name');
