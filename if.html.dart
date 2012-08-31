@@ -22,13 +22,16 @@ class IfComponent extends Component {
   Element _child;
   String _childId;
   WatcherDisposer _stopWatcher;
+  // See TODO below.
+  var conditionInitializer;
 
-  IfComponent(root, elem)
-    : super('if', root, elem);
+  IfComponent()
+    : super('if');
 
-  void created() {
+  void created(ShadowRoot shadowRoot) {
     // TODO(sigmund): support document fragments, not just a single child.
     // TODO(sigmund): use logging and not assertions.
+    root = shadowRoot;
     assert(element.elements.length == 1);
     _childTemplate = element.elements[0];
     _childId = _childTemplate.id;
@@ -40,6 +43,15 @@ class IfComponent extends Component {
   }
 
   void inserted() {
+    // TODO(samhop): this is also not such a good pattern. It's needed because 
+    // Component.element isn't currently available at the right time. This will be
+    // alleviated when we move away from wrappers, since Component.element will
+    // become Component;
+    var condition = element.attributes['instantiate'].substring('if '.length);
+    conditionInitializer(condition);
+    print(shouldShow);
+    print(scopedVariables);
+
     _stopWatcher = bind(() => shouldShow(scopedVariables), (e) {
       bool showNow = e.newValue;
       if (_child != null && !showNow) {
@@ -52,7 +64,6 @@ class IfComponent extends Component {
         }
         manager.expandDeclarations(_child).forEach((component) {
           component.scopedVariables = scopedVariables;
-          component.created();
         });
         element.parent.nodes.add(_child);
       }

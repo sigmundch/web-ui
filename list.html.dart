@@ -17,19 +17,19 @@
  */
 class ListComponent extends Component {
   Getter<List> items;
-  final String _loopVar;
+  String _loopVar;
   Element _childTemplate;
   Element _parent;
   WatcherDisposer _stopWatcher;
 
-  ListComponent(root, elem)
-    : super('list', root, elem),
-      _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
-          elem.attributes['iterate']).group(1);
+  ListComponent() : super('list');
 
-  void created() {
+  void created(ShadowRoot shadowRoot) {
     // TODO(sigmund): support document fragments, not just a single child.
     // TODO(sigmund): use logging and not assertions.
+    root = shadowRoot;
+    _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
+        element.attributes['iterate']).group(1);
     assert(element.elements.length == 1);
     _childTemplate = element.elements[0];
     element.nodes.clear();

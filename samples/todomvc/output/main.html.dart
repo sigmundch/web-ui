@@ -42,23 +42,26 @@ mainMain() {
 void _componentsSetUp() {
   // use mirrors when they become available.
   Map<String, Function> map = {
-    'x-todo-footer': (root, elem) => new FooterComponent(root, elem),
-    'x-todo-form': (root, elem) => new FormComponent(root, elem),
-    'x-toggle-all': (root, elem) => new ToggleComponent(root, elem),
-    'x-list': (root, elem) => new ListComponent(root, elem),
-    'x-if': (root, elem) {
-      // TODO(terry): Better mechanism to disambiguate each if and multiple
-      //              x-list as well.
-      var res = new IfComponent(root, elem);
-      var condition = elem.attributes['instantiate'].substring('if '.length);
-      if (condition == 'viewModel.hasElements') {
-        res.shouldShow = (_) => viewModel.hasElements;
-      } else if (condition == 'viewModel.isVisible(x)') {
-        res.shouldShow = (vars) => viewModel.isVisible(vars['x']);
-      }
-      return res;
+    'x-todo-footer': () => new FooterComponent(),
+    'x-todo-form': () => new FormComponent(),
+    'x-toggle-all': () => new ToggleComponent(),
+    'x-list': () => new ListComponent(),
+    'x-if': () {
+      var result = new IfComponent();
+      result.conditionInitializer = (condition) {
+        // TODO(terry): Better mechanism to disambiguate each if and multiple
+        //              x-list as well.
+        print('condition initializer called');
+        print('condition is $condition');
+        if (condition == 'viewModel.hasElements') {
+          result.shouldShow = (_) => viewModel.hasElements;
+        } else if (condition == 'viewModel.isVisible(x)') {
+          result.shouldShow = (vars) => viewModel.isVisible(vars['x']);
+        }
+      };
+      return result;
     },
-    'x-todo-row': (root, elem) => new TodoItemComponent(root, elem),
+    'x-todo-row': () => new TodoItemComponent()
   };
   initializeComponents((String name) => map[name]);
 }

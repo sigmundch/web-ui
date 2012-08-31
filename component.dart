@@ -29,8 +29,8 @@ class Component extends WebComponent {
   String name;
 
   static int _id = 0;
-  Element _element;
-  ShadowRoot _root;
+  Element element;
+  ShadowRoot root;
 
   /**
    * Names in the declared scope of this component in a template, and their
@@ -38,16 +38,13 @@ class Component extends WebComponent {
    */
   Map<String, Dynamic> scopedVariables;
 
-  Component(this.name, this._root, this._element)
+  Component(this.name)
     : id = _id++ {
     scopedVariables = {'this': this};
   }
 
-  Element get element() => _element;
-  ShadowRoot get root() => _root;
-
   // TODO(sigmund): delete print statements or use logging library.
-  void created() => print('$name $id-created');
+  void created(ShadowRoot root) => print('$name $id-created');
   void inserted() => print('$name $id-inserted');
   void removed() => print('$name $id-removed');
 
