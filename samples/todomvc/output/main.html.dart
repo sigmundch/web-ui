@@ -51,8 +51,6 @@ void _componentsSetUp() {
       result.conditionInitializer = (condition) {
         // TODO(terry): Better mechanism to disambiguate each if and multiple
         //              x-list as well.
-        print('condition initializer called');
-        print('condition is $condition');
         if (condition == 'viewModel.hasElements') {
           result.shouldShow = (_) => viewModel.hasElements;
         } else if (condition == 'viewModel.isVisible(x)') {
