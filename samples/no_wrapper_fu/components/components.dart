@@ -2,9 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-typedef WebComponent ComponentConstructorThunk();
+typedef WebComponent ComponentFactory();
 
-class NotAWrapper extends DivElementImpl implements WebComponent {
+/** This is not a wrapper but rather a real live custom div. */
+class FancyDivElement extends DivElementImpl implements WebComponent {
   ShadowRoot _root;
 
   static ComponentConstructorThunk _$constr;
