@@ -29,7 +29,7 @@ if [[ $ARGC -eq $MINARGS ]]; then
   if [[ $IDX -eq 0 ]]; then
     # No extension
     SRCFILE="$SRCFILE.tmpl"
-    OUTFILE="$SRCFILE.tmpl.dart"
+    OUTFILE="$SRCFILE.dart"
   else
     SRCFILE="$SRCFILE"
     OUTFILE="$SRCFILE.dart"
