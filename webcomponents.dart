@@ -36,7 +36,7 @@ CustomElementsManager get manager => _manager;
 
 void initializeComponents(RegistryLookupFunction lookup, [bool
     usePrototypeRewiring = false]) {
-  _usePrototypeRewiring = prototypeRewiring;
+  _usePrototypeRewiring = usePrototypeRewiring;
   _manager = new CustomElementsManager._internal(lookup);
   manager._loadComponents();
 }
