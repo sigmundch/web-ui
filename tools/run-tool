@@ -25,11 +25,19 @@ OUTFILE=
 # check to make sure enough arguments were given or exit
 if [[ $ARGC -eq $MINARGS ]]; then
   SRCFILE=$PWD/$2
-  IDX=`expr index "$SRCFILE" .`
-  if [[ $IDX -eq 0 ]]; then
+  filename="${SRCFILE##*/}"                       # Strip longest match of */ from start
+  dir="${SRCFILE:0:${#SRCFILE} - ${#filename}}"   # Substring from 0 thru pos of filename
+  base="${filename%.[^.]*}"                       # Strip shortest match of . plus at least one non-dot char from end
+  ext="${filename:${#base} + 1}"                  # Substring from len of base thru end
+  if [[ -z "$base" && -n "$ext" ]]; then          # If we have an extension and no base, it's really the base
+    base=".$ext"
+    ext=""
+  fi
+  
+  if [[ ${ext} = "" ]]; then
     # No extension
     SRCFILE="$SRCFILE.tmpl"
-    OUTFILE="$SRCFILE.tmpl.dart"
+    OUTFILE="$SRCFILE.dart"
   else
     SRCFILE="$SRCFILE"
     OUTFILE="$SRCFILE.dart"
