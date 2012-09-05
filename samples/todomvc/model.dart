@@ -15,7 +15,7 @@ class MainComponent {
 }
 
 MainComponent _viewModel;
-MainComponent get viewModel() {
+MainComponent get viewModel {
   if (_viewModel == null) {
     _viewModel = new MainComponent();
   }
@@ -43,7 +43,7 @@ class Todo {
 }
 
 App _app;
-App get app() {
+App get app {
   if (_app == null) {
     _app = new App();
   }
