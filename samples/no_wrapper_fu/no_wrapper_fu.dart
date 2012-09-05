@@ -6,7 +6,7 @@
 
 #import('dart:html');
 
-#import('../../webcomponents.dart');
+#import('../../lib/js_polyfill/web_components.dart');
 
 #source('components/components.dart');
 
@@ -16,7 +16,7 @@ void main() {
 
 void _componentsSetup() {
   Map<String, Function> map = {
-    'x-not-a-wrapper' : () => new NotAWrapper.component()
+    'x-not-a-wrapper' : () => new FancyDivElement.component()
   };
   initializeComponents((String name) => map[name], true);
 }

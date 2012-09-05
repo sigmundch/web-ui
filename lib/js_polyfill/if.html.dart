@@ -9,8 +9,8 @@
 
 #import('dart:html');
 #import('component.dart');
-#import('watcher.dart');
-#import('webcomponents.dart');
+#import('../../watcher.dart');
+#import('web_components.dart');
 
 /**
  * A web component implementing `<template instantiate="if ...">`.

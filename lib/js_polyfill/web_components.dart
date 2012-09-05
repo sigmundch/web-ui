@@ -16,11 +16,11 @@
  * Other helpful Chrome flags are:
  * `--enable-shadow-dom --enable-scoped-style --enable-devtools-experiments`
  */
-#library('webcomponents');
+#library('web_components');
 
 #import('dart:html');
 
-#source('lib/list_map.dart');
+#source('../list_map.dart');
 
 /** Should we use prototype rewiring and the new WebComponent interface? */
 bool _usePrototypeRewiring;
@@ -43,7 +43,7 @@ void initializeComponents(RegistryLookupFunction lookup, [bool
 
 /** A Dart web component. */
 abstract class WebComponent {
-  /** 
+  /**
    * The web component element wrapped by this class.
    * Does not exist if _usePrototypeRewiring because in that case we don't use
    * wrappers.
@@ -73,8 +73,8 @@ class CustomElementsManager {
    */
   Map<String, _CustomDeclaration> _customDeclarations;
 
-  /** 
-   * Maps DOM elements to the user-defiend corresponding dart objects. 
+  /**
+   * Maps DOM elements to the user-defiend corresponding dart objects.
    * Not used if _usePrototypeRewiring.
    */
   ListMap<Element, WebComponent> _customElements;
@@ -232,11 +232,11 @@ class CustomElementsManager {
     return declaration.morph(element);
   }
 
-  /** 
+  /**
    * Returns [element] if _usePrototypeRewiring, otherwise returns the dart
    * wrapper for [element].
    */
-  WebComponent operator [](Element element) => 
+  WebComponent operator [](Element element) =>
       (_usePrototypeRewiring? element : _customElements[element]);
 
   // Initializes management of inserted and removed
@@ -275,7 +275,7 @@ bool get hasShadowRoot {
       // an exception to be thrown.
       new ShadowRoot(new DivElement());
       _hasShadowRoot = true;
-    } catch (var e) {
+    } catch (e) {
       _hasShadowRoot = false;
       // Hide <template> elements.
       // TODO(jmesserly): This is a workaround because we don't distribute

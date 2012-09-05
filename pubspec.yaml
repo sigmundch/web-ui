@@ -1,8 +1,6 @@
-name: webcomponents
+name: web_components
 description: an easy way to build web apps in Dart
 version: 0.0.1
 dependencies:
-  unittest:
-    sdk: unittest
-  args:
-    sdk: args
+  unittest: { sdk: unittest }
+  args: { sdk: args }

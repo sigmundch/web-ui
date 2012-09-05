@@ -4,13 +4,8 @@
 
 #library('model');
 
-#import('dart:html');
-
-class BodyComponent {
-  BodyComponent();
-
-  bool isVisible(Todo todo) => todo != null &&
-      ((showIncomplete && !todo.done) || (showDone && todo.done));
+class MainComponent {
+  MainComponent();
 
   bool showIncomplete = true;
 
@@ -19,10 +14,10 @@ class BodyComponent {
   bool get hasElements() => app.todos.length > 0;
 }
 
-BodyComponent _viewModel;
-BodyComponent get viewModel() {
+MainComponent _viewModel;
+MainComponent get viewModel {
   if (_viewModel == null) {
-    _viewModel = new BodyComponent();
+    _viewModel = new MainComponent();
   }
   return _viewModel;
 }
@@ -41,11 +36,14 @@ class Todo {
 
   Todo(this.task);
 
+  bool get isVisible() =>
+      (viewModel.showIncomplete && !done) || (viewModel.showDone && done);
+
   String toString() => "$task ${done ? '(done)' : '(not done)'}";
 }
 
 App _app;
-App get app() {
+App get app {
   if (_app == null) {
     _app = new App();
   }

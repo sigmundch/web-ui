@@ -8,9 +8,9 @@
 #library('list_component');
 
 #import('dart:html');
+#import('../../watcher.dart');
 #import('component.dart');
-#import('watcher.dart');
-#import('webcomponents.dart');
+#import('web_components.dart');
 
 /**
  * A web component implementing `<template iterate=...>`.
@@ -48,7 +48,7 @@ class ListComponent extends Component {
       }
       for (var x in items()) {
         var child = _childTemplate.clone(true);
-        var component = manager.expandElement(child);
+        var component = manager.expandElement(child) as Component;
         // TODO(jmesserly): should support children that aren't WebComponents
         component.scopedVariables = new Map.from(scopedVariables);
         component.scopedVariables[_loopVar] = x;

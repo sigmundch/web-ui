@@ -8,28 +8,28 @@ typedef WebComponent ComponentFactory();
 class FancyDivElement extends DivElementImpl implements WebComponent {
   ShadowRoot _root;
 
-  static ComponentConstructorThunk _$constr;
-  factory NotAWrapper.component() {
+  static ComponentFactory _$constr;
+  factory FancyDivElement.component() {
     if(_$constr == null) {
-      _$constr = () => new NotAWrapper._internal();
+      _$constr = () => new FancyDivElement._internal();
     }
     var t1 = new DivElement();
     rewirePrototypeChain(t1, _$constr, 'NotAWrapper');
     return t1;
   }
 
-  factory NotAWrapper() {
+  factory FancyDivElement() {
     return manager.expandHtml('<div is="x-not-a-wrapper"></div>');
   }
 
-  NotAWrapper._internal();
+  FancyDivElement._internal();
 
   void created(ShadowRoot root) {
     _root = root;
     _idiomCount = 0;
   }
 
-  void inserted() { 
+  void inserted() {
     _root.on.click.add((e) => _root.innerHTML = '<p>${generateIdiom()}</p>');
     print('[samhop] NotAWrapper inserted');
   }

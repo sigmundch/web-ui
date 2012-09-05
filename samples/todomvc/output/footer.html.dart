@@ -4,9 +4,9 @@
 #library('footer_html');
 
 #import('dart:html');
-#import('../../../component.dart');
+#import('../../../lib/js_polyfill/component.dart');
 #import('../../../watcher.dart');
-#import('../../../webcomponents.dart');
+#import('../../../lib/js_polyfill/web_components.dart');
 
 /** Below import from script tag in HTML file. */
 #import('model.dart');

@@ -4,7 +4,7 @@
 #library('item_html');
 
 #import('dart:html');
-#import('../../../component.dart');
+#import('../../../lib/js_polyfill/component.dart');
 #import('../../../watcher.dart');
 
 /** Below import from script tag in HTML file. */

@@ -6,7 +6,7 @@
 #library('watcher_test');
 
 #import('package:unittest/unittest.dart');
-#import('../watcher.dart');
+#import("package:web_components/watcher.dart");
 
 main() {
   test('simple watcher ', () {
