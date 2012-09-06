@@ -81,14 +81,8 @@ class Component extends WebComponent implements Element {
         _removeActions = [] {
   }
 
-<<<<<<< HEAD
-  // TODO(jmesserly): rename these shadowRoot and host?
-  Element get element() => _element;
-  ShadowRoot get root() => _root;
-=======
   Element get element => _element;
   ShadowRoot get root => _root;
->>>>>>> Changed nested templates codegen
 
   // TODO(sigmund): delete print statements or use logging library.
   void created(ShadowRoot root) {
