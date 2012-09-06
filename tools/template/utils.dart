@@ -5,22 +5,19 @@
 #library('template_utils');
 
 /**
- * Convert any string name with hyphens; remove hyphen and make next character
- * an upper-case letter.
+ * Converts a string name with hyphens into an identifier, by removing hyphens
+ * and capitalizing the following letter.
  */
-String toCamelCase(String knownName) {
-  var dartName = new StringBuffer();
-  List<String> splits = knownName.split('-');
-  if (splits.length > 0) {
-    dartName.add(splits[0]);
-    for (int idx = 1; idx < splits.length; idx++) {
-      String part = splits[idx];
+String toCamelCase(String hyphenedName) {
+  var segments = hyphenedName.split('-');
+  for (int i = 1; i < segments.length; i++) {
+    var segment = segments[i];
+    if (segment.length > 0) {
       // Character between 'a'..'z' mapped to 'A'..'Z'
-      dartName.add("${part[0].toUpperCase()}${part.substring(1)}");
+      segments[i] = '${segment[0].toUpperCase()}${segment.substring(1)}';
     }
   }
-
-  return dartName.toString();
+  return Strings.join(segments, '');
 }
 
 /** Invokes [callback] and returns how long it took to execute in ms. */
@@ -57,4 +54,3 @@ String eventAttribute(String attributeName) {
 
   return null;
 }
-
