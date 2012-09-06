@@ -26,7 +26,7 @@
 bool _usePrototypeRewiring;
 
 // typedefs
-typedef WebComponent WebComponentFactory ();
+typedef WebComponent WebComponentFactory();
 typedef WebComponentFactory RegistryLookupFunction(String tagName);
 
 // Globals
