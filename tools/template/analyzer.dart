@@ -63,7 +63,8 @@ class ElementInfo implements NodeInfo {
   /**
    * Format [elementId] in camel case, suitable for using as a Dart identifier.
    */
-  String get idAsIdentifier() => '_${toCamelCase(elementId)}';
+  String get idAsIdentifier() =>
+      elementId == null ? null : '_${toCamelCase(elementId)}';
 
   ElementInfo() : attributes = <AttributeInfo>{}, events = <EventInfo>{};
 

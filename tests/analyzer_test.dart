@@ -63,6 +63,14 @@ main() {
     expect(info[elem.children[0].children[0]].idAsIdentifier, equals('_fooBa'));
   });
 
+  test('id as identifier - no id', () {
+    var input = '<div></div>';
+    var elem = parseSubtree(input);
+    var info = analyze(elem);
+    expect(info[elem].elementId, isNull);
+    expect(info[elem].idAsIdentifier, isNull);
+  });
+
   test('hasDataBinding - attribute w/o data', () {
     var input = '<input value="x"/>';
     var elem = parseSubtree(input);

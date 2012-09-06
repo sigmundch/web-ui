@@ -68,7 +68,8 @@ if [ "$1" = "template" ]; then
   BASE_DIR=`cd $(dirname $0) && pwd`
 
   # Pre-process the file
-  $DART --package-root=packages/ $BASE_DIR/$1/tool.dart $SRCFILE $OUTFILE
+  $DART --package-root=packages/ --enable-asserts --enable-type-checks \
+      $BASE_DIR/$1/tool.dart $SRCFILE $OUTFILE
 else
   echo -e "\033[31mOnly template tool supported. \033[0m"
 fi

@@ -8,6 +8,7 @@
 #import('../../lib/html5parser/htmltree.dart');
 #import('../lib/world.dart');
 #import('compile.dart');
+#import('analyzer.dart');
 
 /** Each html file to process; either main file or web component file. */
 class CompilationUnit {
@@ -20,6 +21,7 @@ class CompilationUnit {
   HTMLDocument _doc;
   String _code;
   String _html;
+  Map<TreeNode, NodeInfo> info;
 
   /** Another files to process (e.g., web components). */
   CompilationUnit(String filename, ElemCG ecg, [int fileType = TYPE_COMPONENT])

@@ -10,19 +10,15 @@
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles="">
   <template>
-    <!-- TODO(terry): Hack to split out conditionals special ?? opeartor. -->
-    <div id='todo-item' class="{{_editing ? 'editing' ?? todo.done ? 'completed'}}">
-
-    <!-- TODO(sigmund): are arbitrary expressions like this allowed in MDV? -->
-<!--
-    <div id='todo-item' class="{{_editing ? 'editing' : (todo.done ? 'completed' : '')}}">
--->
-      <div id="item-view" class="view" data-on-dblclick="{{edit()}}">
-        <input id="checkbox" class="toggle" type="checkbox" checked="{{todo.done}}">
+    <div id='todo-item' class="{{_editingClass}} {{_completedClass}}">
+      <div id="item-view" class="view" data-on-doubleClick="{{edit()}}">
+        <input id="checkbox" class="toggle" type="checkbox"
+               data-bind="{{checked:todo.done}}">
         <label id="label">{{todo.task}}</label>
         <button id="destroy-button" class="destroy" data-on-click="{{delete()}}"></button>
       </div>
-      <input id="edit-line" class="edit" value="{{todo.task}}"
+      <input id="edit-line" class="edit"
+             data-bind="{{value:todo.task}}"
              data-on-blur="{{update()}}" autofocus>
     </div>
   </template>
@@ -30,6 +26,9 @@
     Todo todo;
     bool _editing = false;
     String _currValue;
+
+    String get _editingClass => _editing ? 'editing' : '';
+    String get _completedClass => todo.done ? 'completed' : '';
 
     void edit() {
       _editing = true;

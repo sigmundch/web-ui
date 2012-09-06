@@ -17,6 +17,7 @@
 #import('processor.dart');
 #import('template.dart');
 #import('utils.dart');
+#import('analyzer.dart', prefix: 'analyzer');
 
 
 // TODO(terry): Too many classes in this file need to break up walking, analysis
@@ -83,11 +84,15 @@ class Compile {
             }
             break;
           case ProcessFile.WALKING:
+            final duration = time(() {
+              process.cu.info = analyzer.analyze(process.cu.document);
+            });
             // Walk the tree.
             final walkedElapsed = time(() {
               _walkTree(process.cu.document, process.cu.elemCG);
             });
             if (options.showInfo) {
+              printStats("Analyzed", duration, process.cu.filename);
               printStats("Walked", walkedElapsed, process.cu.filename);
             }
             break;
@@ -235,13 +240,15 @@ class CGBlock {
   int _localIndex;
 
   Template _template;    // If template remember
+  final ProcessFiles processor;
 
   // Block Types:
   static final int CONSTRUCTOR = 0;
   static final int REPEAT = 1;
   static final int TEMPLATE = 2;
 
-  CGBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR, local])
+  CGBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR, local,
+      this.processor])
       : _stmts = new List<CGStatement>(),
         _localIndex = 0,
         _indent = indent,
@@ -249,7 +256,7 @@ class CGBlock {
         _localName = local {
     assert(_blockType >= CGBlock.CONSTRUCTOR && _blockType <= CGBlock.TEMPLATE);
   }
-  CGBlock.createTemplate(Template template, [int indent = 4])
+  CGBlock.createTemplate(Template template, [int indent = 4, this.processor])
       : _template = template,
         _stmts = new List<CGStatement>(),
         _localIndex = 0,
@@ -267,21 +274,6 @@ class CGBlock {
 
   Template get template => _template;
 
-  String getHTMLElementIdAttribute(HTMLElement elem) {
-    int idx = 0;
-    var attrs = elem.attributes;
-    if (attrs != null) {
-      while (idx < attrs.length) {
-        var attr = attrs[idx++];
-        if (attr.name == "id") {
-          return attr.value;
-        }
-      }
-    }
-
-    return null;
-  }
-
   /**
    * Each statement (HTML) encountered is remembered with either/both variable
    * name of parent and local name to associate with this element when the DOM
@@ -289,24 +281,14 @@ class CGBlock {
    */
   CGStatement push(var elem, var parentName, [bool exact = false]) {
     var varName;
-    if (elem is HTMLElement) {
-      HTMLElement htmlElem = elem;
-      if (htmlElem.hasVar) {
-        varName = htmlElem.varName;
-      } else {
-        // Any name with ID use name that is camel-cased to the id.
-        String idName = getHTMLElementIdAttribute(htmlElem);
-        if (idName != null) {
-          varName = "_${toCamelCase(idName)}";
-        }
-      }
-    }
+    var info = processor.current.cu.info[elem];
+    if (info != null) varName = info.idAsIdentifier;
 
     if (varName == null) {
       varName = _localIndex++;
     }
 
-    CGStatement stmt = new CGStatement(elem, _indent, parentName, varName,
+    CGStatement stmt = new CGStatement(elem, info, _indent, parentName, varName,
         exact, isRepeat);
     _stmts.add(stmt);
 
@@ -546,35 +528,25 @@ class CGBlock {
 
     final variableName = stmt.variableName;
     final listenerName = stmt.listenerName;
+    final info = stmt._info;
 
     StringBuffer listenerBody = new StringBuffer();
     bool listenerToCreate = false;
-    for (var expr in expressions) {
-      if (expr.isEvent) {
-        listenerToCreate = true;
-        if (expr.expression.trim().length > 0) {
-          listenerBody.add("$spaces    component.${expr.expression};\n");
-        }
-      } else if (expr.isAttribute) {
-        if (expr.isBoundAttribute) {
-          listenerBody.add(
-              "$spaces    ${expr.expression} = $variableName.${expr.name
-              };\n");
-        } else {
-          listenerBody.add(
-              "$spaces    $variableName.${expr.name
-              } = component.${expr.expression};\n");
-        }
-      }
-    }
 
-    if (listenerToCreate) {
-      statement.add("$spaces  $listenerName = (_) {\n");
-      statement.add(listenerBody.toString());
-      statement.add("$spaces    dispatch();\n");
-      statement.add("$spaces  };\n");
-    }
+    info.events.forEach((name, eventInfo) {
+      // TODO(terry,sigmund): this shouldn't refer to the component. The
+      // action method should be resolved via lookup in the context of the
+      // component's body (we need to make "if"s into closures, not classes).
+      listenerBody.add(
+        "$spaces    component.${eventInfo.action(variableName)};\n");
+    });
 
+    if (listenerBody.length > 0) {
+      statement.add("$spaces  $listenerName = (_) {\n"
+                    "$listenerBody"
+                    "$spaces    dispatch();\n"
+                    "$spaces  };\n");
+    }
     return statement.toString();
   }
 
@@ -718,27 +690,32 @@ class CGBlock {
       //              expressions in content (text nodes) as well.
       int watcherIdx = 0;
       bool eventHandled = false;
-      for (var expr in expressions) {
-        if (expr.isEvent) {
-          String listenerName = stmt.listenerName;
-          String event = expr.name;
-          String varName = stmt.variableName;
-          buff.add("${spaces}if ($varName != null) {\n");
-          buff.add("$spaces  $varName.on.$event.add($listenerName);\n");
-          eventHandled = true;
-        } else if (expr.isAttribute) {
-          // TODO(terry): Attribute expression on first element in template IF.
-          watcherIdx++;
-        } else if (expr.isContent) {
-          String varName = stmt.variableName;
-          String stopWatcherName = "_stopWatcher${varName}_$watcherIdx";
 
-          buff.add(
-              "$spaces  ${stopWatcherName} = component.bind(() => component."
-              "${expr.expression}, (e) {\n${spaces}    ${varName}.innerHTML = "
-              "'${expr.interpolatedString}';\n${spaces}  });\n");
-          watcherIdx++;
-        }
+      var info = stmt._info;
+      info.events.forEach((name, eventInfo) {
+        var listenerName = stmt.listenerName;
+        var varName = stmt.variableName;
+        buff.add("${spaces}if ($varName != null) {\n");
+        buff.add("$spaces  $varName.on.$name.add($listenerName);\n");
+        eventHandled = true;
+      });
+
+      info.attributes.forEach((name, attrInfo) {
+        watcherIdx++;
+      });
+
+      if (info.contentBinding != null) {
+        String varName = stmt.variableName;
+        String stopWatcherName = "_stopWatcher${varName}_$watcherIdx";
+        var innerHTML = info.contentExpression;
+        // TODO(terry,sigmund): remove this hack for 'component.'
+        innerHTML = innerHTML.replaceAll(@'${', @'${component.');
+        buff.add(
+            "$spaces  $stopWatcherName ="
+            " component.bind(() => component.${info.contentBinding}, (e) {\n"
+            "${spaces}    $varName.innerHTML = $innerHTML;\n"
+            "${spaces}  });\n");
+        watcherIdx++;
       }
       if (eventHandled) {
         buff.add("$spaces}\n");
@@ -757,16 +734,13 @@ class CGBlock {
     if (conditionalTemplate) {
       final CGStatement stmt = _stmts[0];
       List<Expression> expressions = stmt.attributesExpressions();
-      for (var expr in expressions) {
-        if (expr.isEvent) {
-          String listenerName = stmt.listenerName;
-          String event = expr.name;
-          String varName = stmt.variableName;
-          buff.add("${spaces}if ($varName != null) {\n");
-          buff.add("$spaces  $varName.on.$event.remove($listenerName);\n");
-          buff.add("$spaces}\n");
-        }
-      }
+
+      stmt._info.events.forEach((name, eventInfo) {
+        var varName = stmt.variableName;
+        buff.add("${spaces}if ($varName != null) {\n");
+        buff.add("$spaces  $varName.on.$name.remove(${stmt.listenerName});\n");
+        buff.add("$spaces}\n");
+      });
 
       for (var attr in template.attributes) {
         if (attr.name == "id") {
@@ -797,14 +771,16 @@ class CGStatement {
 
   final bool _repeating;
   final StringBuffer _buff;
-  var _elem;
+  TreeNode _elem;
+  analyzer.NodeInfo _info;
   int _indent;
   var parentName;
   String varName;
   bool _globalVariable;
   bool _closed;
 
-  CGStatement(this._elem, this._indent, this.parentName, varNameOrIndex,
+  CGStatement(this._elem, this._info,
+      this._indent, this.parentName, varNameOrIndex,
       [bool exact = false, bool repeating = false]) :
         _buff = new StringBuffer(),
         _closed = false,
@@ -856,171 +832,10 @@ class CGStatement {
     _closed = true;
   }
 
-  List<Expression> classExpressions(HTMLAttribute attr) {
-    Expect.isTrue(attr.name == "class");
-
-    List<Expression> result = [];
-
-    var classExprs = attr.value.split("??");
-    for (var expr in classExprs) {
-      int idx = expr.indexOf("?");
-      if (idx != -1) {
-        String classExpr = expr.substring(0, idx);
-        String className = expr.substring(idx + 1);
-        result.add(new Expression.classAttribute(attr.name, classExpr,
-            className));
-      } else {
-        result.add(new Expression.attribute(attr.name, expr));
-      }
-    }
-
-    return result;
-  }
-
-  bool hasEvent(List<Expression> result, String eventName) {
-    for (var expr in result) {
-      if (expr.name == eventName) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /** Find all attributes associated with a template expression. */
-  List<Expression> attributesExpressions([bool innerTemplate = false]) {
-    List<Expression> result = [];
-
-    bool addOnClick = false;
-    bool addOnChange = false;
-    for (var attr in _elem.attributes) {
-      bool boundAttribute = false;
-      if (attr is TemplateAttributeExpression) {
-        Expression newExpr;
-        String eventName = eventAttribute(attr.name);
-        if (eventName != null) {
-          newExpr = new Expression.event(eventName, attr.value);
-        } else {
-          switch (_elem.tagTokenId) {
-            case TokenKind.INPUT_ELEMENT:
-              if (attr.name == "checked") {
-                // Emit an expression flipping the assignment for special bound
-                // attribute/
-                addOnClick = true;
-                boundAttribute = true;
-              } else if (attr.name == "value") {
-                // Emit the expression flipping the assignment for special bound
-                // attribute/
-                addOnChange = true;
-                boundAttribute = true;
-              }
-              break;
-            case TokenKind.A_ELEMENT:
-              // Anchor tags are bound if href is used.
-              newExpr = new Expression.hrefAttribute(attr.name, attr.value,
-                  true);
-              break;
-          }
-
-          // TODO(terry): Special class expression(s) handling.  Need to hook
-          //              into Dart expression parser (but this could be tricky
-          //              too.
-          if (newExpr == null) {
-            if (attr.name == "class") {
-              List<Expression> classExprs = classExpressions(attr);
-              for (var classExpr in classExprs) {
-                result.add(classExpr);
-              }
-              continue;
-            } else {
-              newExpr = new Expression.attribute(attr.name, attr.value,
-                  boundAttribute);
-            }
-          }
-        }
-
-        bool found = false;
-        for (var expr in result) {
-          if (expr.sameName(newExpr)) {
-            // If the attribute was already set just ignore same attribute
-            // subsequent times.
-            found = true;
-            break;
-          }
-        }
-
-        if (!found) {
-          result.add(newExpr);
-        }
-      }
-    }
-
-    // Necessary user might already have a click/chagne handler if so
-    // then no need to synthesize the event.
-    if (addOnClick && !hasEvent(result, "click")) {
-      result.add(new Expression.event("click", ""));
-    }
-    if (addOnChange && !hasEvent(result, "change")) {
-      result.add(new Expression.event("change", ""));
-    }
-
-    // TODO(terry): Only one expression in the text node; need to handle
-    //              multiple text expressions.
-    if (_elem.anyChildren) {
-      String expression = null;
-      StringBuffer anyText = new StringBuffer();
-      for (var child in _elem.children) {
-        if (child is TemplateExpression) {
-          TemplateExpression contentExpr = child;
-          expression = contentExpr.expression;
-          if (innerTemplate) {
-            // Inside a nested template need prefix expression with component.
-            anyText.add("\$\{component.${contentExpr.expression}\}");
-          } else {
-            anyText.add("\$\{${contentExpr.expression}\}");
-          }
-        } else if (child is HTMLText) {
-          HTMLText contentExpr = child;
-          anyText.add(contentExpr.value);
-        }
-      }
-      if (anyText.length > 0 && (expression != null)) {
-        result.add(new Expression(expression, anyText.toString().trim()));
-      }
-    }
-
-    // TODO(terry): Re-order the results events should be first before
-    //              attributes.  At least the Todo app needs to call markAll()
-    //              before allChecked() in toggleall.html.  Hopefully, all
-    //              data binding can call methods first for events then the
-    //              attributes; but I'm not convinced that's always true.
-    List<Expression> orderedResult = [];
-    for (var expr in result) {
-      if (expr.isEvent) {
-        orderedResult.add(expr);
-      }
-    }
-    for (var expr in result) {
-      if (!expr.isEvent) {
-        orderedResult.add(expr);
-      }
-    }
-
-    return orderedResult;
-  }
-
-  findExpressionInExpressions(List<Expression> exprs, String expr) {
-    int idx = 0;
-    while (idx < exprs.length) {
-      var existExpr = exprs[idx];
-      if (existExpr.expression == expr) {
-        return idx;
-      } else {
-        idx++;
-      }
-    }
-
-    return -1;
-  }
+  // TODO(sigmund): delete completely
+  List<Expression> attributesExpressions([bool innerTemplate = false]) =>
+      const [];
 
   String emitStatement(int boundElemIdx) {
     StringBuffer statement = new StringBuffer();
@@ -1109,36 +924,37 @@ class CGStatement {
 
     String listenerName = "_listener$variableName";
 
+    // TODO(sigmund): create a listener per event type
+    // TODO(sigmund): analyzer should merge together repeated listeners on the
+    // same event type.
     bool emittedListener = false;
     bool emittedWatcher = false;
-    for (var expr in expressions) {
-      String stopWatcherName = "_stopWatcher${variableName}_$watcherIdx";
 
-      if (expr.isEvent && !emittedListener) {
-        declLines.add("${spaces}EventListener $listenerName;$NEW_LINE");
+    // listeners associated with UI events:
+    _info.events.forEach((name, eventInfo) {
+      if (!emittedListener) {
+        declLines.add("${spaces}EventListener $listenerName;\n");
         emittedListener = true;
-      } else if (expr.isAttribute) {
-        declLines.add("${spaces}WatcherDisposer $stopWatcherName;$NEW_LINE");
-        watcherIdx++;
-        emittedWatcher = true;
-      } else if (expr.isContent) {
-        declLines.add("${spaces}WatcherDisposer $stopWatcherName;$NEW_LINE");
-        watcherIdx++;
-        emittedWatcher = true;
       }
+    });
+
+    // stop-functions for watchers associated with data-bound attributes
+    _info.attributes.forEach((name, attrInfo) {
+      for (int i = attrInfo.bindings.length; i > 0; i--) {
+        declLines.add("${spaces}WatcherDisposer "
+                      "_stopWatcher${variableName}_$watcherIdx;\n");
+        watcherIdx++;
+      }
+    });
+
+    // stop-functions for watchers associated with data-bound content
+    if (_info.contentBinding != null) {
+      declLines.add("${spaces}WatcherDisposer "
+                    "_stopWatcher${variableName}_$watcherIdx;\n");
+      watcherIdx++;
     }
 
     return declLines.toString();
-  }
-
-  String get elementId {
-    for (var attr in _elem.attributes) {
-      if (attr.name == 'id') {
-        return attr.value;
-      }
-    }
-
-    return null;
   }
 
   /**
@@ -1147,7 +963,7 @@ class CGStatement {
    */
   String emitWebComponentCreated([String indent = null, String prefix = ""]) {
     String spaces = indent == null ? Codegen.spaces(4) : indent;
-    String elemId = elementId;
+    String elemId = _info != null ? _info.elementId : null;
 
     return (elemId != null) ?
         "$spaces$variableName = ${prefix}root.query('#$elemId');$NEW_LINE" : "";
@@ -1165,166 +981,66 @@ class CGStatement {
     StringBuffer statement = new StringBuffer();
 
     StringBuffer listenerBody = new StringBuffer();
-    bool listenerToCreate = false;
-    for (var expr in expressions) {
-      if (expr.isEvent) {
-        listenerToCreate = true;
-        if (expr.expression.trim().length > 0) {
-          listenerBody.add("$spaces    ${expr.expression};$NEW_LINE");
-        }
-      } else if (expr.isAttribute) {
-        // TODO(terry): Need to parse expression and check if expression is
-        // calling a getter then we're not really 2-way bound just 1-way.
-        // Current hack is to look for () that implies getter only.
-        if (expr.isBoundAttribute && !expr.expression.endsWith("()")) {
-          listenerBody.add(
-              "$spaces    ${expr.expression} = $variableName.${expr.name
-              };$NEW_LINE");
-        } else {
-          listenerBody.add(
-              "$spaces    $variableName.${expr.name} = ${expr.expression
-              };$NEW_LINE");
-        }
-      }
+
+    // listeners associated with UI events:
+    _info.events.forEach((name, eventInfo) {
+      listenerBody.add("$spaces    ${eventInfo.action(variableName)};\n");
+    });
+
+    if (listenerBody.length > 0) {
+      statement.add("$spaces  $listenerName = (_) {$NEW_LINE"
+                    "$listenerBody"
+                    "$spaces    dispatch();$NEW_LINE"
+                    "$spaces  };$NEW_LINE");
     }
 
-    if (listenerToCreate) {
-      statement.add("$spaces  $listenerName = (_) {$NEW_LINE");
-      statement.add(listenerBody.toString());
-      statement.add("$spaces    dispatch();$NEW_LINE");
-      statement.add("$spaces  };$NEW_LINE");
-    }
+    // attach event listeners
+    // TODO(terry,sigmund): support more than one listener per element.
+    _info.events.forEach((name, eventInfo) {
+      var eventName = eventInfo.eventName;
+      statement.add(
+        "$spaces  $variableName.on.${eventName}.add($listenerName);\n");
+    });
 
     int watcherIdx = 0;
-
     // Emit stopWatchers.
-    for (var expr in expressions) {
-      String stopWatcherName = "_stopWatcher${variableName}_$watcherIdx";
-      if (expr.isEvent) {
-        String event = expr.name;
-        statement.add(
-            "$spaces  $variableName.on.$event.add($listenerName);$NEW_LINE");
-      } else if (expr.isAttribute) {
-        if (expr.isHref) {
-          String classWatcher = emitClassAttribute(variableName, expr, true);
-          statement.add("$spaces  $stopWatcherName = $classWatcher");
-        } else if (expr.isClassAttribute) {
-          String classWatcher = emitClassAttribute(variableName, expr);
-          statement.add("$spaces  $stopWatcherName = $classWatcher");
-        } else {
-          // Emit the watcher bound to the attribute changing
-          //   watcher = bind(() => attribute_expression, (e) {
-          //      element.attribute_name_expression = e.newValue;
-          //   });
+
+    // stop-functions for watchers associated with data-bound attributes
+    _info.attributes.forEach((name, attrInfo) {
+      if (attrInfo.isClass) {
+        for (int i = 0; i < attrInfo.bindings.length; i++) {
+          var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
+          var exp = attrInfo.bindings[i];
           statement.add(
-            "$spaces  $stopWatcherName = bind(() => ${expr.expression
-            }, (e) {$NEW_LINE$spaces    $variableName.${expr.name
-            } = e.newValue;$NEW_LINE$spaces  });$NEW_LINE");
+            "$spaces  $stopWatcherName = bind(() => $exp, (e) {\n"
+            "$spaces    if (e.oldValue != null && e.oldValue != '') {\n"
+            "$spaces      $variableName.classes.remove(e.oldValue);\n"
+            "$spaces    }\n"
+            "$spaces    if (e.newValue != null && e.newValue != '') {\n"
+            "$spaces      $variableName.classes.add(e.newValue);\n"
+            "$spaces    }\n"
+            "$spaces  });\n");
+          watcherIdx++;
         }
-        watcherIdx++;
-      } else if (expr.isContent) {
-        statement.add(
-          "$spaces  $stopWatcherName = bind(() => ${expr.expression
-            }, (e) {$NEW_LINE$spaces    ${variableName
-            }.innerHTML = '${expr.interpolatedString}'; });$NEW_LINE");
-        watcherIdx++;
-      }
-    }
-
-    return statement.toString();
-  }
-
-  String emitClassAttribute(String elemName, Expression classExpr,
-                            [bool aTag = false]) {
-    Expect.isTrue(classExpr.isClassAttribute);
-
-    String result;
-    if (classExpr.isHref) {
-      String expr = classExpr.expression;
-      result = "bind(() => window.location.hash, (e) {${NEW_LINE
-}        ${elemName}.classes.clear();${NEW_LINE
-}        if ($expr != null) $elemName.classes.add($expr);${NEW_LINE
-}      });${NEW_LINE}";
-    } else if (classExpr.hasClassName) {
-      String cssCls = classExpr.className;
-      result = "bind(() => ${classExpr.expression}, (e) {${NEW_LINE
-}      if (e.newValue) {${NEW_LINE
-}        ${elemName}.classes.add($cssCls);${NEW_LINE
-}      } else {${NEW_LINE
-}        $elemName.classes.remove($cssCls);${NEW_LINE
-}      }});${NEW_LINE}";
-    } else {
-      result = "bind(() => ${classExpr.expression
-}, (e) { $elemName.classes.add(e.newValue); });${NEW_LINE}";
-    }
-    return result;
-  }
-
-/** Used for web components with template expressions {{expr}}. */
-String emitIfWebComponentInserted(List<Expression> expressions, int index) {
-  String spaces = Codegen.spaces(2);
-
-  StringBuffer statement = new StringBuffer();
-
-  StringBuffer listenerBody = new StringBuffer();
-  bool listenerToCreate = false;
-  for (var expr in expressions) {
-    if (expr.isEvent) {
-      listenerToCreate = true;
-      if (expr.expression.trim().length > 0) {
-        listenerBody.add("$spaces    ${expr.expression};$NEW_LINE");
-      }
-    } else if (expr.isAttribute) {
-      if (expr.isBoundAttribute) {
-        listenerBody.add(
-            "$spaces    ${expr.expression} = $variableName.${expr.name
-            };$NEW_LINE");
       } else {
-        listenerBody.add(
-            "$spaces    $variableName.${expr.name} = ${expr.expression
-            };$NEW_LINE");
+        statement.add(
+          "$spaces  _stopWatcher${variableName}_$watcherIdx ="
+          " bind(() => ${attrInfo.boundValue},"
+          " (e) {\n$spaces    $variableName.$name = e.newValue;\n"
+          "$spaces  });\n");
+        watcherIdx++;
       }
-    }
-  }
+    });
 
-  if (listenerToCreate) {
-    statement.add("$spaces  $listenerName = (_) {$NEW_LINE");
-    statement.add(listenerBody.toString());
-    statement.add("$spaces    dispatch();$NEW_LINE");
-    statement.add("$spaces  };$NEW_LINE");
-  }
-
-  int watcherIdx = 0;
-
-  // Emit stopWatchers.
-  for (var expr in expressions) {
-    String stopWatcherName = "_stopWatcher${variableName}_$watcherIdx";
-    if (expr.isEvent) {
-      String event = expr.name;
+    // stop-functions for watchers associated with data-bound content
+    if (_info.contentBinding != null) {
       statement.add(
-          "$spaces  $variableName.on.$event.add($listenerName);$NEW_LINE");
-    } else if (expr.isAttribute) {
-      if (expr.isClassAttribute) {
-        String classWatcher = emitClassAttribute(variableName, expr);
-        statement.add("$spaces  $stopWatcherName = $classWatcher");
-      } else {
-        // Emit the watcher bound to the attribute changing
-        //   watcher = bind(() => attribute_expression, (e) {
-        //      element.attribute_name_expression = e.newValue;
-        //   });
-        statement.add(
-            "$spaces  $stopWatcherName = bind(() => ${expr.expression
-            }, (e) {$NEW_LINE$spaces    $variableName.${expr.name
-            } = e.newValue;$NEW_LINE$spaces  });$NEW_LINE");
-        }
-        watcherIdx++;
-      } else if (expr.isContent) {
-        statement.add(
-          "$spaces  $stopWatcherName = bind(() => ${expr.expression
-            }, (e) {$NEW_LINE$spaces    ${variableName
-            }.innerHTML = '${expr.interpolatedString}'; });$NEW_LINE");
-        watcherIdx++;
-      }
+          "$spaces  _stopWatcher${variableName}_$watcherIdx ="
+          " bind(() => ${_info.contentBinding},"
+          " (e) {\n$spaces    ${variableName}.innerHTML ="
+          " ${_info.contentExpression};"
+          " });\n");
+      watcherIdx++;
     }
 
     return statement.toString();
@@ -1337,21 +1053,33 @@ String emitIfWebComponentInserted(List<Expression> expressions, int index) {
     StringBuffer statement = new StringBuffer();
 
     int watcherIdx = 0;
-    for (var expr in expressions) {
-      if (expr.isEvent) {
-        String event = expr.name;
-        statement.add(
-            "$spaces  $variableName.on.$event.remove($listenerName);$NEW_LINE");
-      } else if (expr.isAttribute || expr.isContent) {
-        String stopWatcherName = "_stopWatcher${variableName}_$watcherIdx";
-        statement.add("$spaces  $stopWatcherName();$NEW_LINE");
+
+    // Detach event listeners.
+    _info.events.forEach((name, eventInfo) {
+      var eventName = eventInfo.eventName;
+      statement.add(
+        "$spaces  $variableName.on.${eventName}.remove($listenerName);\n");
+    });
+
+    // Call stop-watcher.
+    _info.attributes.forEach((name, attrInfo) {
+      for (int i = 0; i < attrInfo.bindings.length; i++) {
+        var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
+        statement.add("$spaces  $stopWatcherName();\n");
         watcherIdx++;
       }
+    });
+
+    if (_info.contentBinding != null) {
+      var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
+      statement.add("$spaces  $stopWatcherName();\n");
+      watcherIdx++;
     }
 
     return statement.toString();
   }
 
+  // TODO(sigmund): remove expression argument.
   String emitBoundElementFunction(List<Expression> expressions, int index) {
     // Statements to update attributes associated with expressions.
     StringBuffer statementUpdateAttrs = new StringBuffer();
@@ -1373,11 +1101,10 @@ String emitIfWebComponentInserted(List<Expression> expressions, int index) {
 
     // TODO(terry): Fill in event hookup this is hacky.
     if (_elem.attributes != null) {
+      int idx = _info != null && _info.contentBinding != null ? 1 : 0;
       for (var attr in _elem.attributes) {
         if (attr is TemplateAttributeExpression) {
-          int idx = findExpressionInExpressions(expressions, attr.value);
-          assert(idx != -1);
-
+          if (_info.attributes[attr.name] != null) idx++;
           if (_elem.tagTokenId == TokenKind.INPUT_ELEMENT) {
             if (attr.name == "value") {
               // Hook up on keyup.
@@ -1410,30 +1137,7 @@ String emitIfWebComponentInserted(List<Expression> expressions, int index) {
     return statement.toString();
   }
 
-  bool get hasTemplateExpression {
-    if (_elem is HTMLElement) {
-      HTMLElement htmlElem = _elem;
-      if (htmlElem.attributes != null) {
-        int count = htmlElem.attributes.length;
-        int idx = 0;
-        while (idx < count) {
-          if (htmlElem.attributes[idx++] is TemplateAttributeExpression) {
-            return true;
-          }
-        }
-      }
-
-      if (htmlElem.anyChildren) {
-        for (var child in htmlElem.children) {
-          if (child is TemplateExpression) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
-  }
+  bool get hasTemplateExpression => _info != null && _info.hasDataBinding;
 }
 
 /** Class for each code section of code emitted for a web component. */
@@ -1499,61 +1203,8 @@ class WebComponentEmitter {
   }
 }
 
+// TODO(sigmund): delete this class entirely.
 class Expression {
-  static const int ATTR_EXPR = 1;       // Attribute expression.
-  static const int EVENT_EXPR = 2;      // data-on-NNNN expression.
-  static const int CONTENT_EXPR = 3;    // Text node expression.
-
-  final int _type;
-  String name;
-  final String expression;
-  final String interpolatedString;
-
-  /** HTML bound attribute e.g, checked, value, etc. for 1-way binding. */
-  bool _boundAttribute;
-
-  /**
-   * Used if class name is dependent of expression true or false value.  If
-   * true add this name if false removed name from classes list.
-   */
-  String _className;
-
-  bool _href = false;
-
-  Expression(this.expression, [String this.interpolatedString = null])
-      : _type = CONTENT_EXPR, _boundAttribute = false;
-  Expression.attribute(this.name, this.expression, [bool boundAttr = false])
-      : _type = ATTR_EXPR,
-        _boundAttribute = boundAttr,
-        interpolatedString = null;
-  Expression.classAttribute(this.name, this.expression, String className,
-                            [bool boundAttr = false])
-      : _type = ATTR_EXPR,
-        _className = className,
-        _boundAttribute = boundAttr,
-        interpolatedString = null;
-  Expression.hrefAttribute(this.name, this.expression, [bool boundAttr = false])
-      : _type = ATTR_EXPR,
-        _boundAttribute = boundAttr,
-        _href = true,
-        interpolatedString = null;
-  Expression.event(this.name, this.expression)
-      : _type = EVENT_EXPR, _boundAttribute = false, interpolatedString = null;
-
-  bool get isAttribute => _type == ATTR_EXPR;
-  bool get isClassAttribute => _type == ATTR_EXPR && (name == 'class');
-  bool get isContent => _type == CONTENT_EXPR;
-  bool get isEvent => _type == EVENT_EXPR;
-  bool get isBoundAttribute => _boundAttribute;
-  bool get isHref => _href;
-  bool get hasClassName => _className != null;
-  bool get hasInterpolatedString => interpolatedString != null;
-
-  /** Class name to add and remove from classes property. */
-  String get className => _className;
-
-  bool sameName(Expression other) =>
-      this.name == other.name && this._type == other._type;
 }
 
 // TODO(terry): Consider merging ElemCG and Analyze.
@@ -1591,6 +1242,7 @@ class ElemCG {
    * List of injection function declarations.  Same expression used multiple
    * times has the same index in _expressions.
    */
+  // TO-DELETE
   final List<Expression> _expressions;
 
   /**  List of each function declarations. */
@@ -1602,7 +1254,7 @@ class ElemCG {
   ElemCG(this.processor)
       : _webComponent = false,
         _includes = [],
-        _expressions = [],
+        _expressions = [], // TO-DELETE
         repeats = [],
         _cgBlocks = [],
         _globalDecls = new StringBuffer(),
@@ -1634,6 +1286,7 @@ class ElemCG {
     }
   }
 
+  // TO-DELETE
   List<Expression> get expressions => _expressions;
 
   List<String> activeBlocksLocalNames() {
@@ -1684,13 +1337,13 @@ Nested iterates must have a localName;
       return false;
     }
     _cgBlocks.add(
-        new CGBlock(indent, blockType, itemName));
+        new CGBlock(indent, blockType, itemName, processor));
 
     return true;
   }
 
   bool pushTemplate(int indent, Template template) {
-    _cgBlocks.add(new CGBlock.createTemplate(template, indent));
+    _cgBlocks.add(new CGBlock.createTemplate(template, indent, processor));
     return true;
   }
 
@@ -1959,15 +1612,6 @@ Nested iterates must have a localName;
       } else if (elem.tagTokenId == TokenKind.LINK_ELEMENT) {
         queueUpFileToProcess(elem);
       } else {
-        // Any TemplateAttributeExpression?
-        if (elem.attributes != null) {
-          for (var attr in elem.attributes) {
-            if (attr is TemplateAttributeExpression) {
-              emitAttributeExpression(attr);
-            }
-          }
-        }
-
         CGStatement stmt = pushStatement(elem, parentName);
         emitElement(elem, scopeName, stmt.hasGlobalVariable ?
             stmt.variableName : varIndex);
@@ -2000,28 +1644,11 @@ Nested iterates must have a localName;
 
   }
 
-  const String DATA_ON_ATTRIBUTE = "data-on-";
-  void emitAttributeExpression(TemplateAttributeExpression elem) {
-    Expression newExpr;
-    if (elem.name.startsWith(DATA_ON_ATTRIBUTE)) {
-      String eventName = elem.name.substring(DATA_ON_ATTRIBUTE.length);
-      newExpr = new Expression.event(eventName, elem.value);
-    } else {
-      newExpr = new Expression.attribute(elem.name, elem.value);
-    }
-
-    for (var expr in _expressions) {
-      if (expr.sameName(newExpr)) {
-        // If the attribute was already set just ignore same attribute
-        // subsequent times.
-        return;
-      }
-    }
-
-    _expressions.add(newExpr);
-  }
-
+  // TODO(sigmund,terry): discuss about what we'll do about inject_, can we
+  // delete this function entirely?
   void emitExpressions(TemplateExpression elem, String scopeName) {
+/*
+// TO-DELETE
     if (isWebComponent) {
       _expressions.add(new Expression(elem.expression));
     } else {
@@ -2052,6 +1679,8 @@ Nested iterates must have a localName;
 
       _expressions.add(new Expression(func.toString()));
     }
+// end TO-DELETE
+*/
   }
 
   void emitCall(TemplateCall elem, String scopeName) {
@@ -2067,59 +1696,4 @@ Nested iterates must have a localName;
       emitConstructHtml(child, "e0", "templateRoot");
     }
   }
-
-  String get lastBlockVarName {
-    var varName;
-    if (lastBlock != null && lastBlock.hasStatements) {
-      varName = lastBlock.last.variableName;
-    } else {
-      varName = "root";
-    }
-
-    return varName;
-  }
-
-  String injectParamName(String name) {
-    // Local name _item is reserved.
-    if (name != null && name == "_item") {
-      return null;    // Local name is not valid.
-    }
-
-    return (name == null) ? "_item" : name;
-  }
-
-  addScope(int indent, StringBuffer buff, String item) {
-    String spaces = Codegen.spaces(indent);
-
-    if (item == null) {
-      item = "_item";
-    }
-    buff.add("${spaces}_scopes[\"${item}\"] = ${item};\n");
-  }
-
-  removeScope(int indent, StringBuffer buff, String item) {
-    String spaces = Codegen.spaces(indent);
-
-    if (item == null) {
-      item = "_item";
-    }
-    buff.add("${spaces}_scopes.remove(\"${item}\");\n");
-  }
-
-  String defineScopes() {
-    StringBuffer buff = new StringBuffer();
-
-    // Construct the active scope names for name resolution.
-    List<String> names = activeBlocksLocalNames();
-    if (names.length > 0) {
-      buff.add("    // Local scoped block names.\n");
-      for (String name in names) {
-        buff.add("    var ${name} = _scopes[\"${name}\"];\n");
-      }
-      buff.add("\n");
-    }
-
-    return buff.toString();
-  }
-
 }

@@ -39,18 +39,3 @@ prettyStats(String phase, num elapsed, [String filename = '']) {
 printStats(String phase, num elapsed, [String filename = '']) {
   print('$phase $filename in $elapsed msec.');
 }
-
-const String DATA_ON_ATTRIBUTE = "data-on-";
-String eventAttribute(String attributeName) {
-  if (attributeName.startsWith(DATA_ON_ATTRIBUTE)) {
-    String event = attributeName.substring(DATA_ON_ATTRIBUTE.length);
-    // TODO(terry): May need other event mappings or support doubleClick
-    //              instead of dblclick?
-    if (event == "dblclick") {
-      event = "doubleClick";
-    }
-    return event;
-  }
-
-  return null;
-}
