@@ -130,7 +130,7 @@ class Parser {
     var message;
     try {
       message = 'expected $expected, but found $tok';
-    } catch (final e) {
+    } catch (e) {
       message = 'parsing error expected $expected';
     }
     _error(message, tok.span);
@@ -814,7 +814,7 @@ class Parser {
 
         try {
           return _mergeFontStyles(processor.processFontFamily(), dartStyles);
-        } catch (final fontException) {
+        } catch (fontException) {
           _error(fontException);
         }
         break;
@@ -1112,7 +1112,7 @@ class Parser {
         String hexText1 = _peekToken.text;
         _next();
         if (_peekIdentifier()) {
-          hexText = '${hexText1}${identifier().name}';
+          hexText = '$hexText1${identifier().name}';
         } else {
           hexText = hexText1;
         }
@@ -1125,7 +1125,7 @@ class Parser {
       try {
         int hexValue = parseHex(hexText);
         return new HexColorTerm(hexValue, hexText, _makeSpan(start));
-      } catch (HexNumberException hne) {
+      } catch (hexNumberException) {
         _error('Bad hex number', _makeSpan(start));
       }
       break;
@@ -1188,11 +1188,11 @@ class Parser {
           String rgbColor = TokenKind.decimalToHex(colorValue, 3);
           try {
             colorValue = parseHex(rgbColor);
-          } catch (HexNumberException hne) {
+          } catch (hexNumberException) {
             _error('Bad hex number', _makeSpan(start));
           }
           return new HexColorTerm(colorValue, rgbColor, _makeSpan(start));
-        } catch (final error) {
+        } catch (error) {
           if (error is NoColorMatchException) {
             // TODO(terry): Other named things to match with validator?
 
@@ -1480,9 +1480,9 @@ class ExpressionsProcessor {
     }
 
     return new FontExpression(_exprs.span,
-        size: fontSize.font.size,
-        lineHeight: fontSize.font.lineHeight,
-        family: fontFamily.font.family);
+        size: fontSize.dynamic.font.size,
+        lineHeight: fontSize.dynamic.font.lineHeight,
+        family: fontFamily.dynamic.font.family);
   }
 }
 

@@ -22,6 +22,7 @@ class CmdOptions {
   bool throwOnErrors;
   bool throwOnWarnings;
   bool showInfo;
+  bool dumpTree;
   bool showWarnings;
   bool useColors;
 
@@ -30,6 +31,7 @@ class CmdOptions {
     throwOnErrors = args['throw_on_errors'];
     throwOnWarnings = args['throw_on_warnings'];
     showInfo = args['verbose'];
+    dumpTree = args['dump'];
     showWarnings = args['suppress_warnings'];
     useColors = args['no_colors'];
   }

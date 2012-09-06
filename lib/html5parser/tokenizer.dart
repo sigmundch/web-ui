@@ -27,7 +27,7 @@ class Tokenizer extends TokenizerBase {
     _index = idx;
   }
 
-  Token next([bool inTag = true]) {
+  Token next([bool inTag = true, bool textNodeArea = false]) {
     // keep track of our starting position
     _startIndex = _index;
 
@@ -47,12 +47,6 @@ class Tokenizer extends TokenizerBase {
         }
       case TokenChar.END_OF_FILE:
         return _finishToken(TokenKind.END_OF_FILE);
-      case TokenChar.LPAREN:
-        return _finishToken(TokenKind.LPAREN);
-      case TokenChar.RPAREN:
-        return _finishToken(TokenKind.RPAREN);
-      case TokenChar.COMMA:
-        return _finishToken(TokenKind.COMMA);
       case TokenChar.LESS_THAN:
         if (_peekChar() == TokenChar.EXCLAMATION &&
             _peekChar(1) == TokenChar.MINUS &&
@@ -96,12 +90,17 @@ class Tokenizer extends TokenizerBase {
       case TokenChar.RBRACE:
         return _finishToken(TokenKind.RBRACE);
       case TokenChar.EXCLAMATION:
-        return this.finishIdentifier();
+        if (inTag) {
+          return this.finishIdentifier();
+        }
+        return _finishToken(TokenKind.EXCLAMATION);
       default:
         if (TokenizerHelpers.isIdentifierStart(ch)) {
           return this.finishIdentifier();
         } else if (TokenizerHelpers.isDigit(ch)) {
           return this.finishNumber();
+        } else if (textNodeArea) {
+          return this.finishTextNode();
         } else {
           return _errorToken();
         }
@@ -120,6 +119,40 @@ class Tokenizer extends TokenizerBase {
       _index - _startIndex);
 
     return tokId >= 0 ? tokId : TokenKind.IDENTIFIER;
+  }
+
+  Token finishTextNode() {
+    int start = _index;
+    var buf = new List<int>();
+    while (true) {
+      int ch = _peekChar();
+      if (ch == TokenChar.LESS_THAN) {
+        break;
+      } else if (peekStartExpression()) {
+        break;
+      } else if (ch == 0) {
+        return _errorToken();
+      } else {
+        buf.add(_nextChar());
+      }
+    }
+
+    return _makeTextNodeToken(buf);
+  }
+
+  bool peekStartExpression() {
+    if (_index + 1 < _text.length &&
+        TokenizerHelpers.isLBrace(_text.charCodeAt(_index)) &&
+        TokenizerHelpers.isLBrace(_text.charCodeAt(_index + 1))) {
+      return true;
+    }
+    return false;
+  }
+
+  Token _makeTextNodeToken(List<int> buf) {
+    final s = new String.fromCharCodes(buf);
+    return new LiteralToken(TokenKind.TEXT_NODE, _source, _startIndex, _index,
+      s);
   }
 
   // Need to override so CSS version of isIdentifierPart is used.

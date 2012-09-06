@@ -44,7 +44,7 @@ void runCss([bool debug = false, bool parseOnly = false,
   if (!debug) {
     try {
       cssParseAndValidate(cssExpr, cssWorld);
-    } catch (final cssException) {
+    } catch (cssException) {
       templateValid = false;
       dumpTree = cssException.toString();
     }
@@ -59,7 +59,7 @@ void runCss([bool debug = false, bool parseOnly = false,
       stylesheetTree.add("\n============>Tree Dump<============\n");
       stylesheetTree.add(stylesheet.toDebugString());
       dumpTree = stylesheetTree.toString();
-    } catch (final cssParseException) {
+    } catch (cssParseException) {
       templateValid = false;
       dumpTree = cssParseException.toString();
     }
@@ -84,7 +84,7 @@ void runCss([bool debug = false, bool parseOnly = false,
   } else {
     try {
       dumpTree = cssParseAndValidateDebug(cssExpr, cssWorld);
-    } catch (final cssException) {
+    } catch (cssException) {
       templateValid = false;
       dumpTree = cssException.toString();
     }

@@ -100,9 +100,9 @@ class Parser {
     return _peekToken.kind;
   }
 
-  Token _next([bool inTag = true]) {
+  Token _next([bool inTag = true, bool textNodeArea = false]) {
     _previousToken = _peekToken;
-    _peekToken = tokenizer.next(inTag);
+    _peekToken = tokenizer.next(inTag, textNodeArea);
     return _previousToken;
   }
 
@@ -148,7 +148,7 @@ class Parser {
     var message;
     try {
       message = 'expected $expected, but found $tok';
-    } catch (final e) {
+    } catch (e) {
       message = 'parsing error expected $expected';
     }
     _error(message, tok.span);
@@ -207,92 +207,7 @@ class Parser {
     }
   }
 
-  // TODO(terry): get should be able to use all template control flow but return
-  //              a string instead of a node.  Maybe expose both html and get
-  //              e.g.,
-  //
-  //              A.)
-  //              html {
-  //                <div>...</div>
-  //              }
-  //
-  //              B.)
-  //              html foo() {
-  //                <div>..</div>
-  //              }
-  //
-  //              C.)
-  //              get {
-  //                <div>...</div>
-  //              }
-  //
-  //              D.)
-  //              get foo() {
-  //                <div>..</div>
-  //              }
-  //
-  //              Only one default allower either A or C the constructor will
-  //              generate a string or a node.
-  //              Examples B and D would generate getters that either return
-  //              a node for B or a String for D.
-  //
-  List<TemplateGetter> processGetters() {
-    List<TemplateGetter> getters = [];
-
-    while (true) {
-      if (_peekIdentifier('get')) {
-        _next();
-
-        int start = _peekToken.start;
-        if (_peekIdentifier()) {
-          String getterName = identifier().name;
-
-          List<TemplateParameter> params = new List<TemplateParameter>();
-
-          _eat(TokenKind.LPAREN);
-
-          start = _peekToken.start;
-          while (true) {
-            // TODO(terry): Need robust Dart argument parser (e.g.,
-            //              List<String> arg1, etc).
-            int pStart = _peekToken.start;
-            var type = processAsIdentifier();
-            var name = processAsIdentifier();
-            if (name == null && type != null) {
-              name = type;
-              type = "";
-            }
-            if (type != null && name != null) {
-              params.add(new TemplateParameter(type, name, _makeSpan(pStart)));
-
-              if (!_maybeEat(TokenKind.COMMA)) {
-                break;
-              }
-            } else {
-              // No parameters we're done.
-              break;
-            }
-          }
-
-          _eat(TokenKind.RPAREN);
-
-          _eat(TokenKind.LBRACE);
-
-          var elems = new HTMLElement.fragment(_makeSpan(_peekToken.start));
-          var templateDoc = processHTML(elems);
-
-          _eat(TokenKind.RBRACE);       // close } of get block
-
-          getters.add(new TemplateGetter(getterName, params, templateDoc,
-            _makeSpan(_peekToken.start)));
-        }
-      } else {
-        break;
-      }
-    }
-
-    return getters;
-  }
+  static const IF_INSTANTIATE = "if ";
 
   processHTML(HTMLElement root) {
     assert(root.isFragment);
@@ -311,8 +226,8 @@ class Parser {
         start = _peekToken.start;
 
         int token = _peek();
-        bool xtag = token == TokenKind.IDENTIFIER;
-        if (TokenKind.validTagName(token) || xtag) {
+        bool xTag = token == TokenKind.IDENTIFIER;
+        if (TokenKind.validTagName(token) || xTag) {
           bool templateTag = token == TokenKind.TEMPLATE;
 
           Token tagToken = _next();
@@ -337,7 +252,8 @@ class Parser {
             scopeType = TokenKind.unscopedTag(tagToken.kind) ? 2 : 1;
           } else if (_maybeEat(TokenKind.END_NO_SCOPE_TAG)) {
             scopeType = 2;
-          } else if (xtag) {
+          }
+          if (xTag) {
             scopeType = 1;
           }
 
@@ -345,16 +261,66 @@ class Parser {
             var elem;
             if (templateTag) {
               // Process template
-              // TODO(terry): Template attributes instantiate, iterate, etc.
-              elem = new Template("", _makeSpan(start));
-            } else if (!xtag) {
-              elem = new HTMLElement.attributes(tagToken.kind,
+              String instantiate;
+              String iterate;
+              String isAttr;
+              if (attrs.containsKey('instantiate')) {
+                instantiate = attrs['instantiate'].value;
+                attrs.remove('instantiate');
+              }
+              if (attrs.containsKey('iterate')) {
+                iterate = attrs['iterate'].value;
+                attrs.remove('iterate');
+              }
+              if (attrs.containsKey('is')) {
+                isAttr = attrs['is'].value;
+                attrs.remove('is');
+              }
+
+              if (instantiate != null && iterate != null) {
+                _error(
+                    'Template must have either iterate or instantiate not both',
+                    _makeSpan(start));
+              }
+
+              // TODO(terry): Make sure attributes of a template are not
+              //              computed expressions.  {{expr}}
+              var templAttrs = attrs.getValues();
+              var span = _makeSpan(start);
+              if (instantiate != null) {
+                if (isAttr == Template.IF_COMPONENT) {
+                  instantiate = instantiate.trim();
+                  if (instantiate.startsWith(IF_INSTANTIATE)) {
+                    String condExpr =
+                        instantiate.substring(IF_INSTANTIATE.length);
+                    elem = new Template.createConditional(templAttrs, condExpr,
+                        span);
+                  } else {
+                    _error('Template conditional instantiate attr missing if.');
+                  }
+                } else if (isAttr == Template.LIST_COMPONENT) {
+                  _error('Template iterate x-list with instantiate attribute.');
+                } else {
+                  elem = new Template.createInstantiate(templAttrs, instantiate,
+                      span);
+                }
+              } else if (iterate != null) {
+                if (isAttr == Template.LIST_COMPONENT) {
+                  elem = new Template.createIterate(templAttrs, iterate, span);
+                } else {
+                  _error('Template conditional x-if with iterate attribute.');
+                }
+              } else {
+                elem = new Template(templAttrs, span);
+              }
+            } else if (!xTag) {
+              elem = new HTMLElement.createAttributes(tagToken.kind,
                                                 attrs.getValues(),
                                                 varName,
                                                 _makeSpan(start));
             } else {
               // XTag
-              elem = new HTMLUnknownElement.attributes(_peekToken.text,
+              elem = new HTMLUnknownElement.attributes(tagToken.text,
                   attrs.getValues(),
                   varName,
                   _makeSpan(start));
@@ -370,16 +336,26 @@ class Parser {
         } else {
           // Close tag
           _eat(TokenKind.SLASH);
-          if (TokenKind.validTagName(_peek())) {
+          bool nextIsXTag = _peek() == TokenKind.IDENTIFIER;
+          if (TokenKind.validTagName(_peek()) || nextIsXTag) {
             Token tagToken = _next();
 
             _eat(TokenKind.GREATER_THAN);
 
             HTMLElement elem = stack.pop();
             if (!elem.isFragment) {
-              if (elem.tagTokenId != tagToken.kind) {
-                _error('Tag doesn\'t match expected </${elem.tagName
-                    }> got </${TokenKind.tagNameFromTokenId(tagToken.kind)}>');
+
+              if (!elem.isXTag) {
+                if (elem.tagTokenId != tagToken.kind) {
+                  _error('Tag doesn\'t match expected </${elem.tagName
+                      }> got </${
+                      TokenKind.tagNameFromTokenId(tagToken.kind)}>');
+                }
+              } else {
+                if (elem.tagName != tagToken.text) {
+                  _error('XTag doesn\'t match expected </${elem.tagName
+                      }> got </${tagToken.text}>');
+                }
               }
             } else {
               // Too many end tags.
@@ -441,16 +417,17 @@ class Parser {
           LiteralToken litTok = tok;
           attrValue = new StringValue(litTok.value, _makeSpan(litTok.start));
         }
-        attrs[attrName.name] = new HTMLAttribute(attrName.toString(),
-                                                     attrValue.toString(),
-                                                     _makeSpan(start));
+        attrs[attrName.dynamic.name] = new HTMLAttribute(attrName.toString(),
+                                                 attrValue.toString(),
+                                                 _makeSpan(start));
       } else if (_peek() == TokenKind.EXPRESSION) {
         var tok = _next();
         if (tok is LiteralToken) {
           LiteralToken litTok = tok;
           attrValue = new StringValue(litTok.value, _makeSpan(litTok.start));
         }
-        attrs[attrName.name] = new TemplateAttributeExpression(attrName.toString(),
+        attrs[attrName.dynamic.name] =
+            new TemplateAttributeExpression(attrName.toString(),
           attrValue.toString(),
           _makeSpan(start));
       }
@@ -498,7 +475,7 @@ class Parser {
 
     // Gobble up everything until we hit <
     while (_peek() != TokenKind.LESS_THAN && _peek() != TokenKind.END_OF_FILE) {
-      var tok = _next();
+      var tok = _next(false, true);
       // Expression?
       if (tok.kind == TokenKind.EXPRESSION) {
         if (stringValue.length > 0) {
@@ -511,6 +488,8 @@ class Parser {
         nodes.add(new TemplateExpression(litTok.value, _makeSpan(start)));
         stringValue = new StringBuffer();
         start = _peekToken.start;
+      } else if (tok.kind == TokenKind.TEXT_NODE) {
+        stringValue.add(tok.text);
       } else {
         // Only save the the contents between ${ and }
         stringValue.add(tok.text);

@@ -43,13 +43,8 @@ void initializeComponents(RegistryLookupFunction lookup, [bool
 
 /** A Dart web component. */
 abstract class WebComponent {
-  /**
-   * The web component element wrapped by this class.
-   * Does not exist if _usePrototypeRewiring because in that case we don't use
-   * wrappers.
-   */
+  /** The web component element wrapped by this class. */
   abstract Element get element;
-  abstract void set element(Element elem);
 
   /** Invoked when this component gets created. */
   abstract void created(ShadowRoot root);

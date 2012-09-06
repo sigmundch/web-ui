@@ -12,11 +12,14 @@
 #import('../lib/file_system_memory.dart');
 #import('../lib/source.dart');
 #import('../lib/world.dart');
-#import('codegen.dart');
+#import('compile.dart');
+#import('codegen_application.dart');
+#import('utils.dart');
 
 ArgParser commandOptions() {
   var args = new ArgParser();
   args.addFlag('verbose', help: 'Display detail info', defaultsTo: false);
+  args.addFlag('dump', help: 'Dump AST', defaultsTo: false);
   args.addFlag('suppress_warnings', help: 'Warnings not displayed',
       defaultsTo: true);
   args.addFlag('warnings_as_errors', help: 'Warning handled as errors',

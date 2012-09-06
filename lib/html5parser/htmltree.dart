@@ -42,13 +42,57 @@ class CommentDefinition extends TreeNode {
 }
 
 class Template extends HTMLElement {
-  String instantiate;
+  static const String IF_COMPONENT = "x-if";
+  static const String LIST_COMPONENT = "x-list";
 
-  Template(this.instantiate, SourceSpan span):
-      super(TokenKind.TEMPLATE, span) {
-  }
+  final String instantiate;
+  final String iterate;
+
+  /** Attribute is encountered; the web component being used. */
+  final String webComponent;
+
+  Template(List<HTMLAttribute> attrs, SourceSpan span)
+      : instantiate = "",
+        iterate = "",
+        webComponent = null,
+        super.template(attrs, span);
+  Template.createInstantiate(List<HTMLAttribute> attrs, this.instantiate,
+      SourceSpan span)
+      : iterate = "",
+        webComponent = null,
+        super.template(attrs, span);
+  Template.createIterate(List<HTMLAttribute> attrs, this.iterate, SourceSpan span)
+      : instantiate = "",
+        webComponent = LIST_COMPONENT,
+        super.template(attrs, span);
+  Template.createConditional(List<HTMLAttribute> attrs, this.instantiate, SourceSpan span)
+      : iterate = "",
+        webComponent = IF_COMPONENT,
+        super.template(attrs, span);
+
+  bool get hasInstantiate => instantiate != null && !instantiate.isEmpty();
+  bool get hasIterate => iterate != null && !iterate.isEmpty();
+  bool get isWebComponent => webComponent != null && !webComponent.isEmpty();
+  bool get isConditional =>
+      hasInstantiate && !hasIterate && webComponent == IF_COMPONENT;
 
   visit(TreeVisitor visitor) => visitor.visitTemplate(this);
+
+  String attributesToString([bool allAttr = true]) {
+    StringBuffer buff = new StringBuffer(super.attributesToString(allAttr));
+
+    if (instantiate != null && !instantiate.isEmpty()) {
+      buff.add(' instantiate="$instantiate"');
+    }
+    if (iterate != null && !iterate.isEmpty()) {
+      buff.add(' iterate="$iterate"');
+    }
+    if (isWebComponent) {
+      buff.add(' is="$webComponent"');
+    }
+
+    return buff.toString();
+  }
 }
 
 class TemplateParameter extends TreeNode {
@@ -106,7 +150,7 @@ class HTMLChildren extends TreeNode {
 
   TreeNode last() => children.last();
   TreeNode removeLast() => children.removeLast();
-  bool get anyChildren() => children != null && children.length > 0;
+  bool get anyChildren => children != null && children.length > 0;
 
   visit(TreeVisitor visitor) => visitor.visitHTMLChildren(this);
 
@@ -115,6 +159,23 @@ class HTMLChildren extends TreeNode {
     if (children != null) {
       for (final child in children) {
         buff.add(child.toString());
+      }
+    }
+
+    return buff.toString();
+  }
+
+  String generateHTML([bool noScript = true]) {
+    StringBuffer buff = new StringBuffer();
+    if (children != null) {
+      for (final child in children) {
+        if (child is HTMLElement) {
+          if (!child.isScriptTag) {
+            buff.add(child.generateHTML(noScript));
+          }
+        } else {
+          buff.add(child.toString());
+        }
       }
     }
 
@@ -156,7 +217,7 @@ class HTMLDocument extends HTMLChildren {
   HTMLDocument(this.dataController, List<TreeNode> children, SourceSpan span):
     super(children, span);
 
-  bool get hasDataController() =>
+  bool get hasDataController =>
       dataController != null && !dataController.isEmpty();
 
   visit(TreeVisitor visitor) => visitor.visitHTMLDocument(this);
@@ -172,21 +233,31 @@ class HTMLElement extends HTMLChildren {
   int tagTokenId;
   List<HTMLAttribute> attributes;
   String _varName;
+  String _idName;
 
-  HTMLElement(this.tagTokenId, SourceSpan span): super.empty(span);
+  HTMLElement(this.tagTokenId, SourceSpan span) : super.empty(span);
   HTMLElement.fragment(SourceSpan span) : super.empty(span),
       tagTokenId = TAG_FRAGMENT;
-  HTMLElement.attributes(this.tagTokenId, this.attributes, this._varName,
-    SourceSpan span): super.empty(span);
+  HTMLElement.createAttributes(this.tagTokenId, this.attributes, this._varName,
+    SourceSpan span) : super.empty(span);
+  HTMLElement.template(this.attributes, SourceSpan span)
+      : tagTokenId = TokenKind.TEMPLATE,
+        super.empty(span);
 
-  bool get isFragment() => tagTokenId == TAG_FRAGMENT;
-  bool get anyAttributes() => attributes != null;
-  bool get isXTag() => false;
+  bool get isFragment => tagTokenId == TAG_FRAGMENT;
+  bool get anyAttributes => attributes != null;
+  bool get isXTag => false;
+  bool get isUnscoped => TokenKind.unscopedTag(tagTokenId);
+
+  bool get isScriptTag => tagTokenId == TokenKind.SCRIPT_ELEMENT;
 
   visit(TreeVisitor visitor) => visitor.visitHTMLElement(this);
 
-  bool get hasVar() => _varName != null;
-  String get varName() => hasVar ? _varName : null;
+  bool get hasIdName => _idName != null;
+  String get idName => hasIdName ? _idName : null;
+
+  bool get hasVar => _varName != null;
+  String get varName => hasVar ? _varName : null;
 
   String attributesToString([bool allAttr = true]) {
     StringBuffer buff = new StringBuffer();
@@ -202,15 +273,44 @@ class HTMLElement extends HTMLChildren {
     return buff.toString();
   }
 
-  String get tagName() => isFragment ?
+  String get tagName => isFragment ?
     'root' : TokenKind.tagNameFromTokenId(tagTokenId);
 
-  bool get scoped() => !TokenKind.unscopedTag(tagTokenId);
+  bool get scoped => !TokenKind.unscopedTag(tagTokenId);
 
   String tagStartToString([bool allAttrs = true]) =>
       "<${tagName}${attributesToString(allAttrs)}>";
 
   String tagEndToString() => "</${tagName}>";
+
+  String generateHTML([bool noScript = true]) {
+    StringBuffer buff = new StringBuffer();
+
+    if (noScript && isScriptTag) {
+      return "";
+    }
+
+    if (!isFragment) {
+      buff.add(tagStartToString());
+    }
+
+    if (children != null) {
+      for (final child in children) {
+        if (child is HTMLElement) {
+          HTMLElement elem = child;
+          buff.add(elem.generateHTML(noScript));
+        } else {
+          buff.add(child.toString());
+        }
+      }
+
+      if (!isFragment && !isUnscoped) {
+        buff.add(tagEndToString());
+      }
+    }
+
+    return buff.toString();
+  }
 
   String toString() {
     StringBuffer buff = new StringBuffer(tagStartToString());
@@ -249,13 +349,13 @@ class HTMLUnknownElement extends HTMLElement {
   HTMLUnknownElement.fragment(SourceSpan span) : super.fragment(span);
   HTMLUnknownElement.attributes(this.xTag, List<HTMLAttribute> attrs,
       String varName, SourceSpan span)
-      : super.attributes(TAG_XTAG, attrs, varName, span);
+      : super.createAttributes(TAG_XTAG, attrs, varName, span);
 
-  bool get isXTag() => true;
+  bool get isXTag => true;
 
-  String get tagName() => isXTag ? xTag : 'root';
+  String get tagName => isXTag ? xTag : 'root';
 
-  bool get scoped() => true;
+  bool get scoped => true;
 
   visit(TreeVisitor visitor) => visitor.visitHTMLUnknownElement(this);
 }
@@ -266,7 +366,7 @@ class HTMLAttribute extends TreeNode {
 
   HTMLAttribute(this.name, this.value, SourceSpan span): super(span);
 
-  bool get isExpression() => false;
+  bool get isExpression => false;
 
   visit(TreeVisitor visitor) => visitor.visitHTMLAttribute(this);
 
@@ -277,7 +377,7 @@ class TemplateAttributeExpression extends HTMLAttribute {
   TemplateAttributeExpression(String name, String value, SourceSpan span):
       super(name, value, span);
 
-  bool get isExpression() => true;
+  bool get isExpression => true;
 
   visit(TreeVisitor visitor) => visitor.visitTemplateAttributeExpression(this);
 
@@ -357,6 +457,8 @@ class TreePrinter implements TreeVisitor {
     output.heading('Template', node.span);
     output.depth++;
     output.writeValue('Instantiate', node.instantiate);
+    output.writeValue('Iterate', node.iterate);
+    output.writeValue('WebComponent', node.webComponent);
     visitHTMLChildren(node);
     output.depth--;
   }

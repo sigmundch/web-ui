@@ -85,6 +85,7 @@ class TokenKind {
   static final int IDENTIFIER = 511;
   static final int STRING = 512;
   static final int STRING_PART = 513;
+  static final int TEXT_NODE = 514;
 
   static final int TEMPLATE_KEYWORD = 595;      // template keyword
 
@@ -374,6 +375,7 @@ class TokenKind {
       case TokenKind.IDENTIFIER: return 'identifier';
       case TokenKind.STRING: return 'string';
       case TokenKind.STRING_PART: return 'string part';
+      case TokenKind.TEXT_NODE: return 'text node';
       case TokenKind.TEMPLATE_KEYWORD: return 'template';
       default:
         throw "Unknown TOKEN";

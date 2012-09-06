@@ -1,0 +1,54 @@
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<!doctype html>
+<html lang="en">
+<body>
+<script type="application/dart" src='model.dart'></script>
+<element name="x-todo-row" extends="li" constructor="TodoItemComponent"
+         apply-author-styles="">
+  <template>
+    <!-- TODO(terry): Hack to split out conditionals special ?? opeartor. -->
+    <div id='todo-item' class="{{_editing ? 'editing' ?? todo.done ? 'completed'}}">
+
+    <!-- TODO(sigmund): are arbitrary expressions like this allowed in MDV? -->
+<!--
+    <div id='todo-item' class="{{_editing ? 'editing' : (todo.done ? 'completed' : '')}}">
+-->
+      <div id="item-view" class="view" data-on-dblclick="{{edit()}}">
+        <input id="checkbox" class="toggle" type="checkbox" checked="{{todo.done}}">
+        <label id="label">{{todo.task}}</label>
+        <button id="destroy-button" class="destroy" data-on-click="{{delete()}}"></button>
+      </div>
+      <input id="edit-line" class="edit" value="{{todo.task}}"
+             data-on-blur="{{update()}}" autofocus>
+    </div>
+  </template>
+  <script type="application/dart">
+    Todo todo;
+    bool _editing = false;
+    String _currValue;
+
+    void edit() {
+      _editing = true;
+      _currValue = todo.task;
+    }
+
+    void update() {
+      _editing = false;
+      todo.task = _currValue;
+    }
+
+    void delete() {
+      var list = app.todos;
+      var index = list.indexOf(todo);
+      if (index != -1) {
+        list.removeRange(index, 1);
+      }
+    }
+  </script>
+</element>
+</body>
+</html>

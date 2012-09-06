@@ -5,6 +5,7 @@
 #library('css');
 
 #import('dart:coreimpl');
+#import('dart:math', prefix: 'Math');
 #import('package:args/args.dart');
 #import("../lib/file_system.dart");
 #import('../lib/file_system_memory.dart');
@@ -74,7 +75,7 @@ String cssParseAndValidateDebug(String cssExpression, CssWorld cssworld) {
       Validate.template(tree.selectors, cssworld);
       output = prettyTree;
     }
-  } catch (var e) {
+  } catch (e) {
     String error = e.toString();
     output = "$error\n$prettyTree";
     throw e;
