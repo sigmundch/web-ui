@@ -237,7 +237,7 @@ class Tokenizer extends TokenizerBase {
     int start = _index;
     var buf = new List<int>();
     while (true) {
-      if (maybeEatEndExpression()) {
+      if (maybeEatEndExpression(quote)) {
         // Get the expression
         if (quote != -1) {
           while (true) {
@@ -288,10 +288,13 @@ class Tokenizer extends TokenizerBase {
     return false;
   }
 
-  bool maybeEatEndExpression() {
+  bool maybeEatEndExpression([int quote = -1]) {
     if (_index + 1 < _text.length &&
         TokenizerHelpers.isRBrace(_text.charCodeAt(_index)) &&
-        TokenizerHelpers.isRBrace(_text.charCodeAt(_index + 1))) {
+        TokenizerHelpers.isRBrace(_text.charCodeAt(_index + 1)) &&
+        // Within attributes (quote != -1), keep reading until }}" or }}'
+        (quote == -1 || (_index + 2 < _text.length &&
+                         _text.charCodeAt(_index + 2) == quote))) {
       _index += 2;
       return true;
     }

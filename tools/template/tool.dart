@@ -73,7 +73,7 @@ void run(List<String> args) {
   // argument 0 - sourcefile full path
   // argument 1 - output path
   String sourceFullFn = results.rest[0];
-  String outputDirectory = results.rest.length > 1 ? results.rest[2] : null;
+  String outputDirectory = results.rest.length > 1 ? results.rest[1] : null;
 
   File fileSrc = new File(sourceFullFn);
 

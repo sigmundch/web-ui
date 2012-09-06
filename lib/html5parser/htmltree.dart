@@ -554,3 +554,71 @@ class TreePrinter implements TreeVisitor {
   }
 }
 
+// TODO(sigmund): this should be auto-generated, not written by hand as it is
+// now.
+class RecursiveVisitor implements TreeVisitor {
+  void visitIdentifier(Identifier node) {
+  }
+  void visitStringValue(StringValue node) {
+  }
+  void visitCommentDefinition(CommentDefinition node) {
+  }
+
+  void visitTemplate(Template node) {
+    visitHTMLElement(node);
+  }
+
+  void visitTemplateParameter(TemplateParameter node) {
+    node.paramType.visit(this);
+    node.paramName.visit(this);
+  }
+
+  void visitTemplateSignature(TemplateSignature node) {
+    for (var param in node.params) {
+      param.visit(this);
+    }
+  }
+
+  void visitHTMLChildren(HTMLChildren node) {
+    if (node.children != null) {
+      for (var node in node.children) {
+        node.visit(this);
+      }
+    }
+  }
+
+  void visitHTMLDocument(HTMLDocument node) {
+    visitHTMLChildren(node);
+  }
+
+  void visitHTMLElement(HTMLElement node) {
+    if (node.attributes != null) {
+      for (var attr in node.attributes) {
+        attr.visit(this);
+      }
+    }
+    visitHTMLChildren(node);
+  }
+
+  void visitHTMLUnknownElement(HTMLUnknownElement node) {
+    visitHTMLElement(node);
+  }
+
+  void visitHTMLAttribute(HTMLAttribute node) {
+  }
+  void visitTemplateAttributeExpression(TemplateAttributeExpression node) {
+  }
+  void visitHTMLText(HTMLText node) {
+  }
+  void visitTemplateExpression(TemplateExpression node) {
+  }
+  void visitTemplateCall(TemplateCall node) {
+  }
+
+  void visitTemplateGetter(TemplateGetter node) {
+    for (var param in node.params) {
+      param.visit(this);
+    }
+    docFrag.visit(this);
+  }
+}

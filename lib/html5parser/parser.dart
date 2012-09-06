@@ -504,3 +504,8 @@ class Parser {
   }
 
 }
+
+HTMLDocument parseString(String s) {
+  var file = new SourceFile(SourceFile.IN_MEMORY_FILE, s);
+  return new Parser(file).parse();
+}
