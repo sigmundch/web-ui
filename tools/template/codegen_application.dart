@@ -49,7 +49,7 @@ class CodegenApplication {
           boundElementCount,
           "    DocumentFragment templateRoot = new DocumentFragment();\n${
           cgb.codeBody}${Codegen.renderNodes}",
-          templateExprFuncs: cgb.templatesCodeBody(ecg.expressions),
+          templateExprFuncs: cgb.templatesCodeBody(),
           injectFuncs: Codegen.injectionsCode(ecg)));
     }
 

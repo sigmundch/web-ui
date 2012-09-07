@@ -115,44 +115,39 @@ void run(List<String> args) {
     world.fatal("CSS source file missing - ${sourceFullFn}");
   } else {
     String source = files.readAll(sourceFullFn);
-    try {
-      final compileElapsed = time(() {
-        var analyze = new Compile(files, srcDir.path, srcPath.filename,
-            numParents);
-        // Write out the results.
-        print("Write files to ${outDirectory.path}:");
+    final compileElapsed = time(() {
+      var analyze = new Compile(files, srcDir.path, srcPath.filename,
+          numParents);
+      // Write out the results.
+      print("Write files to ${outDirectory.path}:");
 
-        String outDirPath = outDirectory.path;
-        // Write out the code associated with each compilation unit.
-        analyze.forEach((CompilationUnit cu) {
-          if (!cu.opened || !cu.codeGenerated || !cu.htmlGenerated) {
-            world.error(
-                "Unexpected compiler error CU ${cu.filename} not processed.");
-          } else {
-            // Source filename associated with this compilation unit.
-            String filename = cu.filename;
+      String outDirPath = outDirectory.path;
+      // Write out the code associated with each compilation unit.
+      analyze.forEach((CompilationUnit cu) {
+        if (!cu.opened || !cu.codeGenerated || !cu.htmlGenerated) {
+          world.error(
+              "Unexpected compiler error CU ${cu.filename} not processed.");
+        } else {
+          // Source filename associated with this compilation unit.
+          String filename = cu.filename;
 
-            // TODO(terry): Only write out web components for now need to
-            //              remove the if sentry so all files are outputed.
-            if (cu.isWebComponent) {
-              // Output .dart file.
-              String dartFilename = "$filename.dart";
-              files.writeString("$outDirPath/$dartFilename", cu.code);
-              print("  Writing $dartFilename");
+          // TODO(terry): Only write out web components for now need to
+          //              remove the if sentry so all files are outputed.
+          if (cu.isWebComponent) {
+            // Output .dart file.
+            String dartFilename = "$filename.dart";
+            files.writeString("$outDirPath/$dartFilename", cu.code);
+            print("  Writing $dartFilename");
 
-              // Otuput the .html file.
-              String htmlFilename = "$filename.html";
-              files.writeString("$outDirPath/$htmlFilename", cu.html);
-              print("  Writing $htmlFilename");
-            }
+            // Otuput the .html file.
+            String htmlFilename = "$filename.html";
+            files.writeString("$outDirPath/$htmlFilename", cu.html);
+            print("  Writing $htmlFilename");
           }
-        });
+        }
       });
+    });
 
-      printStats("Compiled", compileElapsed, sourceFullFn);
-    } catch (htmlException) {
-      // TODO(terry): TBD
-      print("ERROR unhandled EXCEPTION");
-    }
+    printStats("Compiled", compileElapsed, sourceFullFn);
   }
 }

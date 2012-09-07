@@ -108,10 +108,11 @@ class Codegen {
     // Emit all injection functions.
     buff.add(genInjectsCommentBlock);
     var index = 0;
-    for (var expr in ecg.expressions) {
-      buff.add("\n  inject_$index() => safeHTML(model.$expr);");
-      index++;
-    }
+    // TODO(sigmund,terry): are inject_ methods still needed?
+    //for (var expr in ecg.expressions) {
+    //  buff.add("\n  inject_$index() => safeHTML(model.$expr);");
+    //  index++;
+    //}
 
     return buff.toString();
   }
