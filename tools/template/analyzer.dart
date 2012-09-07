@@ -8,10 +8,10 @@
  */
 #library('analyzer');
 
-#import('package:web_components/lib/html5parser/htmltree.dart');
-#import('package:web_components/lib/html5parser/tokenkind.dart');
-#import('utils.dart');
+#import('package:html5lib/treebuilders/simpletree.dart');
 #import('package:web_components/tools/lib/world.dart');
+#import('utils.dart');
+
 
 /** Information extracted for any node in the AST. */
 interface NodeInfo {
@@ -120,6 +120,38 @@ class EventInfo implements NodeInfo {
   String toString() => '(eventName: $eventName, action: $action)';
 }
 
+// TODO(jmesserly): I'm not sure we need this, but it was useful for
+// bootstrapping the switch to the html5 parser.
+class TemplateInfo extends ElementInfo {
+  static const String IF_COMPONENT = "x-if";
+  static const String LIST_COMPONENT = "x-list";
+
+  final String instantiate;
+  final String iterate;
+
+  /** Attribute `is` encountered; the web component being used. */
+  final String webComponent;
+
+  TemplateInfo()
+      : instantiate = "", iterate = "", webComponent = null;
+
+  TemplateInfo.instantiate(this.instantiate)
+      : iterate = "", webComponent = null;
+
+  TemplateInfo.iterate(this.iterate)
+      : instantiate = "", webComponent = LIST_COMPONENT;
+
+  TemplateInfo.conditional(this.instantiate)
+      : iterate = "", webComponent = IF_COMPONENT;
+
+  bool get hasInstantiate => !instantiate.isEmpty();
+  bool get hasIterate => !iterate.isEmpty();
+  bool get isWebComponent => webComponent != null && !webComponent.isEmpty();
+  bool get isConditional =>
+      hasInstantiate && !hasIterate && webComponent == IF_COMPONENT;
+}
+
+
 /**
  * Specifies the action to take on a particular event. Some actions need to read
  * attributes from the DOM element that has the event listener (e.g. two way
@@ -128,66 +160,117 @@ class EventInfo implements NodeInfo {
  */
 typedef String ActionDefinition([String elemVarName]);
 
-const String DATA_ON_ATTRIBUTE = "data-on-";
 
 /** Extract relevant information from [source] and it's children. */
-Map<TreeNode, NodeInfo> analyze(TreeNode source) {
-  var res = new Map<TreeNode, NodeInfo>();
-  var analyzer = new _Analyzer(res);
-  source.visit(analyzer);
-  return res;
+Map<Node, NodeInfo> analyze(Element source) {
+  return (new _Analyzer()..visit(source)).results;
 }
 
 
 /** A visitor that walks the HTML to extract all the relevant information. */
-class _Analyzer extends RecursiveVisitor implements TreeVisitor {
-  final Map<TreeNode, NodeInfo> results;
-  final List<TreeNode> _stack;
+class _Analyzer extends TreeVisitor {
+  static const String _DATA_ON_ATTRIBUTE = "data-on-";
 
-  _Analyzer(this.results) : _stack = [];
+  final Map<Node, NodeInfo> results;
 
-  void visitHTMLElement(HTMLElement node) {
-    results[node] = new ElementInfo();
-    _stack.add(node);
-    super.visitHTMLElement(node);
-    var last = _stack.removeLast();
-    assert(node === last);
-  }
+  _Analyzer() : results = new Map<Node, NodeInfo>();
 
-  void visitHTMLAttribute(HTMLAttribute node) {
-    if (node.name == "id") {
-      (results[_stack.last()] as ElementInfo).elementId = node.value;
+  void visitElement(Element node) {
+    ElementInfo info = null;
+    if (node.tagName == 'template') {
+      // template tags are handled specially.
+      info = createTemplateInfo(node);
     }
+
+    if (info == null) {
+      info = new ElementInfo();
+    }
+    if (node.id != '') info.elementId = node.id;
+    results[node] = info;
+
+    node.attributes.forEach((name, value) {
+      visitAttribute(node, info, name, value);
+    });
+
+    super.visitElement(node);
   }
 
-  void visitTemplateAttributeExpression(TemplateAttributeExpression node) {
-    final HTMLElement elem = _stack.last();
-    final ElementInfo elemInfo = results[elem];
+  TemplateInfo createTemplateInfo(Element node) {
+    assert(node.tagName == 'template');
+    var instantiate = node.attributes['instantiate'];
+    var iterate = node.attributes['iterate'];
+    var isAttr = node.attributes['is'];
+
+    if (instantiate != null && iterate != null) {
+      // TODO(jmesserly): get the node's span here
+      world.error('Template cannot have iterate and instantiate attributes');
+      return null;
+    }
+
+    // TODO(jmesserly): this is from the old parser, needs cleanup, it feels
+    // too complicated for what it's doing. I don't think we need so many
+    // constructors on TemplateInfo.
+    TemplateInfo info = null;
+    if (instantiate != null) {
+      if (isAttr == TemplateInfo.IF_COMPONENT) {
+        instantiate = instantiate.trim();
+        if (instantiate.startsWith("if ")) {
+          var condExpr = instantiate.substring("if ".length);
+          info = new TemplateInfo.conditional(condExpr);
+        } else {
+          world.error('Template conditional instantiate attr missing if.');
+        }
+      } else if (isAttr == TemplateInfo.LIST_COMPONENT) {
+        world.error('Template iterate x-list with instantiate attribute.');
+      } else {
+        info = new TemplateInfo.instantiate(instantiate);
+      }
+    } else if (iterate != null) {
+      if (isAttr == TemplateInfo.LIST_COMPONENT) {
+        info = new TemplateInfo.iterate(iterate);
+      } else {
+        world.error('Template conditional x-if with iterate attribute.');
+      }
+    } else {
+      info = new TemplateInfo();
+    }
+
+    return info;
+  }
+
+  void visitAttribute(Element elem, ElementInfo elemInfo,
+      String name, String value) {
+
+    var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
+    if (match == null) return; // not a binding
+
+    // Strip off the outer {{ }}.
+    value = match[1];
+
     // TODO(sigmund): should this be true if you only have UI event listeners?
     elemInfo.hasDataBinding = true;
-    if (node.name.startsWith(DATA_ON_ATTRIBUTE)) {
+    if (name.startsWith(_DATA_ON_ATTRIBUTE)) {
       // Special data-attribute specifying an event listener.
       var eventInfo = new EventInfo(
-          node.name.substring(DATA_ON_ATTRIBUTE.length),
-          ([elemVarName]) => node.value);
-      results[node] = eventInfo;
+          name.substring(_DATA_ON_ATTRIBUTE.length),
+          ([elemVarName]) => value);
       elemInfo.events[eventInfo.eventName] = eventInfo;
       return;
     }
 
-    var name = node.name;
     var attrInfo;
     if (name == 'data-bind') {
-      var colonIdx = node.value.indexOf(':');
+      var colonIdx = value.indexOf(':');
       if (colonIdx <= 0) {
+        // TODO(jmesserly): get the node's span here
         world.error('data-bind attribute should be of the form '
-            'data-bind="name:value"', node.span);
+            'data-bind="name:value"');
         return;
       }
 
-      name = node.value.substring(0, colonIdx);
-      var value = node.value.substring(colonIdx + 1);
-      var isInput = elem.tagTokenId == TokenKind.INPUT_ELEMENT;
+      name = value.substring(0, colonIdx);
+      value = value.substring(colonIdx + 1);
+      var isInput = elem.tagName == 'input';
       // Special two-way binding logic for input elements.
       if (isInput && name == 'checked') {
         attrInfo = new AttributeInfo(value);
@@ -209,45 +292,52 @@ class _Analyzer extends RecursiveVisitor implements TreeVisitor {
             // Assume [value] is a property with a setter.
             ([elemVarName]) => '$value = $elemVarName.value');
       } else {
-        throw "Unknown data-bind attribute: ${elem.tagTokenId} - ${name}";
+        throw new UnsupportedOperationException(
+            "Unknown data-bind attribute: ${elem.tagName} - ${name}");
       }
     } else if (name == 'class') {
       // Special support to bind each css class separately.
       // class="{{class1}} {{class2}} {{class3}}"
       List<String> bindings = [];
-      var parts = node.value.split(const RegExp(@'}}\s*{{'));
+      var parts = value.split(const RegExp(@'}}\s*{{'));
       for (var part in parts) {
         bindings.add(part);
       }
       attrInfo = new AttributeInfo.forClass(bindings);
     } else {
       // Default to a 1-way binding for any other attribute.
-      attrInfo = new AttributeInfo(node.value);
+      attrInfo = new AttributeInfo(value);
     }
-    results[node] = attrInfo;
+
     elemInfo.attributes[name] = attrInfo;
   }
 
-  void visitTemplateExpression(TemplateExpression node) {
-    final HTMLChildren parentElem = _stack.last();
-    final ElementInfo info = results[parentElem];
-    info.hasDataBinding = true;
-    // TODO(sigmund,terry): support more than 1 template expression
-    assert(info.contentBinding == null);
-    info.contentBinding = node.expression;
+  void visitText(Text text) {
+    var bindingRegex = const RegExp(@'{{(.*)}}');
+    if (!bindingRegex.hasMatch(text.value)) return;
 
+    var parentElem = text.parent;
+    var info = results[parentElem];
+    info.hasDataBinding = true;
+    assert(info.contentBinding == null);
+
+    // Match all bindings.
     var buf = new StringBuffer();
-    for (var content in parentElem.children) {
-      if (content is HTMLText) {
-        buf.add(content.value);
-      } else {
-        // TODO(sigmund,terry): support more than 1 template expression
-        assert(content == node);
-        buf.add("\${${node.expression}}");
+    int offset = 0;
+    for (var match in bindingRegex.allMatches(text.value)) {
+      var binding = match[1];
+      // TODO(sigmund,terry): support more than 1 template expression
+      if (info.contentBinding == null) {
+        info.contentBinding = binding;
       }
+
+      buf.add(text.value.substring(offset, match.start()));
+      buf.add("\${$binding}");
+      offset = match.end();
     }
+    buf.add(text.value.substring(offset));
+
     var content = buf.toString().replaceAll("'", "\\'").replaceAll('\n', " ");
     info.contentExpression = "'$content'";
   }
 }
-

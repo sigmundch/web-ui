@@ -5,9 +5,6 @@
 #library('codegen_application');
 
 #import('dart:coreimpl');
-#import('package:web_components/lib/html5parser/tokenkind.dart');
-#import('package:web_components/lib/html5parser/htmltree.dart');
-#import('package:web_components/tools/css/css.dart', prefix:'css');
 #import('package:web_components/tools/lib/world.dart');
 #import('codegen.dart');
 #import('compile.dart');
@@ -89,37 +86,5 @@ class CodegenApplication {
         body: buff.toString(),
         funcs: myFuncs,
         epilog: "${templateExprFuncs}$injectFuncs");
-  }
-
-  String _emitCSSSelectors(css.Stylesheet stylesheet) {
-    if (stylesheet == null) {
-      return "";
-    }
-
-    SplayTreeMap<String, css.CssData> classes;
-
-    for (final production in stylesheet.topLevels) {
-      if (production is css.IncludeDirective) {
-        for (final topLevel in production.styleSheet.topLevels) {
-          if (topLevel is css.RuleSet) {
-            classes = css.Generate.computeClassSelectors(topLevel, classes);
-          }
-        }
-      } else if (production is css.RuleSet) {
-        classes = css.Generate.computeClassSelectors(production, classes);
-      }
-    }
-
-    if (classes == null) {
-      classes = new SplayTreeMap<String, css.CssData>();
-    }
-
-    var buff = new StringBuffer();
-    for (final String knownClass in classes.getKeys()) {
-      var dartName = toCamelCase(knownClass);
-      buff.add("  static String get ${dartName}() => \"${knownClass}\";\n");
-    }
-
-    return buff.toString();
   }
 }

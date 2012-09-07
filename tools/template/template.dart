@@ -6,8 +6,6 @@
 
 #import('dart:coreimpl');
 #import('package:args/args.dart');
-#import('package:web_components/lib/html5parser/parser.dart');
-#import('package:web_components/lib/html5parser/htmltree.dart');
 #import('package:web_components/tools/lib/cmd_options.dart');
 #import('package:web_components/tools/lib/file_system_memory.dart');
 #import('package:web_components/tools/lib/source.dart');
@@ -45,12 +43,4 @@ void initHtmlWorld(CmdOptions opts) {
   //  options.throwOnErrors = true;
   //  options.throwOnFatal = true;
   //  options.useColors = commandLine ? true : false;
-}
-
-// TODO(terry): Add obfuscation mapping file.
-HTMLDocument templateParseAndValidate(String template) {
-  Parser parser = new Parser(new SourceFile(SourceFile.IN_MEMORY_FILE,
-    template));
-
-  return parser.parse();
 }

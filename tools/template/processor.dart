@@ -5,7 +5,6 @@
 #library('processor');
 
 #import('dart:coreimpl');
-#import('package:web_components/lib/html5parser/htmltree.dart');
 #import('package:web_components/tools/lib/world.dart');
 #import('package:web_components/tools/lib/file_system.dart');
 #import('compile.dart');

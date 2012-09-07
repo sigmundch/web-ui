@@ -5,11 +5,12 @@
 #library('analysis');
 
 #import('dart:coreimpl');
-#import('package:web_components/lib/html5parser/tokenkind.dart');
-#import('package:web_components/lib/html5parser/htmltree.dart');
-#import('package:web_components/tools/css/css.dart', prefix:'css');
+#import('package:html5lib/html5parser.dart');
+#import('package:html5lib/tokenizer.dart');
+#import('package:html5lib/treebuilders/simpletree.dart');
 #import('package:web_components/tools/lib/file_system.dart');
 #import('package:web_components/tools/lib/world.dart');
+#import('analyzer.dart', prefix: 'analyzer');
 #import('codegen.dart');
 #import('codegen_application.dart');
 #import('codegen_component.dart');
@@ -17,11 +18,29 @@
 #import('processor.dart');
 #import('template.dart');
 #import('utils.dart');
-#import('analyzer.dart', prefix: 'analyzer');
+
+// TODO(jmesserly): move these things into html5lib's public api
+// This is for voidElements:
+#import('package:html5lib/lib/constants.dart', prefix: 'html5_constants');
+// This is for htmlEscapeMinimal:
+#import('package:html5lib/lib/utils.dart', prefix: 'html5_utils');
 
 
 // TODO(terry): Too many classes in this file need to break up walking, analysis
 //              and codegen to different files (started but needs to finished).
+// TODO(terry): Add obfuscation mapping file.
+Document parseHtml(String template, String sourcePath) {
+  var parser = new HTMLParser();
+  var document = parser.parse(new HTMLTokenizer(template));
+
+  // Note: errors aren't fatal in HTML (unless strict mode is on).
+  // So just print them as warnings.
+  for (var e in parser.errors) {
+    world.warning(
+        'Error in $sourcePath line ${e.line}:${e.column}: ${e.message}');
+  }
+  return document;
+}
 
 /**
  * Walk the tree produced by the parser looking for templates, expressions, etc.
@@ -66,7 +85,7 @@ class Compile {
             String source = fs.readAll("$baseDir/${process.cu.filename}");
 
             final parsedElapsed = time(() {
-              process.cu.document = templateParseAndValidate(source);
+              process.cu.document = parseHtml(source, process.cu.filename);
             });
             if (options.showInfo) {
               printStats("Parsed", parsedElapsed, process.cu.filename);
@@ -134,35 +153,17 @@ class Compile {
   }
 
   /** Walk the HTML tree of the template file. */
-  void _walkTree(HTMLDocument doc, ElemCG ecg) {
+  void _walkTree(Document doc, ElemCG ecg) {
     if (!ecg.pushBlock()) {
-      world.error("Error at ${doc.children}");
+      world.error("Error at ${doc.nodes}");
     }
 
-    var start;
-    // Skip the fragment (root) if it exist and the HTML node as well.
-    if (doc.children.length > 0 && doc.children[0] is HTMLElement) {
-      final HTMLElement elem = doc.children[0];
-      if (elem.isFragment) {
-        start = elem;
-        for (var child in start.children) {
-          if (child is HTMLText) {
-            continue;
-          } else if (child is HTMLElement) {
-            if (child.tagTokenId == TokenKind.HTML_ELEMENT) {
-              start = child;
-            }
-            break;
-          }
-        }
-      }
-    } else {
-      start = doc;
-    }
+    // Start from the HTML node.
+    var start = doc.query('html');
 
     bool firstTime = true;
-    for (var child in start.dynamic.children) {
-      if (child is HTMLText) {
+    for (var child in start.nodes) {
+      if (child is Text) {
         if (!firstTime) {
           ecg.closeStatement();
         }
@@ -196,7 +197,16 @@ class Compile {
 
   String _emitterHTML(ProcessFile process) {
     // TODO(terry): Need special emitter for main vs web component.
-    return process.cu.document.generateHTML();
+
+    // TODO(jmesserly): not sure about removing script nodes like this
+    // But we need to do this for web components to work.
+    var scriptTags = process.cu.document.queryAll('script');
+    for (var tag in scriptTags) {
+      // TODO(jmesserly): use tag.remove() once it's supported.
+      tag.parent.$dom_removeChild(tag);
+    }
+
+    return process.cu.document.outerHTML;
   }
 
   /**
@@ -231,7 +241,8 @@ class CGBlock {
   /** Local variable index (e.g., e0, e1, etc.). */
   int _localIndex;
 
-  Template _template;    // If template remember
+  final analyzer.TemplateInfo template;
+  final Element templateElement;
   final ProcessFiles processor;
 
   // Block Types:
@@ -241,16 +252,21 @@ class CGBlock {
 
   CGBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR, local,
       this.processor])
-      : _stmts = new List<CGStatement>(),
+      : template = null,
+        templateElement = null,
+        _stmts = <CGStatement>[],
         _localIndex = 0,
         _indent = indent,
         _blockType = blockType,
         _localName = local {
     assert(_blockType >= CGBlock.CONSTRUCTOR && _blockType <= CGBlock.TEMPLATE);
   }
-  CGBlock.createTemplate(Template template, [int indent = 4, this.processor])
-      : _template = template,
-        _stmts = new List<CGStatement>(),
+  CGBlock.createTemplate(Element templateElement,
+      [int indent = 4, ProcessFiles processor])
+      : templateElement = templateElement,
+        processor = processor,
+        template = processor.current.cu.info[templateElement],
+        _stmts = <CGStatement>[],
         _localIndex = 0,
         _indent = indent,
         _blockType = CGBlock.TEMPLATE,
@@ -263,8 +279,6 @@ class CGBlock {
 
   bool get hasLocalName => _localName != null;
   String get localName => _localName;
-
-  Template get template => _template;
 
   /**
    * Each statement (HTML) encountered is remembered with either/both variable
@@ -586,19 +600,17 @@ class CGBlock {
     code.removedStmts.add(emitTemplateRemoved());
   }
 
-  bool get conditionalTemplate =>
-      isTemplate && template.isConditional && template.anyAttributes;
+  bool get conditionalTemplate => isTemplate && template.isConditional
+      && templateElement.attributes.length > 0;
 
   /** Emit watchers for a template conditional. */
   String emitTemplateWatcher() {
-    String spaces = Codegen.spaces(2);
+    var spaces = Codegen.spaces(2);
     if (conditionalTemplate) {
-      for (var attr in template.attributes) {
-        if (attr.name == "id") {
-          var tmplId = attr.value;
-          var ifExpr = template.instantiate;
-
-          return "${spaces}WatcherDisposer _stopWatcher_if_$tmplId;\n";
+      for (var name in templateElement.attributes.getKeys()) {
+        if (name == "id") {
+          var value = templateElement.attributes[name];
+          return "${spaces}WatcherDisposer _stopWatcher_if_$value;\n";
         }
       }
     }
@@ -611,11 +623,11 @@ class CGBlock {
   String emitTemplateCreated() {
     String spaces = Codegen.spaces(2);
     if (conditionalTemplate) {
-      for (var attr in template.attributes) {
-        if (attr.name == "id") {
-          var tmplId = attr.value;
+      for (var name in templateElement.attributes.getKeys()) {
+        if (name == "id") {
+          var tmplId = templateElement.attributes[name];
           var ifExpr = template.instantiate;
-          // Template conditional e.g.,
+          // analyzer.TemplateInfo conditional e.g.,
           //
           //    <template instantiate="if anyDone" is="x-if" id='done'>
           //
@@ -640,9 +652,9 @@ class CGBlock {
       // Compute the body.
       WebComponentEmitter tmplCode = new WebComponentEmitter();
       emitIfTemplateStatements(tmplCode);
-      for (var attr in template.attributes) {
-        if (attr.name == "id") {
-          var tmplId = attr.value;
+      for (var name in templateElement.attributes.getKeys()) {
+        if (name == "id") {
+          var tmplId = templateElement.attributes[name];
           var ifExpr = template.instantiate;
           var body = emitTemplateIfBody();
           return
@@ -676,10 +688,18 @@ class CGBlock {
 
       final analyzer.ElementInfo info = stmt._info;
       info.events.forEach((name, eventInfo) {
+        // TODO(jmesserly): throughout this file we hookup names via:
+        //    .on['eventname']
+        // instead of:
+        //    .on.eventName
+        // We do this because attribute names are not case sensitive in HTML,
+        // and like the real DOM, our parser will canonicalize them to lower
+        // case. Remove this workaround once we switch to the
+        // `data-action="eventName:"` syntax.
         var listenerName = stmt.listenerName;
         var varName = stmt.variableName;
         buff.add("${spaces}if ($varName != null) {\n"
-                 "${spaces}  $varName.on.$name.add($listenerName);\n");
+                 "${spaces}  $varName.on['$name'].add($listenerName);\n");
         eventHandled = true;
       });
 
@@ -720,14 +740,15 @@ class CGBlock {
       final analyzer.ElementInfo info = stmt._info;
       info.events.forEach((name, eventInfo) {
         var varName = stmt.variableName;
+        var listenerName = stmt.listenerName;
         buff.add("${spaces}if ($varName != null) {\n");
-        buff.add("$spaces  $varName.on.$name.remove(${stmt.listenerName});\n");
+        buff.add("$spaces  $varName.on['$name'].remove($listenerName);\n");
         buff.add("$spaces}\n");
       });
 
-      for (var attr in template.attributes) {
-        if (attr.name == "id") {
-          var tmplId = attr.value;
+      for (var name in templateElement.attributes.getKeys()) {
+        if (name == "id") {
+          var tmplId = templateElement.attributes[name];
           var ifExpr = template.instantiate;
           var body = emitTemplateIfBody();
           buff.add("${spaces}_stopWatcher_if_$tmplId();\n");
@@ -752,7 +773,7 @@ class CGBlock {
 class CGStatement {
   final bool _repeating;
   final StringBuffer _buff;
-  TreeNode _elem;
+  Node _elem;
   analyzer.ElementInfo _info;
   int _indent;
   var parentName;
@@ -807,11 +828,9 @@ class CGStatement {
   bool get closed => _closed;
 
   void close() {
-    if (_elem is HTMLElement) {
-      final HTMLElement elem = _elem;
-      if (elem.scoped) {
-        add("</${elem.tagName}>");
-      }
+    if (_elem is Element && _elem is! DocumentType &&
+        html5_constants.voidElements.indexOf(_elem.tagName) >= 0) {
+      add("</${_elem.tagName}>");
     }
     _closed = true;
   }
@@ -855,14 +874,14 @@ class CGStatement {
       // statement.add("$spaces$localVar$varName = renderSetupFineGrainUpdates("
       //               "() => model.${exprs[0].name}, $boundElemIdx);\n");
     } else {
-      bool isTextNode = _elem is HTMLText;
+      bool isTextNode = _elem is Text;
       String createType = isTextNode ? "Text" : "Element.html";
       if (tmpRepeat == null) {
         statement.add("$spaces$localVar$varName = new $createType(\'");
       } else {
         statement.add("$spaces$localVar$tmpRepeat = new $createType(\'");
       }
-      if (_elem is Template) {
+      if (_elem.tagName == 'template') {
         statement.add("<template></template>");
       } else {
         statement.add(isTextNode ?  _buff.toString().trim() : _buff.toString());
@@ -872,10 +891,10 @@ class CGStatement {
 
     if (tmpRepeat == null) {
       statement.add("$spaces$parentName.nodes.add($varName);\n");
-      if (_elem is Template) {
+      if (_elem.tagName == 'template') {
         // TODO(terry): Need to support multiple templates either nested or
         //              siblings.
-        // Hookup Template to the root.
+        // Hookup analyzer.TemplateInfo to the root.
         statement.add("${spaces}root = $parentName;\n");
       }
     } else {
@@ -975,7 +994,7 @@ class CGStatement {
     _info.events.forEach((name, eventInfo) {
       var eventName = eventInfo.eventName;
       statement.add(
-        "$spaces  $variableName.on.${eventName}.add($listenerName);\n");
+        "$spaces  $variableName.on['$eventName'].add($listenerName);\n");
     });
 
     int watcherIdx = 0;
@@ -1033,7 +1052,7 @@ class CGStatement {
     _info.events.forEach((name, eventInfo) {
       var eventName = eventInfo.eventName;
       statement.add(
-        "$spaces  $variableName.on.${eventName}.remove($listenerName);\n");
+        "$spaces  $variableName.on['$eventName'].remove($listenerName);\n");
     });
 
     // Call stop-watcher.
@@ -1067,40 +1086,35 @@ class CGStatement {
     statement.add("$spaces  if (e0 == null) {\n");
 
     // Creation of DOM element.
-    bool isTextNode = _elem is HTMLText;
+    bool isTextNode = _elem is Text;
     String createType = isTextNode ? "Text" : "Element.html";
     statement.add("$spaces    e0 = new $createType(\'");
     statement.add(isTextNode ? _buff.toString().trim() : _buff.toString());
     statement.add("\');\n");
 
     // TODO(terry): Fill in event hookup this is hacky.
-    final HTMLElement elem = _elem;
-    if (elem.attributes != null) {
-      int idx = _info != null && _info.contentBinding != null ? 1 : 0;
-      for (var attr in elem.attributes) {
-        if (attr is TemplateAttributeExpression) {
-          if (_info.attributes[attr.name] != null) idx++;
-          if (elem.tagTokenId == TokenKind.INPUT_ELEMENT) {
-            if (attr.name == "value") {
-              // Hook up on keyup.
-              statement.add("$spaces    e0.on.keyUp.add(wrap1((_) {"
-                  " model.${attr.value} = e0.value; }));\n");
-            } else if (attr.name == "checked") {
-              statement.add("$spaces    e0.on.click.add(wrap1((_) {"
-                  " model.${attr.value} = e0.checked; }));\n");
-            } else {
-              // TODO(terry): Need to handle here with something...
-              // data-on-XXXXX would handle on-change .on.change.add(listener);
-
-//              assert(false);
-            }
+    int idx = _info != null && _info.contentBinding != null ? 1 : 0;
+    _elem.attributes.forEach((name, value) {
+      if (_info.attributes[name] != null) {
+        if (_elem.tagName == 'input') {
+          if (name == "value") {
+            // Hook up on keyup.
+            statement.add("$spaces    e0.on.keyUp.add(wrap1((_) {"
+                " model.${value} = e0.value; }));\n");
+          } else if (name == "checked") {
+            statement.add("$spaces    e0.on.click.add(wrap1((_) {"
+                " model.${value} = e0.checked; }));\n");
+          } else {
+            // TODO(terry): Need to handle here with something...
+            // data-on-XXXXX would handle on-change .on.change.add(listener);
+            //assert(false);
           }
-
-          statementUpdateAttrs.add(
-              "$spaces  e0.${attr.name} = inject_$idx();\n");
         }
+
+        idx++;
+        statementUpdateAttrs.add("$spaces  e0.${name} = inject_$idx();\n");
       }
-    }
+    });
 
     statement.add("$spaces  }\n");
 
@@ -1314,8 +1328,8 @@ Nested iterates must have a localName;
     return true;
   }
 
-  bool pushTemplate(int indent, Template template) {
-    _cgBlocks.add(new CGBlock.createTemplate(template, indent, processor));
+  bool pushTemplate(int indent, Element elem) {
+    _cgBlocks.add(new CGBlock.createTemplate(elem, indent, processor));
     return true;
   }
 
@@ -1388,54 +1402,32 @@ Nested iterates must have a localName;
    *     <link rel="component" href="webcomponent_file">
    * defines a web component file to process.
    */
-  void queueUpFileToProcess(HTMLElement elem) {
-    if (elem.tagTokenId == TokenKind.LINK_ELEMENT) {
-      bool webComponent = false;
-      String href = "";
-      // TODO(terry): Consider making HTMLElement attributes a map instead of
-      //              a list for faster access.
-      for (HTMLAttribute attr in elem.attributes) {
-        if (attr.name == 'rel' && attr.value == 'components') {
-          webComponent = true;
-        }
-        if (attr.name == 'href') {
-          href = attr.value;
-        }
-      }
-      if (webComponent && !href.isEmpty()) {
+  void queueUpFileToProcess(Element elem) {
+    if (elem.tagName == 'link') {
+      bool webComponent = elem.attributes['rel'] == 'components';
+      String href = elem.attributes['href'];
+      if (webComponent && href != null && href != '') {
         processor.add(href);
       }
     }
   }
 
-  String getAttributeValue(HTMLElement elem, String name) {
-    for (HTMLAttribute attr in elem.attributes) {
-      if (attr.name.toLowerCase() == name) {
-        return attr.value;
-      }
-    }
-
-    return null;
-  }
-
-  final String _SCRIPT_TYPE_ATTR = "type";
-  final String _SCRIPT_SRC_ATTR = "src";
   final String _DART_SCRIPT_TYPE = "application/dart";
-  emitScript(HTMLElement elem) {
-    Expect.isTrue(elem.tagTokenId == TokenKind.SCRIPT_ELEMENT);
 
-    String typeValue = getAttributeValue(elem, _SCRIPT_TYPE_ATTR);
-    if (typeValue != null && typeValue == _DART_SCRIPT_TYPE) {
-      String includeName = getAttributeValue(elem, _SCRIPT_SRC_ATTR);
+  void emitScript(Element elem) {
+    Expect.isTrue(elem.tagName == 'script');
+
+    if (elem.attributes['type'] == _DART_SCRIPT_TYPE) {
+      String includeName = elem.attributes["src"];
       if (includeName != null) {
         _includes.add(includeName);
       } else {
-        Expect.isTrue(elem.children.length == 1);
+        Expect.isTrue(elem.nodes.length == 1);
         // This is the code to be emitted with the web component.
-        _userCode = elem.children[0].toString();
+        _userCode = elem.nodes[0].value;
       }
     } else {
-      reportError("tag ignored possibly missing type='application/dart'");
+      reportError('tag ignored possibly missing type="$_DART_SCRIPT_TYPE"');
     }
   }
 
@@ -1444,27 +1436,28 @@ Nested iterates must have a localName;
    * [parentVarOrIndex] if # it's a local variable if string it's an exposed
    * name (specified by the var attribute) for this element.
    */
-  emitElement(var elem,
+  emitElement(Node elem,
               [String scopeName = "",
                var parentVarOrIdx = 0,
                bool immediateNestedRepeat = false]) {
-    if (elem is Template) {
-      Template template = elem;
-      emitTemplate(template);
-    } else if (elem is HTMLElement) {
-      if (!elem.isFragment) {
-        add("<${elem.tagName}${elem.attributesToString(false)}>");
+    if (elem.tagName == 'template') {
+      emitTemplate(elem);
+    } else if (elem is Element) {
+      // Note: this check is always true right now, because DocumentFragment
+      // does not extend Element in html5lib. This might change in the future
+      // because in dart:html DocumentFragment extends Element
+      // (this is unlike the real DOM, see:
+      // http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-B63ED1A3).
+      if (elem is! DocumentFragment) {
+        // TODO(jmesserly): would be nice if we didn't have to grab info here.
+        var info = processor.current.cu.info[elem];
+        add("<${elem.tagName}${attributesToString(elem, info)}>");
       }
       String prevParent = lastVariableName;
-      for (var childElem in elem.children) {
-        if (childElem is HTMLElement) {
+      for (var childElem in elem.nodes) {
+        if (childElem is Element) {
           closeStatement();
-          if (childElem.hasVar) {
-            emitConstructHtml(childElem, scopeName, prevParent,
-              childElem.varName);
-          } else {
-            emitConstructHtml(childElem, scopeName, prevParent);
-          }
+          emitConstructHtml(childElem, scopeName, prevParent);
           closeStatement();
         } else {
           emitElement(childElem, scopeName, parentVarOrIdx);
@@ -1473,7 +1466,7 @@ Nested iterates must have a localName;
 
       // Close this tag.
       closeStatement();
-    } else if (elem is HTMLText) {
+    } else if (elem is Text) {
       String outputValue = elem.value.trim();
       if (outputValue.length > 0) {
         bool emitTextNode = false;
@@ -1498,10 +1491,6 @@ Nested iterates must have a localName;
           closeStatement();
         }
       }
-    } else if (elem is TemplateExpression) {
-      emitExpressions(elem, scopeName);
-    } else if (elem is TemplateCall) {
-      emitCall(elem, parentVarOrIdx);
     }
   }
 
@@ -1548,40 +1537,37 @@ Nested iterates must have a localName;
   /**
    * Construct the HTML; each top-level node get's it's own variable.
    */
-  void emitConstructHtml(var elem,
+  void emitConstructHtml(Node elem,
                          [String scopeName = "",
                           String parentName = "parent",
-                          var varIndex = 0,
+                          int varIndex = 0,
                           bool immediateNestedRepeat = false]) {
-    if (elem is HTMLElement) {
-      if (elem is HTMLUnknownElement) {
-        HTMLUnknownElement unknownElem = elem;
-        if (unknownElem.xTag == "element") {
-          _webComponent = true;
+    if (elem is Element) {
+      if (elem.tagName == "element") {
+        _webComponent = true;
 
-          String className = getAttributeValue(unknownElem, "constructor");
-          if (className != null) {
-            _className = className;
-          } else {
-            reportError(
-                "Web Component class name missing; use constructor attribute");
-          }
-
-          String wcName = getAttributeValue(unknownElem, "name");
-          if (wcName != null) {
-            _webComponentName = wcName;
-          } else {
-            reportError("Missing name of Web Component use name attribute");
-          }
-
-          CGStatement stmt = pushStatement(elem, parentName);
-          emitElement(elem, scopeName, stmt.hasGlobalVariable ?
-              stmt.variableName : varIndex);
+        String className = elem.attributes["constructor"];
+        if (className != null) {
+          _className = className;
+        } else {
+          reportError(
+              "Web Component class name missing; use constructor attribute");
         }
-      } else if (elem.tagTokenId == TokenKind.SCRIPT_ELEMENT) {
+
+        String wcName = elem.attributes["name"];
+        if (wcName != null) {
+          _webComponentName = wcName;
+        } else {
+          reportError("Missing name of Web Component use name attribute");
+        }
+
+        CGStatement stmt = pushStatement(elem, parentName);
+        emitElement(elem, scopeName, stmt.hasGlobalVariable ?
+            stmt.variableName : varIndex);
+      } else if (elem.tagName == 'script') {
         // Never emit a script tag.
         emitScript(elem);
-      } else if (elem.tagTokenId == TokenKind.LINK_ELEMENT) {
+      } else if (elem.tagName == 'link') {
         queueUpFileToProcess(elem);
       } else {
         CGStatement stmt = pushStatement(elem, parentName);
@@ -1655,17 +1641,32 @@ Nested iterates must have a localName;
 */
   }
 
-  void emitCall(TemplateCall elem, String scopeName) {
-    pushStatement(elem, scopeName);
-  }
-
-  void emitTemplate(Template elem) {
+  void emitTemplate(Element elem) {
     if (!pushTemplate(6, elem)) {
       reportError("Error at ${elem}");
     }
 
-    for (var child in elem.children) {
+    for (var child in elem.nodes) {
       emitConstructHtml(child, "e0", "templateRoot");
     }
   }
+}
+
+// TODO(jmesserly): is there a better way to do this?
+String attributesToString(Node node, ElementInfo info) {
+  if (node.attributes.length == 0) return '';
+
+  var str = new StringBuffer();
+  node.attributes.forEach((name, value) {
+    // Skip data bound attributes, we'll deal with them separately.
+    if (info.attributes[name] == null) {
+      // TODO(jmesserly): need a convenience method in html5lib for escaping
+      // html attributes.
+      // Note: we don't use dart's htmlEscape function because it escapes more
+      // things than we need. This is the same one used by html5lib.
+      value = html5_utils.htmlEscapeMinimal(value, {'"': "&quot;"});
+      str.add(' $name="$value"');
+    }
+  });
+  return str.toString();
 }

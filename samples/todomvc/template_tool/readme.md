@@ -20,7 +20,7 @@ Here is quick lists of issues to be resolved:
 
 Generating the code:
 
-    tool/template/tool.dart --verbose /DART-WC/dart-web-components/samples/todomvc/template_tool/main.html /DART-WC/dart-web-components/samples/todomvc/output
+    tools/template/tool.dart --verbose samples/todomvc/template_tool/main.html samples/todomvc/output
 
 this will generated a number of files with the *.html.dart and *.html.html
 
@@ -51,8 +51,6 @@ Todo application NOT WORKING:
 If running the Todo application after entering a task you get a task item of:
 
      {{todo.task}}
-     
+
 and the application seems hung you forgot to add the above block of code to
 item.html.dart
-
-

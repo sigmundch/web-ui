@@ -6,20 +6,20 @@
 
 #import('package:unittest/unittest.dart');
 #import('package:unittest/vm_config.dart');
-#import('package:webcomponents/lib/html5parser/htmltree.dart');
-#import('package:webcomponents/lib/html5parser/parser.dart', prefix: 'parser');
-#import('package:webcomponents/tools/template/analyzer.dart');
+#import('package:html5lib/html5parser.dart');
+#import('package:html5lib/treebuilders/simpletree.dart');
+#import('package:web_components/tools/template/analyzer.dart');
 
 main() {
   useVmConfiguration();
   test('parse single element', () {
-    var input = '<div></div>';
+    var input = '<div/>';
     var elem = parseSubtree(input);
-    expect(elem.toString(), input);
+    expect(elem.outerHTML, input);
   });
 
   test('id extracted - shallow element', () {
-    var input = '<div id="foo"></div>';
+    var input = '<div id="foo"/>';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].elementId, equals('foo'));
@@ -30,8 +30,8 @@ main() {
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].elementId, isNull);
-    expect(info[elem.children[0]].elementId, isNull);
-    expect(info[elem.children[0].children[0]].elementId, equals('foo'));
+    expect(info[elem.nodes[0]].elementId, isNull);
+    expect(info[elem.nodes[0].nodes[0]].elementId, equals('foo'));
   });
 
   test('id as identifier - found in dom', () {
@@ -59,8 +59,8 @@ main() {
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].elementId, isNull);
-    expect(info[elem.children[0]].elementId, isNull);
-    expect(info[elem.children[0].children[0]].idAsIdentifier, equals('_fooBa'));
+    expect(info[elem.nodes[0]].elementId, isNull);
+    expect(info[elem.nodes[0].nodes[0]].idAsIdentifier, equals('_fooBa'));
   });
 
   test('id as identifier - no id', () {
@@ -204,11 +204,46 @@ main() {
     expect(info[elem].events['change'].eventName, 'change');
     expect(info[elem].events['change'].action(), 'foo()');
   });
+
+  test('template element', () {
+    var elem = parseSubtree('<template/>');
+    TemplateInfo info = analyze(elem)[elem];
+    expect(elem.attributes.length, isZero);
+    expect(info.instantiate, equals(''));
+    expect(info.iterate, equals(''));
+    expect(info.webComponent, isNull);
+    expect(info.isConditional, isFalse);
+  });
+
+  // TODO(jmesserly): I'm not sure this is correct behavior for
+  // template instantiate. You should be able to use an empty attribute value
+  test('template instantiate', () {
+    var elem = parseSubtree('<template instantiate="foo"/>');
+    TemplateInfo info = analyze(elem)[elem];
+    expect(elem.attributes, equals({'instantiate': 'foo'}));
+    expect(info.instantiate, equals('foo'));
+    expect(info.hasIterate, isFalse);
+    expect(info.webComponent, isNull);
+  });
+
+  test('template instantiate if', () {
+    var elem = parseSubtree('<template instantiate="if foo" is="x-if" />');
+    TemplateInfo info = analyze(elem)[elem];
+    expect(info.isConditional);
+    expect(elem.attributes, equals({'instantiate': 'if foo', 'is': 'x-if'}));
+    expect(info.instantiate, equals('foo'));
+    expect(info.hasIterate, isFalse);
+    expect(info.webComponent, TemplateInfo.IF_COMPONENT);
+  });
+
+  test('template iterate', () {
+    var elem = parseSubtree('<template iterate="bar" is="x-list" />');
+    TemplateInfo info = analyze(elem)[elem];
+    expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
+    expect(info.instantiate, equals(''));
+    expect(info.iterate, equals('bar'));
+    expect(info.webComponent, TemplateInfo.LIST_COMPONENT);
+  });
 }
 
-HTMLElement parseSubtree(String elementHtml) {
-  var root = parser.parseString('<html><body>$elementHtml</body></html>');
-  var html = root.children[0].children[0];
-  var body = html.children[0];
-  return body.children[0];
-}
+Element parseSubtree(String html) => parseFragment(html).nodes[0];

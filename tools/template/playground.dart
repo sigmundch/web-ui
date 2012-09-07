@@ -11,7 +11,6 @@
  */
 
 #import('dart:html');
-#import('package:web_components/lib/html5parser/htmltree.dart');
 #import('package:web_components/tools/lib/file_system_memory.dart');
 #import('package:web_components/tools/lib/world.dart');
 #import('package:web_components/tools/lib/source.dart');

@@ -28,7 +28,7 @@ Dependencies are installed using the [Pub Package Manager][pub].
 
     # Temporary hack until pub supports self-package references. b/4505
     cd packages
-    ln -s .. webcomponents
+    ln -s .. web_components
 
     # Run command line tests
     # If needed: export DART_SDK=path/to/dart/sdk

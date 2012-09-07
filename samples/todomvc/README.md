@@ -5,7 +5,7 @@ That means you can edit it and refresh and see it automatically update.
 To run this code, launch [Dartium][] with these flags:
 
     --enable-shadow-dom --enable-scoped-style --allow-file-access-from-files --enable-devtools-experiments
-    
+
 Then open `main.html`
 
 Please note that this sample is intended to work on all [modern browsers][m] but
@@ -19,4 +19,3 @@ blocked on support for
 [Dartium]: http://www.dartlang.org/dartium/
 [dart2js]: http://www.dartlang.org/docs/dart2js/
 [m]: http://www.dartlang.org/support/faq.html#what-browsers-supported
-
