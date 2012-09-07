@@ -32,25 +32,19 @@ class Compile {
   final String baseDir;
   final ProcessFiles components;
 
-  // TODO(terry): Hacky use package: when we're part of the SDK.
-  /** Number of ../ to find dart-web-components directory. */
-  final int _parentsPathCount;
-
   /** Used by template tool to open a file. */
-  Compile(FileSystem filesystem, String path, String filename, int parentsCnt)
+  Compile(FileSystem filesystem, String path, String filename)
       : fs = filesystem,
         baseDir = path,
-        _parentsPathCount = parentsCnt,
         components = new ProcessFiles() {
     components.add(filename, CompilationUnit.TYPE_MAIN);
     _compile();
   }
 
   /** Used by playground to analyze a memory buffer. */
-  Compile.memory(FileSystem filesystem, String filename, int parentsCnt)
+  Compile.memory(FileSystem filesystem, String filename)
       : fs = filesystem,
         baseDir = "",
-        _parentsPathCount = parentsCnt,
         components = new ProcessFiles() {
     components.add(filename, CompilationUnit.TYPE_MAIN);
     _compile();
@@ -194,11 +188,9 @@ class Compile {
     String libraryName = cu.filename.replaceAll('.', '_');
 
     if (cu.isWebComponent) {
-      return CodegenComponent.generate(_parentsPathCount, libraryName,
-          cu.filename, cu.elemCG);
+      return CodegenComponent.generate(libraryName, cu.filename, cu.elemCG);
     } else {
-      return CodegenApplication.generate(_parentsPathCount, libraryName,
-          cu.filename, cu.elemCG);
+      return CodegenApplication.generate(libraryName, cu.filename, cu.elemCG);
     }
   }
 

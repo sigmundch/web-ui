@@ -10,14 +10,13 @@
 #import('newform.html.dart');
 #import('item.html.dart');
 #import('toggleall.html.dart');
-// TODO(jmesserly): ideally these would be package: imports
-#import('../../../lib/js_polyfill/if.html.dart');
-#import('../../../lib/js_polyfill/list.html.dart');
+#import('package:web_components/lib/js_polyfill/if.html.dart');
+#import('package:web_components/lib/js_polyfill/list.html.dart');
 
 // TODO(Terry): All script tags referenced in the .html file are prefixed
 //              likewise all expressions in the HTML are prefixed as well.
-#import('../../../watcher.dart');
-#import('../../../lib/js_polyfill/web_components.dart');
+#import('package:web_components/watcher.dart');
+#import('package:web_components/lib/js_polyfill/web_components.dart');
 
 #import('model.dart');
 #import('todo.dart');

@@ -80,7 +80,7 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
       var fs = new MemoryFileSystem();
       fs.writeString("_memory", htmlTemplate);
 
-      var analyze = new Compile.memory(fs, "_memory", 2);
+      var analyze = new Compile.memory(fs, "_memory");
 
       analyze.forEach((CompilationUnit cu) {
         dumpTree.add(cu.document.toDebugString());

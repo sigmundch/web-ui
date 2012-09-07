@@ -41,8 +41,7 @@ class CodegenComponent {
    * Generate the class for a Web Component
    * [filename] passed in would be filename part (sans '.extension').
    */
-  static String generate(int parentsPathCount, String libraryName,
-                         String filename, ElemCG ecg) {
+  static String generate(String libraryName, String filename, ElemCG ecg) {
     // TODO(terry): Validate that the filename matches identifier:
     //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
     if (libraryName.indexOf('.') >= 0) {
@@ -52,7 +51,7 @@ class CodegenComponent {
     StringBuffer buff = new StringBuffer();
     int injectId = 0;         // Inject function id
 
-    buff.add(Codegen.header(filename, libraryName, parentsPathCount));
+    buff.add(Codegen.header(filename, libraryName));
 
     if (ecg.includes.length > 0) {
       buff.add("/** Below import from script tag in HTML file. */\n");

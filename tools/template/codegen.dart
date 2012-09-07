@@ -14,27 +14,19 @@ class Codegen {
     return SPACES.substring(0, numSpaces);
   }
 
-  static String _fileHeader(String filename, String libraryName,
-                        String parentsDotDot) => """
+  static String header(String filename, String libraryName) => """
 // Generated Dart class from HTML template $filename.
 // DO NOT EDIT.
 
 #library('${libraryName}');
 
 #import('dart:html');
-#import('${parentsDotDot}lib/js_polyfill/component.dart');
-#import('${parentsDotDot}watcher.dart');
-#import('${parentsDotDot}lib/js_polyfill/web_components.dart');
-#import('${parentsDotDot}tools/lib/data_template.dart');
+#import('package:web_components/lib/js_polyfill/component.dart');
+#import('package:web_components/watcher.dart');
+#import('package:web_components/lib/js_polyfill/web_components.dart');
+#import('package:web_components/tools/lib/data_template.dart');
 
 """;
-  static String header(String filename, String libraryName, int parentsCount) {
-    String parentsDotDot = "";
-    while (parentsCount-- > 0) {
-      parentsDotDot = "$parentsDotDot../";
-    }
-    return "${_fileHeader(filename, libraryName, parentsDotDot)}";
-  }
 
   /**
    *  Epilog of the render function; injects the nodes into the live document

@@ -21,33 +21,6 @@
 
 FileSystem files;
 
-// TODO(terry): Hacky way of finding stuff.  Our libraries should be part of
-//              SDK so we can use package sdk:.
-final String _DART_WEB_COMPONENTS = "/dart-web-components";
-int computeParentPathToBase(String path) {
-  int slashCount = 0;
-
-  path = path.trim();
-  if (path.length > 0) {
-    if (path.lastIndexOf('/') == (path.length - 1)) {
-      path = path.substring(0, path.length - 1);
-    }
-
-    int idx = path.indexOf(_DART_WEB_COMPONENTS);
-    if (idx >= 0) {
-      idx += _DART_WEB_COMPONENTS.length;
-      String rest = path.substring(idx);
-      int slashIdx = 0;
-      while ((slashIdx = rest.indexOf('/', slashIdx)) >= 0) {
-        slashIdx++;
-        slashCount++;
-      }
-    }
-  }
-
-  return slashCount;
-}
-
 void main() => run(new Options().arguments);
 
 /** tool.dart [options...] <sourcefile fullpath> <outputfile fullpath> */
@@ -105,10 +78,6 @@ void run(List<String> args) {
   if (!outDirectory.existsSync()) {
     world.fatal("Output directory doesn't exist - ${outDirectory.path}");
   }
-
-  // TODO(terry): Hacky way of finding all our libraries; should use package
-  //              when we're part of the SDK.
-  int numParents = computeParentPathToBase(outDirectory.path);
 
   if (!files.fileExists(sourceFullFn)) {
     // Display colored error message if file is missing.
