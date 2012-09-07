@@ -316,6 +316,8 @@ $sbMainFooter
 """);
 
   // Inject the output dart script on the page and the dart.js bootstrap script.
+  var protocol = window.location.protocol;
+  if (protocol == 'file:') protocol = 'http:';
   document.head.nodes
    ..add(
      new ScriptElement()
@@ -323,7 +325,8 @@ $sbMainFooter
        ..type = "application/dart")
     ..add(
       new ScriptElement()
-        ..src = "//dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"
+        ..src = "$protocol//dart.googlecode.com/svn/branches/bleeding_edge/"
+                "dart/client/dart.js"
         ..type = "application/javascript");
 
 }
