@@ -5,9 +5,9 @@
 #library('codegen_component');
 
 #import('dart:coreimpl');
-#import('../../lib/html5parser/tokenkind.dart');
-#import('../../lib/html5parser/htmltree.dart');
-#import('../lib/world.dart');
+#import('package:web_components/lib/html5parser/tokenkind.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/lib/world.dart');
 #import('codegen.dart');
 #import('compile.dart');
 #import('utils.dart');

@@ -11,11 +11,11 @@
  */
 
 #import('dart:html');
-#import('../../lib/html5parser/htmltree.dart');
-#import('../lib/file_system_memory.dart');
-#import('../lib/world.dart');
-#import('../lib/source.dart');
-#import('../lib/cmd_options.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/lib/file_system_memory.dart');
+#import('package:web_components/tools/lib/world.dart');
+#import('package:web_components/tools/lib/source.dart');
+#import('package:web_components/tools/lib/cmd_options.dart');
 #import('template.dart');
 #import('compile.dart');
 #import('codegen_application.dart');

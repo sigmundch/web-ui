@@ -16,7 +16,7 @@
 
 #import('dart:html');
 #import('model.dart');
-#import('../../../watcher.dart');
+#import('package:web_components/watcher.dart');
 
 main() {
   // listen on changes to #hash in the URL

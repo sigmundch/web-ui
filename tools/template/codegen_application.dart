@@ -5,10 +5,10 @@
 #library('codegen_application');
 
 #import('dart:coreimpl');
-#import('../../lib/html5parser/tokenkind.dart');
-#import('../../lib/html5parser/htmltree.dart');
-#import('../css/css.dart', prefix:'css');
-#import('../lib/world.dart');
+#import('package:web_components/lib/html5parser/tokenkind.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/css/css.dart', prefix:'css');
+#import('package:web_components/tools/lib/world.dart');
 #import('codegen.dart');
 #import('compile.dart');
 #import('utils.dart');

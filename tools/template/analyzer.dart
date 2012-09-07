@@ -8,10 +8,10 @@
  */
 #library('analyzer');
 
-#import('../../lib/html5parser/htmltree.dart');
-#import('../../lib/html5parser/tokenkind.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/lib/html5parser/tokenkind.dart');
 #import('utils.dart');
-#import('../lib/world.dart');
+#import('package:web_components/tools/lib/world.dart');
 
 /** Information extracted for any node in the AST. */
 interface NodeInfo {
@@ -128,6 +128,8 @@ class EventInfo implements NodeInfo {
  */
 typedef String ActionDefinition([String elemVarName]);
 
+const String DATA_ON_ATTRIBUTE = "data-on-";
+
 /** Extract relevant information from [source] and it's children. */
 Map<TreeNode, NodeInfo> analyze(TreeNode source) {
   var res = new Map<TreeNode, NodeInfo>();
@@ -154,21 +156,19 @@ class _Analyzer extends RecursiveVisitor implements TreeVisitor {
 
   void visitHTMLAttribute(HTMLAttribute node) {
     if (node.name == "id") {
-      results[_stack.last()].elementId = node.value;
+      (results[_stack.last()] as ElementInfo).elementId = node.value;
     }
   }
 
-  static const String _DATA_ON_ATTRIBUTE = "data-on-";
-
   void visitTemplateAttributeExpression(TemplateAttributeExpression node) {
-    var elem = _stack.last();
-    var elemInfo = results[elem];
+    final HTMLElement elem = _stack.last();
+    final ElementInfo elemInfo = results[elem];
     // TODO(sigmund): should this be true if you only have UI event listeners?
     elemInfo.hasDataBinding = true;
-    if (node.name.startsWith(_DATA_ON_ATTRIBUTE)) {
+    if (node.name.startsWith(DATA_ON_ATTRIBUTE)) {
       // Special data-attribute specifying an event listener.
       var eventInfo = new EventInfo(
-          node.name.substring(_DATA_ON_ATTRIBUTE.length),
+          node.name.substring(DATA_ON_ATTRIBUTE.length),
           ([elemVarName]) => node.value);
       results[node] = eventInfo;
       elemInfo.events[eventInfo.eventName] = eventInfo;
@@ -229,8 +229,8 @@ class _Analyzer extends RecursiveVisitor implements TreeVisitor {
   }
 
   void visitTemplateExpression(TemplateExpression node) {
-    var parentElem = _stack.last();
-    var info = results[parentElem];
+    final HTMLChildren parentElem = _stack.last();
+    final ElementInfo info = results[parentElem];
     info.hasDataBinding = true;
     // TODO(sigmund,terry): support more than 1 template expression
     assert(info.contentBinding == null);

@@ -6,7 +6,7 @@
 #library('data_template');
 
 #import('dart:html');
-#import('../../watcher.dart');
+#import('package:web_components/watcher.dart');
 
 safeHTML(v) {
   if (v is String) {

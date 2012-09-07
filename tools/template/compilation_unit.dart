@@ -5,8 +5,8 @@
 #library('compilation_unit');
 
 #import('dart:coreimpl');
-#import('../../lib/html5parser/htmltree.dart');
-#import('../lib/world.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/lib/world.dart');
 #import('compile.dart');
 #import('analyzer.dart');
 

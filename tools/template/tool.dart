@@ -7,12 +7,12 @@
 #import('package:args/args.dart');
 #import('dart:io');
 
-#import('../../lib/html5parser/htmltree.dart');
-#import('../lib/cmd_options.dart');
-#import('../lib/file_system.dart');
-#import('../lib/file_system_vm.dart');
-#import('../lib/source.dart');
-#import('../lib/world.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/lib/cmd_options.dart');
+#import('package:web_components/tools/lib/file_system.dart');
+#import('package:web_components/tools/lib/file_system_vm.dart');
+#import('package:web_components/tools/lib/source.dart');
+#import('package:web_components/tools/lib/world.dart');
 #import('compile.dart');
 #import('compilation_unit.dart');
 #import('codegen_application.dart');
@@ -85,8 +85,7 @@ void run(List<String> args) {
   } else {
     String source = files.readAll(sourceFullFn);
     final compileElapsed = time(() {
-      var analyze = new Compile(files, srcDir.path, srcPath.filename,
-          numParents);
+      var analyze = new Compile(files, srcDir.path, srcPath.filename);
       // Write out the results.
       print("Write files to ${outDirectory.path}:");
 

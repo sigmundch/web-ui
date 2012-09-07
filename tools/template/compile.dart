@@ -5,11 +5,11 @@
 #library('analysis');
 
 #import('dart:coreimpl');
-#import('../../lib/html5parser/tokenkind.dart');
-#import('../../lib/html5parser/htmltree.dart');
-#import('../css/css.dart', prefix:'css');
-#import('../lib/file_system.dart');
-#import('../lib/world.dart');
+#import('package:web_components/lib/html5parser/tokenkind.dart');
+#import('package:web_components/lib/html5parser/htmltree.dart');
+#import('package:web_components/tools/css/css.dart', prefix:'css');
+#import('package:web_components/tools/lib/file_system.dart');
+#import('package:web_components/tools/lib/world.dart');
 #import('codegen.dart');
 #import('codegen_application.dart');
 #import('codegen_component.dart');
@@ -142,7 +142,7 @@ class Compile {
     var start;
     // Skip the fragment (root) if it exist and the HTML node as well.
     if (doc.children.length > 0 && doc.children[0] is HTMLElement) {
-      HTMLElement elem = doc.children[0];
+      final HTMLElement elem = doc.children[0];
       if (elem.isFragment) {
         start = elem;
         for (var child in start.children) {
@@ -273,7 +273,7 @@ class CGBlock {
    */
   CGStatement push(var elem, var parentName, [bool exact = false]) {
     var varName;
-    var info = processor.current.cu.info[elem];
+    final analyzer.ElementInfo info = processor.current.cu.info[elem];
     if (info != null) varName = info.idAsIdentifier;
 
     if (varName == null) {
@@ -516,7 +516,7 @@ class CGBlock {
 
     final variableName = stmt.variableName;
     final listenerName = stmt.listenerName;
-    final info = stmt._info;
+    final analyzer.ElementInfo info = stmt._info;
 
     StringBuffer listenerBody = new StringBuffer();
     bool listenerToCreate = false;
@@ -674,7 +674,7 @@ class CGBlock {
       int watcherIdx = 0;
       bool eventHandled = false;
 
-      var info = stmt._info;
+      final analyzer.ElementInfo info = stmt._info;
       info.events.forEach((name, eventInfo) {
         var listenerName = stmt.listenerName;
         var varName = stmt.variableName;
@@ -717,7 +717,8 @@ class CGBlock {
     if (conditionalTemplate) {
       final CGStatement stmt = _stmts[0];
 
-      stmt._info.events.forEach((name, eventInfo) {
+      final analyzer.ElementInfo info = stmt._info;
+      info.events.forEach((name, eventInfo) {
         var varName = stmt.variableName;
         buff.add("${spaces}if ($varName != null) {\n");
         buff.add("$spaces  $varName.on.$name.remove(${stmt.listenerName});\n");
@@ -752,7 +753,7 @@ class CGStatement {
   final bool _repeating;
   final StringBuffer _buff;
   TreeNode _elem;
-  analyzer.NodeInfo _info;
+  analyzer.ElementInfo _info;
   int _indent;
   var parentName;
   String varName;
@@ -806,8 +807,11 @@ class CGStatement {
   bool get closed => _closed;
 
   void close() {
-    if (_elem is HTMLElement && _elem.scoped) {
-      add("</${_elem.tagName}>");
+    if (_elem is HTMLElement) {
+      final HTMLElement elem = _elem;
+      if (elem.scoped) {
+        add("</${elem.tagName}>");
+      }
     }
     _closed = true;
   }
@@ -942,7 +946,7 @@ class CGStatement {
   }
 
   bool isEventAttribute(String attributeName) =>
-      attributeName.startsWith(DATA_ON_ATTRIBUTE);
+      attributeName.startsWith(analyzer.DATA_ON_ATTRIBUTE);
 
   String get listenerName => "_listener$variableName";
 
@@ -1070,12 +1074,13 @@ class CGStatement {
     statement.add("\');\n");
 
     // TODO(terry): Fill in event hookup this is hacky.
-    if (_elem.attributes != null) {
+    final HTMLElement elem = _elem;
+    if (elem.attributes != null) {
       int idx = _info != null && _info.contentBinding != null ? 1 : 0;
-      for (var attr in _elem.attributes) {
+      for (var attr in elem.attributes) {
         if (attr is TemplateAttributeExpression) {
           if (_info.attributes[attr.name] != null) idx++;
-          if (_elem.tagTokenId == TokenKind.INPUT_ELEMENT) {
+          if (elem.tagTokenId == TokenKind.INPUT_ELEMENT) {
             if (attr.name == "value") {
               // Hook up on keyup.
               statement.add("$spaces    e0.on.keyUp.add(wrap1((_) {"
