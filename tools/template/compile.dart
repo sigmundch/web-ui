@@ -230,9 +230,6 @@ class CGBlock {
   /** Code type of this block. */
   final int _blockType;
 
-  /** Number of spaces to prefix for each statement. */
-  final int _indent;
-
   /** Optional local name for #each or #with. */
   final String _localName;
 
@@ -256,7 +253,6 @@ class CGBlock {
         templateElement = null,
         _stmts = <CGStatement>[],
         _localIndex = 0,
-        _indent = indent,
         _blockType = blockType,
         _localName = local {
     assert(_blockType >= CGBlock.CONSTRUCTOR && _blockType <= CGBlock.TEMPLATE);
@@ -268,7 +264,6 @@ class CGBlock {
         template = processor.current.cu.info[templateElement],
         _stmts = <CGStatement>[],
         _localIndex = 0,
-        _indent = indent,
         _blockType = CGBlock.TEMPLATE,
         _localName = null;
 
@@ -294,7 +289,7 @@ class CGBlock {
       varName = _localIndex++;
     }
 
-    CGStatement stmt = new CGStatement(elem, info, _indent, parentName, varName,
+    CGStatement stmt = new CGStatement(elem, info, parentName, varName,
         exact, isRepeat);
     _stmts.add(stmt);
 
@@ -411,8 +406,6 @@ class CGBlock {
   List<String> webComponentCode(ElemCG ecg, String constructorSignature) {
     List<WebComponentEmitter> templatesCode = [];
 
-    String spaces = Codegen.spaces(2);
-
     StringBuffer buff = new StringBuffer();
 
     buff.add("$genBoundElementsCommentBlock\n");
@@ -445,14 +438,13 @@ class CGBlock {
 
       // Construct and delegate from outer template to nested template.
       code.constructorStmts.add(
-          "$spaces  _template_$emitIdx = new _Template_$emitIdx(this);\n");
+          "_template_$emitIdx = new _Template_$emitIdx(this);\n");
 
       // Delegate to the inner template.
-      code.otherVars.add("${spaces}_Template_$emitIdx _template_$emitIdx;\n");
-      code.createdStmts.add(
-          "$spaces  _template_$emitIdx.created(shadowRoot);\n");
-      code.insertedStmts.add("$spaces  _template_$emitIdx.inserted();\n");
-      code.removedStmts.add("$spaces  _template_$emitIdx.removed();\n");
+      code.otherVars.add("_Template_$emitIdx _template_$emitIdx;\n");
+      code.createdStmts.add("_template_$emitIdx.created(shadowRoot);\n");
+      code.insertedStmts.add("_template_$emitIdx.inserted();\n");
+      code.removedStmts.add("_template_$emitIdx.removed();\n");
 
       cgb.emitInnerTemplateStatements(ecg.className, templateCode);
     }
@@ -524,9 +516,7 @@ class CGBlock {
   }
 
   String emitIfTemplateInsert(CGStatement stmt) {
-    String spaces = Codegen.spaces(2);
-
-    StringBuffer statement = new StringBuffer();
+    var ifInsertBody = new CodePrinter(1);
 
     final variableName = stmt.variableName;
     final listenerName = stmt.listenerName;
@@ -539,17 +529,13 @@ class CGBlock {
       // TODO(terry,sigmund): this shouldn't refer to the component. The
       // action method should be resolved via lookup in the context of the
       // component's body (we need to make "if"s into closures, not classes).
-      listenerBody.add(
-        "$spaces    component.${eventInfo.action(variableName)};\n");
+      listenerBody.add("component.${eventInfo.action(variableName)};\n");
     });
 
     if (listenerBody.length > 0) {
-      statement.add("$spaces  $listenerName = (_) {\n"
-                    "$listenerBody"
-                    "$spaces    dispatch();\n"
-                    "$spaces  };\n");
+      ifInsertBody.add("$listenerName = (_) {\n$listenerBody dispatch();\n};");
     }
-    return statement.toString();
+    return ifInsertBody.toString();
   }
 
   void emitTemplateStatements(WebComponentEmitter code) {
@@ -584,10 +570,8 @@ class CGBlock {
    * Generated class for a nested template. [parent] parentTemplate class name.
    */
   void emitInnerTemplateStatements(String parent, WebComponentEmitter code) {
-    String spaces = Codegen.spaces(2);
-
     // The component to delegate all calls.
-    code.elemVars.add("$spaces$parent component;\n");
+    code.elemVars.add("$parent component;\n");
 
     emitIfTemplateStatements(code);
 
@@ -605,12 +589,11 @@ class CGBlock {
 
   /** Emit watchers for a template conditional. */
   String emitTemplateWatcher() {
-    var spaces = Codegen.spaces(2);
     if (conditionalTemplate) {
       for (var name in templateElement.attributes.getKeys()) {
         if (name == "id") {
           var value = templateElement.attributes[name];
-          return "${spaces}WatcherDisposer _stopWatcher_if_$value;\n";
+          return "WatcherDisposer _stopWatcher_if_$value;\n";
         }
       }
     }
@@ -621,7 +604,6 @@ class CGBlock {
    * Emit creation of a template conditional.
    */
   String emitTemplateCreated() {
-    String spaces = Codegen.spaces(2);
     if (conditionalTemplate) {
       for (var name in templateElement.attributes.getKeys()) {
         if (name == "id") {
@@ -635,10 +617,8 @@ class CGBlock {
           //
           //    var done = manager[component.root.query('#done')];
           //    done.shouldShow = (_) => component.anyDone
-          return
-              "$spaces  var $tmplId ="
-              " manager[component.root.query('#$tmplId')];\n"
-              "$spaces  $tmplId.shouldShow = (_) => component.$ifExpr;\n";
+          return "var $tmplId = manager[component.root.query('#$tmplId')];\n"
+              "$tmplId.shouldShow = (_) => component.$ifExpr;\n";
         }
       }
     }
@@ -647,7 +627,6 @@ class CGBlock {
 
   /** Emit the if conditional watcher. */
   String emitTemplateIf() {
-    String spaces = Codegen.spaces(4);
     if (conditionalTemplate) {
       // Compute the body.
       WebComponentEmitter tmplCode = new WebComponentEmitter();
@@ -657,9 +636,8 @@ class CGBlock {
           var tmplId = templateElement.attributes[name];
           var ifExpr = template.instantiate;
           var body = emitTemplateIfBody();
-          return
-              "${spaces}_stopWatcher_if_$tmplId = component.bind("
-              "() => component.$ifExpr, (_) {\n$body\n$spaces});\n";
+          return "_stopWatcher_if_$tmplId = component.bind("
+                 "() => component.$ifExpr, (_) {\n$body\n});\n";
         }
       }
     }
@@ -668,17 +646,16 @@ class CGBlock {
 
   /** Emit the code associated with the first element of the template if. */
   String emitTemplateIfBody() {
-    String spaces = Codegen.spaces(6);
-    StringBuffer buff = new StringBuffer();
+    var ifBody = new CodePrinter(3);
 
     // Use the first statement.
     final CGStatement stmt = _stmts[0];
     if (stmt != null) {
-      buff.add("${spaces}if (${stmt.variableName} != null) {\n");
-      buff.add(stmt.emitWebComponentRemoved(spaces));
-      buff.add("$spaces}\n\n");
+      ifBody.add("if (${stmt.variableName} != null) {");
+      ifBody.add(stmt.emitWebComponentRemoved());
+      ifBody.add("}\n");
 
-      buff.add(stmt.emitWebComponentCreated(spaces, "component."));
+      ifBody.add(stmt.emitWebComponentCreated("component."));
 
       // TODO(terry): Need to handle multiple events on first element after
       //              template IF and multiple attributes and multiple template
@@ -698,8 +675,9 @@ class CGBlock {
         // `data-action="eventName:"` syntax.
         var listenerName = stmt.listenerName;
         var varName = stmt.variableName;
-        buff.add("${spaces}if ($varName != null) {\n"
-                 "${spaces}  $varName.on['$name'].add($listenerName);\n");
+        ifBody.add('''
+            if ($varName != null) {
+              $varName.on['$name'].add($listenerName);''');
         eventHandled = true;
       });
 
@@ -710,29 +688,27 @@ class CGBlock {
       if (info.contentBinding != null) {
         String varName = stmt.variableName;
         String stopWatcherName = "_stopWatcher${varName}_$watcherIdx";
+        var val = info.contentBinding;
         var innerHTML = info.contentExpression;
         // TODO(terry,sigmund): remove this hack for 'component.'
         innerHTML = innerHTML.replaceAll(@'${', @'${component.');
-        buff.add(
-            "$spaces  $stopWatcherName ="
-            " component.bind(() => component.${info.contentBinding}, (e) {\n"
-            "${spaces}    $varName.innerHTML = $innerHTML;\n"
-            "${spaces}  });\n");
+        ifBody.add('''
+            $stopWatcherName = component.bind(() => component.$val, (e) {
+              $varName.innerHTML = $innerHTML;
+            });''');
         watcherIdx++;
       }
       if (eventHandled) {
-        buff.add("$spaces}\n");
+        ifBody.add("}");
       }
     }
 
-    return buff.toString();
+    return ifBody.toString();
   }
 
   /** Emit removal of any template conditional watchers. */
   String emitTemplateRemoved() {
-    String spaces = Codegen.spaces(4);
-
-    StringBuffer buff = new StringBuffer();
+    var printer = new CodePrinter(2);
 
     if (conditionalTemplate) {
       final CGStatement stmt = _stmts[0];
@@ -741,9 +717,10 @@ class CGBlock {
       info.events.forEach((name, eventInfo) {
         var varName = stmt.variableName;
         var listenerName = stmt.listenerName;
-        buff.add("${spaces}if ($varName != null) {\n");
-        buff.add("$spaces  $varName.on['$name'].remove($listenerName);\n");
-        buff.add("$spaces}\n");
+        printer.add('''
+            if ($varName != null) {
+              $varName.on['$name'].remove($listenerName);
+            }''');
       });
 
       for (var name in templateElement.attributes.getKeys()) {
@@ -751,12 +728,12 @@ class CGBlock {
           var tmplId = templateElement.attributes[name];
           var ifExpr = template.instantiate;
           var body = emitTemplateIfBody();
-          buff.add("${spaces}_stopWatcher_if_$tmplId();\n");
+          printer.add("_stopWatcher_if_$tmplId();");
         }
       }
     }
 
-    return buff.toString();
+    return printer.toString();
   }
 
 }
@@ -775,14 +752,12 @@ class CGStatement {
   final StringBuffer _buff;
   Node _elem;
   analyzer.ElementInfo _info;
-  int _indent;
   var parentName;
   String varName;
   bool _globalVariable;
   bool _closed;
 
-  CGStatement(this._elem, this._info,
-      this._indent, this.parentName, varNameOrIndex,
+  CGStatement(this._elem, this._info, this.parentName, varNameOrIndex,
       [bool exact = false, bool repeating = false]) :
         _buff = new StringBuffer(),
         _closed = false,
@@ -804,10 +779,9 @@ class CGStatement {
 
   String globalDeclaration() {
     if (hasGlobalVariable) {
-      String spaces = Codegen.spaces(_indent);
       return (_repeating) ?
-        "  List ${varName};             // Repeated elements.\n" :
-        "  var ${varName};\n";
+        "List ${varName};             // Repeated elements.\n" :
+        "var ${varName};\n";
     }
 
     return "";
@@ -815,7 +789,7 @@ class CGStatement {
 
   String globalInitializers() {
     if (hasGlobalVariable && _repeating) {
-      return "    ${varName} = [];\n";
+      return "${varName} = [];\n";
     }
 
     return "";
@@ -836,9 +810,7 @@ class CGStatement {
   }
 
   String emitStatement(int boundElemIdx) {
-    StringBuffer statement = new StringBuffer();
-
-    String spaces = Codegen.spaces(_indent);
+    var printer = new CodePrinter();
 
     String localVar = "";
     String tmpRepeat;
@@ -868,53 +840,49 @@ class CGStatement {
           var eNNN = new Element.html('HTML GOES HERE');
           parent.nodes.add(eNNN);
     */
-    statement.add("\n");
+    printer.add("");
     if (hasDataBinding) {
       // TODO(sigmund, terry): is this still needed?
-      // statement.add("$spaces$localVar$varName = renderSetupFineGrainUpdates("
+      // printer.add("$spaces$localVar$varName = renderSetupFineGrainUpdates("
       //               "() => model.${exprs[0].name}, $boundElemIdx);\n");
     } else {
       bool isTextNode = _elem is Text;
       String createType = isTextNode ? "Text" : "Element.html";
       if (tmpRepeat == null) {
-        statement.add("$spaces$localVar$varName = new $createType(\'");
+        printer.add("$localVar$varName = new $createType(\'");
       } else {
-        statement.add("$spaces$localVar$tmpRepeat = new $createType(\'");
+        printer.add("$localVar$tmpRepeat = new $createType(\'");
       }
       if (_elem.tagName == 'template') {
-        statement.add("<template></template>");
+        printer.add("<template></template>");
       } else {
-        statement.add(isTextNode ?  _buff.toString().trim() : _buff.toString());
+        printer.add(isTextNode ?  _buff.toString().trim() : _buff.toString());
       }
-      statement.add("\');\n");
+      printer.add("\');\n");
     }
 
     if (tmpRepeat == null) {
-      statement.add("$spaces$parentName.nodes.add($varName);\n");
+      printer.add("$parentName.nodes.add($varName);\n");
       if (_elem.tagName == 'template') {
         // TODO(terry): Need to support multiple templates either nested or
         //              siblings.
         // Hookup analyzer.TemplateInfo to the root.
-        statement.add("${spaces}root = $parentName;\n");
+        printer.add("root = $parentName;\n");
       }
     } else {
-      statement.add("$spaces$parentName.nodes.add($tmpRepeat);\n"
-                    "$spaces$varName.add($tmpRepeat);\n");
+      printer.add("$parentName.nodes.add($tmpRepeat);\n"
+                    "$varName.add($tmpRepeat);\n");
     }
 
-    return statement.toString();
+    return printer.toString();
   }
 
   String emitWebComponentElementVariables() {
-    String spaces = Codegen.spaces(2);
-    return "${spaces}var $variableName;\n";
+    return "var $variableName;\n";
   }
 
   String emitWebComponentListeners(int index) {
-    String spaces = Codegen.spaces(2);
-
-    StringBuffer declLines = new StringBuffer();
-
+    var declarations = new CodePrinter(1);
     int watcherIdx = 0;
 
     String listenerName = "_listener$variableName";
@@ -928,7 +896,7 @@ class CGStatement {
     // listeners associated with UI events:
     _info.events.forEach((name, eventInfo) {
       if (!emittedListener) {
-        declLines.add("${spaces}EventListener $listenerName;\n");
+        declarations.add("EventListener $listenerName;");
         emittedListener = true;
       }
     });
@@ -936,32 +904,30 @@ class CGStatement {
     // stop-functions for watchers associated with data-bound attributes
     _info.attributes.forEach((name, attrInfo) {
       for (int i = attrInfo.bindings.length; i > 0; i--) {
-        declLines.add("${spaces}WatcherDisposer "
-                      "_stopWatcher${variableName}_$watcherIdx;\n");
+        declarations.add(
+          "WatcherDisposer _stopWatcher${variableName}_$watcherIdx;");
         watcherIdx++;
       }
     });
 
     // stop-functions for watchers associated with data-bound content
     if (_info.contentBinding != null) {
-      declLines.add("${spaces}WatcherDisposer "
-                    "_stopWatcher${variableName}_$watcherIdx;\n");
+      declarations.add(
+          "WatcherDisposer _stopWatcher${variableName}_$watcherIdx;");
       watcherIdx++;
     }
 
-    return declLines.toString();
+    return declarations.toString();
   }
 
   /**
    * [prefix] is the prefix used for nested templates to get to methods/props
    * on the Component.
    */
-  String emitWebComponentCreated([String indent = null, String prefix = ""]) {
-    String spaces = indent == null ? Codegen.spaces(4) : indent;
+  String emitWebComponentCreated([String prefix = ""]) {
     String elemId = _info != null ? _info.elementId : null;
-
     return (elemId != null) ?
-        "$spaces$variableName = ${prefix}root.query('#$elemId');\n" : "";
+        "$variableName = ${prefix}root.query('#$elemId');\n" : "";
   }
 
   bool isEventAttribute(String attributeName) =>
@@ -971,126 +937,107 @@ class CGStatement {
 
   /** Used for web components with template expressions {{expr}}. */
   String emitWebComponentInserted(int index) {
-    String spaces = Codegen.spaces(2);
-
-    StringBuffer statement = new StringBuffer();
-
-    StringBuffer listenerBody = new StringBuffer();
+    var insertedBody = new CodePrinter(1);
+    var listenerBody = new CodePrinter();
 
     // listeners associated with UI events:
     _info.events.forEach((name, eventInfo) {
-      listenerBody.add("$spaces    ${eventInfo.action(variableName)};\n");
+      listenerBody.add('${eventInfo.action(variableName)};');
     });
 
     if (listenerBody.length > 0) {
-      statement.add("$spaces  $listenerName = (_) {\n"
-                    "$listenerBody"
-                    "$spaces    dispatch();\n"
-                    "$spaces  };\n");
+      insertedBody.add('$listenerName = (_) {\n $listenerBody dispatch();\n};');
     }
 
     // attach event listeners
     // TODO(terry,sigmund): support more than one listener per element.
     _info.events.forEach((name, eventInfo) {
       var eventName = eventInfo.eventName;
-      statement.add(
-        "$spaces  $variableName.on['$eventName'].add($listenerName);\n");
+      insertedBody.add("$variableName.on['$eventName'].add($listenerName);");
     });
 
     int watcherIdx = 0;
     // Emit stopWatchers.
 
+    var stopWatcherPrefix = '_stopWatcher${variableName}_';
     // stop-functions for watchers associated with data-bound attributes
     _info.attributes.forEach((name, attrInfo) {
       if (attrInfo.isClass) {
         for (int i = 0; i < attrInfo.bindings.length; i++) {
-          var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
           var exp = attrInfo.bindings[i];
-          statement.add(
-            "$spaces  $stopWatcherName = bind(() => $exp, (e) {\n"
-            "$spaces    if (e.oldValue != null && e.oldValue != '') {\n"
-            "$spaces      $variableName.classes.remove(e.oldValue);\n"
-            "$spaces    }\n"
-            "$spaces    if (e.newValue != null && e.newValue != '') {\n"
-            "$spaces      $variableName.classes.add(e.newValue);\n"
-            "$spaces    }\n"
-            "$spaces  });\n");
+          insertedBody.add('''
+              $stopWatcherPrefix$watcherIdx = bind(() => $exp, (e) {
+                if (e.oldValue != null && e.oldValue != '') {
+                  $variableName.classes.remove(e.oldValue);
+                }
+                if (e.newValue != null && e.newValue != '') {
+                  $variableName.classes.add(e.newValue);
+                }
+              });''');
           watcherIdx++;
         }
       } else {
-        statement.add(
-          "$spaces  _stopWatcher${variableName}_$watcherIdx ="
-          " bind(() => ${attrInfo.boundValue},"
-          " (e) {\n$spaces    $variableName.$name = e.newValue;\n"
-          "$spaces  });\n");
+        var val = attrInfo.boundValue;
+        insertedBody.add('''
+            $stopWatcherPrefix$watcherIdx = bind(() => $val, (e) {
+              $variableName.$name = e.newValue;
+            });''');
         watcherIdx++;
       }
     });
 
     // stop-functions for watchers associated with data-bound content
     if (_info.contentBinding != null) {
-      statement.add(
-          "$spaces  _stopWatcher${variableName}_$watcherIdx ="
-          " bind(() => ${_info.contentBinding},"
-          " (e) {\n$spaces    ${variableName}.innerHTML ="
-          " ${_info.contentExpression};"
-          " });\n");
+      var val = _info.contentBinding;
+      insertedBody.add('''
+          $stopWatcherPrefix$watcherIdx = bind(() => $val, (e) {
+            $variableName.innerHTML = ${_info.contentExpression};
+          });''');
       watcherIdx++;
     }
 
-    return statement.toString();
+    return insertedBody.toString();
   }
 
-  String emitWebComponentRemoved([String indent = null]) {
-    String spaces = (indent == null) ? Codegen.spaces(2) : indent;
-
-    StringBuffer statement = new StringBuffer();
-
+  String emitWebComponentRemoved() {
+    var removedBody = new CodePrinter();
     int watcherIdx = 0;
 
     // Detach event listeners.
     _info.events.forEach((name, eventInfo) {
       var eventName = eventInfo.eventName;
-      statement.add(
-        "$spaces  $variableName.on['$eventName'].remove($listenerName);\n");
+      removedBody.add("$variableName.on['$eventName'].remove($listenerName);");
     });
 
     // Call stop-watcher.
     _info.attributes.forEach((name, attrInfo) {
       for (int i = 0; i < attrInfo.bindings.length; i++) {
-        var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
-        statement.add("$spaces  $stopWatcherName();\n");
+        removedBody.add('_stopWatcher${variableName}_$watcherIdx();');
         watcherIdx++;
       }
     });
 
     if (_info.contentBinding != null) {
-      var stopWatcherName = '_stopWatcher${variableName}_$watcherIdx';
-      statement.add("$spaces  $stopWatcherName();\n");
+      removedBody.add('_stopWatcher${variableName}_$watcherIdx();');
       watcherIdx++;
     }
 
-    return statement.toString();
+    return removedBody.toString();
   }
 
   String emitBoundElementFunction(int index) {
     // Statements to update attributes associated with expressions.
     StringBuffer statementUpdateAttrs = new StringBuffer();
+    var printer = new CodePrinter(1);
 
-    StringBuffer statement = new StringBuffer();
-
-    String spaces = Codegen.spaces(2);
-
-    statement.add(
-        "\n${spaces}Element templateLine_$index(var e0) {\n");
-    statement.add("$spaces  if (e0 == null) {\n");
+    printer.add("Element templateLine_$index(var e0) {");
+    printer.add("  if (e0 == null) {\n");
 
     // Creation of DOM element.
     bool isTextNode = _elem is Text;
     String createType = isTextNode ? "Text" : "Element.html";
-    statement.add("$spaces    e0 = new $createType(\'");
-    statement.add(isTextNode ? _buff.toString().trim() : _buff.toString());
-    statement.add("\');\n");
+    var text = isTextNode ? _buff.toString().trim() : _buff.toString();
+    printer.add("e0 = new $createType(\'$text\');");
 
     // TODO(terry): Fill in event hookup this is hacky.
     int idx = _info != null && _info.contentBinding != null ? 1 : 0;
@@ -1099,11 +1046,11 @@ class CGStatement {
         if (_elem.tagName == 'input') {
           if (name == "value") {
             // Hook up on keyup.
-            statement.add("$spaces    e0.on.keyUp.add(wrap1((_) {"
-                " model.${value} = e0.value; }));\n");
+            printer.add(
+              'e0.on.keyUp.add(wrap1((_) { model.${value} = e0.value; }));');
           } else if (name == "checked") {
-            statement.add("$spaces    e0.on.click.add(wrap1((_) {"
-                " model.${value} = e0.checked; }));\n");
+            printer.add(
+              'e0.on.click.add(wrap1((_) { model.${value} = e0.checked; }));');
           } else {
             // TODO(terry): Need to handle here with something...
             // data-on-XXXXX would handle on-change .on.change.add(listener);
@@ -1112,18 +1059,15 @@ class CGStatement {
         }
 
         idx++;
-        statementUpdateAttrs.add("$spaces  e0.${name} = inject_$idx();\n");
+        statementUpdateAttrs.add("e0.${name} = inject_$idx();");
       }
     });
 
-    statement.add("$spaces  }\n");
+    printer.add('}');
+    printer.add(statementUpdateAttrs.toString());
+    printer.add("return e0;\n}");
 
-    statement.add(statementUpdateAttrs.toString());
-
-    statement.add("$spaces  return e0;\n");
-    statement.add("$spaces}\n");
-
-    return statement.toString();
+    return printer.toString();
   }
 
   bool get hasDataBinding => _info != null && _info.hasDataBinding;
@@ -1154,41 +1098,39 @@ class WebComponentEmitter {
   }
 
   String toString() {
-    String spaces = Codegen.spaces(2);
+    var componentBody = new CodePrinter(1);
 
-    StringBuffer buff = new StringBuffer();
-
-    buff.add(elemVars.toString());
-    buff.add(otherVars.toString());
-    buff.add("\n");
+    componentBody.add(elemVars.toString());
+    componentBody.add(otherVars.toString());
+    componentBody.add('');
 
     // Build the constructor function.
     if (constructorStmts.length == 0) {
-      buff.add("${spaces}$constructorSignature;\n\n");
+      componentBody.add('$constructorSignature;');
     } else {
-      buff.add("${spaces}$constructorSignature {\n");
-      buff.add("${constructorStmts.toString()}");
-      buff.add("${spaces}}\n\n");
+      componentBody.add('''
+          $constructorSignature {
+              ${constructorStmts}
+          }''');
     }
+    componentBody.add('');
 
     // Build the created function.
-    buff.add("${spaces}void created(ShadowRoot shadowRoot) {\n");
-    // Every created function needs this first line.
-    buff.add("$spaces  ${_delegate}root = shadowRoot;\n");
-    buff.add(createdStmts.toString());
-    buff.add("$spaces}\n\n");
+    componentBody.add('''
+        void created(ShadowRoot shadowRoot) {
+          ${_delegate}root = shadowRoot;
+          $createdStmts
+        }''');
+    componentBody.add('');
 
     // Build the inserted function.
-    buff.add("${spaces}void inserted() {\n");
-    buff.add(insertedStmts.toString());
-    buff.add("$spaces}\n\n");
+    componentBody.add('void inserted() {\n $insertedStmts }');
+    componentBody.add('');
 
     // Build the removed function.
-    buff.add("${spaces}void removed() {\n");
-    buff.add(removedStmts.toString());
-    buff.add("$spaces}");
+    componentBody.add('void removed() {\n $removedStmts }');
 
-    return buff.toString();
+    return componentBody.toString();
   }
 }
 
@@ -1653,7 +1595,7 @@ Nested iterates must have a localName;
 }
 
 // TODO(jmesserly): is there a better way to do this?
-String attributesToString(Node node, ElementInfo info) {
+String attributesToString(Node node, analyzer.ElementInfo info) {
   if (node.attributes.length == 0) return '';
 
   var str = new StringBuffer();
@@ -1669,4 +1611,33 @@ String attributesToString(Node node, ElementInfo info) {
     }
   });
   return str.toString();
+}
+
+/** Helper class that auto-formats generated code. */
+class CodePrinter {
+  int _indent;
+  StringBuffer _buff;
+  CodePrinter([initialIndent = 0])
+      : _indent = initialIndent, _buff = new StringBuffer();
+
+  void add(String lines) {
+    lines.split('\n').forEach((line) => _add(line.trim()));
+  }
+
+  void _add(String line) {
+    bool decIndent = line.startsWith("}");
+    bool incIndent = line.endsWith("{");
+    if (decIndent) _indent--;
+    for (int i = 0; i < _indent; i++) _buff.add('  ');
+    _buff.add(line);
+    _buff.add('\n');
+    if (incIndent) _indent++;
+  }
+
+  void inc([delta = 1]) { _indent += delta; }
+  void dec([delta = 1]) { _indent -= delta; }
+
+  String toString() => _buff.toString();
+
+  int get length => _buff.length;
 }

@@ -6,6 +6,7 @@
 
 #import('dart:coreimpl');
 #import('package:web_components/tools/lib/world.dart');
+#import('package:html5lib/treebuilders/simpletree.dart');
 #import('compile.dart');
 #import('analyzer.dart');
 
@@ -17,17 +18,17 @@ class CompilationUnit {
   final int _fileType;
   final String _filename;
   final ElemCG _ecg;
-  HTMLDocument _doc;
+  Document _doc;
   String _code;
   String _html;
-  Map<TreeNode, NodeInfo> info;
+  Map<Node, NodeInfo> info;
 
   /** Another files to process (e.g., web components). */
   CompilationUnit(String filename, ElemCG ecg, [int fileType = TYPE_COMPONENT])
       : _filename = filename, _fileType = fileType, _ecg = ecg;
 
   /** Used for processing the main file. */
-  CompilationUnit.kickStart(String filename, HTMLDocument doc, ElemCG ecg)
+  CompilationUnit.kickStart(String filename, Document doc, ElemCG ecg)
       : _filename = filename, _doc = doc, _fileType = TYPE_MAIN,
         _ecg = ecg;
 
@@ -50,8 +51,8 @@ class CompilationUnit {
     _html = htmlCode;
   }
 
-  HTMLDocument get document() => _doc;
-  void set document(HTMLDocument doc) {
+  Document get document() => _doc;
+  void set document(Document doc) {
     _doc = doc;
   }
 

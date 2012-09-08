@@ -162,7 +162,7 @@ typedef String ActionDefinition([String elemVarName]);
 
 
 /** Extract relevant information from [source] and it's children. */
-Map<Node, NodeInfo> analyze(Element source) {
+Map<Node, NodeInfo> analyze(Node source) {
   return (new _Analyzer()..visit(source)).results;
 }
 
