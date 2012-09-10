@@ -148,10 +148,8 @@ class ProcessFiles {
   ProcessFiles() : _files = [];
 
   /** Another compiler file dependency. */
-  void add(String filename,
-           [int fileType = CompilationUnit.TYPE_COMPONENT]) {
-    CompilationUnit cu =
-        new CompilationUnit(filename, new ElemCG(this), fileType);
+  void add(String filename, [bool isWebComponent = true]) {
+    var cu = new CompilationUnit(filename, new ElemCG(this), isWebComponent);
     _files.add(new ProcessFile(cu));
   }
 
@@ -167,8 +165,8 @@ class ProcessFiles {
    * the NULL_PROCESS is returned signalling all files have been parsed, walked,
    * analyzed, and code has been emited.
    */
-  nextProcess() {
-    ProcessFile currProcess = current;
+  ProcessFile nextProcess() {
+    var currProcess = current;
 
     // Something is still running?
     if (currProcess == null) {
@@ -224,18 +222,13 @@ class ProcessFiles {
    * is returned.
    */
   ProcessFile get current() {
-    for (ProcessFile processFile in _files) {
+    for (var processFile in _files) {
       if (processFile.isProcessRunning) {
         return processFile;
       }
     }
-
     return null;
   }
 
-  void forEach(void f(ProcessFile processFile) ) {
-    for (ProcessFile pFile in _files) {
-      f(pFile);
-    }
-  }
+  void forEach(void f(ProcessFile processFile)) => _files.forEach(f);
 }

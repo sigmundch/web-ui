@@ -84,7 +84,7 @@ void run(List<String> args) {
   } else {
     String source = files.readAll(sourceFullFn);
     final compileElapsed = time(() {
-      var analyze = new Compile(files, srcDir.path, srcPath.filename);
+      var analyze = new Compile(files, srcPath.filename, srcDir.path);
       // Write out the results.
       print("Write files to ${outDirectory.path}:");
 

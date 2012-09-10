@@ -46,25 +46,14 @@ Document parseHtml(String template, String sourcePath) {
  * as a prelude to emitting the code for the template.
  */
 class Compile {
-  final FileSystem fs;
+  final FileSystem filesystem;
   final String baseDir;
   final ProcessFiles components;
 
   /** Used by template tool to open a file. */
-  Compile(FileSystem filesystem, String path, String filename)
-      : fs = filesystem,
-        baseDir = path,
-        components = new ProcessFiles() {
-    components.add(filename, CompilationUnit.TYPE_MAIN);
-    _compile();
-  }
-
-  /** Used by playground to analyze a memory buffer. */
-  Compile.memory(FileSystem filesystem, String filename)
-      : fs = filesystem,
-        baseDir = "",
-        components = new ProcessFiles() {
-    components.add(filename, CompilationUnit.TYPE_MAIN);
+  Compile(this.filesystem, String filename, [this.baseDir = ""])
+      : components = new ProcessFiles() {
+    components.add(filename, isWebComponent: false);
     _compile();
   }
 
@@ -81,7 +70,7 @@ class Compile {
         switch (process.phase) {
           case ProcessFile.PARSING:
             // Parse the template.
-            String source = fs.readAll("$baseDir/${process.cu.filename}");
+            var source = filesystem.readAll("$baseDir/${process.cu.filename}");
 
             final parsedElapsed = time(() {
               process.cu.document = parseHtml(source, process.cu.filename);
@@ -870,7 +859,7 @@ class CGStatement {
       }
     } else {
       printer.add("$parentName.nodes.add($tmpRepeat);\n"
-                    "$variableName.add($tmpRepeat);\n");
+                  "$variableName.add($tmpRepeat);\n");
     }
 
     return printer.toString();
