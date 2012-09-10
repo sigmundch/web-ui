@@ -18,8 +18,8 @@ class CompilationUnit {
   final int _fileType;
   final String _filename;
   final ElemCG _ecg;
-  Document _doc;
-  String _code;
+  Document document;
+  String code;
   String _html;
   Map<Node, NodeInfo> info;
 
@@ -29,31 +29,21 @@ class CompilationUnit {
 
   /** Used for processing the main file. */
   CompilationUnit.kickStart(String filename, Document doc, ElemCG ecg)
-      : _filename = filename, _doc = doc, _fileType = TYPE_MAIN,
+      : _filename = filename, document = doc, _fileType = TYPE_MAIN,
         _ecg = ecg;
 
   String get filename() => _filename;
   bool get isWebComponent() => _fileType == TYPE_COMPONENT;
 
-  bool get opened() => _doc != null;
-  bool get codeGenerated() => _code != null;
+  bool get opened() => document != null;
+  bool get codeGenerated() => code != null;
   bool get htmlGenerated() => _html != null;
 
   ElemCG get elemCG() => _ecg;
 
-  String get code() => _code;
-  void set code(String sourceCode) {
-    _code = sourceCode;
-  }
-
   String get html() => _html;
   void set html(String htmlCode) {
     _html = htmlCode;
-  }
-
-  Document get document() => _doc;
-  void set document(Document doc) {
-    _doc = doc;
   }
 
   String toString() => "$filename";

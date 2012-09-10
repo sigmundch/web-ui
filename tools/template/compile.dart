@@ -36,8 +36,7 @@ Document parseHtml(String template, String sourcePath) {
   // Note: errors aren't fatal in HTML (unless strict mode is on).
   // So just print them as warnings.
   for (var e in parser.errors) {
-    world.warning(
-        'Error in $sourcePath line ${e.line}:${e.column}: ${e.message}');
+    world.warning('$sourcePath line ${e.line}:${e.column}: ${e.message}');
   }
   return document;
 }
@@ -243,9 +242,9 @@ class CGBlock {
   final ProcessFiles processor;
 
   // Block Types:
-  static final int CONSTRUCTOR = 0;
-  static final int REPEAT = 1;
-  static final int TEMPLATE = 2;
+  static const int CONSTRUCTOR = 0;
+  static const int REPEAT = 1;
+  static const int TEMPLATE = 2;
 
   CGBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR, local,
       this.processor])
@@ -280,20 +279,19 @@ class CGBlock {
    * name of parent and local name to associate with this element when the DOM
    * constructed.
    */
-  CGStatement push(var elem, var parentName, [bool exact = false]) {
+  CGStatement push(elem, parentName, [bool exact = false]) {
+    // TODO(jmesserly): fix this int|String union type.
     var varName;
-    final analyzer.ElementInfo info = processor.current.cu.info[elem];
+    analyzer.ElementInfo info = processor.current.cu.info[elem];
     if (info != null) varName = info.idAsIdentifier;
 
     if (varName == null) {
       varName = _localIndex++;
     }
 
-    CGStatement stmt = new CGStatement(elem, info, parentName, varName,
-        exact, isRepeat);
-    _stmts.add(stmt);
-
-    return stmt;
+    var s = new CGStatement(elem, info, parentName, varName, exact, isRepeat);
+    _stmts.add(s);
+    return s;
   }
 
   void add(String value) {
@@ -320,7 +318,7 @@ class CGBlock {
    */
   String get globalDeclarations {
     StringBuffer buff = new StringBuffer();
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       buff.add(stmt.globalDeclaration());
     }
 
@@ -355,7 +353,7 @@ class CGBlock {
    */
   String get globalInitializers {
     StringBuffer buff = new StringBuffer();
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       buff.add(stmt.globalInitializers());
     }
 
@@ -368,7 +366,7 @@ class CGBlock {
     // If statement is a bound element, has {{ }}, then boundElemIdx will match
     // the BoundElementEntry index associated with this element's statement.
     int boundElemIdx = 0;
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       buff.add(stmt.emitStatement(boundElemIdx));
       if (stmt.hasDataBinding) {
         boundElemIdx++;
@@ -391,7 +389,7 @@ class CGBlock {
     buff.add(genBoundElementsCommentBlock);
 
     int boundElemIdx = 0;   // Index if statement is a bound elem has a {{ }}.
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       if (stmt.hasDataBinding) {
         buff.add(stmt.emitBoundElementFunction(boundElemIdx++));
       }
@@ -477,7 +475,7 @@ class CGBlock {
    */
   void emitIfTemplateStatements(WebComponentEmitter code) {
     int boundElemIdx = 0;
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       if (boundElemIdx != 0) {
         if (stmt.hasDataBinding) {
           // Build the element variables.
@@ -541,7 +539,7 @@ class CGBlock {
   void emitTemplateStatements(WebComponentEmitter code) {
     bool first = true;
     int boundElemIdx = 0;
-    for (final CGStatement stmt in _stmts) {
+    for (CGStatement stmt in _stmts) {
       if (stmt.hasDataBinding) {
         // Build the element variables.
         code.elemVars.add(stmt.emitWebComponentElementVariables());
@@ -649,7 +647,7 @@ class CGBlock {
     var ifBody = new CodePrinter(3);
 
     // Use the first statement.
-    final CGStatement stmt = _stmts[0];
+    CGStatement stmt = _stmts[0];
     if (stmt != null) {
       ifBody.add("if (${stmt.variableName} != null) {");
       ifBody.add(stmt.emitWebComponentRemoved());
@@ -711,7 +709,7 @@ class CGBlock {
     var printer = new CodePrinter(2);
 
     if (conditionalTemplate) {
-      final CGStatement stmt = _stmts[0];
+      CGStatement stmt = _stmts[0];
 
       final analyzer.ElementInfo info = stmt._info;
       info.events.forEach((name, eventInfo) {
@@ -752,36 +750,37 @@ class CGStatement {
   final StringBuffer _buff;
   Node _elem;
   analyzer.ElementInfo _info;
-  var parentName;
-  String varName;
+  final parentName;
+  String variableName;
   bool _globalVariable;
   bool _closed;
 
+  static int _globalGeneratedId = 0;
+
   CGStatement(this._elem, this._info, this.parentName, varNameOrIndex,
-      [bool exact = false, bool repeating = false]) :
-        _buff = new StringBuffer(),
+      [bool exact = false, bool repeating = false])
+      : _buff = new StringBuffer(),
         _closed = false,
         _repeating = repeating {
 
     if (varNameOrIndex is String) {
       // We have the global variable name
-      varName = varNameOrIndex;
+      variableName = varNameOrIndex;
       _globalVariable = true;
     } else {
       // local index generate local variable name.
-      varName = "e${varNameOrIndex}";
+      variableName = "_e${varNameOrIndex}";
       _globalVariable = false;
     }
   }
 
   bool get hasGlobalVariable => _globalVariable;
-  String get variableName => varName;
 
   String globalDeclaration() {
     if (hasGlobalVariable) {
       return (_repeating) ?
-        "List ${varName};             // Repeated elements.\n" :
-        "var ${varName};\n";
+        "List ${variableName};             // Repeated elements.\n" :
+        "var ${variableName};\n";
     }
 
     return "";
@@ -789,7 +788,7 @@ class CGStatement {
 
   String globalInitializers() {
     if (hasGlobalVariable && _repeating) {
-      return "${varName} = [];\n";
+      return "${variableName} = [];\n";
     }
 
     return "";
@@ -816,7 +815,7 @@ class CGStatement {
     String tmpRepeat;
     if (hasGlobalVariable) {
       if (_repeating) {
-        tmpRepeat = "tmp_${varName}";
+        tmpRepeat = "tmp_${variableName}";
         localVar = "var ";
       }
     } else {
@@ -849,7 +848,7 @@ class CGStatement {
       bool isTextNode = _elem is Text;
       String createType = isTextNode ? "Text" : "Element.html";
       if (tmpRepeat == null) {
-        printer.add("$localVar$varName = new $createType(\'");
+        printer.add("$localVar$variableName = new $createType(\'");
       } else {
         printer.add("$localVar$tmpRepeat = new $createType(\'");
       }
@@ -862,7 +861,7 @@ class CGStatement {
     }
 
     if (tmpRepeat == null) {
-      printer.add("$parentName.nodes.add($varName);\n");
+      printer.add("$parentName.nodes.add($variableName);\n");
       if (_elem.tagName == 'template') {
         // TODO(terry): Need to support multiple templates either nested or
         //              siblings.
@@ -871,7 +870,7 @@ class CGStatement {
       }
     } else {
       printer.add("$parentName.nodes.add($tmpRepeat);\n"
-                    "$varName.add($tmpRepeat);\n");
+                    "$variableName.add($tmpRepeat);\n");
     }
 
     return printer.toString();
@@ -925,13 +924,16 @@ class CGStatement {
    * on the Component.
    */
   String emitWebComponentCreated([String prefix = ""]) {
-    String elemId = _info != null ? _info.elementId : null;
-    return (elemId != null) ?
-        "$variableName = ${prefix}root.query('#$elemId');\n" : "";
+    var id = _info.elementId;
+    if (id == null) {
+      // TODO(jmesserly): is it okay to mutate the tree like this?
+      // TODO(jmesserly): this logic probably belongs in the analyzer.
+      id = 'id${++_globalGeneratedId}';
+      _elem.attributes['id'] = id;
+      _info.elementId = id;
+    }
+    return "$variableName = ${prefix}root.query('#$id');\n";
   }
-
-  bool isEventAttribute(String attributeName) =>
-      attributeName.startsWith(analyzer.DATA_ON_ATTRIBUTE);
 
   String get listenerName => "_listener$variableName";
 
@@ -1534,53 +1536,6 @@ Nested iterates must have a localName;
     }
 
     return newName;
-  }
-
-  void emitIncludes() {
-
-  }
-
-  bool matchExpression() {
-
-  }
-
-  // TODO(sigmund,terry): discuss about what we'll do about inject_, can we
-  // delete this function entirely?
-  void emitExpressions(TemplateExpression elem, String scopeName) {
-/*
-// TO-DELETE
-    if (isWebComponent) {
-      _expressions.add(new Expression(elem.expression));
-    } else {
-      StringBuffer func = new StringBuffer();
-      String newExpr = elem.expression;
-      bool anyNesting = isNestedNamedBlock();
-      if (scopeName.length > 0 && !anyNesting) {
-        // In a block #command need the scope passed in.
-        add("\$\{inject_${_expressions.length}(_item)\}");
-        func.add("\n  String inject_${_expressions.length
-          }(var _item) {\n");
-        // Escape all single-quotes, this expression is embedded as a string
-        // parameter for the call to safeHTML.
-        newExpr = _resolveNames(newExpr.replaceAll("'", "\\'"), "_item");
-      } else {
-        // Not in a block #command item isn't passed in.
-        add("\$\{inject_${_expressions.length}()\}");
-        func.add("\n  String inject_${_expressions.length}() {\n");
-
-        if (anyNesting) {
-          func.add(defineScopes());
-        }
-      }
-
-      // Construct the active scope names for name resolution.
-      func.add("    return safeHTML('\$\{${newExpr}\}');\n");
-      func.add("  }\n");
-
-      _expressions.add(new Expression(func.toString()));
-    }
-// end TO-DELETE
-*/
   }
 
   void emitTemplate(Element elem) {

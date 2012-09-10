@@ -3,6 +3,7 @@
    for details. All rights reserved. Use of this source code is governed by a
    BSD-style license that can be found in the LICENSE file.
 -->
+<!doctype html>
 <html>
 <body>
 <script type="application/dart" src='model.dart'></script>
@@ -18,7 +19,7 @@
     <label for="x-toggle-all"></label>
   </template>
   <script type="application/dart">
-    bool allChecked () => app.todos.length > 0 && 
+    bool allChecked () => app.todos.length > 0 &&
         app.todos.every((t) => t.done);
 
     void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });

@@ -10,14 +10,14 @@
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles="">
   <template>
-    <div id='todo-item' class="{{_editingClass}} {{_completedClass}}">
-      <div id="item-view" class="view" data-on-doubleClick="{{edit()}}">
-        <input id="checkbox" class="toggle" type="checkbox"
+    <div id="todo-item" class="{{_editingClass}} {{_completedClass}}">
+      <div class="view" data-on-doubleClick="{{edit()}}">
+        <input class="toggle" type="checkbox"
                data-bind="{{checked:todo.done}}">
-        <label id="label">{{todo.task}}</label>
-        <button id="destroy-button" class="destroy" data-on-click="{{delete()}}"></button>
+        <label>{{todo.task}}</label>
+        <button class="destroy" data-on-click="{{delete()}}"></button>
       </div>
-      <input id="edit-line" class="edit"
+      <input class="edit"
              data-bind="{{value:todo.task}}"
              data-on-blur="{{update()}}" autofocus>
     </div>
