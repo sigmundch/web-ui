@@ -6,7 +6,7 @@
 <!doctype html>
 <html lang="en">
 <body>
-<script type="application/dart" src='model.dart'></script>
+<script type="application/dart" src="model.dart"></script>
 <element name="x-todo-footer" extends="footer" constructor="FooterComponent" apply-author-styles="">
   <template>
     <!-- TODO(terry): Moved id from span to strong (revert later). -->
@@ -16,8 +16,7 @@
       <li> <a class="{{activeClass}}" href="#/active">Active</a> </li>
       <li> <a class="{{completedClass}}" href="#/completed">Completed</a> </li>
     </ul>
-    <template instantiate="if anyDone" is="x-if" id='condition'>
-      <!-- TODO(terry): 1st elem of template conditional must have id attr -->
+    <template instantiate="if anyDone">
       <button id="clear-completed" data-on-click="{{clearDone()}}">
         Clear completed ({{doneCount}})
       </button>

@@ -30,7 +30,7 @@ class ElementInfo implements NodeInfo {
   bool isIterate = false;
 
   /** Whether the element is conditional. */
-  bool isConditional = false;
+  bool hasIfCondition = false;
 
   /** Whether the element contains data bindings. */
   bool hasDataBinding = false;
@@ -71,7 +71,7 @@ class ElementInfo implements NodeInfo {
   String toString() => 'id: $elementId, '
       'isComponent: $isComponent, '
       'isIterate: $isIterate, '
-      'isConditional: $isConditional, '
+      'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
       'contentBinding: $contentBinding, '
       'contentExpression: $contentExpression, '
@@ -123,32 +123,20 @@ class EventInfo implements NodeInfo {
 // TODO(jmesserly): I'm not sure we need this, but it was useful for
 // bootstrapping the switch to the html5 parser.
 class TemplateInfo extends ElementInfo {
-  static const String IF_COMPONENT = "x-if";
-  static const String LIST_COMPONENT = "x-list";
-
   final String instantiate;
   final String iterate;
 
-  /** Attribute `is` encountered; the web component being used. */
-  final String webComponent;
+  TemplateInfo(this.instantiate, this.iterate);
 
-  TemplateInfo()
-      : instantiate = "", iterate = "", webComponent = null;
+  bool get hasIfCondition => instantiate.startsWith('if ');
 
-  TemplateInfo.instantiate(this.instantiate)
-      : iterate = "", webComponent = null;
-
-  TemplateInfo.iterate(this.iterate)
-      : instantiate = "", webComponent = LIST_COMPONENT;
-
-  TemplateInfo.conditional(this.instantiate)
-      : iterate = "", webComponent = IF_COMPONENT;
-
-  bool get hasInstantiate => !instantiate.isEmpty();
-  bool get hasIterate => !iterate.isEmpty();
-  bool get isWebComponent => webComponent != null && !webComponent.isEmpty();
-  bool get isConditional =>
-      hasInstantiate && !hasIterate && webComponent == IF_COMPONENT;
+  String get ifCondition {
+    if (!hasIfCondition) {
+      throw new UnsupportedOperationException(
+          'not a <template iterate="if ..."> node');
+    }
+    return instantiate.substring(3);
+  }
 }
 
 
@@ -199,7 +187,6 @@ class _Analyzer extends TreeVisitor {
     assert(node.tagName == 'template');
     var instantiate = node.attributes['instantiate'];
     var iterate = node.attributes['iterate'];
-    var isAttr = node.attributes['is'];
 
     if (instantiate != null && iterate != null) {
       // TODO(jmesserly): get the node's span here
@@ -207,35 +194,9 @@ class _Analyzer extends TreeVisitor {
       return null;
     }
 
-    // TODO(jmesserly): this is from the old parser, needs cleanup, it feels
-    // too complicated for what it's doing. I don't think we need so many
-    // constructors on TemplateInfo.
-    TemplateInfo info = null;
-    if (instantiate != null) {
-      if (isAttr == TemplateInfo.IF_COMPONENT) {
-        instantiate = instantiate.trim();
-        if (instantiate.startsWith("if ")) {
-          var condExpr = instantiate.substring("if ".length);
-          info = new TemplateInfo.conditional(condExpr);
-        } else {
-          world.error('Template conditional instantiate attr missing if.');
-        }
-      } else if (isAttr == TemplateInfo.LIST_COMPONENT) {
-        world.error('Template iterate x-list with instantiate attribute.');
-      } else {
-        info = new TemplateInfo.instantiate(instantiate);
-      }
-    } else if (iterate != null) {
-      if (isAttr == TemplateInfo.LIST_COMPONENT) {
-        info = new TemplateInfo.iterate(iterate);
-      } else {
-        world.error('Template conditional x-if with iterate attribute.');
-      }
-    } else {
-      info = new TemplateInfo();
-    }
-
-    return info;
+    if (instantiate == null) instantiate = "";
+    if (iterate == null) iterate = "";
+    return new TemplateInfo(instantiate, iterate);
   }
 
   void visitAttribute(Element elem, ElementInfo elemInfo,

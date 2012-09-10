@@ -211,8 +211,7 @@ main() {
     expect(elem.attributes.length, isZero);
     expect(info.instantiate, equals(''));
     expect(info.iterate, equals(''));
-    expect(info.webComponent, isNull);
-    expect(info.isConditional, isFalse);
+    expect(info.hasIfCondition, isFalse);
   });
 
   // TODO(jmesserly): I'm not sure this is correct behavior for
@@ -222,18 +221,17 @@ main() {
     TemplateInfo info = analyze(elem)[elem];
     expect(elem.attributes, equals({'instantiate': 'foo'}));
     expect(info.instantiate, equals('foo'));
-    expect(info.hasIterate, isFalse);
-    expect(info.webComponent, isNull);
+    expect(info.iterate, equals(''));
   });
 
   test('template instantiate if', () {
     var elem = parseSubtree('<template instantiate="if foo" is="x-if" />');
     TemplateInfo info = analyze(elem)[elem];
-    expect(info.isConditional);
+    expect(info.hasIfCondition);
     expect(elem.attributes, equals({'instantiate': 'if foo', 'is': 'x-if'}));
-    expect(info.instantiate, equals('foo'));
-    expect(info.hasIterate, isFalse);
-    expect(info.webComponent, TemplateInfo.IF_COMPONENT);
+    expect(info.instantiate, equals('if foo'));
+    expect(info.ifCondition, equals('foo'));
+    expect(info.iterate, equals(''));
   });
 
   test('template iterate', () {
@@ -242,7 +240,6 @@ main() {
     expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
     expect(info.instantiate, equals(''));
     expect(info.iterate, equals('bar'));
-    expect(info.webComponent, TemplateInfo.LIST_COMPONENT);
   });
 }
 

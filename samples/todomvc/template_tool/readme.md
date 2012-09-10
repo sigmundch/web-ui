@@ -24,26 +24,6 @@ Generating the code:
 
 this will generated a number of files with the *.html.dart and *.html.html
 
-Generating the web components classes from the template compiler does not
-currently handling the data binding in main.html this means that the following
-code needs to be pasted into item.html.dart for scopedVariables:
-
-
-  // TODO(samhop): this is a terrible pattern -- it would be better if
-  // there were a lifecycle event for 'data is ready', which in this case
-  // we would call when scopedVariables contained the data to do the binding
-  // (i.e. AFTER scopedVariables is initially set up by the Component's
-  // constructor).
-  void set scopedVariables(vars) {
-    super.scopedVariables = vars;
-    if (element != null) {
-      todo = scopedVariables[element.attributes['data-todo']];
-    }
-  }
-
-  get scopedVariables => super.scopedVariables;
-
-
 
 Todo application NOT WORKING:
 =============================

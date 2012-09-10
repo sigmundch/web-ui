@@ -11,6 +11,7 @@
 #import('package:web_components/tools/lib/file_system.dart');
 #import('package:web_components/tools/lib/world.dart');
 #import('analyzer.dart', prefix: 'analyzer');
+#import('code_printer.dart');
 #import('codegen.dart');
 #import('codegen_application.dart');
 #import('codegen_component.dart');
@@ -571,64 +572,51 @@ class CGBlock {
     code.removedStmts.add(emitTemplateRemoved());
   }
 
-  bool get conditionalTemplate => isTemplate && template.isConditional
-      && templateElement.attributes.length > 0;
+  bool get conditionalTemplate => isTemplate && template.hasIfCondition;
 
   /** Emit watchers for a template conditional. */
   String emitTemplateWatcher() {
-    if (conditionalTemplate) {
-      for (var name in templateElement.attributes.getKeys()) {
-        if (name == "id") {
-          var value = templateElement.attributes[name];
-          return "WatcherDisposer _stopWatcher_if_$value;\n";
-        }
-      }
-    }
-    return "";
+    if (!conditionalTemplate) return '';
+
+    var templateId = getOrCreateElementId(templateElement, template);
+    return '''
+        WatcherDisposer _stopWatcher_if_${template.idAsIdentifier};
+        Element _template_$templateId;
+        Element _childTemplate;
+        Element _parent;
+        Element _child;
+        String _childId;''';
   }
 
   /**
-   * Emit creation of a template conditional.
+   * Emit creation of a template conditional, e.g.
+   *
+   *     <template instantiate="if anyDone">
    */
   String emitTemplateCreated() {
-    if (conditionalTemplate) {
-      for (var name in templateElement.attributes.getKeys()) {
-        if (name == "id") {
-          var tmplId = templateElement.attributes[name];
-          var ifExpr = template.instantiate;
-          // analyzer.TemplateInfo conditional e.g.,
-          //
-          //    <template instantiate="if anyDone" is="x-if" id='done'>
-          //
-          // Emit statements:
-          //
-          //    var done = manager[component.root.query('#done')];
-          //    done.shouldShow = (_) => component.anyDone
-          return "var $tmplId = manager[component.root.query('#$tmplId')];\n"
-              "$tmplId.shouldShow = (_) => component.$ifExpr;\n";
-        }
-      }
-    }
-    return "";
+    if (!conditionalTemplate) return '';
+
+    var id = getOrCreateElementId(templateElement, template);
+    return '''
+        _template_$id = component.root.query('#$id');
+        assert(_template_$id.elements.length == 1);
+        _childTemplate = _template_$id.elements[0];
+        _childId = _childTemplate.id;
+        if (_childId != null && _childId != '') _childTemplate.id = '';
+        _template_$id.style.display = 'none';
+        _template_$id.nodes.clear();''';
   }
 
   /** Emit the if conditional watcher. */
   String emitTemplateIf() {
-    if (conditionalTemplate) {
-      // Compute the body.
-      WebComponentEmitter tmplCode = new WebComponentEmitter();
-      emitIfTemplateStatements(tmplCode);
-      for (var name in templateElement.attributes.getKeys()) {
-        if (name == "id") {
-          var tmplId = templateElement.attributes[name];
-          var ifExpr = template.instantiate;
-          var body = emitTemplateIfBody();
-          return "_stopWatcher_if_$tmplId = component.bind("
-                 "() => component.$ifExpr, (_) {\n$body\n});\n";
-        }
-      }
-    }
-    return "";
+    if (!conditionalTemplate) return '';
+
+    // Compute the body.
+    var tmplCode = new WebComponentEmitter();
+    emitIfTemplateStatements(tmplCode);
+    var body = emitTemplateIfBody();
+    return "_stopWatcher_if_${template.idAsIdentifier} = component.bind("
+           "() => component.${template.ifCondition}, (e) {\n$body\n});\n";
   }
 
   /** Emit the code associated with the first element of the template if. */
@@ -638,6 +626,18 @@ class CGBlock {
     // Use the first statement.
     CGStatement stmt = _stmts[0];
     if (stmt != null) {
+      var templateId = getOrCreateElementId(templateElement, template);
+      ifBody.add('''
+          bool showNow = e.newValue;
+          if (_child != null && !showNow) {
+            _child.remove();
+            _child = null;
+          } else if (_child == null && showNow) {
+            _child = _childTemplate.clone(true);
+            if (_childId != null && _childId != '') _child.id = _childId;
+            _template_$templateId.parent.nodes.add(_child);
+          }''');
+
       ifBody.add("if (${stmt.variableName} != null) {");
       ifBody.add(stmt.emitWebComponentRemoved());
       ifBody.add("}\n");
@@ -710,14 +710,8 @@ class CGBlock {
             }''');
       });
 
-      for (var name in templateElement.attributes.getKeys()) {
-        if (name == "id") {
-          var tmplId = templateElement.attributes[name];
-          var ifExpr = template.instantiate;
-          var body = emitTemplateIfBody();
-          printer.add("_stopWatcher_if_$tmplId();");
-        }
-      }
+      printer.add("_stopWatcher_if_${template.idAsIdentifier}();");
+      printer.add("if (_child != null) _child.remove();");
     }
 
     return printer.toString();
@@ -725,6 +719,18 @@ class CGBlock {
 
 }
 
+int _globalGeneratedId = 0;
+String getOrCreateElementId(Element element, analyzer.ElementInfo info) {
+  var id = info.elementId;
+  if (id == null) {
+    // TODO(jmesserly): this logic probably belongs in the analyzer.
+    // TODO(jmesserly): is it okay to mutate the tree like this?
+    id = 'id${++_globalGeneratedId}';
+    element.attributes['id'] = id;
+    info.elementId = id;
+  }
+  return id;
+}
 
 // TODO(terry): Consider adding backpointer to block CGStatement is contained
 //              in; no need to replicate things; like whether the statement is
@@ -743,8 +749,6 @@ class CGStatement {
   String variableName;
   bool _globalVariable;
   bool _closed;
-
-  static int _globalGeneratedId = 0;
 
   CGStatement(this._elem, this._info, this.parentName, varNameOrIndex,
       [bool exact = false, bool repeating = false])
@@ -913,14 +917,7 @@ class CGStatement {
    * on the Component.
    */
   String emitWebComponentCreated([String prefix = ""]) {
-    var id = _info.elementId;
-    if (id == null) {
-      // TODO(jmesserly): is it okay to mutate the tree like this?
-      // TODO(jmesserly): this logic probably belongs in the analyzer.
-      id = 'id${++_globalGeneratedId}';
-      _elem.attributes['id'] = id;
-      _info.elementId = id;
-    }
+    var id = getOrCreateElementId(_elem, _info);
     return "$variableName = ${prefix}root.query('#$id');\n";
   }
 
@@ -1555,33 +1552,4 @@ String attributesToString(Node node, analyzer.ElementInfo info) {
     }
   });
   return str.toString();
-}
-
-/** Helper class that auto-formats generated code. */
-class CodePrinter {
-  int _indent;
-  StringBuffer _buff;
-  CodePrinter([initialIndent = 0])
-      : _indent = initialIndent, _buff = new StringBuffer();
-
-  void add(String lines) {
-    lines.split('\n').forEach((line) => _add(line.trim()));
-  }
-
-  void _add(String line) {
-    bool decIndent = line.startsWith("}");
-    bool incIndent = line.endsWith("{");
-    if (decIndent) _indent--;
-    for (int i = 0; i < _indent; i++) _buff.add('  ');
-    _buff.add(line);
-    _buff.add('\n');
-    if (incIndent) _indent++;
-  }
-
-  void inc([delta = 1]) { _indent += delta; }
-  void dec([delta = 1]) { _indent -= delta; }
-
-  String toString() => _buff.toString();
-
-  int get length => _buff.length;
 }
