@@ -494,14 +494,14 @@ class CGBlock {
   String emitTemplateWatcher() {
     if (!conditionalTemplate) return '';
 
-    var templateId = getOrCreateElementId(templateElement, template);
+    var id = getOrCreateElementId(templateElement, template);
     return '''
         WatcherDisposer _stopWatcher_if_${template.idAsIdentifier};
-        Element _template_$templateId;
-        Element _childTemplate;
-        Element _parent;
-        Element _child;
-        String _childId;''';
+        Element _template_$id;
+        Element _childTemplate_$id;
+        Element _parent_$id;
+        Element _child_$id;
+        String _childId_$id;''';
   }
 
   /**
@@ -516,9 +516,11 @@ class CGBlock {
     return '''
         _template_$id = root.query('#$id');
         assert(_template_$id.elements.length == 1);
-        _childTemplate = _template_$id.elements[0];
-        _childId = _childTemplate.id;
-        if (_childId != null && _childId != '') _childTemplate.id = '';
+        _childTemplate_$id = _template_$id.elements[0];
+        _childId_$id = _childTemplate_$id.id;
+        if (_childId_$id != null && _childId_$id != '') {
+          _childTemplate_$id.id = '';
+        }
         _template_$id.style.display = 'none';
         _template_$id.nodes.clear();''';
   }
@@ -542,16 +544,18 @@ class CGBlock {
     // Use the first statement.
     CGStatement stmt = _stmts[0];
     if (stmt != null) {
-      var templateId = getOrCreateElementId(templateElement, template);
+      var id = getOrCreateElementId(templateElement, template);
       ifBody.add('''
           bool showNow = e.newValue;
-          if (_child != null && !showNow) {
-            _child.remove();
-            _child = null;
-          } else if (_child == null && showNow) {
-            _child = _childTemplate.clone(true);
-            if (_childId != null && _childId != '') _child.id = _childId;
-            _template_$templateId.parent.nodes.add(_child);
+          if (_child_$id != null && !showNow) {
+            _child_$id.remove();
+            _child_$id = null;
+          } else if (_child_$id == null && showNow) {
+            _child_$id = _childTemplate_$id.clone(true);
+            if (_childId_$id != null && _childId_$id != '') {
+              _child_$id.id = _childId_$id;
+            }
+            _template_$id.parent.nodes.add(_child_$id);
           }''');
 
       ifBody.add("if (${stmt.variableName} != null) {");
@@ -625,7 +629,8 @@ class CGBlock {
       });
 
       printer.add("_stopWatcher_if_${template.idAsIdentifier}();");
-      printer.add("if (_child != null) _child.remove();");
+      var id = getOrCreateElementId(templateElement, template);
+      printer.add("if (_child_$id != null) _child_$id.remove();");
     }
 
     return printer.toString();
