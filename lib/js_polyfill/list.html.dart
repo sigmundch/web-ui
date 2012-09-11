@@ -42,7 +42,10 @@ class ListComponent extends Component {
       for (var n in _parent.elements) {
         var wrapper = manager[n];
         if (wrapper != this) {
-          if (wrapper != null) wrapper.removed();
+          // TODO(sigmund,jmesserly): ensure we keep the following logic in the
+          // auto-generated lists from the template compiler. We comment it out
+          // here because it is handled by web_components mutation observers.
+          // if (wrapper != null) wrapper.removed();
           n.remove();
         }
       }

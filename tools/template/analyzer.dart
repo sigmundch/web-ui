@@ -23,6 +23,18 @@ class ElementInfo implements NodeInfo {
   /** Id given to an element node, if any. */
   String elementId;
 
+  /** Generated field name, if any, associated with this element. */
+  // TODO(sigmund): move this to Emitter?
+  String elemField;
+
+  /**
+   * Whether code generators need to create a field to store a reference to this
+   * element. This is typically true whenever we need to access the element
+   * (e.g. to add event listeners, update values on data-bound watchers, etc).
+   */
+  bool get needsField =>
+      events.length > 0 || hasDataBinding || hasIfCondition || isIterate;
+
   /** Whether the element is a component instantiation. */
   bool isComponent = false;
 
@@ -44,6 +56,10 @@ class ElementInfo implements NodeInfo {
    */
   // TODO(terry,sigmund): support more than 1 expression in the contents.
   String contentExpression;
+
+  /** Generated watcher disposer that watchs for the content expression. */
+  // TODO(sigmund): move somewhere else?
+  String stopperName;
 
   /** Variable declared on loop iterations (null when `!isIterate`). */
   String iterVariable;
@@ -105,12 +121,21 @@ class AttributeInfo implements NodeInfo {
 
   String toString() =>
       '(isClass: $isClass, values: ${Strings.join(bindings, "")})';
+
+  /**
+   * Generated fields for watcher disposers based on the bindings of this
+   * attribute.
+   */
+  List<String> stopperNames;
 }
 
 /** Information extracted for each declared event in an element. */
 class EventInfo implements NodeInfo {
   /** Event name for attributes representing actions. */
   String eventName;
+
+  /** Generated field name, if any, associated with this event. */
+  String listenerField;
 
   /** Action associated for event listener attributes. */
   ActionDefinition action;
@@ -160,6 +185,7 @@ class _Analyzer extends TreeVisitor {
   static const String _DATA_ON_ATTRIBUTE = "data-on-";
 
   final Map<Node, NodeInfo> results;
+  int _totalIds = 0;
 
   _Analyzer() : results = new Map<Node, NodeInfo>();
 
@@ -181,6 +207,16 @@ class _Analyzer extends TreeVisitor {
     });
 
     super.visitElement(node);
+
+    if (info.needsField) {
+      if (info.elementId == null) {
+        var id = 'e-${_totalIds}';
+        _totalIds++;
+        node.attributes['id'] = id;
+        info.elementId = id;
+      }
+      info.elemField = info.idAsIdentifier;
+    }
   }
 
   TemplateInfo createTemplateInfo(Element node) {

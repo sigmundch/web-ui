@@ -16,6 +16,7 @@
 #import('codegen_application.dart');
 #import('codegen_component.dart');
 #import('compilation_unit.dart');
+#import('emitters.dart');
 #import('processor.dart');
 #import('template.dart');
 #import('utils.dart');
@@ -383,39 +384,17 @@ class CGBlock {
   }
 
   void emitIfTemplateStatements(WebComponentEmitter code) {
-    int boundElemIdx = 0;
+    bool first = true;
     for (CGStatement stmt in _stmts) {
-      if (boundElemIdx != 0) {
+      if (!first) {
         if (stmt.hasDataBinding) {
-          // Build the element variables.
-          code.elemVars.add(stmt.emitWebComponentElementVariables());
-
-          // Build the element listeners.
-          code.otherVars.add(
-              stmt.emitWebComponentListeners(boundElemIdx));
-
-          // Build the created function body.
-          code.createdStmts.add(stmt.emitWebComponentCreated());
-
-          // Build the inserted function body.
-          code.insertedStmts.add(
-                stmt.emitWebComponentInserted(boundElemIdx));
-
-          // Build the removed function body.
-          code.removedStmts.add(
-              stmt.emitWebComponentRemoved());
-
-          boundElemIdx++;
+          emitTemplateStatement(code, stmt);
+          first = false;
         }
       } else {
         if (stmt.hasDataBinding) {
-          // Build the element variables.
           code.elemVars.add(stmt.emitWebComponentElementVariables());
-
-          // Build the element listeners.
-          code.otherVars.add(
-              stmt.emitWebComponentListeners(boundElemIdx));
-
+          code.otherVars.add(stmt.emitWebComponentListeners());
           code.insertedStmts.add(emitIfTemplateInsert(stmt));
         }
       }
@@ -446,36 +425,44 @@ class CGBlock {
   }
 
   void emitTemplateStatements(WebComponentEmitter code) {
-    bool first = true;
-    int boundElemIdx = 0;
     for (CGStatement stmt in _stmts) {
       if (stmt.hasDataBinding) {
-        // Build the element variables.
-        code.elemVars.add(stmt.emitWebComponentElementVariables());
-
-        // Build the element listeners.
-        code.otherVars.add(
-            stmt.emitWebComponentListeners(boundElemIdx));
-
-        // Build the created function body.
-        code.createdStmts.add(stmt.emitWebComponentCreated());
-
-        // Build the inserted function body.
-        code.insertedStmts.add(
-              stmt.emitWebComponentInserted(boundElemIdx));
-
-        // Build the removed function body.
-        code.removedStmts.add(
-            stmt.emitWebComponentRemoved());
-
-        boundElemIdx++;
+        emitTemplateStatement(code, stmt);
       }
     }
+  }
+
+  // TODO(sigmund): delete once we have a top-down visitor that applies all
+  // [Emitter]s.
+  void emitTemplateStatement(WebComponentEmitter code, CGStatement stmt) {
+    List<Emitter> emitters = [
+        new ElementFieldEmitter(stmt._elem, stmt._info),
+        new EventListenerEmitter(stmt._elem, stmt._info),
+        new DataBindingEmitter(stmt._elem, stmt._info),
+    ];
+
+    var context = code.context;
+    context.printer = new CodePrinter(2);
+    emitters.forEach((e) => e.emitDeclarations(context));
+    code.elemVars.add(context.printer.toString());
+
+    context.printer = new CodePrinter(2);
+    emitters.forEach((e) => e.emitCreated(context));
+    code.createdStmts.add(context.printer.toString());
+
+    context.printer = new CodePrinter(2);
+    emitters.forEach((e) => e.emitInserted(context));
+    code.insertedStmts.add(context.printer.toString());
+
+    context.printer = new CodePrinter(2);
+    emitters.forEach((e) => e.emitRemoved(context));
+    code.removedStmts.add(context.printer.toString());
   }
 
   /**
    * Generated class for a nested template. [parent] parentTemplate class name.
    */
+  // TODO(sigmund): delete once we new emitters working.
   void emitInnerTemplateStatements(WebComponentEmitter code) {
     emitIfTemplateStatements(code);
 
@@ -494,14 +481,14 @@ class CGBlock {
   String emitTemplateWatcher() {
     if (!conditionalTemplate) return '';
 
-    var id = getOrCreateElementId(templateElement, template);
+    var id = template.idAsIdentifier;
     return '''
-        WatcherDisposer _stopWatcher_if_${template.idAsIdentifier};
-        Element _template_$id;
-        Element _childTemplate_$id;
-        Element _parent_$id;
-        Element _child_$id;
-        String _childId_$id;''';
+        WatcherDisposer _stopWatcher_if$id;
+        Element _template$id;
+        Element _childTemplate$id;
+        Element _parent$id;
+        Element _child$id;
+        String _childId$id;''';
   }
 
   /**
@@ -512,17 +499,17 @@ class CGBlock {
   String emitTemplateCreated() {
     if (!conditionalTemplate) return '';
 
-    var id = getOrCreateElementId(templateElement, template);
+    var id = template.idAsIdentifier;
     return '''
-        _template_$id = root.query('#$id');
-        assert(_template_$id.elements.length == 1);
-        _childTemplate_$id = _template_$id.elements[0];
-        _childId_$id = _childTemplate_$id.id;
-        if (_childId_$id != null && _childId_$id != '') {
-          _childTemplate_$id.id = '';
+        _template$id = root.query('#${template.elementId}');
+        assert(_template$id.elements.length == 1);
+        _childTemplate$id = _template$id.elements[0];
+        _childId$id = _childTemplate$id.id;
+        if (_childId$id != null && _childId$id != '') {
+          _childTemplate$id.id = '';
         }
-        _template_$id.style.display = 'none';
-        _template_$id.nodes.clear();''';
+        _template$id.style.display = 'none';
+        _template$id.nodes.clear();''';
   }
 
   /** Emit the if conditional watcher. */
@@ -533,7 +520,7 @@ class CGBlock {
     var tmplCode = new WebComponentEmitter();
     emitIfTemplateStatements(tmplCode);
     var body = emitTemplateIfBody();
-    return "_stopWatcher_if_${template.idAsIdentifier} = bind("
+    return "_stopWatcher_if${template.idAsIdentifier} = bind("
            "() => ${template.ifCondition}, (e) {\n$body\n});\n";
   }
 
@@ -544,18 +531,18 @@ class CGBlock {
     // Use the first statement.
     CGStatement stmt = _stmts[0];
     if (stmt != null) {
-      var id = getOrCreateElementId(templateElement, template);
+      var id = template.idAsIdentifier;
       ifBody.add('''
           bool showNow = e.newValue;
-          if (_child_$id != null && !showNow) {
-            _child_$id.remove();
-            _child_$id = null;
-          } else if (_child_$id == null && showNow) {
-            _child_$id = _childTemplate_$id.clone(true);
-            if (_childId_$id != null && _childId_$id != '') {
-              _child_$id.id = _childId_$id;
+          if (_child$id != null && !showNow) {
+            _child$id.remove();
+            _child$id = null;
+          } else if (_child$id == null && showNow) {
+            _child$id = _childTemplate$id.clone(true);
+            if (_childId$id != null && _childId$id != '') {
+              _child$id.id = _childId$id;
             }
-            _template_$id.parent.nodes.add(_child_$id);
+            _template$id.parent.nodes.add(_child$id);
           }''');
 
       ifBody.add("if (${stmt.variableName} != null) {");
@@ -628,9 +615,9 @@ class CGBlock {
             }''');
       });
 
-      printer.add("_stopWatcher_if_${template.idAsIdentifier}();");
-      var id = getOrCreateElementId(templateElement, template);
-      printer.add("if (_child_$id != null) _child_$id.remove();");
+      printer.add("_stopWatcher_if${template.idAsIdentifier}();");
+      var id = template.idAsIdentifier;
+      printer.add("if (_child$id != null) _child$id.remove();");
     }
 
     return printer.toString();
@@ -792,7 +779,7 @@ class CGStatement {
     return "var $variableName;\n";
   }
 
-  String emitWebComponentListeners(int index) {
+  String emitWebComponentListeners() {
     var declarations = new CodePrinter(1);
     int watcherIdx = 0;
 
@@ -841,70 +828,6 @@ class CGStatement {
   }
 
   String get listenerName => "_listener$variableName";
-
-  /** Used for web components with template expressions {{expr}}. */
-  String emitWebComponentInserted(int index) {
-    var insertedBody = new CodePrinter(1);
-    var listenerBody = new CodePrinter();
-
-    // listeners associated with UI events:
-    _info.events.forEach((name, eventInfo) {
-      listenerBody.add('${eventInfo.action(variableName)};');
-    });
-
-    if (listenerBody.length > 0) {
-      insertedBody.add('$listenerName = (_) {\n $listenerBody dispatch();\n};');
-    }
-
-    // attach event listeners
-    // TODO(terry,sigmund): support more than one listener per element.
-    _info.events.forEach((name, eventInfo) {
-      var eventName = eventInfo.eventName;
-      insertedBody.add("$variableName.on['$eventName'].add($listenerName);");
-    });
-
-    int watcherIdx = 0;
-    // Emit stopWatchers.
-
-    var stopWatcherPrefix = '_stopWatcher${variableName}_';
-    // stop-functions for watchers associated with data-bound attributes
-    _info.attributes.forEach((name, attrInfo) {
-      if (attrInfo.isClass) {
-        for (int i = 0; i < attrInfo.bindings.length; i++) {
-          var exp = attrInfo.bindings[i];
-          insertedBody.add('''
-              $stopWatcherPrefix$watcherIdx = bind(() => $exp, (e) {
-                if (e.oldValue != null && e.oldValue != '') {
-                  $variableName.classes.remove(e.oldValue);
-                }
-                if (e.newValue != null && e.newValue != '') {
-                  $variableName.classes.add(e.newValue);
-                }
-              });''');
-          watcherIdx++;
-        }
-      } else {
-        var val = attrInfo.boundValue;
-        insertedBody.add('''
-            $stopWatcherPrefix$watcherIdx = bind(() => $val, (e) {
-              $variableName.$name = e.newValue;
-            });''');
-        watcherIdx++;
-      }
-    });
-
-    // stop-functions for watchers associated with data-bound content
-    if (_info.contentBinding != null) {
-      var val = _info.contentBinding;
-      insertedBody.add('''
-          $stopWatcherPrefix$watcherIdx = bind(() => $val, (e) {
-            $variableName.innerHTML = ${_info.contentExpression};
-          });''');
-      watcherIdx++;
-    }
-
-    return insertedBody.toString();
-  }
 
   String emitWebComponentRemoved() {
     var removedBody = new CodePrinter();
@@ -982,6 +905,7 @@ class CGStatement {
 
 /** Class for each code section of code emitted for a web component. */
 class WebComponentEmitter {
+  final Context context;
   final StringBuffer elemVars;
   final StringBuffer otherVars;
   String constructor;
@@ -996,7 +920,8 @@ class WebComponentEmitter {
         constructorStmts = new StringBuffer(),
         createdStmts = new StringBuffer(),
         insertedStmts = new StringBuffer(),
-        removedStmts = new StringBuffer();
+        removedStmts = new StringBuffer(),
+        context = new Context(new CodePrinter());
 
   String toString() {
     var componentBody = new CodePrinter(1);
