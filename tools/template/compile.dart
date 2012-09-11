@@ -81,7 +81,7 @@ class Compile {
             }
             if (options.dumpTree) {
               print("\n\n Dump Tree ${process.cu.filename}:\n\n");
-              print(process.cu.document.toDebugString());
+              print(process.cu.document.outerHTML);
               print("\n=========== End of AST ===========\n\n");
             }
             break;
@@ -216,12 +216,6 @@ class Compile {
  * statements (HTML) within that block are scoped to a CGBlock.
  */
 class CGBlock {
-  /** Code type of this block. */
-  final int _blockType;
-
-  /** Optional local name for #each or #with. */
-  final String _localName;
-
   final List<CGStatement> _stmts;
 
   /** Local variable index (e.g., e0, e1, etc.). */
@@ -231,38 +225,17 @@ class CGBlock {
   final Element templateElement;
   final ProcessFiles processor;
 
-  // Block Types:
-  static const int CONSTRUCTOR = 0;
-  static const int REPEAT = 1;
-  static const int TEMPLATE = 2;
-
-  CGBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR, local,
-      this.processor])
-      : template = null,
-        templateElement = null,
+  CGBlock(ProcessFiles processor, [Element templateElement])
+      : processor = processor,
+        templateElement = templateElement,
+        template = (templateElement != null ?
+            processor.current.cu.info[templateElement] : null),
         _stmts = <CGStatement>[],
-        _localIndex = 0,
-        _blockType = blockType,
-        _localName = local {
-    assert(_blockType >= CGBlock.CONSTRUCTOR && _blockType <= CGBlock.TEMPLATE);
-  }
-  CGBlock.createTemplate(Element templateElement,
-      [int indent = 4, ProcessFiles processor])
-      : templateElement = templateElement,
-        processor = processor,
-        template = processor.current.cu.info[templateElement],
-        _stmts = <CGStatement>[],
-        _localIndex = 0,
-        _blockType = CGBlock.TEMPLATE,
-        _localName = null;
+        _localIndex = 0;
 
   bool get hasStatements => !_stmts.isEmpty();
-  bool get isConstructor => _blockType == CGBlock.CONSTRUCTOR;
-  bool get isRepeat => _blockType == CGBlock.REPEAT;
-  bool get isTemplate => _blockType == CGBlock.TEMPLATE;
-
-  bool get hasLocalName => _localName != null;
-  String get localName => _localName;
+  bool get isConstructor => template == null;
+  bool get isTemplate => template != null;
 
   /**
    * Each statement (HTML) encountered is remembered with either/both variable
@@ -279,7 +252,7 @@ class CGBlock {
       varName = _localIndex++;
     }
 
-    var s = new CGStatement(elem, info, parentName, varName, exact, isRepeat);
+    var s = new CGStatement(elem, info, parentName, varName, exact);
     _stmts.add(s);
     return s;
   }
@@ -391,78 +364,24 @@ class CGBlock {
   /**
    * Emit the entire component class.
    */
-  List<String> webComponentCode(ElemCG ecg, String constructorSignature) {
-    List<WebComponentEmitter> templatesCode = [];
-
-    StringBuffer buff = new StringBuffer();
-
-    buff.add("$genBoundElementsCommentBlock\n");
-
-    WebComponentEmitter code = new WebComponentEmitter();
-
+  String webComponentCode(ElemCG ecg, String constructorSignature) {
+    var code = new WebComponentEmitter();
     code.constructor = constructorSignature;
 
     // Outer most template (main).
     emitTemplateStatements(code);
-    templatesCode.add(code);
 
     // Iterate thru each template for each statement where there's an expression
     // emitting code for creating, inserting and removing for each component.
     CGBlock cgb;
     int templateIdx = 2;
     while ((cgb = ecg.templateCG(templateIdx++)) != null) {
-      int emitIdx = templateIdx - 2;
-
-      var templateCode = new WebComponentEmitter(true);
-
-      // Emit the constructor.
-      templateCode.constructor = "_Template_$emitIdx(this.component)";
-
-      templatesCode.add(templateCode);
-
-      // TODO(terry): Need to have a parent child template relationship only
-      //              delegate from parent template to child template. Likewise,
-      //              templates as siblings handled same way.
-
-      // Construct and delegate from outer template to nested template.
-      code.constructorStmts.add(
-          "_template_$emitIdx = new _Template_$emitIdx(this);\n");
-
-      // Delegate to the inner template.
-      code.otherVars.add("_Template_$emitIdx _template_$emitIdx;\n");
-      code.createdStmts.add("_template_$emitIdx.created(shadowRoot);\n");
-      code.insertedStmts.add("_template_$emitIdx.inserted();\n");
-      code.removedStmts.add("_template_$emitIdx.removed();\n");
-
-      cgb.emitInnerTemplateStatements(ecg.className, templateCode);
+      cgb.emitInnerTemplateStatements(code);
     }
 
-    List<String> allGeneratedCode = [];
-    for (var code in templatesCode) {
-      allGeneratedCode.add(code.toString());
-    }
-    return allGeneratedCode;
+    return code.toString();
   }
 
-  /*
-    _stopWatcher_if_condition = bind(() => anyDone, (_) {
-      if (_clearCompleted != null) {
-        _clearCompleted.on.click.remove(_listener1);
-        _stopWatcher_todoCount();
-      }
-      // TODO(sigmund): this feels too hacky. This node is under a conditional,
-      // but it is not a component. We should probably wrap it in an artificial
-      // component so we can call the lifecycle methods [created], [inserted]
-      // and [removed] on it.
-      _clearCompleted = root.query('#clear-completed');
-      if (_clearCompleted != null) {
-        _clearCompleted.on.click.add(_listener1);
-        _stopWatcher_todoCount = bind(() => doneCount, (e) {
-          _clearCompleted.innerHTML = 'Clear completed ${e.newValue}';
-        });
-      }
-    });
-   */
   void emitIfTemplateStatements(WebComponentEmitter code) {
     int boundElemIdx = 0;
     for (CGStatement stmt in _stmts) {
@@ -517,7 +436,7 @@ class CGBlock {
       // TODO(terry,sigmund): this shouldn't refer to the component. The
       // action method should be resolved via lookup in the context of the
       // component's body (we need to make "if"s into closures, not classes).
-      listenerBody.add("component.${eventInfo.action(variableName)};\n");
+      listenerBody.add("${eventInfo.action(variableName)};\n");
     });
 
     if (listenerBody.length > 0) {
@@ -557,10 +476,7 @@ class CGBlock {
   /**
    * Generated class for a nested template. [parent] parentTemplate class name.
    */
-  void emitInnerTemplateStatements(String parent, WebComponentEmitter code) {
-    // The component to delegate all calls.
-    code.elemVars.add("$parent component;\n");
-
+  void emitInnerTemplateStatements(WebComponentEmitter code) {
     emitIfTemplateStatements(code);
 
     code.otherVars.add(emitTemplateWatcher());
@@ -598,7 +514,7 @@ class CGBlock {
 
     var id = getOrCreateElementId(templateElement, template);
     return '''
-        _template_$id = component.root.query('#$id');
+        _template_$id = root.query('#$id');
         assert(_template_$id.elements.length == 1);
         _childTemplate = _template_$id.elements[0];
         _childId = _childTemplate.id;
@@ -615,8 +531,8 @@ class CGBlock {
     var tmplCode = new WebComponentEmitter();
     emitIfTemplateStatements(tmplCode);
     var body = emitTemplateIfBody();
-    return "_stopWatcher_if_${template.idAsIdentifier} = component.bind("
-           "() => component.${template.ifCondition}, (e) {\n$body\n});\n";
+    return "_stopWatcher_if_${template.idAsIdentifier} = bind("
+           "() => ${template.ifCondition}, (e) {\n$body\n});\n";
   }
 
   /** Emit the code associated with the first element of the template if. */
@@ -642,7 +558,7 @@ class CGBlock {
       ifBody.add(stmt.emitWebComponentRemoved());
       ifBody.add("}\n");
 
-      ifBody.add(stmt.emitWebComponentCreated("component."));
+      ifBody.add(stmt.emitWebComponentCreated());
 
       // TODO(terry): Need to handle multiple events on first element after
       //              template IF and multiple attributes and multiple template
@@ -677,10 +593,8 @@ class CGBlock {
         String stopWatcherName = "_stopWatcher${varName}_$watcherIdx";
         var val = info.contentBinding;
         var innerHTML = info.contentExpression;
-        // TODO(terry,sigmund): remove this hack for 'component.'
-        innerHTML = innerHTML.replaceAll(@'${', @'${component.');
         ifBody.add('''
-            $stopWatcherName = component.bind(() => component.$val, (e) {
+            $stopWatcherName = bind(() => $val, (e) {
               $varName.innerHTML = $innerHTML;
             });''');
         watcherIdx++;
@@ -1065,25 +979,19 @@ class CGStatement {
 class WebComponentEmitter {
   final StringBuffer elemVars;
   final StringBuffer otherVars;
-  String constructorSignature;
+  String constructor;
   final StringBuffer constructorStmts;
   final StringBuffer createdStmts;
   final StringBuffer insertedStmts;
   final StringBuffer removedStmts;
-  final String _delegate;
 
-  WebComponentEmitter([bool innerTemplate = false])
+  WebComponentEmitter()
       : elemVars = new StringBuffer(),
         otherVars = new StringBuffer(),
         constructorStmts = new StringBuffer(),
         createdStmts = new StringBuffer(),
         insertedStmts = new StringBuffer(),
-        removedStmts = new StringBuffer(),
-        _delegate = innerTemplate ? "component." : "";
-
-  void set constructor(String constructSig) {
-    constructorSignature = constructSig;
-  }
+        removedStmts = new StringBuffer();
 
   String toString() {
     var componentBody = new CodePrinter(1);
@@ -1094,11 +1002,11 @@ class WebComponentEmitter {
 
     // Build the constructor function.
     if (constructorStmts.length == 0) {
-      componentBody.add('$constructorSignature;');
+      componentBody.add('$constructor;');
     } else {
       componentBody.add('''
-          $constructorSignature {
-              ${constructorStmts}
+          $constructor {
+              $constructorStmts
           }''');
     }
     componentBody.add('');
@@ -1106,7 +1014,7 @@ class WebComponentEmitter {
     // Build the created function.
     componentBody.add('''
         void created(ShadowRoot shadowRoot) {
-          ${_delegate}root = shadowRoot;
+          root = shadowRoot;
           $createdStmts
         }''');
     componentBody.add('');
@@ -1205,61 +1113,8 @@ class ElemCG {
     }
   }
 
-  List<String> activeBlocksLocalNames() {
-    List<String> result = [];
-
-    for (final CGBlock block in _cgBlocks) {
-      if (block.isRepeat && block.hasLocalName) {
-        result.add(block.localName);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Active block with this localName.
-   */
-  bool matchBlocksLocalName(String name) =>
-      _cgBlocks.some((block) => block.isRepeat &&
-                                block.hasLocalName &&
-                                block.localName == name);
-
-  /**
-   * Any active blocks?
-   */
-  bool isNestedBlock() =>
-      _cgBlocks.some((block) => block.isRepeat);
-
-  /**
-   * Any active blocks with localName?
-   */
-  bool isNestedNamedBlock() =>
-      _cgBlocks.some((block) => block.isRepeat && block.hasLocalName);
-
-  // Any current active #each blocks.
-  bool anyRepeatBlocks() =>
-      _cgBlocks.some((block) => block.isRepeat);
-
-  bool pushBlock([int indent = 4, int blockType = CGBlock.CONSTRUCTOR,
-                  String itemName = null]) {
-    if (itemName != null && matchBlocksLocalName(itemName)) {
-      reportError("Active block already exist with local name: ${itemName}.");
-      return false;
-    } else if (itemName == null && this.isNestedBlock()) {
-      reportError('''
-Nested iterates must have a localName;
- \n  #each list [localName]\n  #with object [localName]''');
-      return false;
-    }
-    _cgBlocks.add(
-        new CGBlock(indent, blockType, itemName, processor));
-
-    return true;
-  }
-
-  bool pushTemplate(int indent, Element elem) {
-    _cgBlocks.add(new CGBlock.createTemplate(elem, indent, processor));
+  bool pushBlock([Element templateElement]) {
+    _cgBlocks.add(new CGBlock(processor, templateElement));
     return true;
   }
 
@@ -1525,7 +1380,7 @@ Nested iterates must have a localName;
   }
 
   void emitTemplate(Element elem) {
-    if (!pushTemplate(6, elem)) {
+    if (!pushBlock(elem)) {
       reportError("Error at ${elem}");
     }
 

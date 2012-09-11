@@ -28,7 +28,7 @@ class ListComponent extends Component {
     // TODO(sigmund): support document fragments, not just a single child.
     // TODO(sigmund): use logging and not assertions.
     root = shadowRoot;
-    _loopVar = const RegExp(@"{{(.*) in .*}}").firstMatch(
+    _loopVar = const RegExp(@"(.*) in .*").firstMatch(
         element.attributes['iterate']).group(1);
     assert(element.elements.length == 1);
     _childTemplate = element.elements[0];

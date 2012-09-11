@@ -46,7 +46,7 @@ class CodegenComponent {
       world.fatal("Bad library - $libraryName");
     }
 
-    StringBuffer buff = new StringBuffer();
+    var buff = new StringBuffer();
     int injectId = 0;         // Inject function id
 
     buff.add(Codegen.header(filename, libraryName));
@@ -64,28 +64,15 @@ class CodegenComponent {
     if (cgb != null) {
       Expect.isTrue(ecg.isWebComponent);
 
-      String clsName = ecg.className;
-      String wcName = ecg.webComponentName;
-      String constructor = "$clsName() : super('$wcName')";
+      var clsName = ecg.className;
+      var wcName = ecg.webComponentName;
+      var constructor = "$clsName() : super('$wcName')";
 
-      List<String> generatedClasses = cgb.webComponentCode(ecg, constructor);
-      int genClassesCount = generatedClasses.length;
-      for (int idx = 0; idx < genClassesCount; idx++) {
-        var genCode = generatedClasses[idx];
-        String classCode;
-        if (idx == 0) {
-          String userCode = _cg._emitUserCode(ecg);
-          String code = "$userCode$genCode";
-          classCode =
-              Codegen.emitExtendsClassHeader(clsName, "Component", code);
-        } else {
-          clsName = "_Template_$idx";
-          genCode ="$genCode${emitWebComponentOverrides("$wcName $clsName")}";
-          classCode = Codegen.emitImplementsClassHeader(clsName, "WebComponent",
-              genCode);
-        }
-        buff.add("$classCode\n");
-      }
+      var genCode = cgb.webComponentCode(ecg, constructor);
+      var userCode = _cg._emitUserCode(ecg);
+      var code = "$userCode$genCode";
+      buff.add(Codegen.emitExtendsClassHeader(clsName, "Component", code));
+      buff.add('\n');
     }
 
     return buff.toString();
