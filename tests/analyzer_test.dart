@@ -13,13 +13,13 @@
 main() {
   useVmConfiguration();
   test('parse single element', () {
-    var input = '<div/>';
+    var input = '<div></div>';
     var elem = parseSubtree(input);
     expect(elem.outerHTML, input);
   });
 
   test('id extracted - shallow element', () {
-    var input = '<div id="foo"/>';
+    var input = '<div id="foo"></div>';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].elementId, equals('foo'));
@@ -72,21 +72,21 @@ main() {
   });
 
   test('hasDataBinding - attribute w/o data', () {
-    var input = '<input value="x"/>';
+    var input = '<input value="x">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(!info[elem].hasDataBinding);
   });
 
   test('hasDataBinding - attribute with data, 1 way binding', () {
-    var input = '<input value="{{x}}"/>';
+    var input = '<input value="{{x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].hasDataBinding);
   });
 
   test('hasDataBinding - attribute with data, 2 way binding', () {
-    var input = '<input data-bind="{{value:x}}"/>';
+    var input = '<input data-bind="{{value:x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].hasDataBinding);
@@ -111,7 +111,7 @@ main() {
   });
 
   test('attribute - no info', () {
-    var input = '<input value="x"/>';
+    var input = '<input value="x">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes, isNotNull);
@@ -119,7 +119,7 @@ main() {
   });
 
   test('attribute - 1 way binding input value', () {
-    var input = '<input value="{{x}}"/>';
+    var input = '<input value="{{x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes.length, equals(1));
@@ -130,7 +130,7 @@ main() {
   });
 
   test('attribute - 2 way binding input value', () {
-    var input = '<input data-bind="{{value:x}}"/>';
+    var input = '<input data-bind="{{value:x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes.length, equals(1));
@@ -142,7 +142,7 @@ main() {
   });
 
   test('attribute - 1 way binding checkbox', () {
-    var input = '<input checked="{{x}}"/>';
+    var input = '<input checked="{{x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes.length, equals(1));
@@ -153,7 +153,7 @@ main() {
   });
 
   test('attribute - 2 way binding checkbox', () {
-    var input = '<input data-bind="{{checked:x}}"/>';
+    var input = '<input data-bind="{{checked:x}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes.length, equals(1));
@@ -196,7 +196,7 @@ main() {
   });
 
   test('attribute - ui-event hookup', () {
-    var input = '<input data-on-change="{{foo()}}"/>';
+    var input = '<input data-on-change="{{foo()}}">';
     var elem = parseSubtree(input);
     var info = analyze(elem);
     expect(info[elem].attributes, isEmpty);
@@ -206,7 +206,7 @@ main() {
   });
 
   test('template element', () {
-    var elem = parseSubtree('<template/>');
+    var elem = parseSubtree('<template></template>');
     TemplateInfo info = analyze(elem)[elem];
     expect(elem.attributes.length, isZero);
     expect(info.instantiate, equals(''));
@@ -217,7 +217,7 @@ main() {
   // TODO(jmesserly): I'm not sure this is correct behavior for
   // template instantiate. You should be able to use an empty attribute value
   test('template instantiate', () {
-    var elem = parseSubtree('<template instantiate="foo"/>');
+    var elem = parseSubtree('<template instantiate="foo"></template>');
     TemplateInfo info = analyze(elem)[elem];
     expect(elem.attributes, equals({'instantiate': 'foo'}));
     expect(info.instantiate, equals('foo'));
@@ -225,20 +225,22 @@ main() {
   });
 
   test('template instantiate if', () {
-    var elem = parseSubtree('<template instantiate="if foo" is="x-if" />');
+    var elem = parseSubtree(
+        '<template instantiate="if foo" is="x-if"></template>');
     TemplateInfo info = analyze(elem)[elem];
     expect(info.hasIfCondition);
     expect(elem.attributes, equals({
-      'instantiate': 'if foo', 'is': 'x-if', 'id' : 'e-0'}));
+      'instantiate': 'if foo', 'is': 'x-if', 'id' : '__id-12'}));
     expect(info.instantiate, equals('if foo'));
     expect(info.ifCondition, equals('foo'));
     expect(info.iterate, equals(''));
   });
 
   test('template iterate', () {
-    var elem = parseSubtree('<template iterate="bar" is="x-list" />');
+    var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
     TemplateInfo info = analyze(elem)[elem];
-    expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
+    expect(elem.attributes, equals({
+      'iterate': 'bar', 'is': 'x-list', 'id' : '__id-13'}));
     expect(info.instantiate, equals(''));
     expect(info.iterate, equals('bar'));
   });

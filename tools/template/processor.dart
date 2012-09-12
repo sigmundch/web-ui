@@ -231,4 +231,13 @@ class ProcessFiles {
   }
 
   void forEach(void f(ProcessFile processFile)) => _files.forEach(f);
+
+  ProcessFile findWebComponent(String webComponentName) {
+    for (ProcessFile file in _files) {
+      CompilationUnit cu = file.cu;
+      if (cu.isWebComponent && (cu.webComponentName == webComponentName)) {
+        return file;
+      }
+    }
+  }
 }

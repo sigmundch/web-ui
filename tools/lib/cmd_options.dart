@@ -23,6 +23,10 @@ class CmdOptions {
   bool throwOnWarnings;
   bool showInfo;
   bool dumpTree;
+
+  /** Remove any generated files. */
+  bool clean;
+
   bool showWarnings;
   bool useColors;
 
@@ -32,6 +36,7 @@ class CmdOptions {
     throwOnWarnings = args['throw_on_warnings'];
     showInfo = args['verbose'];
     dumpTree = args['dump'];
+    clean = args['clean'];
     showWarnings = args['suppress_warnings'];
     useColors = args['no_colors'];
   }

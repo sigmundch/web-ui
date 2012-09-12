@@ -82,7 +82,7 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
       var analyze = new Compile(fs, "_memory");
 
       analyze.forEach((CompilationUnit cu) {
-        dumpTree.add(cu.document.toDebugString());
+        dumpTree.add(cu.document.outerHTML);
 
         // Get the generated Dart class for this template file.
         code.add(cu.code);

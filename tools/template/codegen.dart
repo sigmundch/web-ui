@@ -18,11 +18,18 @@ class Codegen {
 #library('${libraryName}');
 
 #import('dart:html');
+""";
+
+  static String get commonComponents => """
+#import('package:web_components/lib/js_polyfill/if.html.dart');
+#import('package:web_components/lib/js_polyfill/list.html.dart');
+""";
+
+  static String get commonIncludes => """
 #import('package:web_components/lib/js_polyfill/component.dart');
 #import('package:web_components/watcher.dart');
 #import('package:web_components/lib/js_polyfill/web_components.dart');
 #import('package:web_components/tools/lib/data_template.dart');
-
 """;
 
   /**

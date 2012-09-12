@@ -17,6 +17,7 @@
 ArgParser commandOptions() {
   var args = new ArgParser();
   args.addFlag('verbose', help: 'Display detail info', defaultsTo: false);
+  args.addFlag('clean', help: 'Remove all generated files', defaultsTo: false);
   args.addFlag('dump', help: 'Dump AST', defaultsTo: false);
   args.addFlag('suppress_warnings', help: 'Warnings not displayed',
       defaultsTo: true);

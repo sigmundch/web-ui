@@ -31,7 +31,7 @@
 // TODO(terry): Too many classes in this file need to break up walking, analysis
 //              and codegen to different files (started but needs to finished).
 // TODO(terry): Add obfuscation mapping file.
-Document parseHtml(String template, String sourcePath) {
+parseHtml(String template, String sourcePath) {
   var parser = new HTMLParser();
   var document = parser.parse(new HTMLTokenizer(template));
 
@@ -181,12 +181,13 @@ class Compile {
     if (cu.isWebComponent) {
       return CodegenComponent.generate(libraryName, cu.filename, cu.elemCG);
     } else {
-      return CodegenApplication.generate(libraryName, cu.filename, cu.elemCG);
+      return CodegenApplication.generate(cu.document, components, libraryName,
+          cu.filename, cu.elemCG);
     }
   }
 
   String _emitterHTML(ProcessFile process) {
-    // TODO(terry): Need special emitter for main vs web component.
+    CompilationUnit cu = process.cu;
 
     // TODO(jmesserly): not sure about removing script nodes like this
     // But we need to do this for web components to work.
@@ -196,7 +197,11 @@ class Compile {
       tag.parent.$dom_removeChild(tag);
     }
 
-    return process.cu.document.outerHTML;
+    if (cu.isWebComponent) {
+      return process.cu.document.outerHTML;
+    } else {
+      return CodegenApplication.generateHTML(cu.document, cu.elemCG);
+    }
   }
 
   /**
@@ -623,19 +628,53 @@ class CGBlock {
     return printer.toString();
   }
 
-}
-
-int _globalGeneratedId = 0;
-String getOrCreateElementId(Element element, analyzer.ElementInfo info) {
-  var id = info.elementId;
-  if (id == null) {
-    // TODO(jmesserly): this logic probably belongs in the analyzer.
-    // TODO(jmesserly): is it okay to mutate the tree like this?
-    id = 'id${++_globalGeneratedId}';
-    element.attributes['id'] = id;
-    info.elementId = id;
+  const String _ITER_KEYWORD = " in ";
+  String emitTemplateIterate(CodePrinter out, int index) {
+    if (template.isIterate) {
+      String varName = "xList_$index";
+      out.add("var $varName = manager[body.query("
+          "'#${template.elementId}')];");
+      // TODO(terry): Use real Dart expression parser.
+      String listExpr = template.iterate;
+      int inIndex = listExpr.indexOf(_ITER_KEYWORD);
+      if (inIndex != -1) {
+        listExpr = listExpr.substring(inIndex + _ITER_KEYWORD.length).trim();
+      }
+      // TODO(terry): Should return error or allow just app.todos?
+      out.add("$varName.items = () => $listExpr;");
+    }
   }
-  return id;
+
+  List<String> allComponentsUsed() {
+    List<String> allWcs = [];
+    for (CGStatement stmt in _stmts) {
+      if (stmt._info != null && stmt._info.componentName != null) {
+        if (allWcs.indexOf(stmt._info.componentName) == -1) {
+          allWcs.add(stmt._info.componentName);
+        }
+      }
+    }
+
+    return allWcs;
+  }
+
+  List<String> allIfConditions() {
+    List<String> allIfs = [];
+    for (CGStatement stmt in _stmts) {
+      if (stmt._info != null && (stmt._info is analyzer.TemplateInfo)) {
+        analyzer.TemplateInfo templateInfo = stmt._info;
+        allIfs.add(templateInfo.instantiate);
+      }
+    }
+
+    return allIfs;
+  }
+
+  String getHTMLBody() {
+    for (CGStatement stmt in _stmts) {
+
+    }
+  }
 }
 
 // TODO(terry): Consider adding backpointer to block CGStatement is contained
@@ -823,7 +862,7 @@ class CGStatement {
    * on the Component.
    */
   String emitWebComponentCreated([String prefix = ""]) {
-    var id = getOrCreateElementId(_elem, _info);
+    var id = _info.elementId;
     return "$variableName = ${prefix}root.query('#$id');\n";
   }
 
@@ -1022,6 +1061,24 @@ class ElemCG {
   String get webComponentName => _webComponentName;
   List<String> get includes => _includes;
   String get userCode => _userCode;
+
+  /** List of Dart files generated for each web component. */
+  List<String> get dartWebComponents {
+    List<String> result = [];
+    processor.forEach((ProcessFile processFile) {
+      result.add(processFile.cu.dartFilename);
+    });
+    return result;
+  }
+
+  /** List of HTML files generated for each web component. */
+  List<String> get htmlWebComponents {
+    List<String> result = [];
+    processor.forEach((ProcessFile processFile) {
+      result.add(processFile.cu.htmlFilename);
+    });
+    return result;
+  }
 
   void reportError(String msg) {
     String filename = processor.current.cu.filename;
@@ -1307,6 +1364,22 @@ class ElemCG {
     }
 
     return newName;
+  }
+
+  List<String> allWebComponentUsage() {
+    List<String> result = [];
+    CGBlock cgb;
+    int templateIdx = 0;
+    while ((cgb = getCGBlock(templateIdx++)) != null) {
+      List<String> wcs = cgb.allComponentsUsed();
+      for (String name in wcs) {
+        if (result.indexOf(name) == -1) {
+          result.add(name);
+        }
+      }
+    }
+
+    return result;
   }
 
   void emitTemplate(Element elem) {

@@ -98,17 +98,31 @@ void run(List<String> args) {
           // Source filename associated with this compilation unit.
           String filename = cu.filename;
 
-          // TODO(terry): Only write out web components for now need to
-          //              remove the if sentry so all files are outputed.
-          if (cu.isWebComponent) {
-            // Output .dart file.
-            String dartFilename = "$filename.dart";
-            files.writeString("$outDirPath/$dartFilename", cu.code);
+          // Output .dart file.
+          String dartFilename = cu.dartFilename;
+          String dartFilenameFullQual = "$outDirPath/$dartFilename";
+          if (options.clean) {
+            File fileOut = new File.fromPath(new Path(dartFilenameFullQual));
+            if (fileOut.existsSync()) {
+              fileOut.deleteSync();
+              print("  Deleting $dartFilename");
+            }
+          } else {
+            files.writeString(dartFilenameFullQual, cu.code);
             print("  Writing $dartFilename");
+          }
 
-            // Otuput the .html file.
-            String htmlFilename = "$filename.html";
-            files.writeString("$outDirPath/$htmlFilename", cu.html);
+          // Otuput the .html file.
+          String htmlFilename = cu.htmlFilename;
+          String htmlFilenameFullQual = "$outDirPath/$htmlFilename";
+          if (options.clean) {
+            File fileOut = new File.fromPath(new Path(htmlFilenameFullQual));
+            if (fileOut.existsSync()) {
+              fileOut.deleteSync();
+              print("  Deleting $htmlFilename");
+            }
+          } else {
+            files.writeString(htmlFilenameFullQual, cu.html);
             print("  Writing $htmlFilename");
           }
         }

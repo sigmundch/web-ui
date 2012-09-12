@@ -32,8 +32,11 @@ class ElementInfo implements NodeInfo {
    * element. This is typically true whenever we need to access the element
    * (e.g. to add event listeners, update values on data-bound watchers, etc).
    */
-  bool get needsField =>
+  bool get needsHtmlId =>
       events.length > 0 || hasDataBinding || hasIfCondition || isIterate;
+
+  /** The name of a component (use of is attribute). */
+  String componentName;
 
   /** Whether the element is a component instantiation. */
   bool isComponent = false;
@@ -82,6 +85,10 @@ class ElementInfo implements NodeInfo {
   String get idAsIdentifier() =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
 
+  /** Generate an id's for any HTML element w/o an id attribute. */
+  static int _uniqueId = 0;
+  static int nextElementId() => _uniqueId++;
+
   ElementInfo() : attributes = <AttributeInfo>{}, events = <EventInfo>{};
 
   String toString() => 'id: $elementId, '
@@ -91,7 +98,6 @@ class ElementInfo implements NodeInfo {
       'hasDataBinding: $hasDataBinding, '
       'contentBinding: $contentBinding, '
       'contentExpression: $contentExpression, '
-      'iterVariable: $iterVariable, '
       'conditionalExpression: $conditionalExpression, '
       'loopExpression: $loopExpression, '
       'attributes: $attributes, '
@@ -148,10 +154,18 @@ class EventInfo implements NodeInfo {
 // TODO(jmesserly): I'm not sure we need this, but it was useful for
 // bootstrapping the switch to the html5 parser.
 class TemplateInfo extends ElementInfo {
+  static const String LIST_COMPONENT = "x-list";
+  static const String IF_COMPONENT = "x-if";
+
   final String instantiate;
   final String iterate;
 
-  TemplateInfo(this.instantiate, this.iterate);
+  TemplateInfo(this.instantiate, this.iterate) {
+    if (!iterate.isEmpty()) {
+      isIterate = true;
+      componentName = LIST_COMPONENT;
+    }
+  }
 
   bool get hasIfCondition => instantiate.startsWith('if ');
 
@@ -178,7 +192,6 @@ typedef String ActionDefinition([String elemVarName]);
 Map<Node, NodeInfo> analyze(Node source) {
   return (new _Analyzer()..visit(source)).results;
 }
-
 
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {
@@ -208,12 +221,12 @@ class _Analyzer extends TreeVisitor {
 
     super.visitElement(node);
 
-    if (info.needsField) {
+    // Need to get to this element at codegen time; for template, data binding,
+    // or event hookup.  We need an HTML id attribute for this node.
+    if (info.needsHtmlId) {
       if (info.elementId == null) {
-        var id = 'e-${_totalIds}';
-        _totalIds++;
-        node.attributes['id'] = id;
-        info.elementId = id;
+        info.elementId = "__id-${ElementInfo.nextElementId()}";
+        node.attributes['id'] = info.elementId;
       }
       info.elemField = info.idAsIdentifier;
     }
@@ -232,14 +245,20 @@ class _Analyzer extends TreeVisitor {
 
     if (instantiate == null) instantiate = "";
     if (iterate == null) iterate = "";
+
     return new TemplateInfo(instantiate, iterate);
   }
 
-  void visitAttribute(Element elem, ElementInfo elemInfo,
-      String name, String value) {
+  void visitAttribute(Element elem, ElementInfo elemInfo, String name,
+                      String value) {
+    if (name == 'is') {
+      elemInfo.componentName = value;
+    }
 
     var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
-    if (match == null) return; // not a binding
+    if (match == null) return;
+
+    // Bound attribute.
 
     // Strip off the outer {{ }}.
     value = match[1];
@@ -314,7 +333,7 @@ class _Analyzer extends TreeVisitor {
     if (!bindingRegex.hasMatch(text.value)) return;
 
     var parentElem = text.parent;
-    var info = results[parentElem];
+    ElementInfo info = results[parentElem];
     info.hasDataBinding = true;
     assert(info.contentBinding == null);
 

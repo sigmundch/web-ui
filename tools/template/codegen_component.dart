@@ -50,6 +50,7 @@ class CodegenComponent {
     int injectId = 0;         // Inject function id
 
     buff.add(Codegen.header(filename, libraryName));
+    buff.add(Codegen.commonIncludes);
 
     if (ecg.includes.length > 0) {
       buff.add("/** Below import from script tag in HTML file. */\n");

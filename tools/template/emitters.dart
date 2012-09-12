@@ -27,16 +27,20 @@ abstract class Emitter {
   Emitter(this.elem, this.elemInfo);
 
   /** Emit declarations needed by this emitter's feature. */
-  void emitDeclarations(Context context);
+  void emitDeclarations(Context context) {
+  }
 
   /** Emit feature-related statemetns in the `created` method. */
-  void emitCreated(Context context);
+  void emitCreated(Context context) {
+  }
 
   /** Emit feature-related statemetns in the `inserted` method. */
-  void emitInserted(Context context);
+  void emitInserted(Context context) {
+  }
 
   /** Emit feature-related statemetns in the `removed` method. */
-  void emitRemoved(Context context);
+  void emitRemoved(Context context) {
+  }
 
   // The following are helper methods to make it simpler to write emitters.
 

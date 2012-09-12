@@ -27,5 +27,10 @@ class CompilationUnit {
   bool get codeGenerated => code != null;
   bool get htmlGenerated => html != null;
 
+  String get dartFilename => "$filename.dart";
+  String get htmlFilename => "$filename.html";
+
+  String get webComponentName => isWebComponent ? elemCG.webComponentName : "";
+
   String toString() => "$filename";
 }
