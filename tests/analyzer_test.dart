@@ -230,7 +230,7 @@ main() {
     TemplateInfo info = analyze(elem)[elem];
     expect(info.hasIfCondition);
     expect(elem.attributes, equals({
-      'instantiate': 'if foo', 'is': 'x-if', 'id' : '__id-12'}));
+      'instantiate': 'if foo', 'is': 'x-if', 'id' : '__e-0'}));
     expect(info.instantiate, equals('if foo'));
     expect(info.ifCondition, equals('foo'));
     expect(info.iterate, equals(''));
@@ -240,7 +240,7 @@ main() {
     var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
     TemplateInfo info = analyze(elem)[elem];
     expect(elem.attributes, equals({
-      'iterate': 'bar', 'is': 'x-list', 'id' : '__id-13'}));
+      'iterate': 'bar', 'is': 'x-list', 'id' : '__e-0'}));
     expect(info.instantiate, equals(''));
     expect(info.iterate, equals('bar'));
   });

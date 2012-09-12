@@ -85,10 +85,6 @@ class ElementInfo implements NodeInfo {
   String get idAsIdentifier() =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
 
-  /** Generate an id's for any HTML element w/o an id attribute. */
-  static int _uniqueId = 0;
-  static int nextElementId() => _uniqueId++;
-
   ElementInfo() : attributes = <AttributeInfo>{}, events = <EventInfo>{};
 
   String toString() => 'id: $elementId, '
@@ -198,7 +194,7 @@ class _Analyzer extends TreeVisitor {
   static const String _DATA_ON_ATTRIBUTE = "data-on-";
 
   final Map<Node, NodeInfo> results;
-  int _totalIds = 0;
+  int _uniqueId = 0;
 
   _Analyzer() : results = new Map<Node, NodeInfo>();
 
@@ -225,8 +221,9 @@ class _Analyzer extends TreeVisitor {
     // or event hookup.  We need an HTML id attribute for this node.
     if (info.needsHtmlId) {
       if (info.elementId == null) {
-        info.elementId = "__id-${ElementInfo.nextElementId()}";
+        info.elementId = "__e-${_uniqueId}";
         node.attributes['id'] = info.elementId;
+        _uniqueId++;
       }
       info.elemField = info.idAsIdentifier;
     }

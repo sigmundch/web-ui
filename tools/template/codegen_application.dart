@@ -185,7 +185,6 @@ class CodegenApplication {
         codePrinter.add("'$wcName': () => new $className(),");
       } else if (wcName == analyzer.TemplateInfo.IF_COMPONENT) {
         codePrinter.add("'$wcName': () {");
-        codePrinter.inc(1);
         codePrinter.add("var result = new IfComponent();");
         codePrinter.add("result.conditionInitializer = (condition) {");
 
@@ -225,7 +224,6 @@ class CodegenApplication {
 
         codePrinter.add("};");
         codePrinter.add("return result;");
-        codePrinter.dec(1);
         codePrinter.add("},");
       } else if (wcName == analyzer.TemplateInfo.LIST_COMPONENT) {
         codePrinter.add("'$wcName': () => new ListComponent(),");

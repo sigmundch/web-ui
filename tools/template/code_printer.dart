@@ -7,28 +7,47 @@
 /** Helper class that auto-formats generated code. */
 class CodePrinter {
   int _indent;
-  StringBuffer _buff;
-  CodePrinter([initialIndent = 0])
-      : _indent = initialIndent, _buff = new StringBuffer();
+  List _items;
+  CodePrinter([initialIndent = 0]) : _indent = initialIndent, _items = [];
 
-  void add(String lines) {
-    lines.split('\n').forEach((line) => _add(line.trim()));
+  /**
+   * Adds [object] to this printer and appends a new-line after it. Returns this
+   * printer.
+   */
+  CodePrinter add(object) {
+    _items.add(object);
+    _items.add('\n');
+    return this;
   }
 
-  void _add(String line) {
-    bool decIndent = line.startsWith("}");
-    bool incIndent = line.endsWith("{");
-    if (decIndent) _indent--;
-    for (int i = 0; i < _indent; i++) _buff.add('  ');
-    _buff.add(line);
-    _buff.add('\n');
-    if (incIndent) _indent++;
+  /** Returns everything on this printer without any fixes on indentation. */
+  String toString() => new StringBuffer().addAll(_items).toString();
+
+  /**
+   * Returns a formatted code block, with indentation appropriate to code
+   * blocks' nesting level.
+   */
+  String formatString() {
+    bool lastEmpty = false;
+    var buff = new StringBuffer();
+    for (var item in _items) {
+      for (var line in item.toString().split('\n')) {
+        line = line.trim();
+        if (line == '') {
+          if (lastEmpty) continue;
+          lastEmpty = true;
+        } else {
+          lastEmpty = false;
+        }
+        bool decIndent = line.startsWith("}");
+        bool incIndent = line.endsWith("{");
+        if (decIndent) _indent--;
+        for (int i = 0; i < _indent; i++) buff.add('  ');
+        buff.add(line);
+        buff.add('\n');
+        if (incIndent) _indent++;
+      }
+    }
+    return buff.toString();
   }
-
-  void inc([delta = 1]) { _indent += delta; }
-  void dec([delta = 1]) { _indent -= delta; }
-
-  String toString() => _buff.toString();
-
-  int get length => _buff.length;
 }
