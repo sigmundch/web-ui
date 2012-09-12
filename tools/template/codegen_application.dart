@@ -8,14 +8,14 @@
 #import('package:html5lib/html5parser.dart');
 #import('package:html5lib/tokenizer.dart');
 #import('package:html5lib/treebuilders/simpletree.dart');
-#import('analyzer.dart', prefix: 'analyzer');
-#import('codegen.dart');
-#import('code_printer.dart');
-#import('compilation_unit.dart');
-#import('compile.dart');
-#import('processor.dart');
-#import('utils.dart');
 #import('package:web_components/tools/lib/world.dart');
+
+#import('analyzer.dart', prefix: 'analyzer');
+#import('code_printer.dart');
+#import('codegen.dart');
+#import('compile.dart');
+#import('source_file.dart');
+#import('utils.dart');
 
 /** Support routines to generate Dart code. */
 class CodegenApplication {
@@ -43,8 +43,8 @@ class CodegenApplication {
   /*
    * [filename] passed in would be filename part (sans '.extension').
    */
-  static String generate(Document doc, ProcessFiles files, String libraryName,
-                         String filename, ElemCG ecg) {
+  static String generate(Document doc, List<SourceFile> files,
+      String libraryName, String filename, ElemCG ecg) {
     // TODO(terry): Validate that the filename matches identifier:
     //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
     if (libraryName.indexOf('.') >= 0) {
@@ -54,9 +54,8 @@ class CodegenApplication {
     CodePrinter buff = new CodePrinter();
     buff.add(Codegen.header(filename, libraryName));
 
-    List<String> wcFilenames = ecg.dartWebComponents;
-    for (String filename in wcFilenames) {
-      buff.add("#import('$filename');");
+    for (var file in files) {
+      buff.add("#import('${file.dartFilename}');");
     }
 
     buff.add(Codegen.commonComponents);
@@ -97,7 +96,7 @@ class CodegenApplication {
     '<link rel="components" href="../../../lib/js_polyfill/if.html.html">'
     '<link rel="components" href="../../../lib/js_polyfill/list.html.html">';
 
-  static String generateHTML(Document doc, ElemCG ecg) {
+  static String generateHTML(Document doc, List<SourceFile> files) {
     var body = doc.queryAll('body');
     assert(body.length == 1);
 
@@ -137,10 +136,8 @@ class CodegenApplication {
     // Add all links for any web components used in this application.
     if (linkParent != null) {
       StringBuffer buff = new StringBuffer();
-      List<String> wcFilenames = ecg.htmlWebComponents;
-
-      for (String filename in wcFilenames) {
-        buff.add('<link rel="components" href = "$filename">');
+      for (var file in files) {
+        buff.add('<link rel="components" href = "${file.htmlFilename}">');
       }
 
       // Add the if and list components.
@@ -173,15 +170,15 @@ class CodegenApplication {
   const String IF_PREFIX = "if ";
 
   /** Construct all components use in the main app. */
-  String _emitComponentsUsed(ProcessFiles files, ElemCG ecg) {
+  String _emitComponentsUsed(List<SourceFile> files, ElemCG ecg) {
     CodePrinter codePrinter = new CodePrinter(2);
     codePrinter.add("Map<String, Function> map = {");
 
     List<String> allWcNames = ecg.allWebComponentUsage();
     for (String wcName in allWcNames) {
-      ProcessFile file = files.findWebComponent(wcName);
+      var file = find(files, (f) => f.webComponentName == wcName);
       if (file != null) {
-        String className = file.cu.elemCG.className;
+        String className = file.elemCG.className;
         codePrinter.add("'$wcName': () => new $className(),");
       } else if (wcName == analyzer.TemplateInfo.IF_COMPONENT) {
         codePrinter.add("'$wcName': () {");

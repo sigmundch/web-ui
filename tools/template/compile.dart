@@ -10,14 +10,14 @@
 #import('package:html5lib/treebuilders/simpletree.dart');
 #import('package:web_components/tools/lib/file_system.dart');
 #import('package:web_components/tools/lib/world.dart');
+
 #import('analyzer.dart', prefix: 'analyzer');
 #import('code_printer.dart');
 #import('codegen.dart');
 #import('codegen_application.dart');
 #import('codegen_component.dart');
-#import('compilation_unit.dart');
 #import('emitters.dart');
-#import('processor.dart');
+#import('source_file.dart');
 #import('template.dart');
 #import('utils.dart');
 
@@ -50,94 +50,100 @@ parseHtml(String template, String sourcePath) {
 class Compile {
   final FileSystem filesystem;
   final String baseDir;
-  final ProcessFiles components;
+  final List<SourceFile> files;
 
   /** Used by template tool to open a file. */
   Compile(this.filesystem, String filename, [this.baseDir = ""])
-      : components = new ProcessFiles() {
-    components.add(filename, isWebComponent: false);
-    _compile();
+      : files = <SourceFile>[] {
+    _parseAndLoadFiles(filename);
+    _analizeAllFiles();
+    _emitAll();
   }
 
-  /**
-   * All compiler work start here driven by the files processor.
-   */
-  void _compile() {
-    var process;
-    while ((process = components.nextProcess()) != ProcessFile.NULL_PROCESS) {
-      if (!process.isProcessRunning) {
-        // No process is running; so this is the next process to run.
-        process.toProcessRunning();
+  void _parseAndLoadFiles(String mainFile) {
+    var pending = new Queue<String>(); // files to process
+    var parsed = new Set<String>();
+    pending.addLast(mainFile);
+    while (!pending.isEmpty()) {
+      var filename = pending.removeFirst();
 
-        switch (process.phase) {
-          case ProcessFile.PARSING:
-            // Parse the template.
-            var source = filesystem.readAll("$baseDir/${process.cu.filename}");
+      // Parse the file.
+      if (parsed.contains(filename)) continue;
+      parsed.add(filename);
+      var file = _parseFile(filename, filename != mainFile);
 
-            final parsedElapsed = time(() {
-              process.cu.document = parseHtml(source, process.cu.filename);
-            });
-            if (options.showInfo) {
-              printStats("Parsed", parsedElapsed, process.cu.filename);
-            }
-            if (options.dumpTree) {
-              print("\n\n Dump Tree ${process.cu.filename}:\n\n");
-              print(process.cu.document.outerHTML);
-              print("\n=========== End of AST ===========\n\n");
-            }
-            break;
-          case ProcessFile.WALKING:
-            final duration = time(() {
-              process.cu.info = analyzer.analyze(process.cu.document);
-            });
-            // Walk the tree.
-            final walkedElapsed = time(() {
-              _walkTree(process.cu.document, process.cu.elemCG);
-            });
-            if (options.showInfo) {
-              printStats("Analyzed", duration, process.cu.filename);
-              printStats("Walked", walkedElapsed, process.cu.filename);
-            }
-            break;
-          case ProcessFile.ANALYZING:
-            // Find next process to analyze.
-
-            // TODO(terry): All analysis should be done here.  Today analysis
-            //              is done in both ElemCG and CBBlock; these analysis
-            //              parts should be moved into the Analyze class.  The
-            //              tree walker portion should be a separate class that
-            //              just does tree walking and produce the object graph
-            //              that is intermingled with CGBlock, ElemCG and the
-            //              CGStatement classes.
-
-            // TODO(terry): The analysis phase not implemented.
-
-            if (options.showInfo) {
-              printStats("Analyzed", 0, process.cu.filename);
-            }
-            break;
-          case ProcessFile.EMITTING:
-            // Spit out the code for this file processed.
-            final codegenElapsed = time(() {
-              process.cu.code = _emitter(process);
-              String filename = process.cu.filename;
-              String html = _emitterHTML(process);
-              process.cu.html =
-                  "<!-- Generated Web Component from HTML template ${filename}."
-                  "  DO NOT EDIT. -->\n"
-                  "$html";
-            });
-            if (options.showInfo) {
-              printStats("Codegen", codegenElapsed, process.cu.filename);
-            }
-            break;
-          default:
-            world.error("Unexpected process $process");
-            return;
+      // Find additional components being loaded.
+      file.document.queryAll('link').forEach((elem) {
+        if (elem.attributes['rel'] == 'components') {
+          var href = elem.attributes['href'];
+          if (href == null || href == '') {
+            world.error(
+              "invalid webcomponent reference:\n ${elem.outerHTML}");
+          } else {
+            pending.addLast(href);
+          }
         }
+      });
+    }
+  }
 
-        // Signal this process has completed running for this phase.
-        process.toProcessDone();
+  /** Parse [filename] and treat it as a component if [isComponent] is true. */
+  SourceFile _parseFile(String filename, bool isComponent) {
+    var file = _createFile(filename, isComponent);
+    files.add(file);
+    var source = filesystem.readAll("$baseDir/$filename");
+    final parsedElapsed = time(() {
+      file.document = parseHtml(source, filename);
+    });
+    if (options.showInfo) {
+      printStats("Parsed", parsedElapsed, filename);
+    }
+    if (options.dumpTree) {
+      print("\n\n Dump Tree $filename:\n\n");
+      print(file.document.outerHTML);
+      print("\n=========== End of AST ===========\n\n");
+    }
+    return file;
+  }
+
+  SourceFile _createFile(String filename, bool isWebComponent) {
+    var ecg = new ElemCG();
+    var file = new SourceFile(filename, ecg, isWebComponent);
+    ecg.file = file;
+    return file;
+  }
+
+  /** Run the analyzer on every input html file. */
+  void _analizeAllFiles() {
+    for (var file in files) {
+      var duration = time(() { file.info = analyzer.analyze(file.document); });
+      if (options.showInfo) {
+        printStats("Analyzed", duration, file.filename);
+      }
+    }
+  }
+
+  /** Emit the generated code corresponding to each input file. */
+  void _emitAll() {
+    // TODO(sigmund): simplify walker
+    for (var file in files) {
+      var walkedElapsed = time(() { _walkTree(file.document, file.elemCG); });
+      if (options.showInfo) {
+        printStats("Walked", walkedElapsed, file.filename);
+      }
+    }
+
+    for (var file in files) {
+      var codegenElapsed = time(() {
+        file.code = _emitter(file);
+        var html = _emitterHTML(file);
+        file.html =
+          "<!-- Generated Web Component from HTML template ${file.filename}."
+          "  DO NOT EDIT. -->\n"
+          "$html";
+      });
+      if (options.showInfo) {
+        printStats("Codegen", codegenElapsed, file.filename);
       }
     }
   }
@@ -174,44 +180,32 @@ class Compile {
   }
 
   /** Emit the Dart code. */
-  String _emitter(ProcessFile process) {
-    CompilationUnit cu = process.cu;
-    String libraryName = cu.filename.replaceAll('.', '_');
+  String _emitter(SourceFile file) {
+    var libraryName = file.filename.replaceAll('.', '_');
 
-    if (cu.isWebComponent) {
-      return CodegenComponent.generate(libraryName, cu.filename, cu.elemCG);
+    if (file.isWebComponent) {
+      return CodegenComponent.generate(libraryName, file.filename, file.elemCG);
     } else {
-      return CodegenApplication.generate(cu.document, components, libraryName,
-          cu.filename, cu.elemCG);
+      return CodegenApplication.generate(file.document, files, libraryName,
+          file.filename, file.elemCG);
     }
   }
 
-  String _emitterHTML(ProcessFile process) {
-    CompilationUnit cu = process.cu;
+  String _emitterHTML(SourceFile file) {
 
     // TODO(jmesserly): not sure about removing script nodes like this
     // But we need to do this for web components to work.
-    var scriptTags = process.cu.document.queryAll('script');
+    var scriptTags = file.document.queryAll('script');
     for (var tag in scriptTags) {
       // TODO(jmesserly): use tag.remove() once it's supported.
       tag.parent.$dom_removeChild(tag);
     }
 
-    if (cu.isWebComponent) {
-      return process.cu.document.outerHTML;
+    if (file.isWebComponent) {
+      return file.document.outerHTML;
     } else {
-      return CodegenApplication.generateHTML(cu.document, cu.elemCG);
+      return CodegenApplication.generateHTML(file.document, files);
     }
-  }
-
-  /**
-   * Helper function to iterate throw all compilation units used by the tool
-   * to write out the results of the compile.
-   */
-  void forEach(void f(CompilationUnit cu)) {
-    components.forEach((ProcessFile pf) {
-      f(pf.cu);
-    });
   }
 }
 
@@ -227,21 +221,21 @@ class CGBlock {
   /** Local variable index (e.g., e0, e1, etc.). */
   int _localIndex;
 
-  final analyzer.TemplateInfo template;
+  final analyzer.TemplateInfo templateInfo;
   final Element templateElement;
-  final ProcessFiles processor;
+  final SourceFile file;
 
-  CGBlock(ProcessFiles processor, [Element templateElement])
-      : processor = processor,
+  CGBlock(SourceFile file, [Element templateElement])
+      : file = file,
         templateElement = templateElement,
-        template = (templateElement != null ?
-            processor.current.cu.info[templateElement] : null),
+        templateInfo = (templateElement != null ? 
+          file.info[templateElement] : null),
         _stmts = <CGStatement>[],
         _localIndex = 0;
 
   bool get hasStatements => !_stmts.isEmpty();
-  bool get isConstructor => template == null;
-  bool get isTemplate => template != null;
+  bool get isConstructor => templateInfo == null;
+  bool get isTemplate => templateInfo != null;
 
   /**
    * Each statement (HTML) encountered is remembered with either/both variable
@@ -251,7 +245,7 @@ class CGBlock {
   CGStatement push(elem, parentName, [bool exact = false]) {
     // TODO(jmesserly): fix this int|String union type.
     var varName;
-    analyzer.ElementInfo info = processor.current.cu.info[elem];
+    analyzer.ElementInfo info = file.info[elem];
     if (info != null) varName = info.idAsIdentifier;
 
     if (varName == null) {
@@ -371,20 +365,18 @@ class CGBlock {
    * Emit the entire component class.
    */
   String webComponentCode(ElemCG ecg, String constructorSignature) {
-    var info = processor.current.cu.info;
-    var root = processor.current.cu.document;
-    var emitter = new WebComponentEmitter(info, constructorSignature);
-    return emitter.run(root);
+    var emitter = new WebComponentEmitter(file.info, constructorSignature);
+    return emitter.run(file.document);
   }
 
   const String _ITER_KEYWORD = " in ";
   String emitTemplateIterate(CodePrinter out, int index) {
-    if (template.isIterate) {
+    if (templateInfo.isIterate) {
       String varName = "xList_$index";
       out.add("var $varName = manager[body.query("
-          "'#${template.elementId}')];");
+          "'#${templateInfo.elementId}')];");
       // TODO(terry): Use real Dart expression parser.
-      String listExpr = template.iterate;
+      String listExpr = templateInfo.iterate;
       int inIndex = listExpr.indexOf(_ITER_KEYWORD);
       if (inIndex != -1) {
         listExpr = listExpr.substring(inIndex + _ITER_KEYWORD.length).trim();
@@ -647,10 +639,10 @@ class ElemCG {
   /**  List of each function declarations. */
   final List<String> repeats;
 
-  /** List of web components to process <link rel=component>. */
-  ProcessFiles processor;
+  /** Input file associated with this emitter. */
+  SourceFile file;
 
-  ElemCG(this.processor)
+  ElemCG()
       : _webComponent = false,
         _includes = [],
         repeats = [],
@@ -664,27 +656,8 @@ class ElemCG {
   List<String> get includes => _includes;
   String get userCode => _userCode;
 
-  /** List of Dart files generated for each web component. */
-  List<String> get dartWebComponents {
-    List<String> result = [];
-    processor.forEach((ProcessFile processFile) {
-      result.add(processFile.cu.dartFilename);
-    });
-    return result;
-  }
-
-  /** List of HTML files generated for each web component. */
-  List<String> get htmlWebComponents {
-    List<String> result = [];
-    processor.forEach((ProcessFile processFile) {
-      result.add(processFile.cu.htmlFilename);
-    });
-    return result;
-  }
-
   void reportError(String msg) {
-    String filename = processor.current.cu.filename;
-    world.error("$filename: $msg");
+    world.error("${file.filename}: $msg");
   }
 
   bool get isLastBlockConstructor {
@@ -703,7 +676,7 @@ class ElemCG {
   }
 
   bool pushBlock([Element templateElement]) {
-    _cgBlocks.add(new CGBlock(processor, templateElement));
+    _cgBlocks.add(new CGBlock(file, templateElement));
     return true;
   }
 
@@ -771,21 +744,6 @@ class ElemCG {
     return _cgBlocks.last().codeBody;
   }
 
-  /**
-   * Any element with this link tag:
-   *     <link rel="component" href="webcomponent_file">
-   * defines a web component file to process.
-   */
-  void queueUpFileToProcess(Element elem) {
-    if (elem.tagName == 'link') {
-      bool webComponent = elem.attributes['rel'] == 'components';
-      String href = elem.attributes['href'];
-      if (webComponent && href != null && href != '') {
-        processor.add(href);
-      }
-    }
-  }
-
   final String _DART_SCRIPT_TYPE = "application/dart";
 
   void emitScript(Element elem) {
@@ -824,7 +782,7 @@ class ElemCG {
       // http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-B63ED1A3).
       if (elem is! DocumentFragment) {
         // TODO(jmesserly): would be nice if we didn't have to grab info here.
-        var info = processor.current.cu.info[elem];
+        var info = file.info[elem];
         add("<${elem.tagName}${attributesToString(elem, info)}>");
       }
       String prevParent = lastVariableName;
@@ -942,7 +900,7 @@ class ElemCG {
         // Never emit a script tag.
         emitScript(elem);
       } else if (elem.tagName == 'link') {
-        queueUpFileToProcess(elem);
+        // Nothing to do.
       } else {
         CGStatement stmt = pushStatement(elem, parentName);
         emitElement(elem, scopeName, stmt.hasGlobalVariable ?

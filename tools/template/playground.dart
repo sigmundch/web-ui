@@ -15,10 +15,10 @@
 #import('package:web_components/tools/lib/world.dart');
 #import('package:web_components/tools/lib/source.dart');
 #import('package:web_components/tools/lib/cmd_options.dart');
-#import('template.dart');
-#import('compile.dart');
 #import('codegen_application.dart');
-#import('compilation_unit.dart');
+#import('compile.dart');
+#import('source_file.dart');
+#import('template.dart');
 
 String currSampleTemplate;
 
@@ -79,13 +79,13 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
       var fs = new MemoryFileSystem();
       fs.writeString("_memory", htmlTemplate);
 
-      var analyze = new Compile(fs, "_memory");
+      var compiler = new Compile(fs, "_memory");
 
-      analyze.forEach((CompilationUnit cu) {
-        dumpTree.add(cu.document.outerHTML);
+      compiler.files.forEach((file) {
+        dumpTree.add(file.document.outerHTML);
 
         // Get the generated Dart class for this template file.
-        code.add(cu.code);
+        code.add(file.code);
       });
     } catch (htmlException) {
       // TODO(terry): TBD

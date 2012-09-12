@@ -12,9 +12,9 @@
 #import('package:web_components/tools/lib/file_system_vm.dart');
 #import('package:web_components/tools/lib/source.dart');
 #import('package:web_components/tools/lib/world.dart');
-#import('compile.dart');
-#import('compilation_unit.dart');
 #import('codegen_application.dart');
+#import('compile.dart');
+#import('source_file.dart');
 #import('template.dart');
 #import('utils.dart');
 
@@ -84,51 +84,30 @@ void run(List<String> args) {
   } else {
     String source = files.readAll(sourceFullFn);
     final compileElapsed = time(() {
-      var analyze = new Compile(files, srcPath.filename, srcDir.path);
-      // Write out the results.
+      var compiler = new Compile(files, srcPath.filename, srcDir.path);
+
+      // Write out the code associated with each source file.
       print("Write files to ${outDirectory.path}:");
-
-      String outDirPath = outDirectory.path;
-      // Write out the code associated with each compilation unit.
-      analyze.forEach((CompilationUnit cu) {
-        if (!cu.opened || !cu.codeGenerated || !cu.htmlGenerated) {
-          world.error(
-              "Unexpected compiler error CU ${cu.filename} not processed.");
-        } else {
-          // Source filename associated with this compilation unit.
-          String filename = cu.filename;
-
-          // Output .dart file.
-          String dartFilename = cu.dartFilename;
-          String dartFilenameFullQual = "$outDirPath/$dartFilename";
-          if (options.clean) {
-            File fileOut = new File.fromPath(new Path(dartFilenameFullQual));
-            if (fileOut.existsSync()) {
-              fileOut.deleteSync();
-              print("  Deleting $dartFilename");
-            }
-          } else {
-            files.writeString(dartFilenameFullQual, cu.code);
-            print("  Writing $dartFilename");
-          }
-
-          // Otuput the .html file.
-          String htmlFilename = cu.htmlFilename;
-          String htmlFilenameFullQual = "$outDirPath/$htmlFilename";
-          if (options.clean) {
-            File fileOut = new File.fromPath(new Path(htmlFilenameFullQual));
-            if (fileOut.existsSync()) {
-              fileOut.deleteSync();
-              print("  Deleting $htmlFilename");
-            }
-          } else {
-            files.writeString(htmlFilenameFullQual, cu.html);
-            print("  Writing $htmlFilename");
-          }
-        }
-      });
+      for (var file in compiler.files) {
+        writeFile(file.dartFilename, outDirectory, file.code);
+        writeFile(file.htmlFilename, outDirectory, file.html);
+      }
     });
 
     printStats("Compiled", compileElapsed, sourceFullFn);
+  }
+}
+
+void writeFile(String filename, Directory outdir, String contents) {
+  String path = "${outdir.path}/$filename";
+  if (options.clean) {
+    File fileOut = new File.fromPath(new Path(path));
+    if (fileOut.existsSync()) {
+      fileOut.deleteSync();
+      print("  Deleting $filename");
+    }
+  } else {
+    files.writeString(path, contents);
+    print("  Writing $filename");
   }
 }

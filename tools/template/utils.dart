@@ -39,3 +39,10 @@ prettyStats(String phase, num elapsed, [String filename = '']) {
 printStats(String phase, num elapsed, [String filename = '']) {
   print('$phase $filename in $elapsed msec.');
 }
+
+find(List list, bool matcher(elem)) {
+  for (var elem in list) {
+    if (matcher(elem)) return elem;
+  }
+  return null;
+}
