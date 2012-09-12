@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #library('template_utils');
+#import('package:web_components/tools/lib/world.dart');
 
 /**
  * Converts a string name with hyphens into an identifier, by removing hyphens
@@ -20,26 +21,27 @@ String toCamelCase(String hyphenedName) {
   return Strings.join(segments, '');
 }
 
-/** Invokes [callback] and returns how long it took to execute in ms. */
-num time(callback()) {
+/**
+ * Invokes [callback], logs how long it took to execute in ms, and returns
+ * whatever [callback] returns. The log message will be printed if either
+ * [:options.showInfo:] or [printTime] are true.
+ */
+time(String logMessage, callback(), [bool printTime = false]) {
   final watch = new Stopwatch();
   watch.start();
-  callback();
+  var result = callback();
   watch.stop();
-  return watch.elapsedInMs();
+  final duration = watch.elapsedInMs();
+  if (options.showInfo || printTime) {
+    print('$logMessage in $GREEN_COLOR$duration ms$NO_COLOR');
+  }
+  return result;
 }
 
 String GREEN_COLOR = '\u001b[32m';
 String NO_COLOR = '\u001b[0m';
 
-prettyStats(String phase, num elapsed, [String filename = '']) {
-  print('$phase $GREEN_COLOR$filename$NO_COLOR in $elapsed msec.');
-}
-
-printStats(String phase, num elapsed, [String filename = '']) {
-  print('$phase $filename in $elapsed msec.');
-}
-
+/** Find and return the first element in [list] that satisfies [matcher]. */
 find(List list, bool matcher(elem)) {
   for (var elem in list) {
     if (matcher(elem)) return elem;

@@ -92,12 +92,7 @@ class Compile {
     var file = _createFile(filename, isComponent);
     files.add(file);
     var source = filesystem.readAll("$baseDir/$filename");
-    final parsedElapsed = time(() {
-      file.document = parseHtml(source, filename);
-    });
-    if (options.showInfo) {
-      printStats("Parsed", parsedElapsed, filename);
-    }
+    file.document = time("Parsed $filename", () => parseHtml(source, filename));
     if (options.dumpTree) {
       print("\n\n Dump Tree $filename:\n\n");
       print(file.document.outerHTML);
@@ -116,10 +111,8 @@ class Compile {
   /** Run the analyzer on every input html file. */
   void _analizeAllFiles() {
     for (var file in files) {
-      var duration = time(() { file.info = analyzer.analyze(file.document); });
-      if (options.showInfo) {
-        printStats("Analyzed", duration, file.filename);
-      }
+      file.info = time('Analyzed ${file.filename}',
+          () => analyzer.analyze(file.document));
     }
   }
 
@@ -127,14 +120,12 @@ class Compile {
   void _emitAll() {
     // TODO(sigmund): simplify walker
     for (var file in files) {
-      var walkedElapsed = time(() { _walkTree(file.document, file.elemCG); });
-      if (options.showInfo) {
-        printStats("Walked", walkedElapsed, file.filename);
-      }
+      time('Walked ${file.filename}',
+          () => _walkTree(file.document, file.elemCG));
     }
 
     for (var file in files) {
-      var codegenElapsed = time(() {
+      time('Codegen ${file.filename}', () {
         file.code = _emitter(file);
         var html = _emitterHTML(file);
         file.html =
@@ -142,9 +133,6 @@ class Compile {
           "  DO NOT EDIT. -->\n"
           "$html";
       });
-      if (options.showInfo) {
-        printStats("Codegen", codegenElapsed, file.filename);
-      }
     }
   }
 

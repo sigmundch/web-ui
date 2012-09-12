@@ -83,7 +83,7 @@ void run(List<String> args) {
     world.fatal("CSS source file missing - ${sourceFullFn}");
   } else {
     String source = files.readAll(sourceFullFn);
-    final compileElapsed = time(() {
+    time('Compiled $sourceFullFn', () {
       var compiler = new Compile(files, srcPath.filename, srcDir.path);
 
       // Write out the code associated with each source file.
@@ -92,9 +92,7 @@ void run(List<String> args) {
         writeFile(file.dartFilename, outDirectory, file.code);
         writeFile(file.htmlFilename, outDirectory, file.html);
       }
-    });
-
-    printStats("Compiled", compileElapsed, sourceFullFn);
+    }, printTime: true);
   }
 }
 
