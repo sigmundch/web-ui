@@ -206,6 +206,7 @@ class CGBlock {
   /** Local variable index (e.g., e0, e1, etc.). */
   int _localIndex;
 
+  // TODO(jmesserly): these are dead now?
   final analyzer.TemplateInfo templateInfo;
   final Element templateElement;
   final SourceFile file;
@@ -213,8 +214,8 @@ class CGBlock {
   CGBlock(SourceFile file, [Element templateElement])
       : file = file,
         templateElement = templateElement,
-        templateInfo = (templateElement != null ? 
-          file.info[templateElement] : null),
+        templateInfo = (templateElement != null ?
+          file.info.elements[templateElement] : null),
         _stmts = <CGStatement>[],
         _localIndex = 0;
 
@@ -230,7 +231,7 @@ class CGBlock {
   CGStatement push(elem, parentName, [bool exact = false]) {
     // TODO(jmesserly): fix this int|String union type.
     var varName;
-    analyzer.ElementInfo info = file.info[elem];
+    analyzer.ElementInfo info = file.info.elements[elem];
     if (info != null) varName = info.idAsIdentifier;
 
     if (varName == null) {
@@ -272,37 +273,6 @@ class CGBlock {
       }
       // TODO(terry): Should return error or allow just app.todos?
       out.add("$varName.items = () => $listExpr;");
-    }
-  }
-
-  List<String> allComponentsUsed() {
-    List<String> allWcs = [];
-    for (CGStatement stmt in _stmts) {
-      if (stmt._info != null && stmt._info.componentName != null) {
-        if (allWcs.indexOf(stmt._info.componentName) == -1) {
-          allWcs.add(stmt._info.componentName);
-        }
-      }
-    }
-
-    return allWcs;
-  }
-
-  List<String> allIfConditions() {
-    List<String> allIfs = [];
-    for (CGStatement stmt in _stmts) {
-      if (stmt._info != null && (stmt._info is analyzer.TemplateInfo)) {
-        analyzer.TemplateInfo templateInfo = stmt._info;
-        allIfs.add(templateInfo.instantiate);
-      }
-    }
-
-    return allIfs;
-  }
-
-  String getHTMLBody() {
-    for (CGStatement stmt in _stmts) {
-
     }
   }
 }
@@ -567,7 +537,7 @@ class ElemCG {
       // http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-B63ED1A3).
       if (elem is! DocumentFragment) {
         // TODO(jmesserly): would be nice if we didn't have to grab info here.
-        var info = file.info[elem];
+        var info = file.info.elements[elem];
         add("<${elem.tagName}${attributesToString(elem, info)}>");
       }
       String prevParent = lastVariableName;
@@ -709,22 +679,6 @@ class ElemCG {
     }
 
     return newName;
-  }
-
-  List<String> allWebComponentUsage() {
-    List<String> result = [];
-    CGBlock cgb;
-    int templateIdx = 0;
-    while ((cgb = getCGBlock(templateIdx++)) != null) {
-      List<String> wcs = cgb.allComponentsUsed();
-      for (String name in wcs) {
-        if (result.indexOf(name) == -1) {
-          result.add(name);
-        }
-      }
-    }
-
-    return result;
   }
 
   void emitTemplate(Element elem) {

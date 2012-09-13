@@ -56,7 +56,6 @@ class CodegenApplication {
       buff.add("#import('${file.dartFilename}');");
     }
 
-    buff.add(Codegen.commonComponents);
     buff.add(Codegen.commonIncludes);
 
     if (ecg.includes.length > 0) {
@@ -89,10 +88,6 @@ class CodegenApplication {
 
   static const String DARTJS_LOADER =
     "http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js";
-
-  static String get commonHtmlComponents =>
-    '<link rel="components" href="../../../lib/js_polyfill/if.html.html">'
-    '<link rel="components" href="../../../lib/js_polyfill/list.html.html">';
 
   static String generateHTML(Document doc, List<SourceFile> files) {
     var body = doc.queryAll('body');
@@ -138,9 +133,6 @@ class CodegenApplication {
         buff.add('<link rel="components" href = "${file.htmlFilename}">');
       }
 
-      // Add the if and list components.
-      buff.add(commonHtmlComponents);
-
       var linksDoc = parse(buff.toString());
       var newLinks = linksDoc.queryAll("link");
       for (var link in newLinks) {
@@ -164,70 +156,26 @@ class CodegenApplication {
     return codePrinter.toString();
   }
 
-  const String VAR_PARAM = "(x)";
-  const String IF_PREFIX = "if ";
-
   /** Construct all components use in the main app. */
   String _emitComponentsUsed(List<SourceFile> files, ElemCG ecg) {
-    CodePrinter codePrinter = new CodePrinter(2);
+    var codePrinter = new CodePrinter(2);
     codePrinter.add("Map<String, Function> map = {");
 
-    List<String> allWcNames = ecg.allWebComponentUsage();
-    for (String wcName in allWcNames) {
-      var file = find(files, (f) => f.webComponentName == wcName);
-      if (file != null) {
-        String className = file.elemCG.className;
-        codePrinter.add("'$wcName': () => new $className(),");
-      } else if (wcName == analyzer.TemplateInfo.IF_COMPONENT) {
-        codePrinter.add("'$wcName': () {");
-        codePrinter.add("var result = new IfComponent();");
-        codePrinter.add("result.conditionInitializer = (condition) {");
+    // TODO(jmesserly): seems like this should be done in analysis phase.
+    var usedComponents = new Set();
+    for (var file in files) {
+      usedComponents.addAll(file.info.usedComponents);
+    }
 
-        bool atLeastOnIf = false;
-
-        CGBlock cgb;
-        int templateIdx = 1;
-        while ((cgb = ecg.templateCG(templateIdx++)) != null) {
-          List<String> ifConditions = cgb.allIfConditions();
-          // Emit all x-if startup values.
-          for (String ifCondition in ifConditions) {
-            String ifStart = atLeastOnIf ? " else if" : "if";
-
-            // TODO(terry): Strips if keyword.
-            ifCondition = ifCondition.startsWith(IF_PREFIX) ?
-                ifCondition.substring(IF_PREFIX.length) : ifCondition;
-            var param;
-            var stmt;
-            // TODO(terry): Hacky parsing only looks for x.
-            int idx = ifCondition.indexOf(VAR_PARAM);
-            if (idx != -1) {
-              param = 'vars';
-              stmt = "${ifCondition.substring(0, idx + 1)}vars['x']"
-                  "${ifCondition.substring(idx + VAR_PARAM.length - 1)}";
-            } else {
-              param = "_";
-              stmt = ifCondition;
-            }
-
-            codePrinter.add("$ifStart (condition == '$ifCondition') {");
-            codePrinter.add("result.shouldShow = ($param) => $stmt;");
-            codePrinter.add("}");
-
-            atLeastOnIf = true;
-          }
-        }
-
-        codePrinter.add("};");
-        codePrinter.add("return result;");
-        codePrinter.add("},");
-      } else if (wcName == analyzer.TemplateInfo.LIST_COMPONENT) {
-        codePrinter.add("'$wcName': () => new ListComponent(),");
+    for (var file in files) {
+      if (usedComponents.contains(file.webComponentName)) {
+        codePrinter.add("'${file.webComponentName}': "
+            "() => new ${file.elemCG.className}(),");
       }
     }
 
     codePrinter.add("};");
-    codePrinter.add("initializeComponents((String name) => map[name]);");
-
+    codePrinter.add("initializeComponents((name) => map[name]);");
     return codePrinter.toString();
   }
 

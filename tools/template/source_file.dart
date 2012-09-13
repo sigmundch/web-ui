@@ -20,8 +20,8 @@ class SourceFile {
   String code;
   String html;
 
-  /** Generated analysis info for this compilation unit. */
-  Map<Node, NodeInfo> info;
+  /** Generated analysis info for this file. */
+  FileInfo info;
 
   /** Another files to process (e.g., web components). */
   SourceFile(this.filename, this.elemCG, [this.isWebComponent = true]);

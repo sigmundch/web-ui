@@ -12,6 +12,22 @@
 #import('package:web_components/tools/lib/world.dart');
 #import('utils.dart');
 
+/** Information extracted for an entire HTML document. */
+class FileInfo {
+  final Map<Node, ElementInfo> elements;
+
+  /**
+   * The names of all web components used by this document.
+   * Note: this list is not sorted. If you need to enumerate it for code
+   * generation, make sure to to sort it first.
+   */
+  // TODO(jmesserly): switch to SplayTreeSet when available.
+  final Set<String> usedComponents;
+
+  FileInfo()
+      : elements = new Map<Node, ElementInfo>(),
+        usedComponents = new Set<String>();
+}
 
 /** Information extracted for any node in the AST. */
 interface NodeInfo {
@@ -32,20 +48,11 @@ class ElementInfo implements NodeInfo {
    * element. This is typically true whenever we need to access the element
    * (e.g. to add event listeners, update values on data-bound watchers, etc).
    */
-  bool get needsHtmlId =>
-      events.length > 0 || hasDataBinding || hasIfCondition || isIterate;
+  bool get needsHtmlId => hasDataBinding || hasIfCondition || hasIterate
+      || values.length > 0 || events.length > 0;
 
   /** The name of a component (use of is attribute). */
   String componentName;
-
-  /** Whether the element is a component instantiation. */
-  bool isComponent = false;
-
-  /** Whether the element is loop iteration. */
-  bool isIterate = false;
-
-  /** Whether the element is conditional. */
-  bool hasIfCondition = false;
 
   /** Whether the element contains data bindings. */
   bool hasDataBinding = false;
@@ -64,20 +71,14 @@ class ElementInfo implements NodeInfo {
   // TODO(sigmund): move somewhere else?
   String stopperName;
 
-  /** Variable declared on loop iterations (null when `!isIterate`). */
-  String iterVariable;
-
-  /** Expression that is used in conditionals. */
-  String conditionalExpression;
-
-  /** Expression that is used in loops. */
-  String loopExpression;
-
   /** Collected information for attributes, if any. */
   Map<String, AttributeInfo> attributes;
 
   /** Collected information for UI events on the corresponding element. */
   Map<String, EventInfo> events;
+
+  /** Collected information about `data-value="name:value"` expressions. */
+  Map<String, String> values;
 
   /**
    * Format [elementId] in camel case, suitable for using as a Dart identifier.
@@ -85,19 +86,31 @@ class ElementInfo implements NodeInfo {
   String get idAsIdentifier() =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
 
-  ElementInfo() : attributes = <AttributeInfo>{}, events = <EventInfo>{};
+  ElementInfo()
+      : attributes = <AttributeInfo>{},
+        events = <EventInfo>{},
+        values = {};
 
-  String toString() => 'id: $elementId, '
-      'isComponent: $isComponent, '
-      'isIterate: $isIterate, '
+
+  /** Whether the template element has `iterate="... in ...". */
+  bool get hasIterate => false;
+
+  /** Whether the template element has an `instantiate="if ..."` conditional. */
+  bool get hasIfCondition => false;
+
+  String toString() => '#<ElementInfo '
+      'elementId: $elementId, '
+      'elemField: $elemField, '
+      'needsHtmlId: $needsHtmlId, '
+      'componentName: $componentName, '
+      'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
       'contentBinding: $contentBinding, '
       'contentExpression: $contentExpression, '
-      'conditionalExpression: $conditionalExpression, '
-      'loopExpression: $loopExpression, '
       'attributes: $attributes, '
-      'events: $events';
+      'idAsIdentifier: $idAsIdentifier, '
+      'events: $events>';
 }
 
 /** Information extracted for each attribute in an element. */
@@ -121,8 +134,8 @@ class AttributeInfo implements NodeInfo {
   AttributeInfo(String value) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
 
-  String toString() =>
-      '(isClass: $isClass, values: ${Strings.join(bindings, "")})';
+  String toString() => '#<AttributeInfo '
+      'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
 
   /**
    * Generated fields for watcher disposers based on the bindings of this
@@ -144,34 +157,41 @@ class EventInfo implements NodeInfo {
 
   EventInfo(this.eventName, this.action);
 
-  String toString() => '(eventName: $eventName, action: $action)';
+  String toString() => '#<EventInfo eventName: $eventName, action: $action>';
 }
 
-// TODO(jmesserly): I'm not sure we need this, but it was useful for
-// bootstrapping the switch to the html5 parser.
 class TemplateInfo extends ElementInfo {
-  static const String LIST_COMPONENT = "x-list";
-  static const String IF_COMPONENT = "x-if";
+  /**
+   * The expression that is used in `<template instantiate="if cond">
+   * conditionals, or null if this there is no `instantiate="if ..."`
+   * attribute.
+   */
+  final String ifCondition;
 
-  final String instantiate;
-  final String iterate;
+  /**
+   * If this is a `<template iterate="item in items">`, this is the variable
+   * declared on loop iterations, e.g. `item`. This will be null if it is not
+   * a `<template iterate="...">`.
+   */
+  final String loopVariable;
 
-  TemplateInfo(this.instantiate, this.iterate) {
-    if (!iterate.isEmpty()) {
-      isIterate = true;
-      componentName = LIST_COMPONENT;
-    }
-  }
+  /**
+   * If this is a `<template iterate="item in items">`, this is the expression
+   * to get the items to iterate over, e.g. `items`. This will be null if it is
+   * not a `<template iterate="...">`.
+   */
+  final String loopItems;
 
-  bool get hasIfCondition => instantiate.startsWith('if ');
+  TemplateInfo([this.ifCondition, this.loopVariable, this.loopItems]);
 
-  String get ifCondition {
-    if (!hasIfCondition) {
-      throw new UnsupportedOperationException(
-          'not a <template iterate="if ..."> node');
-    }
-    return instantiate.substring(3);
-  }
+  bool get hasIterate => loopVariable != null;
+
+  bool get hasIfCondition => ifCondition != null;
+
+  String toString() => '#<TemplateInfo '
+      'ifCondition: $ifCondition, '
+      'loopVariable: $ifCondition, '
+      'loopItems: $ifCondition>';
 }
 
 
@@ -185,18 +205,18 @@ typedef String ActionDefinition([String elemVarName]);
 
 
 /** Extract relevant information from [source] and it's children. */
-Map<Node, NodeInfo> analyze(Node source) {
-  return (new _Analyzer()..visit(source)).results;
+FileInfo analyze(Node source) {
+  return (new _Analyzer()..visit(source)).result;
 }
 
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {
   static const String _DATA_ON_ATTRIBUTE = "data-on-";
 
-  final Map<Node, NodeInfo> results;
+  final FileInfo result;
   int _uniqueId = 0;
 
-  _Analyzer() : results = new Map<Node, NodeInfo>();
+  _Analyzer() : result = new FileInfo();
 
   void visitElement(Element node) {
     ElementInfo info = null;
@@ -209,7 +229,7 @@ class _Analyzer extends TreeVisitor {
       info = new ElementInfo();
     }
     if (node.id != '') info.elementId = node.id;
-    results[node] = info;
+    result.elements[node] = info;
 
     node.attributes.forEach((name, value) {
       visitAttribute(node, info, name, value);
@@ -234,22 +254,59 @@ class _Analyzer extends TreeVisitor {
     var instantiate = node.attributes['instantiate'];
     var iterate = node.attributes['iterate'];
 
+    // Note: we issue warnings instead of errors because the spirit of HTML and
+    // Dart is to be forgiving.
     if (instantiate != null && iterate != null) {
       // TODO(jmesserly): get the node's span here
-      world.error('Template cannot have iterate and instantiate attributes');
+      world.warning('<template> element cannot have iterate and instantiate '
+          'attributes');
       return null;
     }
 
-    if (instantiate == null) instantiate = "";
-    if (iterate == null) iterate = "";
+    if (instantiate != null) {
+      if (instantiate.startsWith('if ')) {
+        return new TemplateInfo(ifCondition: instantiate.substring(3));
+      }
 
-    return new TemplateInfo(instantiate, iterate);
+      // TODO(jmesserly): we need better support for <template instantiate>
+      // as it exists in MDV. Right now we ignore it, but we provide support for
+      // data binding everywhere.
+      if (instantiate != '') {
+        world.warning('<template instantiate> either have  '
+          ' form <template instantiate="if condition" where "condition" is a'
+          ' binding that determines if the contents of the template will be'
+          ' inserted and displayed.');
+      }
+    } else if (iterate != null) {
+      var match = const RegExp(@"(.*) in (.*)").firstMatch(iterate);
+      if (match != null) {
+        return new TemplateInfo(loopVariable: match[1], loopItems: match[2]);
+      }
+      world.warning('<template> iterate must be of the form: '
+          'iterate="variable in list", where "variable" is your variable name'
+          ' and "list" is the list of items.');
+    }
+    return null;
   }
 
+  // TODO(jmesserly): this method is getting big, probably needs to be
+  // split.
   void visitAttribute(Element elem, ElementInfo elemInfo, String name,
                       String value) {
     if (name == 'is') {
-      elemInfo.componentName = value;
+      result.usedComponents.add(value);
+    } else if (name == 'data-value') {
+      var colonIdx = value.indexOf(':');
+      if (colonIdx <= 0) {
+        world.error('data-value attribute should be of the form '
+            'data-value="name:value"');
+        return;
+      }
+      name = value.substring(0, colonIdx);
+      value = value.substring(colonIdx + 1);
+
+      elemInfo.values[name] = value;
+      return;
     }
 
     var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
@@ -330,7 +387,7 @@ class _Analyzer extends TreeVisitor {
     if (!bindingRegex.hasMatch(text.value)) return;
 
     var parentElem = text.parent;
-    ElementInfo info = results[parentElem];
+    ElementInfo info = result.elements[parentElem];
     info.hasDataBinding = true;
     assert(info.contentBinding == null);
 

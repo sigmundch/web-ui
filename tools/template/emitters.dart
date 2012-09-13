@@ -56,11 +56,13 @@ class Context {
   final CodePrinter createdMethod;
   final CodePrinter insertedMethod;
   final CodePrinter removedMethod;
+  final String queryFromElement;
 
   Context([CodePrinter declarations,
            CodePrinter createdMethod,
            CodePrinter insertedMethod,
-           CodePrinter removedMethod])
+           CodePrinter removedMethod,
+           this.queryFromElement])
       : this.declarations = getOrCreatePrinter(declarations),
         this.createdMethod = getOrCreatePrinter(createdMethod),
         this.insertedMethod = getOrCreatePrinter(insertedMethod),
@@ -87,9 +89,24 @@ class ElementFieldEmitter extends Emitter {
   }
 
   void emitCreated(Context context) {
-    if (elemInfo.elemField != null) {
-      context.createdMethod.add(
-          "${elemInfo.elemField} = root.query('#${elemInfo.elementId}');");
+    if (elemInfo.elemField == null) return;
+
+    var queryFrom = context.queryFromElement;
+    var field = elemInfo.elemField;
+    var id = elemInfo.elementId;
+    if (queryFrom != null) {
+      // TODO(jmesserly): we should be able to figure out if IDs match
+      // statically.
+      // Note: This code is more complex because it must handle the case
+      // where the queryFrom node itself has the ID.
+      context.createdMethod.add('''
+        if ($queryFrom.id == "$id") {
+          $field = $queryFrom;
+        } else {
+          $field = $queryFrom.query('#$id');
+        }''');
+    } else {
+      context.createdMethod.add("$field = root.query('#$id');");
     }
   }
 }
@@ -220,17 +237,33 @@ class DataBindingEmitter extends Emitter {
   }
 }
 
+/** Copies values from the scope into the object at component creation time. */
+class DataValueEmitter extends Emitter {
+  DataValueEmitter(Element elem, ElementInfo info) : super(elem, info);
+
+  void emitCreated(Context context) {
+    var elemField = elemInfo.elemField;
+    var id = elemInfo.idAsIdentifier;
+    if (elemInfo.values.length == 0) return;
+
+    context.createdMethod.add('var component$id = manager[$id];');
+    elemInfo.values.forEach((name, value) {
+      context.createdMethod.add('component$id.$name = $value;');
+    });
+  }
+}
+
 /** Emitter of template conditionals like `<template instantiate='if test'>`. */
 class ConditionalEmitter extends Emitter {
-  CodePrinter childrenCreated;
-  CodePrinter childrenRemoved;
-  CodePrinter childrenInserted;
+  final CodePrinter childrenCreated;
+  final CodePrinter childrenRemoved;
+  final CodePrinter childrenInserted;
 
-  ConditionalEmitter(Element elem, ElementInfo info) : super(elem, info) {
-    childrenCreated = new CodePrinter();
-    childrenRemoved = new CodePrinter();
-    childrenInserted = new CodePrinter();
-  }
+  ConditionalEmitter(Element elem, ElementInfo info)
+      : childrenCreated = new CodePrinter(),
+        childrenRemoved = new CodePrinter(),
+        childrenInserted = new CodePrinter(),
+        super(elem, info);
 
   void emitDeclarations(Context context) {
     var id = elemInfo.idAsIdentifier;
@@ -254,7 +287,8 @@ class ConditionalEmitter extends Emitter {
           _childTemplate$id.id = '';
         }
         $id.style.display = 'none';
-        $id.nodes.clear();''');
+        $id.nodes.clear();
+    ''');
   }
 
   void emitInserted(Context context) {
@@ -266,19 +300,21 @@ class ConditionalEmitter extends Emitter {
             // Remove any listeners/watchers on children
     ''');
     context.insertedMethod.add(childrenRemoved);
+
     context.insertedMethod.add('''
             // Remove the actual child
             _child$id.remove();
             _child$id = null;
           } else if (_child$id == null && showNow) {
             _child$id = _childTemplate$id.clone(true);
+            manager.expandDeclarations(_child$id);
             if (_childId$id != null && _childId$id != '') {
               _child$id.id = _childId$id;
             }
-            $id.parent.nodes.add(_child$id);
             // Reassing pointers to children elements
     ''');
     context.insertedMethod.add(childrenCreated);
+    context.insertedMethod.add('$id.parent.nodes.add(_child$id);');
     context.insertedMethod.add('// Attach listeners/watchers');
     context.insertedMethod.add(childrenInserted);
     context.insertedMethod.add('''
@@ -301,12 +337,94 @@ class ConditionalEmitter extends Emitter {
   }
 
   Context contextForChildren(Context c) => new Context(
-      c.declarations, childrenCreated, childrenInserted, childrenRemoved);
+      c.declarations, childrenCreated, childrenInserted, childrenRemoved,
+      '_child${elemInfo.idAsIdentifier}');
 }
+
+
+/**
+ * Emitter of template lists like `<template iterate='item in items'>`.
+ */
+class ListEmitter extends Emitter {
+  // TODO(jmesserly): can these be final?
+  final CodePrinter childrenDeclarations;
+  final CodePrinter childrenCreated;
+  final CodePrinter childrenRemoved;
+  final CodePrinter childrenInserted;
+
+  ListEmitter(Element elem, ElementInfo info)
+      : childrenDeclarations = new CodePrinter(),
+        childrenCreated = new CodePrinter(),
+        childrenRemoved = new CodePrinter(),
+        childrenInserted = new CodePrinter(),
+        super(elem, info);
+
+  String get childElementName => 'child${elemInfo.idAsIdentifier}';
+
+  void emitDeclarations(Context context) {
+    var id = elemInfo.idAsIdentifier;
+    context.declarations.add('''
+        // Fields for template list '${elemInfo.elementId}'
+        Element _childTemplate$id;
+        WatcherDisposer _stopWatcher$id;
+        List<WatcherDisposer> _removeChild$id;
+    ''');
+  }
+
+  void emitCreated(Context context) {
+    var id = elemInfo.idAsIdentifier;
+    context.createdMethod.add('''
+        assert($id.elements.length == 1);
+        _childTemplate$id = $id.elements[0];
+        _removeChild$id = [];
+        $id.nodes.clear();
+    ''');
+  }
+
+  void emitInserted(Context context) {
+    var id = elemInfo.idAsIdentifier;
+    // TODO(jmesserly): this should use fine grained updates.
+    // TODO(jmesserly): watcher should give us the list, not a boolean.
+    context.insertedMethod.add('''
+        _stopWatcher$id = bind(() => ${elemInfo.loopItems}, (e) {
+          $id.nodes.clear();
+          for (var remover in _removeChild$id) remover();
+          _removeChild$id.clear();
+          for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
+            var $childElementName = _childTemplate$id.clone(true);
+            manager.expandDeclarations($childElementName);
+    ''');
+
+    context.insertedMethod
+        .add(childrenDeclarations)
+        .add(childrenCreated)
+        .add('$id.nodes.add($childElementName);')
+        .add('// Attach listeners/watchers')
+        .add(childrenInserted)
+        .add('// Remember to unregister them')
+        .add('_removeChild$id.add(() {')
+        .add(childrenRemoved)
+        .add('});\n}\n});');
+  }
+
+  void emitRemoved(Context context) {
+    var id = elemInfo.idAsIdentifier;
+    context.removedMethod.add('''
+        _stopWatcher$id();
+        for (var remover in _removeChild$id) remover();
+        _removeChild$id.clear();
+    ''');
+  }
+
+  Context contextForChildren(Context c) =>new Context(
+      childrenDeclarations, childrenCreated, childrenInserted, childrenRemoved,
+      queryFromElement: childElementName);
+}
+
 
 /** Generates the class corresponding to a web component. */
 class WebComponentEmitter extends TreeVisitor implements Context {
-  final Map<Node, NodeInfo> _info;
+  final Map<Node, ElementInfo> _info;
 
   Context _context;
   String constructorSignature;
@@ -314,8 +432,9 @@ class WebComponentEmitter extends TreeVisitor implements Context {
   int _totalIds = 0;
   int nextId() => ++_totalIds;
 
-  WebComponentEmitter(this._info, this.constructorSignature)
-      : _context = new Context();
+  WebComponentEmitter(FileInfo documentInfo, this.constructorSignature)
+      : _info = documentInfo.elements,
+        _context = new Context();
 
   String run(Node node) {
     visit(node);
@@ -349,19 +468,24 @@ class WebComponentEmitter extends TreeVisitor implements Context {
   void visitElement(Element elem) {
     var elemInfo = _info[elem];
     if (elemInfo == null) {
-      super.visitElement(elem.toString());
+      super.visitElement(elem);
       return;
     }
 
     var emitters = [new ElementFieldEmitter(elem, elemInfo),
         new EventListenerEmitter(elem, elemInfo),
-        new DataBindingEmitter(elem, elemInfo)];
+        new DataBindingEmitter(elem, elemInfo),
+        new DataValueEmitter(elem, elemInfo)];
 
-    var newContext = _context;
+    var childContext = _context;
     if (elemInfo.hasIfCondition) {
       var condEmitter = new ConditionalEmitter(elem, elemInfo);
       emitters.add(condEmitter);
-      newContext = condEmitter.contextForChildren(_context);
+      childContext = condEmitter.contextForChildren(_context);
+    } else if (elemInfo.hasIterate) {
+      var listEmitter = new ListEmitter(elem, elemInfo);
+      emitters.add(listEmitter);
+      childContext = listEmitter.contextForChildren(_context);
     }
 
     emitters.forEach((e) {
@@ -371,8 +495,8 @@ class WebComponentEmitter extends TreeVisitor implements Context {
       e.emitRemoved(_context);
     });
 
-    var oldContext = _context; 
-    _context = newContext;
+    var oldContext = _context;
+    _context = childContext;
 
     // Invoke super to visit children.
     super.visitElement(elem);

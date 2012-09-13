@@ -149,12 +149,10 @@ class CustomElementsManager {
   List _expandDeclarations([Element root, bool insert = true]) {
     var newCustomElements = [];
     var target;
-    var rootUnderTemplate = false;
     if (root == null) {
       target = document;
     } else {
       target = root;
-      rootUnderTemplate = root.matchesSelector('template *');
     }
     for (var declaration in _customDeclarations.getValues()) {
       var selector = '${declaration.extendz}[is=${declaration.name}]';
@@ -162,8 +160,7 @@ class CustomElementsManager {
       // templates are innert and should not be expanded.
       var activeElements = all.filter(
           (e) => !e.matchesSelector('template *'));
-      if (root != null && root.matchesSelector(selector)
-         && !rootUnderTemplate) {
+      if (root != null && root.matchesSelector(selector)) {
         activeElements.add(root);
       }
       for (var e in activeElements) {
