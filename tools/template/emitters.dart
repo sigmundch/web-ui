@@ -265,6 +265,8 @@ class ConditionalEmitter extends Emitter {
         childrenInserted = new CodePrinter(),
         super(elem, info);
 
+  TemplateInfo get elemInfo => super.elemInfo;
+
   void emitDeclarations(Context context) {
     var id = elemInfo.idAsIdentifier;
     context.declarations.add('''
@@ -352,7 +354,9 @@ class ListEmitter extends Emitter {
   final CodePrinter childrenRemoved;
   final CodePrinter childrenInserted;
 
-  ListEmitter(Element elem, ElementInfo info)
+  TemplateInfo get elemInfo => super.elemInfo;
+
+  ListEmitter(Element elem, TemplateInfo info)
       : childrenDeclarations = new CodePrinter(),
         childrenCreated = new CodePrinter(),
         childrenRemoved = new CodePrinter(),
@@ -423,7 +427,7 @@ class ListEmitter extends Emitter {
 
 
 /** Generates the class corresponding to a web component. */
-class WebComponentEmitter extends TreeVisitor implements Context {
+class WebComponentEmitter extends TreeVisitor {
   final Map<Node, ElementInfo> _info;
 
   Context _context;

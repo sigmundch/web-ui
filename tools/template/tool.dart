@@ -28,69 +28,56 @@ void run(List<String> args) {
     print(argParser.getUsage());
     print("   sourcefile - template file filename.html");
     print("   outputPath - if specified directory to generate files; if not");
+    print("                same directory as sourcefile");
     return;
   }
 
   files = new VMFileSystem();
 
-  // TODO(terry): Cleanup options handling need common options between template
-  //              and CSS parsers also cleanup above cruft.
-
-  // TODO(terry): Pass on switches.
   initHtmlWorld(parseOptions(results, files));
 
   // argument 0 - sourcefile full path
   // argument 1 - output path
   String sourceFullFn = results.rest[0];
-  String outputDirectory = results.rest.length > 1 ? results.rest[1] : null;
-
-  File fileSrc = new File(sourceFullFn);
-
-  if (!fileSrc.existsSync()) {
-    world.fatal("Source file doesn't exist - $sourceFullFn");
-  }
-
-  Directory sourcePath = fileSrc.directorySync();
-  String sourceFilename = fileSrc.name;
+  String outputFullDir = results.rest.length > 1 ? results.rest[1] : null;
 
   Path srcPath = new Path(sourceFullFn);
-  // The createSync is required to ensure that the directory is fully qualified
-  // using the current working directory.
-  File fileIn = new File.fromPath(srcPath);
-  fileIn.createSync();
-  Directory srcDir = fileIn.directorySync();
+
+  Directory srcDir = new Directory.fromPath(srcPath.directoryPath);
   if (!srcDir.existsSync()) {
-    world.fatal("Input directory doesn't exist - srcDir");
+    world.fatal("Input directory doesn't exist - ${srcDir.path}");
+    return;
   }
 
-  // If not outputDirectory not specified use the directory of the source file.
-  if (outputDirectory == null || outputDirectory.isEmpty()) {
-    outputDirectory = srcDir.path;
+  File fileSrc = new File.fromPath(srcPath);
+  if (!fileSrc.existsSync()) {
+    world.fatal("Source file doesn't exist - ${fileSrc.name}");
+    return;
   }
 
-  // The createSync is required to ensure that the directory is fully qualified
-  // using the current working directory.
-  Directory outDirectory = new Directory(outputDirectory);
+  String sourceFilename = fileSrc.name;
+
+  // If outputFullDirectory not specified use the directory of the source file.
+  if (outputFullDir == null || outputFullDir.isEmpty()) {
+    outputFullDir = srcDir.path;
+  }
+
+  Directory outDirectory = new Directory(outputFullDir);
   if (!outDirectory.existsSync()) {
-    world.fatal("Output directory doesn't exist - ${outDirectory.path}");
+    outDirectory.createSync();
   }
 
-  if (!files.fileExists(sourceFullFn)) {
-    // Display colored error message if file is missing.
-    world.fatal("CSS source file missing - ${sourceFullFn}");
-  } else {
-    String source = files.readAll(sourceFullFn);
-    time('Compiled $sourceFullFn', () {
-      var compiler = new Compile(files, srcPath.filename, srcDir.path);
+  String source = files.readAll(sourceFullFn);
+  time('Compiled $sourceFullFn', () {
+    var compiler = new Compile(files, srcPath.filename, srcDir.path);
 
-      // Write out the code associated with each source file.
-      print("Write files to ${outDirectory.path}:");
-      for (var file in compiler.files) {
-        writeFile(file.dartFilename, outDirectory, file.code);
-        writeFile(file.htmlFilename, outDirectory, file.html);
-      }
-    }, printTime: true);
-  }
+    // Write out the code associated with each source file.
+    print("Write files to ${outDirectory.path}:");
+    for (var file in compiler.files) {
+      writeFile(file.dartFilename, outDirectory, file.code);
+      writeFile(file.htmlFilename, outDirectory, file.html);
+    }
+  }, printTime: true);
 }
 
 void writeFile(String filename, Directory outdir, String contents) {

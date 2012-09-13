@@ -24,10 +24,6 @@ class MemoryFileSystem implements FileSystem {
     return buffer.toString();
   }
 
-  bool fileExists(String filename) {
-    return true;
-  }
-
   void createDirectory(String path, [bool recursive]) {
     // TODO(terry): To be implement.
     throw 'createDirectory() is not implemented by MemoryFileSystem yet.';
@@ -37,6 +33,4 @@ class MemoryFileSystem implements FileSystem {
     // TODO(terry): To be implement.
     throw 'removeDirectory() is not implemented by MemoryFileSystem yet.';
   }
-
-  String filenameWithoutExtension(String filename) => filename;
 }

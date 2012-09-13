@@ -214,8 +214,9 @@ class CGBlock {
   CGBlock(SourceFile file, [Element templateElement])
       : file = file,
         templateElement = templateElement,
-        templateInfo = (templateElement != null ?
-          file.info.elements[templateElement] : null),
+        templateInfo = (templateElement != null &&
+            templateElement is analyzer.TemplateInfo ?
+            file.info.elements[templateElement] : null),
         _stmts = <CGStatement>[],
         _localIndex = 0;
 
@@ -261,12 +262,12 @@ class CGBlock {
 
   const String _ITER_KEYWORD = " in ";
   String emitTemplateIterate(CodePrinter out, int index) {
-    if (templateInfo.isIterate) {
+    if (templateInfo.hasIterate) {
       String varName = "xList_$index";
       out.add("var $varName = manager[body.query("
           "'#${templateInfo.elementId}')];");
       // TODO(terry): Use real Dart expression parser.
-      String listExpr = templateInfo.iterate;
+      String listExpr = templateInfo.loopVariable;
       int inIndex = listExpr.indexOf(_ITER_KEYWORD);
       if (inIndex != -1) {
         listExpr = listExpr.substring(inIndex + _ITER_KEYWORD.length).trim();
