@@ -2,9 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('analysis');
+#library('compile');
 
-#import('dart:coreimpl');
 #import('package:html5lib/html5parser.dart');
 #import('package:html5lib/tokenizer.dart');
 #import('package:html5lib/treebuilders/simpletree.dart');
@@ -13,12 +12,10 @@
 
 #import('analyzer.dart', prefix: 'analyzer');
 #import('code_printer.dart');
-#import('codegen.dart');
 #import('codegen_application.dart');
 #import('codegen_component.dart');
 #import('emitters.dart');
 #import('source_file.dart');
-#import('template.dart');
 #import('utils.dart');
 
 // TODO(jmesserly): move these things into html5lib's public api
@@ -254,102 +251,6 @@ class CGBlock {
   CGStatement get last => _stmts.length > 0 ? _stmts.last() : null;
 
   /**
-   * Returns mixed list of elements marked with the var attribute.  If the
-   * element is inside of a #each the name exposed is:
-   *
-   *      List varName;
-   *
-   * otherwise it's:
-   *
-   *      var varName;
-   *
-   * TODO(terry): For scalars var varName should be Element tag type e.g.,
-   *
-   *                   DivElement varName;
-   */
-  String get globalDeclarations {
-    StringBuffer buff = new StringBuffer();
-    for (CGStatement stmt in _stmts) {
-      buff.add(stmt.globalDeclaration());
-    }
-
-    return buff.toString();
-  }
-
-  int get boundElementCount {
-    int count = 0;
-    if (isTemplate) {
-      for (var stmt in _stmts) {
-        if (stmt.hasDataBinding) {
-          count++;
-        }
-      }
-    }
-    return count;
-  }
-
-  // TODO(terry): Need to update this when iterate is driven from the
-  //             <template iterate='name in names'>.  Nested iterates are
-  //             a List<List<Elem>>.
-  /**
-   * List of statement constructors for each var inside a #each.
-   *
-   *    ${#each products}
-   *      <div var=myVar>...</div>
-   *    ${/each}
-   *
-   * returns:
-   *
-   *    myVar = [];
-   */
-  String get globalInitializers {
-    StringBuffer buff = new StringBuffer();
-    for (CGStatement stmt in _stmts) {
-      buff.add(stmt.globalInitializers());
-    }
-
-    return buff.toString();
-  }
-
-  String get codeBody {
-    StringBuffer buff = new StringBuffer();
-
-    // If statement is a bound element, has {{ }}, then boundElemIdx will match
-    // the BoundElementEntry index associated with this element's statement.
-    int boundElemIdx = 0;
-    for (CGStatement stmt in _stmts) {
-      buff.add(stmt.emitStatement(boundElemIdx));
-      if (stmt.hasDataBinding) {
-        boundElemIdx++;
-      }
-    }
-
-    return buff.toString();
-  }
-
-  static String genBoundElementsCommentBlock = @"""
-
-
-  // ==================================================================
-  // Tags that contains a template expression {{ nnnn }}.
-  // ==================================================================""";
-
-  String templatesCodeBody() {
-    StringBuffer buff = new StringBuffer();
-
-    buff.add(genBoundElementsCommentBlock);
-
-    int boundElemIdx = 0;   // Index if statement is a bound elem has a {{ }}.
-    for (CGStatement stmt in _stmts) {
-      if (stmt.hasDataBinding) {
-        buff.add(stmt.emitBoundElementFunction(boundElemIdx++));
-      }
-    }
-
-    return buff.toString();
-  }
-
-  /**
    * Emit the entire component class.
    */
   String webComponentCode(ElemCG ecg, String constructorSignature) {
@@ -443,24 +344,6 @@ class CGStatement {
 
   bool get hasGlobalVariable => _globalVariable;
 
-  String globalDeclaration() {
-    if (hasGlobalVariable) {
-      return (_repeating) ?
-        "List ${variableName};             // Repeated elements.\n" :
-        "var ${variableName};\n";
-    }
-
-    return "";
-  }
-
-  String globalInitializers() {
-    if (hasGlobalVariable && _repeating) {
-      return "${variableName} = [];\n";
-    }
-
-    return "";
-  }
-
   void add(String value) {
     _buff.add(value);
   }
@@ -543,51 +426,6 @@ class CGStatement {
     return printer.toString();
   }
 
-  String emitBoundElementFunction(int index) {
-    // Statements to update attributes associated with expressions.
-    StringBuffer statementUpdateAttrs = new StringBuffer();
-    var printer = new CodePrinter(1);
-
-    printer.add("Element templateLine_$index(var e0) {");
-    printer.add("  if (e0 == null) {\n");
-
-    // Creation of DOM element.
-    bool isTextNode = _elem is Text;
-    String createType = isTextNode ? "Text" : "Element.html";
-    var text = isTextNode ? _buff.toString().trim() : _buff.toString();
-    printer.add("e0 = new $createType(\'$text\');");
-
-    // TODO(terry): Fill in event hookup this is hacky.
-    int idx = _info != null && _info.contentBinding != null ? 1 : 0;
-    _elem.attributes.forEach((name, value) {
-      if (_info.attributes[name] != null) {
-        if (_elem.tagName == 'input') {
-          if (name == "value") {
-            // Hook up on keyup.
-            printer.add(
-              'e0.on.keyUp.add(wrap1((_) { model.${value} = e0.value; }));');
-          } else if (name == "checked") {
-            printer.add(
-              'e0.on.click.add(wrap1((_) { model.${value} = e0.checked; }));');
-          } else {
-            // TODO(terry): Need to handle here with something...
-            // data-on-XXXXX would handle on-change .on.change.add(listener);
-            //assert(false);
-          }
-        }
-
-        idx++;
-        statementUpdateAttrs.add("e0.${name} = inject_$idx();");
-      }
-    });
-
-    printer.add('}');
-    printer.add(statementUpdateAttrs.toString());
-    printer.add("return e0;\n}");
-
-    return printer.toString();
-  }
-
   bool get hasDataBinding => _info != null && _info.hasDataBinding;
 }
 
@@ -618,9 +456,6 @@ class ElemCG {
 
   final List<CGBlock> _cgBlocks;
 
-  /** Global var declarations for all blocks. */
-  final StringBuffer _globalDecls;
-
   /** Global List var initializtion for all blocks in a #each. */
   final StringBuffer _globalInits;
 
@@ -635,7 +470,6 @@ class ElemCG {
         _includes = [],
         repeats = [],
         _cgBlocks = [],
-        _globalDecls = new StringBuffer(),
         _globalInits = new StringBuffer();
 
   bool get isWebComponent => _webComponent;
@@ -648,15 +482,6 @@ class ElemCG {
     world.error("${file.filename}: $msg");
   }
 
-  bool get isLastBlockConstructor {
-    CGBlock block = _cgBlocks.last();
-    return block.isConstructor;
-  }
-
-  String applicationCodeBody() {
-    return getCodeBody(0);
-  }
-
   CGBlock templateCG(int index) {
     if (index > 0) {
       return getCGBlock(index);
@@ -666,12 +491,6 @@ class ElemCG {
   bool pushBlock([Element templateElement]) {
     _cgBlocks.add(new CGBlock(file, templateElement));
     return true;
-  }
-
-  void popBlock() {
-    _globalDecls.add(lastBlock.globalDeclarations);
-    _globalInits.add(lastBlock.globalInitializers);
-    _cgBlocks.removeLast();
   }
 
   CGStatement pushStatement(var elem, var parentName) {
@@ -708,29 +527,7 @@ class ElemCG {
     _cgBlocks.last().add(str);
   }
 
-  String get globalDeclarations {
-    assert(_cgBlocks.length == 1);    // Only constructor body should be left.
-    _globalDecls.add(lastBlock.globalDeclarations);
-    return _globalDecls.toString();
-  }
-
-  String get globalInitializers {
-    assert(_cgBlocks.length == 1);    // Only constructor body should be left.
-    _globalInits.add(lastBlock.globalInitializers);
-    return _globalInits.toString();
-  }
-
   CGBlock getCGBlock(int idx) => idx < _cgBlocks.length ? _cgBlocks[idx] : null;
-
-  String getCodeBody(int index) {
-    CGBlock cgb = getCGBlock(index);
-    return (cgb != null) ? cgb.codeBody : lastCodeBody;
-  }
-
-  String get lastCodeBody {
-    closeStatement();
-    return _cgBlocks.last().codeBody;
-  }
 
   final String _DART_SCRIPT_TYPE = "application/dart";
 

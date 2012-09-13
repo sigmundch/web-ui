@@ -9,8 +9,9 @@
 #library('emitters');
 
 #import('package:html5lib/treebuilders/simpletree.dart');
-#import('code_printer.dart');
+
 #import('analyzer.dart');
+#import('code_printer.dart');
 
 /**
  * An emitter for a web component feature.  It collects all the logic for

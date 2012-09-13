@@ -10,11 +10,8 @@
 #import('package:web_components/tools/lib/cmd_options.dart');
 #import('package:web_components/tools/lib/file_system.dart');
 #import('package:web_components/tools/lib/file_system_vm.dart');
-#import('package:web_components/tools/lib/source.dart');
 #import('package:web_components/tools/lib/world.dart');
-#import('codegen_application.dart');
 #import('compile.dart');
-#import('source_file.dart');
 #import('template.dart');
 #import('utils.dart');
 

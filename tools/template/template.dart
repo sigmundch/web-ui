@@ -4,15 +4,10 @@
 
 #library('template');
 
-#import('dart:coreimpl');
 #import('package:args/args.dart');
 #import('package:web_components/tools/lib/cmd_options.dart');
 #import('package:web_components/tools/lib/file_system_memory.dart');
-#import('package:web_components/tools/lib/source.dart');
 #import('package:web_components/tools/lib/world.dart');
-#import('compile.dart');
-#import('codegen_application.dart');
-#import('utils.dart');
 
 ArgParser commandOptions() {
   var args = new ArgParser();

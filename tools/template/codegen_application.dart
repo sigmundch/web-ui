@@ -4,9 +4,7 @@
 
 #library('codegen_application');
 
-#import('dart:coreimpl');
 #import('package:html5lib/html5parser.dart');
-#import('package:html5lib/tokenizer.dart');
 #import('package:html5lib/treebuilders/simpletree.dart');
 #import('package:web_components/tools/lib/world.dart');
 
