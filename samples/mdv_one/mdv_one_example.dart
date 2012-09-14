@@ -1,6 +1,6 @@
 #import('dart:html');
-#import('../../watcher.dart');
-#import('../../tools/lib/data_template.dart');
+#import("package:web_components/watcher.dart");
+#import('package:web_components/src/template/data_template.dart');
 #import('mdv_one_views.tmpl.dart');
 
 /**

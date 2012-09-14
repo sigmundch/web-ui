@@ -1,9 +1,9 @@
 #library('footer');
 #import('dart:html');
-#import("package:web_components/component.dart");
+#import("package:web_components/mirror_polyfill/component.dart");
 #import("package:web_components/watcher.dart");
-#import("package:web_components/web_components.dart");
-#import("package:web_components/component.dart", prefix: "polyfill");
+#import("package:web_components/mirror_polyfill/web_components.dart");
+#import("package:web_components/mirror_polyfill/component.dart", prefix: "polyfill");
 #import('model.dart');
 
 class FooterComponent extends polyfill.Component {

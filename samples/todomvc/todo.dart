@@ -15,7 +15,7 @@
 
 #import('model.dart');
 #import("package:web_components/watcher.dart");
-#import("package:web_components/web_components.dart");
+#import("package:web_components/mirror_polyfill/web_components.dart");
 
 main() {
   initializeComponents(viewModel);

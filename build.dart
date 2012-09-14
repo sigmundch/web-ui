@@ -4,7 +4,7 @@
 
 #import("dart:io");
 #import("package:args/args.dart");
-#import("tools/template/tool.dart", prefix: "templatetool");
+#import("bin/dwc.dart", prefix: "dwc");
 
 bool cleanBuild;
 bool fullBuild;
@@ -80,7 +80,7 @@ void handleRemovedFiles(List<String> files) => files.forEach(_maybeClean);
 void _processFile(String arg) {
   if (arg.endsWith(".tmpl")) {
     print("processing: ${arg}");
-    templatetool.run([arg, '$arg.dart']);
+    dwc.run([arg, '$arg.dart']);
   }
 }
 

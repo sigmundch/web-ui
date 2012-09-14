@@ -10,7 +10,7 @@
 #library('component');
 
 #import('dart:html');
-#import('../../watcher.dart');
+#import('../watcher.dart');
 #import('web_components.dart');
 
 /**

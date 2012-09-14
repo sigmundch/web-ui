@@ -6,7 +6,7 @@
 
 #import('dart:html');
 
-#import('../../lib/js_polyfill/web_components.dart');
+#import('package:web_components/js_polyfill/web_components.dart');
 
 #source('components/components.dart');
 

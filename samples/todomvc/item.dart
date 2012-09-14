@@ -1,8 +1,8 @@
 #library('item');
 #import('dart:html');
-#import("package:web_components/component.dart");
+#import("package:web_components/mirror_polyfill/component.dart");
 #import("package:web_components/watcher.dart");
-#import("package:web_components/component.dart", prefix: "polyfill");
+#import("package:web_components/mirror_polyfill/component.dart", prefix: "polyfill");
 
 #import('model.dart');
 
