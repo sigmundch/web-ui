@@ -12,7 +12,6 @@
 
 #import('dart:html');
 #import('cmd_options.dart');
-#import('codegen_application.dart');
 #import('compile.dart');
 #import('file_system_memory.dart');
 #import('source_file.dart');
@@ -78,13 +77,14 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
       var fs = new MemoryFileSystem();
       fs.writeString("_memory", htmlTemplate);
 
-      var compiler = new Compile(fs, "_memory");
+      var compiler = new Compile(fs);
+      compiler.run("_memory");
 
       compiler.files.forEach((file) {
         dumpTree.add(file.document.outerHTML);
 
         // Get the generated Dart class for this template file.
-        code.add(file.code);
+        code.add(file.info.generatedCode);
       });
     } catch (htmlException) {
       // TODO(terry): TBD

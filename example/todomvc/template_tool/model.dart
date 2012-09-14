@@ -16,7 +16,7 @@ class MainComponent {
 
   bool showDone = true;
 
-  bool get hasElements() => app.todos.length > 0;
+  bool get hasElements => app.todos.length > 0;
 }
 
 MainComponent _viewModel;

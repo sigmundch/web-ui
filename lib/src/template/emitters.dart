@@ -11,19 +11,21 @@
 #import('package:html5lib/dom.dart');
 
 #import('analyzer.dart');
+#import('source_file.dart');
 #import('code_printer.dart');
+#import('codegen.dart', prefix: 'codegen');
 
 /**
  * An emitter for a web component feature.  It collects all the logic for
  * emitting a particular feature (such as data-binding, event hookup) with
  * respect to a single HTML element.
  */
-abstract class Emitter {
+abstract class Emitter<T extends ElementInfo> {
   /** Element for which code is being emitted. */
   Element elem;
 
   /** Information about the element for which code is being emitted. */
-  ElementInfo elemInfo;
+  T elemInfo;
 
   Emitter(this.elem, this.elemInfo);
 
@@ -79,7 +81,7 @@ class Context {
  * Generates a field for any element that has either event listeners or data
  * bindings.
  */
-class ElementFieldEmitter extends Emitter {
+class ElementFieldEmitter extends Emitter<ElementInfo> {
   ElementFieldEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   void emitDeclarations(Context context) {
@@ -115,7 +117,7 @@ class ElementFieldEmitter extends Emitter {
  * Generates event listeners attached to a node and code that attaches/detaches
  * the listener.
  */
-class EventListenerEmitter extends Emitter {
+class EventListenerEmitter extends Emitter<ElementInfo> {
 
   EventListenerEmitter(Element elem, ElementInfo info)
       : super(elem, info);
@@ -158,7 +160,7 @@ class EventListenerEmitter extends Emitter {
 }
 
 /** Generates watchers that listen on data changes and update a DOM element. */
-class DataBindingEmitter extends Emitter {
+class DataBindingEmitter extends Emitter<ElementInfo> {
   DataBindingEmitter(Element elem, ElementInfo info)
       : super(elem, info);
 
@@ -238,7 +240,7 @@ class DataBindingEmitter extends Emitter {
 }
 
 /** Copies values from the scope into the object at component creation time. */
-class DataValueEmitter extends Emitter {
+class DataValueEmitter extends Emitter<ElementInfo> {
   DataValueEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   void emitCreated(Context context) {
@@ -254,7 +256,7 @@ class DataValueEmitter extends Emitter {
 }
 
 /** Emitter of template conditionals like `<template instantiate='if test'>`. */
-class ConditionalEmitter extends Emitter {
+class ConditionalEmitter extends Emitter<TemplateInfo> {
   final CodePrinter childrenCreated;
   final CodePrinter childrenRemoved;
   final CodePrinter childrenInserted;
@@ -293,8 +295,9 @@ class ConditionalEmitter extends Emitter {
 
   void emitInserted(Context context) {
     var id = elemInfo.idAsIdentifier;
+    var condition = (elemInfo as TemplateInfo).ifCondition;
     context.insertedMethod.add('''
-        _stopWatcher_if$id = bind(() => ${elemInfo.ifCondition}, (e) {
+        _stopWatcher_if$id = bind(() => $condition, (e) {
           bool showNow = e.newValue;
           if (_child$id != null && !showNow) {
             // Remove any listeners/watchers on children
@@ -345,14 +348,14 @@ class ConditionalEmitter extends Emitter {
 /**
  * Emitter of template lists like `<template iterate='item in items'>`.
  */
-class ListEmitter extends Emitter {
+class ListEmitter extends Emitter<TemplateInfo> {
   // TODO(jmesserly): can these be final?
   final CodePrinter childrenDeclarations;
   final CodePrinter childrenCreated;
   final CodePrinter childrenRemoved;
   final CodePrinter childrenInserted;
 
-  ListEmitter(Element elem, ElementInfo info)
+  ListEmitter(Element elem, TemplateInfo info)
       : childrenDeclarations = new CodePrinter(),
         childrenCreated = new CodePrinter(),
         childrenRemoved = new CodePrinter(),
@@ -421,52 +424,19 @@ class ListEmitter extends Emitter {
       queryFromElement: childElementName);
 }
 
-
-/** Generates the class corresponding to a web component. */
-class WebComponentEmitter extends TreeVisitor implements Context {
-  final Map<Node, ElementInfo> _info;
-
+/**
+ * An visitor that applies [ElementFieldEmitter], [EventListenerEmitter],
+ * [DataBindingEmitter], [DataValueEmitter], [ConditionalEmitter], and
+ * [ListEmitter] recursively on a DOM tree.
+ */
+class RecursiveEmitter extends TreeVisitor {
+  final FileInfo _info;
   Context _context;
-  String constructorSignature;
 
-  int _totalIds = 0;
-  int nextId() => ++_totalIds;
-
-  WebComponentEmitter(FileInfo documentInfo, this.constructorSignature)
-      : _info = documentInfo.elements,
-        _context = new Context();
-
-  String run(Node node) {
-    visit(node);
-    var result = new CodePrinter(1);
-    result.add(_context.declarations);
-    result.add('');
-
-    // Build the constructor function.
-    result.add('$constructorSignature;');
-    result.add('');
-
-    // Build the created function.
-    result.add('void created(ShadowRoot shadowRoot) {\nroot = shadowRoot;');
-    result.add(_context.createdMethod);
-    result.add('}');
-    result.add('');
-
-    // Build the inserted function.
-    result.add('void inserted() {');
-    result.add(_context.insertedMethod);
-    result.add('}');
-    result.add('');
-
-    // Build the removed function.
-    result.add('void removed() {');
-    result.add(_context.removedMethod);
-    result.add('}');
-    return result.formatString();
-  }
+  RecursiveEmitter(this._info) : _context = new Context();
 
   void visitElement(Element elem) {
-    var elemInfo = _info[elem];
+    var elemInfo = _info.elements[elem];
     if (elemInfo == null) {
       super.visitElement(elem);
       return;
@@ -502,5 +472,60 @@ class WebComponentEmitter extends TreeVisitor implements Context {
     super.visitElement(elem);
 
     _context = oldContext;
+  }
+}
+
+/** Generates the class corresponding to a web component. */
+class WebComponentEmitter extends RecursiveEmitter {
+  WebComponentEmitter(FileInfo info) : super(info);
+
+  String run(Node node) {
+    visit(node);
+    return codegen.componentCode(
+        _info.filename, _info.libraryName, _info.imports,
+        _info.webComponentClass, _info.webComponentName, _info.userCode,
+        _context.declarations.formatString(1),
+        _context.createdMethod.formatString(2),
+        _context.insertedMethod.formatString(2),
+        _context.removedMethod.formatString(2));
+  }
+}
+
+/** Generates the class corresponding to the main html page. */
+class MainPageEmitter extends RecursiveEmitter {
+  final List<SourceFile> _files;
+  final Map<SourceFile, FileInfo> _filesInfo;
+
+  MainPageEmitter(FileInfo mainFileInfo, this._files, this._filesInfo)
+      : super(mainFileInfo);
+
+  String run(Document document) {
+    visit(document);
+    var generatedImports = _files.map((file) => _filesInfo[file].dartFilename);
+
+    // TODO(jmesserly): seems like this should be done in analysis phase.
+    var usedComponents = new Set();
+    for (var file in _files) {
+      usedComponents.addAll(_filesInfo[file].usedComponents);
+    }
+
+    var mappings = [];
+    for (var file in _files) {
+      var fileInfo = _filesInfo[file];
+      var name = fileInfo.webComponentName;
+      if (name != null && usedComponents.contains(name)) {
+        var className = fileInfo.webComponentClass;
+        mappings.add("'$name': () => new $className()");
+      }
+    }
+
+    return codegen.mainDartCode(
+        _info.filename, _info.libraryName,
+        generatedImports, _info.imports,
+        _context.declarations.formatString(0),
+        _context.createdMethod.formatString(1),
+        _context.insertedMethod.formatString(1),
+        Strings.join(mappings, ',\n    '),
+        document.body.innerHTML.trim());
   }
 }

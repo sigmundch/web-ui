@@ -25,10 +25,6 @@ class VMFileSystem implements FileSystem {
     return new String.fromCharCodes(new Utf8Decoder(buffer).decodeRest());
   }
 
-  bool fileExists(String filename) {
-    return new File(filename).existsSync();
-  }
-
   void createDirectory(String path, [bool recursive = false]) {
     // TODO(rnystrom): Implement.
     throw 'createDirectory() is not implemented by VMFileSystem yet.';
@@ -38,7 +34,4 @@ class VMFileSystem implements FileSystem {
     // TODO(rnystrom): Implement.
     throw 'removeDirectory() is not implemented by VMFileSystem yet.';
   }
-
-  String filenameWithoutExtension(String filename) =>
-      new Path(filename).filenameWithoutExtension;
 }
