@@ -6,12 +6,12 @@
 
 #import('dart:io');
 #import('package:args/args.dart');
-#import('../lib/file_system.dart');
-#import('../lib/file_system_vm.dart');
-#import('../lib/world.dart');
-#import('../lib/utils.dart');
-#import('../lib/source.dart');
-#import('../lib/cmd_options.dart');
+#import('../template/file_system.dart');
+#import('../template/file_system_vm.dart');
+#import('../template/world.dart');
+#import('../template/utils.dart');
+#import('../template/source.dart');
+#import('../template/cmd_options.dart');
 #import('css.dart');
 
 FileSystem files;
