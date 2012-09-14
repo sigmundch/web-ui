@@ -12,24 +12,21 @@
  * An input html file to process by the template compiler; either main file or
  * web component file.
  */
-class SourceFile {
+class SourceFile implements Hashable {
   final String filename;
-  final ElemCG elemCG;
   final bool isWebComponent;
   Document document;
-  String code;
-  String html;
 
   /** Generated analysis info for this file. */
   FileInfo info;
 
   /** Another files to process (e.g., web components). */
-  SourceFile(this.filename, this.elemCG, [this.isWebComponent = true]);
+  SourceFile(this.filename, [this.isWebComponent = true]);
 
   String get dartFilename => "$filename.dart";
   String get htmlFilename => "$filename.html";
 
-  String get webComponentName => isWebComponent ? elemCG.webComponentName : "";
+  String toString() => "<#SourceFile $filename>";
 
-  String toString() => "$filename";
+  int hashCode() => filename.hashCode();
 }

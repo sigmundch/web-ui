@@ -74,8 +74,8 @@ void run(List<String> args) {
     // Write out the code associated with each source file.
     print("Write files to ${outDirectory.path}:");
     for (var file in compiler.files) {
-      writeFile(file.dartFilename, outDirectory, file.code);
-      writeFile(file.htmlFilename, outDirectory, file.html);
+      writeFile(file.dartFilename, outDirectory, file.info.generatedCode);
+      writeFile(file.htmlFilename, outDirectory, file.info.generatedHtml);
     }
   }, printTime: true);
 }

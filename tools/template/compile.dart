@@ -10,10 +10,10 @@
 #import('package:web_components/tools/lib/file_system.dart');
 #import('package:web_components/tools/lib/world.dart');
 
-#import('analyzer.dart', prefix: 'analyzer');
+#import('analyzer.dart');
 #import('code_printer.dart');
+#import('codegen.dart', prefix: 'codegen');
 #import('codegen_application.dart');
-#import('codegen_component.dart');
 #import('emitters.dart');
 #import('source_file.dart');
 #import('utils.dart');
@@ -48,10 +48,11 @@ class Compile {
   final FileSystem filesystem;
   final String baseDir;
   final List<SourceFile> files;
+  final Map<SourceFile, FileInfo> info;
 
   /** Used by template tool to open a file. */
   Compile(this.filesystem, String filename, [this.baseDir = ""])
-      : files = <SourceFile>[] {
+      : files = <SourceFile>[], info = new Map<SourceFile, FileInfo>() {
     _parseAndLoadFiles(filename);
     _analizeAllFiles();
     _emitAll();
@@ -86,7 +87,7 @@ class Compile {
 
   /** Parse [filename] and treat it as a component if [isComponent] is true. */
   SourceFile _parseFile(String filename, bool isComponent) {
-    var file = _createFile(filename, isComponent);
+    var file = new SourceFile(filename, isComponent);
     files.add(file);
     var source = filesystem.readAll("$baseDir/$filename");
     file.document = time("Parsed $filename", () => parseHtml(source, filename));
@@ -98,50 +99,36 @@ class Compile {
     return file;
   }
 
-  SourceFile _createFile(String filename, bool isWebComponent) {
-    var ecg = new ElemCG();
-    var file = new SourceFile(filename, ecg, isWebComponent);
-    ecg.file = file;
-    return file;
-  }
-
   /** Run the analyzer on every input html file. */
   void _analizeAllFiles() {
     for (var file in files) {
-      file.info = time('Analyzed ${file.filename}',
-          () => analyzer.analyze(file.document));
+      info[file] = time('Analyzed ${file.filename}', () => analyze(file));
     }
   }
 
   /** Emit the generated code corresponding to each input file. */
   void _emitAll() {
+    var emitCG = new Map<SourceFile, ElemCG>();
     // TODO(sigmund): simplify walker
     for (var file in files) {
-      time('Walked ${file.filename}',
-          () => _walkTree(file.document, file.elemCG));
+      emitCG[file] = time('Walked ${file.filename}', () => _walkTree(file));
     }
 
     for (var file in files) {
       time('Codegen ${file.filename}', () {
-        file.code = _emitter(file);
-        var html = _emitterHTML(file);
-        file.html =
-          "<!-- Generated Web Component from HTML template ${file.filename}."
-          "  DO NOT EDIT. -->\n"
-          "$html";
+        file.info.generatedCode = _emitter(file, emitCG[file]);
+        file.info.generatedHtml = _emitterHtml(file);
       });
     }
   }
 
   /** Walk the HTML tree of the template file. */
-  void _walkTree(Document doc, ElemCG ecg) {
-    if (!ecg.pushBlock()) {
-      world.error("Error at ${doc.nodes}");
-    }
+  ElemCG _walkTree(SourceFile file) {
+    var ecg = new ElemCG(file);
+    ecg.pushBlock();
 
     // Start from the HTML node.
-    var start = doc.query('html');
-
+    var start = file.document.query('html');
     bool firstTime = true;
     for (var child in start.nodes) {
       if (child is Text) {
@@ -152,32 +139,58 @@ class Compile {
         // Skip any empty text nodes; no need to pollute the pretty-printed
         // HTML.
         // TODO(terry): Need to add {space}, {/r}, etc. like Soy.
-        String textNodeValue = child.value.trim();
-        if (textNodeValue.length > 0) {
-          CGStatement stmt = ecg.pushStatement(child, "frag");
+        if (child.value.trim().length > 0) {
+          ecg.pushStatement(child, "frag");
         }
-        continue;
+      } else {
+        ecg.emitConstructHtml(child, "", "frag");
+        firstTime = false;
       }
-
-      ecg.emitConstructHtml(child, "", "frag");
-      firstTime = false;
     }
+    return ecg;
   }
 
+
   /** Emit the Dart code. */
-  String _emitter(SourceFile file) {
+  String _emitter(SourceFile file, ElemCG elemCG) {
     var libraryName = file.filename.replaceAll('.', '_');
 
     if (file.isWebComponent) {
-      return CodegenComponent.generate(libraryName, file.filename, file.elemCG);
+      return _emitComponentDartFile(file);
     } else {
       return CodegenApplication.generate(file.document, files, libraryName,
-          file.filename, file.elemCG);
+          file.filename, elemCG);
     }
   }
 
-  String _emitterHTML(SourceFile file) {
+  /** Generate a dart file containing the class for a web component. */
+  String _emitComponentDartFile(SourceFile file) {
+    FileInfo fileInfo = info[file];
+    if (!file.isWebComponent || fileInfo.webComponentName == null) {
+      world.error('unexpected: no component was declared in ${file.filename}');
+      return '';
+    }
 
+    String extraImports = '';
+    if (fileInfo.imports.length > 0) {
+      extraImports = new StringBuffer()
+          .add("/** Imports extracted from script tag in HTML file. */\n")
+          .addAll(fileInfo.imports.map((url) => "#import('$url');\n"))
+          .toString();
+    }
+
+    var className = fileInfo.webComponentClass;
+    var emitter = new WebComponentEmitter(fileInfo,
+        "$className() : super('${fileInfo.webComponentName}')");
+    var genCode = emitter.run(file.document);
+
+    return codegen.componentCode(file.filename, fileInfo.libraryName,
+        extraImports, className, fileInfo.webComponentName, fileInfo.userCode,
+        genCode);
+  }
+
+  /** Emit the HTML code. */
+  String _emitterHtml(SourceFile file) {
     // TODO(jmesserly): not sure about removing script nodes like this
     // But we need to do this for web components to work.
     var scriptTags = file.document.queryAll('script');
@@ -186,11 +199,15 @@ class Compile {
       tag.parent.$dom_removeChild(tag);
     }
 
+    var html;
     if (file.isWebComponent) {
-      return file.document.outerHTML;
+      html = file.document.outerHTML;
     } else {
-      return CodegenApplication.generateHTML(file.document, files);
+      html = CodegenApplication.generateHTML(file.document, files);
     }
+    return "<!-- Generated Web Component from HTML template ${file.filename}."
+           "  DO NOT EDIT. -->\n"
+           "$html";
   }
 }
 
@@ -206,23 +223,14 @@ class CGBlock {
   /** Local variable index (e.g., e0, e1, etc.). */
   int _localIndex;
 
-  // TODO(jmesserly): these are dead now?
-  final analyzer.TemplateInfo templateInfo;
-  final Element templateElement;
   final SourceFile file;
+  final FileInfo info;
 
-  CGBlock(SourceFile file, [Element templateElement])
+  CGBlock(SourceFile file, FileInfo info)
       : file = file,
-        templateElement = templateElement,
-        templateInfo = (templateElement != null &&
-            templateElement is analyzer.TemplateInfo ?
-            file.info.elements[templateElement] : null),
+        info = info,
         _stmts = <CGStatement>[],
         _localIndex = 0;
-
-  bool get hasStatements => !_stmts.isEmpty();
-  bool get isConstructor => templateInfo == null;
-  bool get isTemplate => templateInfo != null;
 
   /**
    * Each statement (HTML) encountered is remembered with either/both variable
@@ -232,14 +240,14 @@ class CGBlock {
   CGStatement push(elem, parentName, [bool exact = false]) {
     // TODO(jmesserly): fix this int|String union type.
     var varName;
-    analyzer.ElementInfo info = file.info.elements[elem];
-    if (info != null) varName = info.idAsIdentifier;
+    var elemInfo = info.elements[elem];
+    if (elemInfo != null) varName = elemInfo.idAsIdentifier;
 
     if (varName == null) {
       varName = _localIndex++;
     }
 
-    var s = new CGStatement(elem, info, parentName, varName, exact);
+    var s = new CGStatement(elem, elemInfo, parentName, varName, exact);
     _stmts.add(s);
     return s;
   }
@@ -251,14 +259,6 @@ class CGBlock {
   }
 
   CGStatement get last => _stmts.length > 0 ? _stmts.last() : null;
-
-  /**
-   * Emit the entire component class.
-   */
-  String webComponentCode(ElemCG ecg, String constructorSignature) {
-    var emitter = new WebComponentEmitter(file.info, constructorSignature);
-    return emitter.run(file.document);
-  }
 
   const String _ITER_KEYWORD = " in ";
   String emitTemplateIterate(CodePrinter out, int index) {
@@ -290,7 +290,7 @@ class CGStatement {
   final bool _repeating;
   final StringBuffer _buff;
   Node _elem;
-  analyzer.ElementInfo _info;
+  ElementInfo _info;
   final parentName;
   String variableName;
   bool _globalVariable;
@@ -386,7 +386,7 @@ class CGStatement {
       if (_elem.tagName == 'template') {
         // TODO(terry): Need to support multiple templates either nested or
         //              siblings.
-        // Hookup analyzer.TemplateInfo to the root.
+        // Hookup TemplateInfo to the root.
         printer.add("root = $parentName;\n");
       }
     } else {
@@ -411,20 +411,6 @@ class ElemCG {
   var identRe = const RegExp(
       @"""s*('"\'\"[^'"\'\"]+'"\'\"|[_A-Za-z][_A-Za-z0-9]*)""");
 
-  bool _webComponent;
-
-  /** Name of class if web component constructor attribute of element tag. */
-  String _className;
-
-  /** Name of the web component name attribute of element tag. */
-  String _webComponentName;
-
-  /** List of script tags with src. */
-  final List<String> _includes;
-
-  /** Dart script code associated with web component. */
-  String _userCode;
-
   final List<CGBlock> _cgBlocks;
 
   /** Global List var initializtion for all blocks in a #each. */
@@ -434,20 +420,15 @@ class ElemCG {
   final List<String> repeats;
 
   /** Input file associated with this emitter. */
-  SourceFile file;
+  final SourceFile file;
+  final FileInfo info;
 
-  ElemCG()
-      : _webComponent = false,
-        _includes = [],
+  ElemCG(SourceFile file)
+      : file = file,
+        info = file.info,
         repeats = [],
         _cgBlocks = [],
         _globalInits = new StringBuffer();
-
-  bool get isWebComponent => _webComponent;
-  String get className => _className;
-  String get webComponentName => _webComponentName;
-  List<String> get includes => _includes;
-  String get userCode => _userCode;
 
   void reportError(String msg) {
     world.error("${file.filename}: $msg");
@@ -459,9 +440,8 @@ class ElemCG {
     }
   }
 
-  bool pushBlock([Element templateElement]) {
-    _cgBlocks.add(new CGBlock(file, templateElement));
-    return true;
+  void pushBlock() {
+    _cgBlocks.add(new CGBlock(file, info));
   }
 
   CGStatement pushStatement(var elem, var parentName) {
@@ -500,24 +480,6 @@ class ElemCG {
 
   CGBlock getCGBlock(int idx) => idx < _cgBlocks.length ? _cgBlocks[idx] : null;
 
-  final String _DART_SCRIPT_TYPE = "application/dart";
-
-  void emitScript(Element elem) {
-    Expect.isTrue(elem.tagName == 'script');
-
-    if (elem.attributes['type'] == _DART_SCRIPT_TYPE) {
-      String includeName = elem.attributes["src"];
-      if (includeName != null) {
-        _includes.add(includeName);
-      } else {
-        Expect.isTrue(elem.nodes.length == 1);
-        // This is the code to be emitted with the web component.
-        _userCode = elem.nodes[0].value;
-      }
-    } else {
-      reportError('tag ignored possibly missing type="$_DART_SCRIPT_TYPE"');
-    }
-  }
 
   /**
    * [scopeName] for expression.
@@ -538,8 +500,8 @@ class ElemCG {
       // http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-B63ED1A3).
       if (elem is! DocumentFragment) {
         // TODO(jmesserly): would be nice if we didn't have to grab info here.
-        var info = file.info.elements[elem];
-        add("<${elem.tagName}${attributesToString(elem, info)}>");
+        var elemInfo = info.elements[elem];
+        add("<${elem.tagName}${attributesToString(elem, elemInfo)}>");
       }
       String prevParent = lastVariableName;
       for (var childElem in elem.nodes) {
@@ -632,29 +594,12 @@ class ElemCG {
                           bool immediateNestedRepeat = false]) {
     if (elem is Element) {
       if (elem.tagName == "element") {
-        _webComponent = true;
-
-        String className = elem.attributes["constructor"];
-        if (className != null) {
-          _className = className;
-        } else {
-          reportError(
-              "Web Component class name missing; use constructor attribute");
-        }
-
-        String wcName = elem.attributes["name"];
-        if (wcName != null) {
-          _webComponentName = wcName;
-        } else {
-          reportError("Missing name of Web Component use name attribute");
-        }
-
         CGStatement stmt = pushStatement(elem, parentName);
         emitElement(elem, scopeName, stmt.hasGlobalVariable ?
             stmt.variableName : varIndex);
       } else if (elem.tagName == 'script') {
-        // Never emit a script tag.
-        emitScript(elem);
+        // Nothing to do.
+        
       } else if (elem.tagName == 'link') {
         // Nothing to do.
       } else {
@@ -683,9 +628,7 @@ class ElemCG {
   }
 
   void emitTemplate(Element elem) {
-    if (!pushBlock(elem)) {
-      reportError("Error at ${elem}");
-    }
+    pushBlock();
 
     for (var child in elem.nodes) {
       emitConstructHtml(child, "e0", "templateRoot");
@@ -694,7 +637,7 @@ class ElemCG {
 }
 
 // TODO(jmesserly): is there a better way to do this?
-String attributesToString(Node node, analyzer.ElementInfo info) {
+String attributesToString(Node node, ElementInfo info) {
   if (node.attributes.length == 0) return '';
 
   var str = new StringBuffer();

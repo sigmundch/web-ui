@@ -84,7 +84,7 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
         dumpTree.add(file.document.outerHTML);
 
         // Get the generated Dart class for this template file.
-        code.add(file.code);
+        code.add(file.info.generatedCode);
       });
     } catch (htmlException) {
       // TODO(terry): TBD

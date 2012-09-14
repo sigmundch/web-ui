@@ -10,7 +10,7 @@
 
 #import('analyzer.dart', prefix: 'analyzer');
 #import('code_printer.dart');
-#import('codegen.dart');
+#import('codegen.dart', prefix: 'codegen');
 #import('compile.dart');
 #import('source_file.dart');
 #import('utils.dart');
@@ -49,41 +49,36 @@ class CodegenApplication {
       world.fatal("Bad library - $libraryName");
     }
 
-    CodePrinter buff = new CodePrinter();
-    buff.add(Codegen.header(filename, libraryName));
+    var printer = new CodePrinter();
+    printer.add(codegen.header(filename, libraryName));
 
     for (var file in files) {
-      buff.add("#import('${file.dartFilename}');");
+      printer.add("#import('${file.dartFilename}');");
     }
 
-    buff.add(Codegen.commonIncludes);
+    printer.add(codegen.commonIncludes);
 
-    if (ecg.includes.length > 0) {
-      buff.add("/** Below import from script tag in HTML file. */");
-      for (var includeName in ecg.includes) {
-        buff.add("#import('$includeName');");
+    if (ecg.info.imports.length > 0) {
+      printer.add("/** Below import from script tag in HTML file. */");
+      for (var target in ecg.info.imports) {
+        printer.add("#import('$target');");
       }
-      buff.add("");
+      printer.add("");
     }
 
-    buff.add("/** Create the views and bind them to models. */");
-    buff.add("mainMain() {");
-    buff.add(mainMainBody);
+    printer.add("/** Create the views and bind them to models. */")
+        .add("mainMain() {")
+        .add(mainMainBody)
+        // Attach any models.
+        .add(_cga._emitIterators(ecg))
+        .add(closeMainMainStartComponentsSetup)
+        .add(_cga._emitComponentsUsed(files, ecg))
+        .add("}")
+        .add("");
 
-    // Attach any models.
-    buff.add(_cga._emitIterators(ecg));
+    _cga._emitIntialPage(printer, doc);
 
-    buff.add(closeMainMainStartComponentsSetup);
-
-    buff.add(_cga._emitComponentsUsed(files, ecg));
-
-    buff.add("}");
-
-    buff.add("");
-
-    _cga._emitIntialPage(buff, doc);
-
-    return buff.toString();
+    return printer.toString();
   }
 
   static const String DARTJS_LOADER =
@@ -168,9 +163,9 @@ class CodegenApplication {
     }
 
     for (var file in files) {
-      if (usedComponents.contains(file.webComponentName)) {
-        codePrinter.add("'${file.webComponentName}': "
-            "() => new ${file.elemCG.className}(),");
+      var name = file.info.webComponentName;
+      if (name != null && usedComponents.contains(name)) {
+        codePrinter.add("'$name': () => new ${file.info.webComponentClass}(),");
       }
     }
 

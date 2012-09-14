@@ -295,8 +295,9 @@ class ConditionalEmitter extends Emitter {
 
   void emitInserted(Context context) {
     var id = elemInfo.idAsIdentifier;
+    var condition = (elemInfo as TemplateInfo).ifCondition;
     context.insertedMethod.add('''
-        _stopWatcher_if$id = bind(() => ${elemInfo.ifCondition}, (e) {
+        _stopWatcher_if$id = bind(() => $condition, (e) {
           bool showNow = e.newValue;
           if (_child$id != null && !showNow) {
             // Remove any listeners/watchers on children
@@ -428,7 +429,7 @@ class ListEmitter extends Emitter {
 
 /** Generates the class corresponding to a web component. */
 class WebComponentEmitter extends TreeVisitor {
-  final Map<Node, ElementInfo> _info;
+  final FileInfo _info;
 
   Context _context;
   String constructorSignature;
@@ -436,9 +437,8 @@ class WebComponentEmitter extends TreeVisitor {
   int _totalIds = 0;
   int nextId() => ++_totalIds;
 
-  WebComponentEmitter(FileInfo documentInfo, this.constructorSignature)
-      : _info = documentInfo.elements,
-        _context = new Context();
+  WebComponentEmitter(this._info, this.constructorSignature)
+      : _context = new Context();
 
   String run(Node node) {
     visit(node);
@@ -470,7 +470,7 @@ class WebComponentEmitter extends TreeVisitor {
   }
 
   void visitElement(Element elem) {
-    var elemInfo = _info[elem];
+    var elemInfo = _info.elements[elem];
     if (elemInfo == null) {
       super.visitElement(elem);
       return;

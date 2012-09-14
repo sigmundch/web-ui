@@ -33,14 +33,14 @@ main() {
   test('id extracted - shallow element', () {
     var input = '<div id="foo"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].elementId, equals('foo'));
   });
 
   test('id extracted - deep element', () {
     var input = '<div><div><div id="foo"></div></div></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].elementId, isNull);
     expect(info[elem.nodes[0]].elementId, isNull);
     expect(info[elem.nodes[0].nodes[0]].elementId, equals('foo'));
@@ -49,14 +49,14 @@ main() {
   test('ElementInfo.toString()', () {
     var input = '<div id="foo"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].toString().startsWith('#<ElementInfo '));
   });
 
   test('id as identifier - found in dom', () {
     var input = '<div id="foo-bar"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].idAsIdentifier, equals('_fooBar'));
   });
 
@@ -64,7 +64,7 @@ main() {
     identifierOf(String id) {
       var input = '<div id="$id"></div>';
       var elem = parseSubtree(input);
-      return analyze(elem).elements[elem].idAsIdentifier;
+      return analyzeNode(elem).elements[elem].idAsIdentifier;
     }
     expect(identifierOf('foo-bar'), equals('_fooBar'));
     expect(identifierOf('foo-b'), equals('_fooB'));
@@ -76,7 +76,7 @@ main() {
   test('id as identifier - deep element', () {
     var input = '<div><div><div id="foo-ba"></div></div></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].elementId, isNull);
     expect(info[elem.nodes[0]].elementId, isNull);
     expect(info[elem.nodes[0].nodes[0]].idAsIdentifier, equals('_fooBa'));
@@ -85,7 +85,7 @@ main() {
   test('id as identifier - no id', () {
     var input = '<div></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].elementId, isNull);
     expect(info[elem].idAsIdentifier, isNull);
   });
@@ -93,28 +93,28 @@ main() {
   test('hasDataBinding - attribute w/o data', () {
     var input = '<input value="x">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(!info[elem].hasDataBinding);
   });
 
   test('hasDataBinding - attribute with data, 1 way binding', () {
     var input = '<input value="{{x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
   });
 
   test('hasDataBinding - attribute with data, 2 way binding', () {
     var input = '<input data-bind="{{value:x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
   });
 
   test('hasDataBinding - content with data', () {
     var input = '<div>{{x}}</div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
     expect(info[elem].contentBinding, equals('x'));
     expect(info[elem].contentExpression, equals(@"'${x}'"));
@@ -123,7 +123,7 @@ main() {
   test('hasDataBinding - content with text and data', () {
     var input = '<div> a b {{x}}c</div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
     expect(info[elem].contentBinding, equals('x'));
     expect(info[elem].contentExpression, equals(@"' a b ${x}c'"));
@@ -132,7 +132,7 @@ main() {
   test('attribute - no info', () {
     var input = '<input value="x">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isNotNull);
     expect(info[elem].attributes, isEmpty);
   });
@@ -140,7 +140,7 @@ main() {
   test('attribute - 1 way binding input value', () {
     var input = '<input value="{{x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['value'], isNotNull);
     expect(!info[elem].attributes['value'].isClass);
@@ -151,7 +151,7 @@ main() {
   test('attribute - 2 way binding input value', () {
     var input = '<input data-bind="{{value:x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['value'], isNotNull);
     expect(!info[elem].attributes['value'].isClass);
@@ -163,7 +163,7 @@ main() {
   test('attribute - 1 way binding checkbox', () {
     var input = '<input checked="{{x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['checked'], isNotNull);
     expect(!info[elem].attributes['checked'].isClass);
@@ -174,7 +174,7 @@ main() {
   test('attribute - 2 way binding checkbox', () {
     var input = '<input data-bind="{{checked:x}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['checked'], isNotNull);
     expect(!info[elem].attributes['checked'].isClass);
@@ -186,7 +186,7 @@ main() {
   test('attribute - 1 way binding, normal field', () {
     var input = '<div foo="{{x}}"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['foo'], isNotNull);
     expect(!info[elem].attributes['foo'].isClass);
@@ -196,7 +196,7 @@ main() {
   test('attribute - single class', () {
     var input = '<div class="{{x}}"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['class'], isNotNull);
     expect(info[elem].attributes['class'].isClass);
@@ -206,7 +206,7 @@ main() {
   test('attribute - many classes', () {
     var input = '<div class="{{x}} {{y}}{{z}}  {{w}}"></div>';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
     expect(info[elem].attributes['class'], isNotNull);
     expect(info[elem].attributes['class'].isClass);
@@ -217,7 +217,7 @@ main() {
   test('attribute - ui-event hookup', () {
     var input = '<input data-on-change="{{foo()}}">';
     var elem = parseSubtree(input);
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isEmpty);
     expect(info[elem].events['change'], isNotNull);
     expect(info[elem].events['change'].eventName, 'change');
@@ -226,7 +226,7 @@ main() {
 
   test('template element', () {
     var elem = parseSubtree('<template></template>');
-    var info = analyze(elem).elements[elem];
+    var info = analyzeNode(elem).elements[elem];
     expect(info is! TemplateInfo, reason: 'example does not need TemplateInfo');
   });
 
@@ -234,7 +234,7 @@ main() {
   // `<template instantiate>` in Model-Driven-Views.
   test('template instantiate (invalid)', () {
     var elem = parseSubtree('<template instantiate="foo"></template>');
-    var info = analyze(elem).elements[elem];
+    var info = analyzeNode(elem).elements[elem];
     expect(elem.attributes, equals({'instantiate': 'foo'}));
     expect(info is! TemplateInfo, reason: 'example is not a valid template');
   });
@@ -242,7 +242,7 @@ main() {
   test('template instantiate if', () {
     var elem = parseSubtree(
         '<template instantiate="if foo" is="x-if"></template>');
-    TemplateInfo info = analyze(elem).elements[elem];
+    TemplateInfo info = analyzeNode(elem).elements[elem];
     expect(info.hasIfCondition);
     expect(elem.attributes, equals({
       'instantiate': 'if foo', 'is': 'x-if', 'id' : '__e-0'}));
@@ -252,14 +252,14 @@ main() {
 
   test('template iterate (invalid)', () {
     var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
-    var info = analyze(elem).elements[elem];
+    var info = analyzeNode(elem).elements[elem];
     expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
     expect(info is! TemplateInfo, reason: 'example is not a valid template');
   });
 
   test('template iterate', () {
     var elem = parseSubtree('<template iterate="foo in bar" is="x-list">');
-    TemplateInfo info = analyze(elem).elements[elem];
+    TemplateInfo info = analyzeNode(elem).elements[elem];
     expect(elem.attributes, equals({
       'iterate': 'foo in bar', 'is': 'x-list', 'id' : '__e-0'}));
     expect(info.ifCondition, isNull);
@@ -270,20 +270,20 @@ main() {
 
   test('used components', () {
     var elem = parseSubtree('<foo is="x-fancy-button"><bar>');
-    var info = analyze(elem).usedComponents;
+    var info = analyzeNode(elem).usedComponents;
     expect(info, equals(['x-fancy-button']));
   });
 
   test('used components 2', () {
     var elem = parseSubtree('<div is="x-foo"><span is="x-bar">');
-    var info = new List.from(analyze(elem).usedComponents);
+    var info = new List.from(analyzeNode(elem).usedComponents);
     info.sort((x, y) => x.compareTo(y));
     expect(info, equals(['x-bar', 'x-foo']));
   });
 
   test('data-value', () {
     var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
-    var info = analyze(elem).elements;
+    var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isEmpty);
     expect(info[elem].events, isEmpty);
     expect(info[elem].values, equals({'todo': 'x'}));
