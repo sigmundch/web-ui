@@ -10,7 +10,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <link rel="components" href="footer.html">
   <link rel="components" href="newform.html">
-  <link rel="components" href="todoapp.html">
   <link rel="components" href="toggleall.html">
   <link rel="components" href="item.html">
   <link rel="stylesheet" href="../base.css">
@@ -19,10 +18,25 @@
   <script type="application/dart" src='model.dart'></script>
 </head>
 <body>
-  <!-- TODO(jmesserly): I moved most of the application body into a web
-       component, because our data binding codegen requires it. Inline the code
-       here again once that restriction is lifted. -->
-  <section id="todoapp" is="x-todo-app"></section>
+  <section id="todoapp">
+    <header id="header">
+      <h1 class='title'>todos</h1>
+      <div is="x-todo-form"></div>
+    </header>
+    <section id="main">
+      <div is="x-toggle-all"></div>
+      <ul id="todo-list">
+        <template iterate="x in app.todos">
+          <template instantiate="if viewModel.isVisible(x)">
+            <li is="x-todo-row" data-value="todo:x"></li>
+          </template>
+        </template>
+      </ul>
+    </section>
+    <template instantiate="if viewModel.hasElements">
+      <footer is="x-todo-footer" id="footer"></footer>
+    </template>
+  </section>
   <footer id="info">
     <p>Double-click to edit a todo.</p>
     <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team.</p>

@@ -104,6 +104,22 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
   return () => _unregister(watcher);
 }
 
+/**
+ * Add a watcher for [exp] and immediatly invoke [callback]. The watch event
+ * passed to [callback] will have `null` as the old value, and the current
+ * evaluation of [exp] as the new value.
+ */
+WatcherDisposer watchAndInvoke(exp, callback, [debugName]) {
+  var res = watch(exp, callback, debugName);
+  // TODO(jmesserly): this should be "is Getter" once dart2js bug is fixed.
+  if (exp is Function) {
+    callback(new WatchEvent(null, exp()));
+  } else {
+    callback(new WatchEvent(null, exp));
+  }
+  return res;
+}
+
 /** Callback fired when an expression changes. */
 typedef void ValueWatcher(WatchEvent e);
 

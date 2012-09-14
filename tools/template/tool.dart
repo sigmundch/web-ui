@@ -15,7 +15,7 @@
 #import('template.dart');
 #import('utils.dart');
 
-FileSystem files;
+FileSystem fileSystem;
 
 void main() => run(new Options().arguments);
 
@@ -32,9 +32,9 @@ void run(List<String> args) {
     return;
   }
 
-  files = new VMFileSystem();
+  fileSystem = new VMFileSystem();
 
-  initHtmlWorld(parseOptions(results, files));
+  initHtmlWorld(parseOptions(results, fileSystem));
 
   // argument 0 - sourcefile full path
   // argument 1 - output path
@@ -67,15 +67,17 @@ void run(List<String> args) {
     outDirectory.createSync();
   }
 
-  String source = files.readAll(sourceFullFn);
+  String source = fileSystem.readAll(sourceFullFn);
   time('Compiled $sourceFullFn', () {
-    var compiler = new Compile(files, srcPath.filename, srcDir.path);
+    var compiler = new Compile(fileSystem);
+    compiler.run(srcPath.filename, srcDir.path);
 
     // Write out the code associated with each source file.
     print("Write files to ${outDirectory.path}:");
     for (var file in compiler.files) {
-      writeFile(file.dartFilename, outDirectory, file.info.generatedCode);
-      writeFile(file.htmlFilename, outDirectory, file.info.generatedHtml);
+      var info = compiler.info[file];
+      writeFile(info.dartFilename, outDirectory, info.generatedCode);
+      writeFile(info.htmlFilename, outDirectory, info.generatedHtml);
     }
   }, printTime: true);
 }
@@ -89,7 +91,7 @@ void writeFile(String filename, Directory outdir, String contents) {
       print("  Deleting $filename");
     }
   } else {
-    files.writeString(path, contents);
+    fileSystem.writeString(path, contents);
     print("  Writing $filename");
   }
 }

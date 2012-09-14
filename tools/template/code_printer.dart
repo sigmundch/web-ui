@@ -6,9 +6,8 @@
 
 /** Helper class that auto-formats generated code. */
 class CodePrinter {
-  int _indent;
   List _items;
-  CodePrinter([initialIndent = 0]) : _indent = initialIndent, _items = [];
+  CodePrinter() : _items = [];
 
   /**
    * Adds [object] to this printer and appends a new-line after it. Returns this
@@ -27,7 +26,7 @@ class CodePrinter {
    * Returns a formatted code block, with indentation appropriate to code
    * blocks' nesting level.
    */
-  String formatString() {
+  String formatString([int indent = 0]) {
     bool lastEmpty = false;
     var buff = new StringBuffer();
     for (var item in _items) {
@@ -41,11 +40,11 @@ class CodePrinter {
         }
         bool decIndent = line.startsWith("}");
         bool incIndent = line.endsWith("{");
-        if (decIndent) _indent--;
-        for (int i = 0; i < _indent; i++) buff.add('  ');
+        if (decIndent) indent--;
+        for (int i = 0; i < indent; i++) buff.add('  ');
         buff.add(line);
         buff.add('\n');
-        if (incIndent) _indent++;
+        if (incIndent) indent++;
       }
     }
     return buff.toString();

@@ -17,14 +17,8 @@ class SourceFile implements Hashable {
   final bool isWebComponent;
   Document document;
 
-  /** Generated analysis info for this file. */
-  FileInfo info;
-
   /** Another files to process (e.g., web components). */
   SourceFile(this.filename, [this.isWebComponent = true]);
-
-  String get dartFilename => "$filename.dart";
-  String get htmlFilename => "$filename.html";
 
   String toString() => "<#SourceFile $filename>";
 

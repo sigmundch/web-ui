@@ -255,9 +255,6 @@ class _Analyzer extends TreeVisitor {
 
   void run(SourceFile file) {
     result.filename = file.filename;
-    // TODO(sigmund,jmesserly): consider keeping a separate map for these,
-    // rather than storing them directly on each file.
-    file.info = result;
     visit(file.document);
   }
 

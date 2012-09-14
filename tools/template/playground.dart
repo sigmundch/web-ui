@@ -14,7 +14,6 @@
 #import('package:web_components/tools/lib/file_system_memory.dart');
 #import('package:web_components/tools/lib/world.dart');
 #import('package:web_components/tools/lib/cmd_options.dart');
-#import('codegen_application.dart');
 #import('compile.dart');
 #import('source_file.dart');
 #import('template.dart');
@@ -78,7 +77,8 @@ void runTemplate([bool debug = false, bool parseOnly = false]) {
       var fs = new MemoryFileSystem();
       fs.writeString("_memory", htmlTemplate);
 
-      var compiler = new Compile(fs, "_memory");
+      var compiler = new Compile(fs);
+      compiler.run("_memory");
 
       compiler.files.forEach((file) {
         dumpTree.add(file.document.outerHTML);
