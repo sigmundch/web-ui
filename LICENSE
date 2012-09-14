@@ -2,7 +2,7 @@ This license applies to all parts of Dart that are not externally
 maintained libraries. The external maintained libraries used by
 this project are:
 
-TodoMVC - in samples/todomvc/
+TodoMVC - in example/todomvc/
 
 
 The libraries may have their own licenses; we recommend you read them,

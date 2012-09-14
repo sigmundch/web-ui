@@ -3,14 +3,14 @@ http://code.google.com/p/mdv/.  The example is forms validation at
 http://code.google.com/p/mdv/source/browse/use_cases/forms_validation.html.
 
     # To compile the mdv one template
-    tools/run-tool template samples/mdv_one/mdv_one_views.tmpl
+    tools/run-tool template example/mdv_one/mdv_one_views.tmpl
 
 The template compiler will create a Dart file name mdv_one_views.tmpl.dart
 
-To run this code, launch [Dartium][] samples/mdv_one/mdv_one_example.html
+To run this code, launch [Dartium][] example/mdv_one/mdv_one_example.html
 
-Please note that this sample is intended to work on all [modern browsers] using the
-[dart2js][] compiler. Firefox support is blocked on a
+Please note that this example is intended to work on all [modern browsers] using
+the [dart2js][] compiler. Firefox support is blocked on a
 [bug in matchesSelector](http://dartbug.com/4401).
 
 [Dartium]: http://www.dartlang.org/dartium/

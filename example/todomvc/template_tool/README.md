@@ -20,6 +20,6 @@ Here is quick lists of issues to be resolved:
 
 Generating the code:
 
-    bin/dwc.dart --verbose samples/todomvc/template_tool/main.html
+    bin/dwc.dart --verbose example/todomvc/template_tool/main.html
 
 this will generated a number of files with the *.html.dart and *.html.html
