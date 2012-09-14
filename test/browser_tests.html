@@ -1,0 +1,30 @@
+<!-- Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+     for details. All rights reserved. Use of this source code is governed by a
+     BSD-style license that can be found in the LICENSE file. -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Component Tests</title>
+  <style type="text/css">
+    .unittest-table { font-family: monospace; border: 1px; }
+    .unittest-pass { background: #6b3;}
+    .unittest-fail { background: #d55;}
+    .unittest-error { background: #a11;}
+    .unittest-xml-log {opacity:0; color: white;}
+    .test-area { display: none; }
+    body { overflow: visible; }
+  </style>
+  <link rel="components" href="../lib/mirror_polyfill/if_component.html">
+  <link rel="components" href="../lib/mirror_polyfill/list_component.html">
+  <!-- This script comes from running "pub install" in the root folder. -->
+  <!-- disabled because of http://dartbug.com/4943
+  <script type="text/javascript" src="../packages/unittest/test_controller.js">
+  </script>
+  -->
+</head>
+<body>
+  <h1>Loading and running tests</h1>
+  <script type="application/dart" src="browser_tests.dart"></script>
+  <script type="application/javascript" src="../lib/mirror_polyfill/components_polyfill_boostrap.dart.js"></script>
+</body>
+</html>

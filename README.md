@@ -26,13 +26,8 @@ Dependencies are installed using the [Pub Package Manager][pub].
 
     pub install
 
-    # Temporary hack until pub supports self-package references. b/4505
-    cd packages
-    ln -s .. web_components
-
-    # Run command line tests
-    # If needed: export DART_SDK=path/to/dart/sdk
-    tests/run.sh
+    # Run command line tests, needs "dart" executable on your path
+    test/run.sh
 
     # Run browser tests
     export DART_PACKAGE_ROOT=file://`pwd`/packages
@@ -51,3 +46,7 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [pub]: http://www.dartlang.org/docs/pub-package-manager/
 [Dartium]: http://www.dartlang.org/dartium/index.html
 [drt]: http://www.chromium.org/developers/testing/webkit-layout-tests
+[drtlucid]: http://gsdview.appspot.com/dartium-archive/continuous/drt-lucid64.zip
+[drtmac]: http://gsdview.appspot.com/dartium-archive/continuous/drt-mac.zip
+[drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
+[drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
