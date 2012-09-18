@@ -80,7 +80,7 @@ void handleRemovedFiles(List<String> files) => files.forEach(_maybeClean);
 void _processFile(String arg) {
   if (arg.endsWith(".tmpl")) {
     print("processing: ${arg}");
-    dwc.run([arg, '$arg.dart']);
+    dwc.run([arg]);
   }
 }
 

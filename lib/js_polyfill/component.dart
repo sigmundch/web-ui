@@ -30,7 +30,7 @@ class Component extends WebComponent {
 
   static int _id = 0;
   Element element;
-  ShadowRoot root;
+  var root;
 
   /**
    * Names in the declared scope of this component in a template, and their

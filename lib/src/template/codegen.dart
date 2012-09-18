@@ -44,7 +44,7 @@ $extraFields
 
   $className() : super('$webComponentName');
 
-  void created(ShadowRoot shadowRoot) {
+  void created(shadowRoot) {
     root = shadowRoot;
 $createdBody
   }

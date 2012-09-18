@@ -390,7 +390,6 @@ class ListEmitter extends Emitter<TemplateInfo> {
     // TODO(jmesserly): watcher should give us the list, not a boolean.
     context.insertedMethod.add('''
         _stopWatcher$id = bind(() => ${elemInfo.loopItems}, (e) {
-          $id.nodes.clear();
           for (var remover in _removeChild$id) remover();
           _removeChild$id.clear();
           for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
@@ -401,11 +400,12 @@ class ListEmitter extends Emitter<TemplateInfo> {
     context.insertedMethod
         .add(childrenDeclarations)
         .add(childrenCreated)
-        .add('$id.nodes.add($childElementName);')
+        .add('$id.parent.nodes.add($childElementName);')
         .add('// Attach listeners/watchers')
         .add(childrenInserted)
         .add('// Remember to unregister them')
         .add('_removeChild$id.add(() {')
+        .add('$childElementName.remove();')
         .add(childrenRemoved)
         .add('});\n}\n});');
   }
@@ -419,7 +419,7 @@ class ListEmitter extends Emitter<TemplateInfo> {
     ''');
   }
 
-  Context contextForChildren(Context c) =>new Context(
+  Context contextForChildren(Context c) => new Context(
       childrenDeclarations, childrenCreated, childrenInserted, childrenRemoved,
       queryFromElement: childElementName);
 }

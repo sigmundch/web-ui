@@ -87,12 +87,12 @@ class CustomElementsManager {
   ListMap<Element, WebComponent> _customElements;
 
   WebComponent _unwrap(Element e) {
-    return _USE_EXPANDO ? e.dynamic.xtag : _customElements[e];
+    return _USE_EXPANDO ? (e as Dynamic).xtag : _customElements[e];
   }
 
   void _setWrapper(Element e, WebComponent component) {
     if (_USE_EXPANDO) {
-      e.dynamic.xtag = component;
+      (e as Dynamic).xtag = component;
     } else {
       _customElements[e] = component;
     }

@@ -23,7 +23,8 @@ class ComponentScope {
   final Map variables;
 
   ComponentScope(parent, this.variables)
-      : parent = parent is ComponentScope ? parent.dynamic.parent : parent {
+      : parent = parent is ComponentScope ?
+          (parent as Element).parent : parent {
 
     if (parent is ComponentScope) {
       // add variables from parent unless it's shadowed.
@@ -220,7 +221,7 @@ class Component extends WebComponent implements Element {
         // TODO(jmesserly): what about two way binding? Mutation observers?
         disposer = bind(() => mirrorGet(this, value).reflectee, (e) {
           if (key == "checked") {
-            node.dynamic.checked = e.newValue;
+            (node as InputElement).checked = e.newValue;
           } else {
             node.attributes[key] = e.newValue;
           }
@@ -285,7 +286,7 @@ class Component extends WebComponent implements Element {
     // Is it a loop variable?
     var item = null;
     if (scope is ComponentScope) {
-      item = scope.dynamic.variables[names[0]];
+      item = (scope as ComponentScope).variables[names[0]];
       if (item != null) {
         scope = item;
         names.removeRange(0, 1);

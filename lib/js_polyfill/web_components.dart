@@ -46,8 +46,12 @@ abstract class WebComponent {
   /** The web component element wrapped by this class. */
   abstract Element get element;
 
-  /** Invoked when this component gets created. */
-  abstract void created(ShadowRoot root);
+  /**
+   * Invoked when this component gets created.
+   * [root] will either be a [ShadowRoot] or an [Element] depending on if this
+   * is running on a browser with Shadow DOM enabled.
+   */
+  abstract void created(root);
 
   /** Invoked when this component gets inserted in the DOM tree. */
   abstract void inserted();
