@@ -1,0 +1,41 @@
+<!-- Simple MDV example from MDV folks. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Forms Validation</title>
+    <script src="include.js"></script>
+  </head>
+  <body data-controller="FormController">
+    <form>
+      <template instantiate>
+        <button disabled="{{ invalid }}">Submit</button><br>
+        Email <input type="text" value="{{ email }}"><br>
+        Repeat Email: <input type="text" value="{{ repeatEmail }}"><br>
+        <input type="checkbox" checked="{{ agreeToTerms }}"> I agree
+        <button disabled="{{ invalid }}">Submit</button>
+      </template>
+    </form>
+
+    <script>
+function FormController(root) {
+  var model = root.computedModel;
+  function checkValid() {
+    model.invalid = !model.agreeToTerms ||
+                    !model.email ||
+                    model.email != model.repeatEmail;
+  }
+
+  Model.observe(model, 'email', checkValid);
+  Model.observe(model, 'repeatEmail', checkValid);
+  Model.observe(model, 'agreeToTerms', checkValid);
+  checkValid();
+}
+
+FormController.prototype = {
+};
+
+document.body.model = {};
+    </script>
+  </body>
+</html>
+

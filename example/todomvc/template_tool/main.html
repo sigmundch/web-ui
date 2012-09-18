@@ -14,7 +14,6 @@
   <link rel="components" href="item.html">
   <link rel="stylesheet" href="../base.css">
   <title>dart - TodoMVC</title>
-  <script type="application/dart" src='todo.dart'></script>
   <script type="application/dart" src='model.dart'></script>
 </head>
 <body>
@@ -42,5 +41,17 @@
     <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team.</p>
     <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
+  <script type="application/dart">
+main() {
+  init();
+
+  // listen on changes to #hash in the URL
+  window.on.popState.add((_) {
+    viewModel.showIncomplete = window.location.hash != '#/completed';
+    viewModel.showDone = window.location.hash != '#/active';
+    dispatch();
+  });
+}
+  </script>
 </body>
 </html>

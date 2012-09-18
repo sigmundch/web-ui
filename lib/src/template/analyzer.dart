@@ -438,7 +438,7 @@ class _Analyzer extends TreeVisitor {
           throw const NotImplementedException(
               'a keyUp listener + a data-bound input value');
         }
-        elemInfo.events['keyUp'] = new EventInfo('keyUp',
+        elemInfo.events['keyup'] = new EventInfo('keyup',
             // Assume [value] is a property with a setter.
             ([elemVarName]) => '$value = $elemVarName.value');
       } else {

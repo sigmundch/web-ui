@@ -69,7 +69,8 @@ String mainDartCode(
     String fieldInitializers,
     String modelBinding,
     String initializationMappings,
-    String initialPage) => """
+    String initialPage,
+    String initialCode) => """
 ${header(filename, libraryName)}
 ${_importList(generatedCodeImports)}
 
@@ -109,6 +110,9 @@ final String _INITIAL_PAGE = '''
 
 WatcherDisposer bind(exp, callback, [debugName]) =>
   watchAndInvoke(exp, callback, debugName);
+
+/** User supplied main page code. */
+$initialCode
 """;
 
 /** Generate text for a list of imports. */

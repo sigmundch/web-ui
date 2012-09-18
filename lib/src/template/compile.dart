@@ -145,12 +145,15 @@ class Compile {
   String _emitMainHtml(SourceFile file) {
     _removeScriptTags(file.document);
 
+    String genDartFile = info[file].dartFilename;
+
     // Clear the body, we moved all of it
     var body = file.document.body;
     body.nodes.clear();
     body.nodes.add(parseFragment(
         '<script type="text/javascript" src="$DARTJS_LOADER"></script>'
-        '<script type="application/dart" src="bootstrap.dart"></script>'));
+        '<script type="application/dart" src="$genDartFile"></script>'
+    ));
 
     // TODO(terry): These link-rel should be removed once we support generating
     //              components(not using the js_polyfill script).

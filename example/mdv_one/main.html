@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Forms Validation</title>
+  </head>
+  <body>
+    <form>
+      <template instantiate>
+        <button disabled="{{invalid}}">Submit</button><br>
+        Email <input type="text" data-bind="{{value:email}}" autofocus="autofocus"><br>
+        Repeat Email: <input type="text" data-bind="{{value:repeatEmail}}"><br>
+        <input type="checkbox" data-bind="{{checked:agree}}"> I agree<br>
+        <button disabled="{{invalid}}">Submit</button>
+      </template>
+    </form>
+    <script type="application/dart">
+String email = "";
+String repeatEmail = "";
+bool agree = false;
+
+bool get invalid => !agree || email.isEmpty() || email != repeatEmail;
+
+main() {
+  init();
+}
+    </script>
+  </body>
+</html>
