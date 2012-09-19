@@ -519,8 +519,6 @@ class MainPageEmitter extends RecursiveEmitter {
       }
     }
 
-    String initialCode = _mainCode(document);
-
     return codegen.mainDartCode(
         _info.filename, _info.libraryName,
         generatedImports, _info.imports,
@@ -529,22 +527,6 @@ class MainPageEmitter extends RecursiveEmitter {
         _context.insertedMethod.formatString(1),
         Strings.join(mappings, ',\n    '),
         document.body.innerHTML.trim(),
-        initialCode);
-  }
-
-  /** Does main page have script tag with a body. If so this is the main(). */
-  String _mainCode(Document doc) {
-    String mainScript = "";
-    var scriptTags = doc.queryAll('script');
-    for (var tag in scriptTags) {
-      if (tag.attributes['src'] == null && tag.nodes.length == 1) {
-        mainScript = tag.nodes[0].value;
-        // TODO(jmesserly): use tag.remove() once it's supported.
-        tag.parent.$dom_removeChild(tag);
-        break;
-      }
-    }
-
-    return mainScript;
+        _info.userCode);
   }
 }

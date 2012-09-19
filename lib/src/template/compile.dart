@@ -115,6 +115,7 @@ class Compile {
     for (var file in files) {
       var fileInfo = info[file];
       time('Codegen ${file.filename}', () {
+        _removeScriptTags(file.document);
         if (file.isWebComponent) {
           fileInfo.generatedCode =
               new WebComponentEmitter(fileInfo).run(file.document);
@@ -131,7 +132,6 @@ class Compile {
 
   /** Generate an html file declaring a web component. */
   String _emitComponentHtml(SourceFile file) {
-    _removeScriptTags(file.document);
     return "<!-- Generated Web Component from HTML template ${file.filename}."
            "  DO NOT EDIT. -->\n"
            "${file.document.outerHTML}";
@@ -143,7 +143,6 @@ class Compile {
 
   /** Generate an html file with the (trimmed down) main html page. */
   String _emitMainHtml(SourceFile file) {
-    _removeScriptTags(file.document);
 
     String genDartFile = info[file].dartFilename;
 
