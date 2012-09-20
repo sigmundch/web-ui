@@ -12,9 +12,6 @@
  *
  * This script does an XMLHTTP request, so to test using custom elements with
  * file:// URLs you must run Chrome with `--allow-file-access-from-files`.
- *
- * Other helpful Chrome flags are:
- * `--enable-shadow-dom --enable-scoped-style --enable-devtools-experiments`
  */
 #library('web_components');
 

@@ -4,7 +4,7 @@ That means you can edit it and refresh and see it automatically update.
 
 To run this code, launch [Dartium][] with these flags:
 
-    --enable-shadow-dom --enable-scoped-style --allow-file-access-from-files --enable-devtools-experiments
+    --enable-experimental-webkit-features --allow-file-access-from-files --enable-devtools-experiments
 
 Then open `main.html`
 
