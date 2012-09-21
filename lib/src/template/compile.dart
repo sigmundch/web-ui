@@ -188,7 +188,9 @@ class Compile {
     var scriptTags = doc.queryAll('script');
     for (var tag in scriptTags) {
       // TODO(jmesserly): use tag.remove() once it's supported.
-      tag.parent.$dom_removeChild(tag);
+      if (tag.attributes['type'] == 'application/dart') {
+        tag.parent.$dom_removeChild(tag);
+      }
     }
   }
 }

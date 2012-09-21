@@ -76,6 +76,10 @@ ${_importList(generatedCodeImports)}
 
 ${_importList(extraImports)}
 
+/** User supplied main page code. */
+$initialCode
+
+/** Generated code. */
 $topLevelFields
 
 /** Create the views and bind them to models. */
@@ -110,9 +114,6 @@ final String _INITIAL_PAGE = '''
 
 WatcherDisposer bind(exp, callback, [debugName]) =>
   watchAndInvoke(exp, callback, debugName);
-
-/** User supplied main page code. */
-$initialCode
 """;
 
 /** Generate text for a list of imports. */

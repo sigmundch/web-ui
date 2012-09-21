@@ -307,8 +307,6 @@ class _Analyzer extends TreeVisitor {
       } else {
         result.imports.add(src);
       }
-    } else {
-      world.warning('ignored tag, possibly missing type="application/dart"');
     }
   }
 

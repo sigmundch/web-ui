@@ -26,7 +26,9 @@ Dependencies are installed using the [Pub Package Manager][pub].
 
     pub install
 
-    # Run command line tests, needs "dart" executable on your path
+    # Run command line tests and automated end-to-end tests. It needs two
+    # executables on your path: `dart` and `DumpRenderTree` (see below
+    # for links to download `DumpRenderTree`)
     test/run.sh
 
     # Run browser tests
