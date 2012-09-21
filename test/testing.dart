@@ -3,11 +3,11 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /** Common definitions used for setting up the test environment. */
-#library('testing');
+library testing;
 
-#import('package:html5lib/dom.dart');
-#import('package:html5lib/html5parser.dart');
-#import('package:web_components/src/template/world.dart');
+import 'package:html5lib/dom.dart';
+import 'package:html5lib/html5parser.dart';
+import 'package:web_components/src/template/world.dart';
 
 // TODO(jmesserly): we need tests for warnings from the analyzer.
 class MockWorld extends World {

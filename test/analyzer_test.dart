@@ -2,13 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('analyzer_test');
+library analyzer_test;
 
-#import('package:html5lib/dom.dart');
-#import('package:unittest/unittest.dart');
-#import('package:unittest/vm_config.dart');
-#import('package:web_components/src/template/analyzer.dart');
-#import('testing.dart');
+import 'package:html5lib/dom.dart';
+import 'package:unittest/unittest.dart';
+import 'package:unittest/vm_config.dart';
+import 'package:web_components/src/template/analyzer.dart';
+import 'testing.dart';
 
 main() {
   useVmConfiguration();

@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /** Collects common snippets of generated code. */
-#library('codegen');
+library codegen;
 
 /** Header with common imports, used in every generated .dart file. */
 String header(String filename, String libraryName) => """

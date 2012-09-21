@@ -1,10 +1,10 @@
-#library('item');
-#import('dart:html');
-#import("package:web_components/mirror_polyfill/component.dart");
-#import("package:web_components/watcher.dart");
-#import("package:web_components/mirror_polyfill/component.dart", prefix: "polyfill");
+library item;
+import 'dart:html';
+import 'package:web_components/mirror_polyfill/component.dart';
+import 'package:web_components/watcher.dart';
+import 'package:web_components/mirror_polyfill/component.dart' as polyfill;
 
-#import('model.dart');
+import 'model.dart';
 
 class TodoItemComponent extends polyfill.Component {
   Todo todo;

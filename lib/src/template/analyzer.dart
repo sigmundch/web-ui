@@ -6,12 +6,12 @@
  * Part of the template compilation that concerns with extracting information
  * from the HTML parse tree.
  */
-#library('analyzer');
+library analyzer;
 
-#import('package:html5lib/dom.dart');
-#import('source_file.dart');
-#import('utils.dart');
-#import('world.dart');
+import 'package:html5lib/dom.dart';
+import 'source_file.dart';
+import 'utils.dart';
+import 'world.dart';
 
 /** Extract relevant information from [file]'s document. */
 FileInfo analyze(SourceFile file) {

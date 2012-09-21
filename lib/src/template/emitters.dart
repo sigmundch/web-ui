@@ -6,14 +6,14 @@
 // TODO(sigmund): add visitor that applies all emitters on a component
 // TODO(sigmund): add support for conditionals, so context is changed at that
 // point.
-#library('emitters');
+library emitters;
 
-#import('package:html5lib/dom.dart');
+import 'package:html5lib/dom.dart';
 
-#import('analyzer.dart');
-#import('source_file.dart');
-#import('code_printer.dart');
-#import('codegen.dart', prefix: 'codegen');
+import 'analyzer.dart';
+import 'source_file.dart';
+import 'code_printer.dart';
+import 'codegen.dart' as codegen;
 
 /**
  * An emitter for a web component feature.  It collects all the logic for

@@ -10,13 +10,13 @@
  * compiler would be from the Dart VM command line running tool.dart.
  */
 
-#import('dart:html');
-#import('cmd_options.dart');
-#import('compile.dart');
-#import('file_system_memory.dart');
-#import('source_file.dart');
-#import('template.dart');
-#import('world.dart');
+import 'dart:html';
+import 'cmd_options.dart';
+import 'compile.dart';
+import 'file_system_memory.dart';
+import 'source_file.dart';
+import 'template.dart';
+import 'world.dart';
 
 String currSampleTemplate;
 

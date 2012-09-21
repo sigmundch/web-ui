@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('source_file');
+library source_file;
 
-#import('package:html5lib/dom.dart');
-#import('compile.dart');
-#import('analyzer.dart');
+import 'package:html5lib/dom.dart';
+import 'compile.dart';
+import 'analyzer.dart';
 
 /**
  * An input html file to process by the template compiler; either main file or

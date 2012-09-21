@@ -8,6 +8,6 @@
  * Instead, use the styles automatically generated from your CSS provided
  * by the automatically generated yourcssfilename.css.dart library.
  */
-#library('styleimpl');
+library styleimpl;
 
 #source('style_property.dart');

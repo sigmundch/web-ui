@@ -2,17 +2,17 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('csstool');
+library csstool;
 
-#import('dart:io');
-#import('package:args/args.dart');
-#import('../template/file_system.dart');
-#import('../template/file_system_vm.dart');
-#import('../template/world.dart');
-#import('../template/utils.dart');
-#import('../template/source.dart');
-#import('../template/cmd_options.dart');
-#import('css.dart');
+import 'dart:io';
+import 'package:args/args.dart';
+import '../template/file_system.dart';
+import '../template/file_system_vm.dart';
+import '../template/world.dart';
+import '../template/utils.dart';
+import '../template/source.dart';
+import '../template/cmd_options.dart';
+import 'css.dart';
 
 FileSystem files;
 

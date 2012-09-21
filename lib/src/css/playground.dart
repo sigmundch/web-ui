@@ -10,13 +10,13 @@
  * would be from the Dart VM command line running tool.dart.
  */
 
-#import('dart:html');
-#import('package:args/args.dart');
-#import('../template/file_system_memory.dart');
-#import('../template/source.dart');
-#import('../template/world.dart');
-#import('../template/cmd_options.dart');
-#import('css.dart');
+import 'dart:html';
+import 'package:args/args.dart';
+import '../template/file_system_memory.dart';
+import '../template/source.dart';
+import '../template/world.dart';
+import '../template/cmd_options.dart';
+import 'css.dart';
 
 void runCss([bool debug = false, bool parseOnly = false,
     bool generateOnly = false]) {

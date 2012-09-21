@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('source');
+library source;
 
-#import('dart:math');
-#import('world.dart');
-#import('utils.dart');
+import 'dart:math';
+import 'world.dart';
+import 'utils.dart';
 
 /**
  * Represents a file of source code.

@@ -6,14 +6,14 @@
 // TODO(jmesserly): using the _tests suffix to prevent run.sh from running this
 // Ideally this would be called component_test.
 /** Basic sanity test for [IfComponent] and [ListComponent]. */
-#library('browser_tests');
+library browser_tests;
 
-#import('dart:html');
-#import('package:unittest/unittest.dart');
-#import('package:unittest/html_config.dart');
-#import("package:web_components/mirror_polyfill/web_components.dart");
-#import("package:web_components/mirror_polyfill/component.dart");
-#import("package:web_components/watcher.dart");
+import 'dart:html';
+import 'package:unittest/unittest.dart';
+import 'package:unittest/html_config.dart';
+import 'package:web_components/mirror_polyfill/web_components.dart';
+import 'package:web_components/mirror_polyfill/component.dart';
+import 'package:web_components/watcher.dart';
 
 class Item {
   bool visible = true;

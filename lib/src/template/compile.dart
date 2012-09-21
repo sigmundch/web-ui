@@ -2,25 +2,25 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('compile');
+library compile;
 
-#import('package:html5lib/dom.dart');
-#import('package:html5lib/html5parser.dart');
-#import('package:html5lib/tokenizer.dart');
+import 'package:html5lib/dom.dart';
+import 'package:html5lib/html5parser.dart';
+import 'package:html5lib/tokenizer.dart';
 
-#import('analyzer.dart');
-#import('code_printer.dart');
-#import('emitters.dart');
-#import('file_system.dart');
-#import('source_file.dart');
-#import('utils.dart');
-#import('world.dart');
+import 'analyzer.dart';
+import 'code_printer.dart';
+import 'emitters.dart';
+import 'file_system.dart';
+import 'source_file.dart';
+import 'utils.dart';
+import 'world.dart';
 
 // TODO(jmesserly): move these things into html5lib's public api
 // This is for voidElements:
-#import('package:html5lib/src/constants.dart', prefix: 'html5_constants');
+import 'package:html5lib/src/constants.dart' as html5_constants;
 // This is for htmlEscapeMinimal:
-#import('package:html5lib/src/utils.dart', prefix: 'html5_utils');
+import 'package:html5lib/src/utils.dart' as html5_utils;
 
 
 // TODO(terry): Too many classes in this file need to break up walking, analysis

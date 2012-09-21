@@ -6,14 +6,14 @@
  * These are not quite unit tests, since we build on top of the analyzer and the
  * html5parser to build the input for each test.
  */
-#library('emitter_test');
+library emitter_test;
 
-#import('package:html5lib/dom.dart');
-#import('package:unittest/unittest.dart');
-#import('package:unittest/vm_config.dart');
-#import('package:web_components/src/template/analyzer.dart');
-#import('package:web_components/src/template/emitters.dart');
-#import('testing.dart');
+import 'package:html5lib/dom.dart';
+import 'package:unittest/unittest.dart';
+import 'package:unittest/vm_config.dart';
+import 'package:web_components/src/template/analyzer.dart';
+import 'package:web_components/src/template/emitters.dart';
+import 'testing.dart';
 
 
 main() {

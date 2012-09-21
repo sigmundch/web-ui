@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('file_system_vm');
+library file_system_vm;
 
-#import('dart:io');
-#import('dart:utf');
-#import('file_system.dart');
+import 'dart:io';
+import 'dart:utf';
+import 'file_system.dart';
 
 /** File system implementation using the vm api's. */
 class VMFileSystem implements FileSystem {

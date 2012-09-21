@@ -2,10 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('world');
+library world;
 
-#import('source.dart');
-#import('utils.dart');
+import 'source.dart';
+import 'utils.dart';
 
 /** The one true [World]. */
 World world;

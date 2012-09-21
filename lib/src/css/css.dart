@@ -2,17 +2,17 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('css');
+library css;
 
-#import('dart:coreimpl');
-#import('dart:math', prefix: 'Math');
-#import('package:args/args.dart');
-#import("../template/file_system.dart");
-#import('../template/file_system_memory.dart');
-#import('../template/cmd_options.dart');
-#import("../styleimpl/styleimpl.dart");
-#import('../template/world.dart');
-#import('../template/source.dart');
+import 'dart:coreimpl';
+import 'dart:math' as Math;
+import 'package:args/args.dart';
+import '../template/file_system.dart';
+import '../template/file_system_memory.dart';
+import '../template/cmd_options.dart';
+import '../styleimpl/styleimpl.dart';
+import '../template/world.dart';
+import '../template/source.dart';
 
 #source('tokenkind.dart');
 #source('token.dart');

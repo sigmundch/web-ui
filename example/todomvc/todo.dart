@@ -6,16 +6,16 @@
  * TodoMVC sample application written with web-components and manually bound
  * models. This example uses mirrors to implements Dart-adapted MDV templates.
  */
-#library('output_todo');
+library output_todo;
 
-#import('dart:html');
+import 'dart:html';
 
 // Code from components
 // TODO(jmesserly): ideally these would be package: imports
 
-#import('model.dart');
-#import("package:web_components/watcher.dart");
-#import("package:web_components/mirror_polyfill/web_components.dart");
+import 'model.dart';
+import 'package:web_components/watcher.dart';
+import 'package:web_components/mirror_polyfill/web_components.dart';
 
 main() {
   initializeComponents(viewModel);

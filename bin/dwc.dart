@@ -3,17 +3,17 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('templatetool');
+library templatetool;
 
-#import('dart:io');
-#import('package:args/args.dart');
-#import('package:web_components/src/template/cmd_options.dart');
-#import('package:web_components/src/template/file_system.dart');
-#import('package:web_components/src/template/file_system_vm.dart');
-#import('package:web_components/src/template/world.dart');
-#import('package:web_components/src/template/compile.dart');
-#import('package:web_components/src/template/template.dart');
-#import('package:web_components/src/template/utils.dart');
+import 'dart:io';
+import 'package:args/args.dart';
+import 'package:web_components/src/template/cmd_options.dart';
+import 'package:web_components/src/template/file_system.dart';
+import 'package:web_components/src/template/file_system_vm.dart';
+import 'package:web_components/src/template/world.dart';
+import 'package:web_components/src/template/compile.dart';
+import 'package:web_components/src/template/template.dart';
+import 'package:web_components/src/template/utils.dart';
 
 FileSystem fileSystem;
 

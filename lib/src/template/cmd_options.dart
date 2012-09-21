@@ -2,10 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('tools');
+library tools;
 
-#import('package:args/args.dart');
-#import('world.dart');
+import 'package:args/args.dart';
+import 'world.dart';
 
 /** Extracts options from command-line arguments. */
 CmdOptions parseOptions(ArgResults args, var files) {
