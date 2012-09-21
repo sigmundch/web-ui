@@ -17,7 +17,7 @@
       <li> <a class="{{completedClass}}" href="#/completed">Completed</a> </li>
     </ul>
     <template instantiate="if anyDone">
-      <button id="clear-completed" data-on-click="{{clearDone()}}">
+      <button id="clear-completed" data-action="click:clearDone()">
         Clear completed ({{doneCount}})
       </button>
     </template>

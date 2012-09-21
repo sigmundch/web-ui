@@ -173,18 +173,24 @@ class Component extends WebComponent implements Element {
     // TODO(jmesserly): not sure if these should be data- attributes or
     // something else. Maybe we should use normal JS event bindings.
     var mirror = currentMirrorSystem();
-    node.dataAttributes.forEach((key, method) {
-      if (!key.startsWith('on-')) return;
-
-      key = key.substring(3);
-      method = method.trim();
+    var value = node.dataAttributes['action'];
+    if (value != null) {
+      var colonIdx = value.indexOf(':');
+      if (colonIdx <= 0) {
+        throw new UnsupportedOperationException(
+          'data-action attributes should be of the form '
+          'data-action="eventName:value"');
+      }
+      var eventName = value.substring(0, colonIdx).trim();
+      var method = value.substring(colonIdx + 1).trim();
       if (!method.endsWith('()')) {
         throw new UnsupportedOperationException(
             'event handler $method for $key must be method call');
       } else {
         method = method.substring(0, method.length - 2);
       }
-      var event = node.on[key];
+
+      var event = reflect(node.on).getField(eventName).value.reflectee;
       if (event == null) {
         throw new UnsupportedOperationException(
             'event $key not found on $node');
@@ -200,7 +206,7 @@ class Component extends WebComponent implements Element {
       };
 
       lifecycleAction(() => event.add(caller), () => event.remove(caller));
-    });
+    }
   }
 
   void _bindAttributes(Element node) {

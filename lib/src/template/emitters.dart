@@ -141,7 +141,7 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
             ${eventInfo.action(elemField)};
             dispatch();
           };
-          $elemField.on['${eventInfo.eventName}'].add($field);
+          $elemField.on.${eventInfo.eventName}.add($field);
       ''');
     });
   }
@@ -152,7 +152,7 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
     elemInfo.events.forEach((name, eventInfo) {
       var field = eventInfo.listenerField;
       context.removedMethod.add('''
-          $elemField.on['${eventInfo.eventName}'].remove($field);
+          $elemField.on.${eventInfo.eventName}.remove($field);
           $field = null;
       ''');
     });

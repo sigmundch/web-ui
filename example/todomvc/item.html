@@ -5,15 +5,15 @@
          apply-author-styles>
   <template>
     <div id='todo-item' class="{{itemClass}}">
-      <div class="view" data-on-dblclick="edit()">
+      <div class="view" data-action="doubleClick:edit()">
         <input id="checkbox" class="toggle" type="checkbox"
-            checked="{{todo.done}}" data-on-click="markDone()">
+            checked="{{todo.done}}" data-action="click:markDone()">
         <label id="label">{{todo.task}}</label>
-        <button class="destroy" data-on-click="delete()"></button>
+        <button class="destroy" data-action="click:delete()"></button>
       </div>
-      <form data-on-submit="update()">
+      <form data-action="submit:update()">
         <input class="edit" value="{{todo.task}}"
-               data-on-blur="update()" autofocus>
+               data-action="blur:update()" autofocus>
       </form>
     </div>
   </template>

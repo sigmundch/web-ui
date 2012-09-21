@@ -246,8 +246,6 @@ typedef String ActionDefinition([String elemVarName]);
 
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {
-  static const String _DATA_ON_ATTRIBUTE = "data-on-";
-
   final FileInfo result;
   int _uniqueId = 0;
 
@@ -369,97 +367,117 @@ class _Analyzer extends TreeVisitor {
     return null;
   }
 
-  // TODO(jmesserly): this method is getting big, probably needs to be
-  // split.
   void visitAttribute(Element elem, ElementInfo elemInfo, String name,
                       String value) {
     if (name == 'is') {
       result.usedComponents.add(value);
+      return;
     } else if (name == 'data-value') {
-      var colonIdx = value.indexOf(':');
-      if (colonIdx <= 0) {
-        world.error('data-value attribute should be of the form '
-            'data-value="name:value"');
-        return;
-      }
-      name = value.substring(0, colonIdx);
-      value = value.substring(colonIdx + 1);
-
-      elemInfo.values[name] = value;
+      _readDataValueAttribute(elem, elemInfo, value);
+      return;
+    } else if (name == 'data-action') {
+      _readDataActionAttribute(elem, elemInfo, value);
       return;
     }
 
-    var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
-    if (match == null) return;
-
-    // Bound attribute.
-
-    // Strip off the outer {{ }}.
-    value = match[1];
-
-    // TODO(sigmund): should this be true if you only have UI event listeners?
+    if (name == 'data-bind') {
+      _readDataBindAttribute(elem, elemInfo, value);
+    } else {
+      var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
+      if (match == null) return;
+      // Strip off the outer {{ }}.
+      value = match[1];
+      if (name == 'class') {
+        elemInfo.attributes[name] = _readClassAttribute(elem, elemInfo, value);
+      } else {
+        // Default to a 1-way binding for any other attribute.
+        elemInfo.attributes[name] = new AttributeInfo(value);
+      }
+    }
     elemInfo.hasDataBinding = true;
-    if (name.startsWith(_DATA_ON_ATTRIBUTE)) {
-      // Special data-attribute specifying an event listener.
-      var eventInfo = new EventInfo(
-          name.substring(_DATA_ON_ATTRIBUTE.length),
-          ([elemVarName]) => value);
-      elemInfo.events[eventInfo.eventName] = eventInfo;
+  }
+
+  void _readDataValueAttribute(
+      Element elem, ElementInfo elemInfo, String value) {
+    var colonIdx = value.indexOf(':');
+    if (colonIdx <= 0) {
+      world.error('data-value attribute should be of the form '
+          'data-value="name:value"');
+      return;
+    }
+    var name = value.substring(0, colonIdx);
+    value = value.substring(colonIdx + 1);
+
+    elemInfo.values[name] = value;
+  }
+
+  void _readDataActionAttribute(
+      Element elem, ElementInfo elemInfo, String value) {
+    // Special data-attribute specifying an event listener.
+    var colonIdx = value.indexOf(':');
+    if (colonIdx <= 0) {
+      world.error('data-action attribute should be of the form '
+          'data-action="eventName:action"');
+      return;
+    }
+    var name = value.substring(0, colonIdx);
+    value = value.substring(colonIdx + 1);
+    var eventInfo = new EventInfo(name, ([elemVarName]) => value);
+    elemInfo.events[name] = eventInfo;
+    return;
+  }
+
+  AttributeInfo _readDataBindAttribute(
+      Element elem, ElementInfo elemInfo, String value) {
+    var colonIdx = value.indexOf(':');
+    if (colonIdx <= 0) {
+      // TODO(jmesserly): get the node's span here
+      world.error('data-bind attribute should be of the form '
+          'data-bind="name:value"');
       return;
     }
 
     var attrInfo;
-    if (name == 'data-bind') {
-      var colonIdx = value.indexOf(':');
-      if (colonIdx <= 0) {
-        // TODO(jmesserly): get the node's span here
-        world.error('data-bind attribute should be of the form '
-            'data-bind="name:value"');
-        return;
-      }
-
-      name = value.substring(0, colonIdx);
-      value = value.substring(colonIdx + 1);
-      var isInput = elem.tagName == 'input';
-      // Special two-way binding logic for input elements.
-      if (isInput && name == 'checked') {
-        attrInfo = new AttributeInfo(value);
-        // TODO(sigmund): deal with conflicts, e.g. I have a click listener too
-        if (elemInfo.events['click'] != null) {
-          throw const NotImplementedException(
-              'a click listener + a data-bound check box');
-        }
-        elemInfo.events['click'] = new EventInfo('click',
-            // Assume [value] is a property with a setter.
-            ([elemVarName]) => '$value = $elemVarName.checked');
-      } else if (isInput && name == 'value') {
-        attrInfo = new AttributeInfo(value);
-        if (elemInfo.events['keyUp'] != null) {
-          throw const NotImplementedException(
-              'a keyUp listener + a data-bound input value');
-        }
-        elemInfo.events['keyup'] = new EventInfo('keyup',
-            // Assume [value] is a property with a setter.
-            ([elemVarName]) => '$value = $elemVarName.value');
-      } else {
-        throw new UnsupportedOperationException(
-            "Unknown data-bind attribute: ${elem.tagName} - ${name}");
-      }
-    } else if (name == 'class') {
-      // Special support to bind each css class separately.
-      // class="{{class1}} {{class2}} {{class3}}"
-      List<String> bindings = [];
-      var parts = value.split(const RegExp(@'}}\s*{{'));
-      for (var part in parts) {
-        bindings.add(part);
-      }
-      attrInfo = new AttributeInfo.forClass(bindings);
-    } else {
-      // Default to a 1-way binding for any other attribute.
+    var name = value.substring(0, colonIdx);
+    value = value.substring(colonIdx + 1);
+    var isInput = elem.tagName == 'input';
+    // Special two-way binding logic for input elements.
+    if (isInput && name == 'checked') {
       attrInfo = new AttributeInfo(value);
+      // TODO(sigmund): deal with conflicts, e.g. I have a click listener too
+      if (elemInfo.events['click'] != null) {
+        throw const NotImplementedException(
+            'a click listener + a data-bound check box');
+      }
+      elemInfo.events['click'] = new EventInfo('click',
+          // Assume [value] is a property with a setter.
+          ([elemVarName]) => '$value = $elemVarName.checked');
+    } else if (isInput && name == 'value') {
+      attrInfo = new AttributeInfo(value);
+      if (elemInfo.events['keyUp'] != null) {
+        throw const NotImplementedException(
+            'a keyUp listener + a data-bound input value');
+      }
+      elemInfo.events['keyUp'] = new EventInfo('keyUp',
+          // Assume [value] is a property with a setter.
+          ([elemVarName]) => '$value = $elemVarName.value');
+    } else {
+      world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}');
+      return;
     }
-
     elemInfo.attributes[name] = attrInfo;
+  }
+
+  AttributeInfo _readClassAttribute(
+      Element elem, ElementInfo elemInfo, String value) {
+    // Special support to bind each css class separately.
+    // class="{{class1}} {{class2}} {{class3}}"
+    List<String> bindings = [];
+    var parts = value.split(const RegExp(@'}}\s*{{'));
+    for (var part in parts) {
+      bindings.add(part);
+    }
+    return new AttributeInfo.forClass(bindings);
   }
 
   void visitText(Text text) {

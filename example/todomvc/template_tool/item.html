@@ -11,15 +11,15 @@
          apply-author-styles="">
   <template>
     <div id="todo-item" class="{{_editingClass}} {{_completedClass}}">
-      <div class="view" data-on-doubleClick="{{edit()}}">
+      <div class="view" data-action="doubleClick:edit()">
         <input class="toggle" type="checkbox"
-               data-bind="{{checked:todo.done}}">
+               data-bind="checked:todo.done">
         <label>{{todo.task}}</label>
-        <button class="destroy" data-on-click="{{delete()}}"></button>
+        <button class="destroy" data-action="click:delete()"></button>
       </div>
       <input class="edit"
-             data-bind="{{value:todo.task}}"
-             data-on-blur="{{update()}}" autofocus>
+             data-bind="value:todo.task"
+             data-action="blur:update()" autofocus>
     </div>
   </template>
   <script type="application/dart">

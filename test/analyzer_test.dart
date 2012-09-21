@@ -105,7 +105,7 @@ main() {
   });
 
   test('hasDataBinding - attribute with data, 2 way binding', () {
-    var input = '<input data-bind="{{value:x}}">';
+    var input = '<input data-bind="value:x">';
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
@@ -149,7 +149,7 @@ main() {
   });
 
   test('attribute - 2 way binding input value', () {
-    var input = '<input data-bind="{{value:x}}">';
+    var input = '<input data-bind="value:x">';
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
@@ -172,7 +172,7 @@ main() {
   });
 
   test('attribute - 2 way binding checkbox', () {
-    var input = '<input data-bind="{{checked:x}}">';
+    var input = '<input data-bind="checked:x">';
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].attributes.length, equals(1));
@@ -215,7 +215,7 @@ main() {
   });
 
   test('attribute - ui-event hookup', () {
-    var input = '<input data-on-change="{{foo()}}">';
+    var input = '<input data-action="change:foo()">';
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isEmpty);
