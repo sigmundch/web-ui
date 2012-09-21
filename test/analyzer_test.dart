@@ -2,27 +2,17 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#library('analyzer');
+#library('analyzer_test');
 
 #import('package:html5lib/dom.dart');
-#import('package:html5lib/html5parser.dart');
 #import('package:unittest/unittest.dart');
 #import('package:unittest/vm_config.dart');
 #import('package:web_components/src/template/analyzer.dart');
-#import('package:web_components/src/template/world.dart');
-
-// TODO(jmesserly): we need tests for warnings from the analyzer.
-class MockWorld extends World {
-  MockWorld() : super(null);
-  warning(message, [span, span1, span2]) {}
-  error(message, [span, span1, span2]) {}
-}
+#import('testing.dart');
 
 main() {
   useVmConfiguration();
-
-  // TODO(jmesserly): fix the warning system to not need this.
-  world = new MockWorld();
+  useMockWorld();
 
   test('parse single element', () {
     var input = '<div></div>';
@@ -289,5 +279,3 @@ main() {
     expect(info[elem].values, equals({'todo': 'x'}));
   });
 }
-
-Element parseSubtree(String html) => parseFragment(html).nodes[0];
