@@ -18,6 +18,31 @@ for test in $DIR/*_test.dart; do
   dart $DART_FLAGS $test
 done
 
+
+function show_diff {
+  diff -t -y $1 $2 | \
+    sed -e "s/\(^.\{63\}\)\(\s[<]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/" |\
+    sed -e "s/\(^.\{63\}\)\(\s[|]\(\s\|$\)\)\(.*\)/[33m\1[33m\2[33m\4[0m/" |\
+    sed -e "s/\(^.\{63\}\)\(\s[>]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/"
+  return 1
+}
+
+function update {
+  read -p "Would you like to update the expectations? [y/N]: " answer
+  if [[ $answer == 'y' || $answer == 'Y' ]]; then
+    cp $2 $1
+    return 0
+  fi
+  return 1
+}
+
+function compare {
+  # use a standard diff, if they are not identical, format the diff nicely to
+  # see what's the error and prompt to see if they wish to update it. If they
+  # do, continue running more tests.
+  diff -q -s $1 $2 || show_diff $1 $2 || update $1 $2
+}
+
 for input in $DIR/data/input/*_test.html; do
   echo -e "\nTesting $input:"
   FILENAME=`basename $input.html`
@@ -27,12 +52,5 @@ for input in $DIR/data/input/*_test.html; do
   DART_PACKAGE_ROOT="file://$DIR/packages/" \
       DumpRenderTree $DIR/data/output/$FILENAME > $DUMP
 
-  # use a standard diff, if they are not identical, format the diff nicely to
-  # see what's the error, then return an error code and exit.
-  diff -q -s $EXPECTATION $DUMP || (\
-    diff -t -y $EXPECTATION $DUMP | \
-      sed -e "s/\(^.\{63\}\)\(\s[<]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/" |\
-      sed -e "s/\(^.\{63\}\)\(\s[|]\(\s\|$\)\)\(.*\)/[33m\1[33m\2[33m\4[0m/" |\
-      sed -e "s/\(^.\{63\}\)\(\s[>]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/"; 1)
-
+  compare $EXPECTATION $DUMP
 done
