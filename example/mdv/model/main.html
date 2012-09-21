@@ -8,18 +8,20 @@
     <form>
       <template instantiate>
         <button disabled="{{model.invalid}}">Submit</button><br>
-        Email <input type="text" data-bind="value:model.email" autofocus="autofocus"><br>
-        Repeat Email: <input type="text" data-bind="value:model.repeatEmail"><br>
+        Email <input type="text" data-bind="value:model.email" autofocus>
+        <br>
+        Repeat Email: <input type="text" data-bind="value:model.repeatEmail">
+        <br>
         <input type="checkbox" data-bind="checked:model.agree"> I agree<br>
         <button disabled="{{model.invalid}}">Submit</button>
       </template>
     </form>
     <script type="application/dart">
-final Model model = new Model();
+      final Model model = new Model();
 
-main() {
-  init();
-}
+      main() {
+        init();
+      }
     </script>
   </body>
 </html>

@@ -55,7 +55,7 @@ class Compile {
   /** Compile the application starting from the given [mainFile]. */
   void run(String mainFile, [String baseDir = ""]) {
     _parseAndDiscover(mainFile, baseDir);
-    _analize();
+    _analyze();
     _emit();
   }
 
@@ -104,7 +104,7 @@ class Compile {
   }
 
   /** Run the analyzer on every input html file. */
-  void _analize() {
+  void _analyze() {
     for (var file in files) {
       info[file] = time('Analyzed ${file.filename}', () => analyze(file));
     }
