@@ -13,7 +13,6 @@ String header(String filename, String libraryName) => """
 #library('${libraryName}');
 
 #import('dart:html');
-#import('package:web_components/src/template/data_template.dart');
 #import('package:web_components/js_polyfill/component.dart');
 #import('package:web_components/js_polyfill/web_components.dart');
 #import('package:web_components/watcher.dart');
