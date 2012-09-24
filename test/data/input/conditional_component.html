@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<body>
+<!-- TODO(sigmund): this should be an import, see issue #43 -->
+<script type='application/dart' src="../input/common.dart"></script>
+<element name="x-conditional" extends="div" constructor="ConditionalExample">
+  <template>
+    <template instantiate="if cond">
+      <span>you should see 'yes': yes</span>
+    </template>
+    <template instantiate="if notCond">
+      <span>you should see 'yes': no</span>
+    </template>
+  </template>
+</element>
+</body>
+</html>
+

@@ -20,16 +20,14 @@
     <span>you should see: no</span>
   </template>
   <script type="application/dart">
-    bool _cond = false;
-    bool get cond => _cond;
-    bool get notCond => !_cond;
+    #import('../input/common.dart');
     main() {
       init();
       window.setTimeout(() {
-        _cond = true;
+        cond = true;
         dispatch();
         window.setTimeout(() {
-          _cond = false;
+          cond = false;
           dispatch();
           // in the end, we should see 'no' again
           window.setTimeout(() => window.postMessage('done', '*'), 0);

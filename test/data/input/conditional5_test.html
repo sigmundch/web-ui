@@ -8,23 +8,22 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>watch_global_var_test</title>
+  <link rel="components" href="conditional_component.html">
+  <title></title>
   <!-- use ../input/ so that the url also works from the output directory -->
   <script src="../input/testing.js"></script>
 </head>
 <body>
-  <template instantiate="if cond">
-    <span>you should not see: yes</span>
-  </template>
-  <template instantiate="if notCond">
-    <span>you should see: no</span>
-  </template>
+  <div is='x-conditional'></div>
   <script type="application/dart">
     #import('../input/common.dart');
     main() {
       init();
-      // default behavior says 'no'
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      window.setTimeout(() {
+        cond = true;
+        dispatch();
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
     }
   </script>
 </body>
