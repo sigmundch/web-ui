@@ -163,7 +163,7 @@ class Compile {
         if (linkParent == null) {
           linkParent = link.parent;
         }
-        link.parent.$dom_removeChild(link);
+        link.remove();
       }
     }
 
@@ -183,13 +183,9 @@ class Compile {
   }
 
   void _removeScriptTags(Document doc) {
-    // TODO(jmesserly): not sure about removing script nodes like this
-    // But we need to do this for web components to work.
-    var scriptTags = doc.queryAll('script');
-    for (var tag in scriptTags) {
-      // TODO(jmesserly): use tag.remove() once it's supported.
+    for (var tag in doc.queryAll('script')) {
       if (tag.attributes['type'] == 'application/dart') {
-        tag.parent.$dom_removeChild(tag);
+        tag.remove();
       }
     }
   }
