@@ -9,6 +9,7 @@ import 'package:html5lib/html5parser.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/template/analyzer.dart';
+import 'package:web_components/src/template/info.dart';
 import 'package:web_components/src/template/source_file.dart';
 import 'testing.dart';
 

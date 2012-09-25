@@ -5,7 +5,7 @@
 /** Collects common snippets of generated code. */
 library codegen;
 
-import 'analyzer.dart';
+import 'info.dart';
 
 /** Header with common imports, used in every generated .dart file. */
 String header(FileInfo info) => """

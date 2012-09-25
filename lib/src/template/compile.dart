@@ -13,6 +13,7 @@ import 'analyzer.dart';
 import 'code_printer.dart';
 import 'emitters.dart';
 import 'file_system.dart';
+import 'info.dart';
 import 'source_file.dart';
 import 'utils.dart';
 import 'world.dart';

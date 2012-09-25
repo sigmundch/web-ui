@@ -10,10 +10,10 @@ library emitters;
 
 import 'package:html5lib/dom.dart';
 
-import 'analyzer.dart';
-import 'source_file.dart';
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;
+import 'info.dart';
+import 'source_file.dart';
 
 /**
  * An emitter for a web component feature.  It collects all the logic for

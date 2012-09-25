@@ -5,8 +5,7 @@
 library source_file;
 
 import 'package:html5lib/dom.dart';
-import 'compile.dart';
-import 'analyzer.dart';
+import 'info.dart';
 
 /**
  * An input html file to process by the template compiler; either main file or
