@@ -11,8 +11,9 @@
 
 #import('dart:mirrors');
 #import('dart:html');
-#import("package:web_components/mirror_polyfill/web_components.dart");
-#import("package:web_components/watcher.dart");
+#import("../watcher.dart");
+#import("../web_component.dart");
+#import("component_loader.dart");
 
 typedef void Action();
 
@@ -43,7 +44,7 @@ class ComponentScope {
  * Eventually the code for [bind] should be baked into every custom element
  * (maybe in dart:html's Element class?).
  */
-class Component extends WebComponent implements Element {
+class Component extends WebComponent {
   /**
    * Counter associated with this component, currently only used for debugging
    * purposes.
@@ -54,7 +55,6 @@ class Component extends WebComponent implements Element {
   String name;
 
   static int _id = 0;
-  Element _element;
   // TODO(jacobr): specifying shadow root like this is wrong as subclasses
   // should always have different shadow roots than their parent classes.
   ShadowRoot _root;
@@ -75,12 +75,12 @@ class Component extends WebComponent implements Element {
    */
   var declaringScope;
 
-  Component(this.name, this._element)
+  Component(this.name, Element element)
       : componentId = _id++,
         // TODO(jmesserly): initialize lazily
         _insertActions = [],
-        _removeActions = [] {
-  }
+        _removeActions = [],
+        super.forElement(element);
 
   Element get element => _element;
   ShadowRoot get root => _root;
@@ -329,160 +329,4 @@ class Component extends WebComponent implements Element {
     }
     return null;
   }
-
-  // This is a temporary hack until Dart supports subclassing elements.
-  // TODO(jacobr): use mirrors instead.
-
-  NodeList get nodes() => _element.nodes;
-
-  void set nodes(Collection<Node> value) { _element.nodes = value; }
-
-  /**
-   * Replaces this node with another node.
-   */
-  Node replaceWith(Node otherNode) { _element.replaceWith(otherNode); }
-
-  /**
-   * Removes this node from the DOM.
-   */
-  Node remove() { _element.remove(); }
-  Node get nextNode() => _element.nextNode;
-
-  Document get document() => _element.document;
-
-  Node get previousNode() => _element.previousNode;
-
-  String get text() => _element.text;
-
-  void set text(String v) { _element.text = v; }
-
-  bool contains(Node other) => _element.contains(other);
-
-  bool hasChildNodes() => _element.hasChildNodes();
-
-  Node insertBefore(Node newChild, Node refChild) =>
-    _element.insertBefore(newChild, refChild);
-
-  AttributeMap get attributes() => _element.attributes;
-  void set attributes(Map<String, String> value) {
-    _element.attributes = value;
-  }
-
-  ElementList get elements() => _element.elements;
-
-  void set elements(Collection<Element> value) {
-    _element.elements = value;
-  }
-
-  Set<String> get classes() => _element.classes;
-
-  void set classes(Collection<String> value) {
-    _element.classes = value;
-  }
-
-  AttributeMap get dataAttributes() => _element.dataAttributes;
-  void set dataAttributes(Map<String, String> value) {
-    _element.dataAttributes = value;
-  }
-
-  Future<ElementRect> get rect() => r.rect;
-
-  Future<CSSStyleDeclaration> get computedStyle() => r.computedStyle;
-
-  Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
-    => r.getComputedStyle(pseudoElement);
-
-  Element clone(bool deep) => _element.clone(deep);
-
-  Element get parent() => _element.parent;
-
-  ElementEvents get on() => _element.on;
-
-  String get contentEditable() => _element.contentEditable;
-
-  String get dir() => _element.dir;
-
-  bool get draggable() => _element.draggable;
-
-  bool get hidden() => _element.hidden;
-
-  String get id() => _element.id;
-
-  String get innerHTML() => _element.innerHTML;
-
-  bool get isContentEditable() => _element.isContentEditable;
-
-  String get lang() => _element.lang;
-
-  String get outerHTML() => _element.outerHTML;
-
-  bool get spellcheck() => _element.spellcheck;
-
-  int get tabIndex() => _element.tabIndex;
-
-  String get title() => _element.title;
-
-  bool get translate() => _element.translate;
-
-  String get webkitdropzone() => _element.webkitdropzone;
-
-  void click() { _element.click(); }
-
-  Element insertAdjacentElement(String where, Element element) =>
-    _element.insertAdjacentElement(where, element);
-
-  void insertAdjacentHTML(String where, String html) {
-    _element.insertAdjacentHTML(where, html);
-  }
-
-  void insertAdjacentText(String where, String text) {
-    _element.insertAdjacentText(where, text);
-  }
-
-  Map<String, String> get dataset() => _element.dataset;
-
-  Element get nextElementSibling() => _element.nextElementSibling;
-
-  Element get offsetParent() => _element.offsetParent;
-
-  Element get previousElementSibling() => _element.previousElementSibling;
-
-  CSSStyleDeclaration get style() => _element.style;
-
-  String get tagName() => _element.tagName;
-  String set tagName(String v) => _element.tagName = v;
-
-  String get webkitRegionOverflow() => _element.webkitRegionOverflow;
-
-  void blur() { _element.blur(); }
-
-  void focus() { _element.focus(); }
-
-  void scrollByLines(int lines) {
-    _element.scrollByLines(lines);
-  }
-
-  void scrollByPages(int pages) {
-    _element.scrollByPages(pages);
-  }
-
-  void scrollIntoView([bool centerIfNeeded]) {
-    if (centerIfNeeded == null) {
-      _element.scrollIntoView();
-    } else {
-      _element.scrollIntoView(centerIfNeeded);
-    }
-  }
-
-  bool matchesSelector(String selectors) => _element.matchesSelector(selectors);
-
-  void webkitRequestFullScreen(int flags) { _element.webkitRequestFullScreen(flags); }
-
-  void webkitRequestFullscreen() { _element.webkitRequestFullscreen(); }
-
-  void webkitRequestPointerLock() { _element.webkitRequestPointerLock(); }
-
-  Element query(String selectors) => _element.query(selectors);
-
-  List<Element> queryAll(String selectors) => _element.queryAll(selectors);
 }

@@ -174,7 +174,7 @@ main() {
       var elem = parseSubtree('<div foo="{{bar}}"></div>');
       var emitter = new DataBindingEmitter(elem, _elemInfo(elem));
       expect(_inserted(emitter), equalsIgnoringWhitespace(
-          '_stopWatcher___e0_1 = bind(() => bar, (e) { '
+          '_stopWatcher___e0_1 = watchAndInvoke(() => bar, (e) { '
           '___e0.foo = e.newValue; });'));
     });
 
@@ -182,7 +182,7 @@ main() {
       var elem = parseSubtree('<div>fo{{bar}}o</div>');
       var emitter = new DataBindingEmitter(elem, _elemInfo(elem));
       expect(_inserted(emitter), equalsIgnoringWhitespace(
-          "_stopWatcher___e0_1 = bind(() => bar, (e) { "
+          "_stopWatcher___e0_1 = watchAndInvoke(() => bar, (e) { "
           "___e0.innerHTML = 'fo\${bar}o'; });"));
     });
 

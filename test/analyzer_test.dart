@@ -5,9 +5,11 @@
 library analyzer_test;
 
 import 'package:html5lib/dom.dart';
+import 'package:html5lib/html5parser.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/template/analyzer.dart';
+import 'package:web_components/src/template/source_file.dart';
 import 'testing.dart';
 
 main() {
@@ -257,20 +259,6 @@ main() {
     expect(info.loopItems, equals('bar'));
   });
 
-
-  test('used components', () {
-    var elem = parseSubtree('<foo is="x-fancy-button"><bar>');
-    var info = analyzeNode(elem).usedComponents;
-    expect(info, equals(['x-fancy-button']));
-  });
-
-  test('used components 2', () {
-    var elem = parseSubtree('<div is="x-foo"><span is="x-bar">');
-    var info = new List.from(analyzeNode(elem).usedComponents);
-    info.sort((x, y) => x.compareTo(y));
-    expect(info, equals(['x-bar', 'x-foo']));
-  });
-
   test('data-value', () {
     var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
     var info = analyzeNode(elem).elements;
@@ -278,4 +266,232 @@ main() {
     expect(info[elem].events, isEmpty);
     expect(info[elem].values, equals({'todo': 'x'}));
   });
+
+
+  group('analyzeDefinitions', () {
+    test('links', () {
+      var info = analyzeDefinitionsInTree(parse(
+        '<head>'
+          '<link rel="components" href="foo.html">'
+          '<link rel="something" href="bar.html">'
+          '<link rel="components" hrefzzz="baz.html">'
+          '<link rel="components" href="quux.html">'
+        '</head>'
+        '<body><link rel="components" href="quuux.html">'
+      ));
+      expect(info.componentLinks, equals(['foo.html', 'quux.html']));
+    });
+
+    test('elements', () {
+      var doc = parse(
+        '<body>'
+          '<element name="x-foo" constructor="Foo"></element>'
+          '<element name="x-bar" constructor="Bar42"></element>'
+        '</body>'
+      );
+      var foo = doc.body.queryAll('element')[0];
+      var bar = doc.body.queryAll('element')[1];
+
+      var info = analyzeDefinitionsInTree(doc);
+      expect(info.declaredComponents.length, equals(2));
+
+      var compInfo = info.declaredComponents[0];
+      expect(compInfo.tagName, equals('x-foo'));
+      expect(compInfo.constructor, equals('Foo'));
+      expect(compInfo.element, equals(foo));
+      expect(compInfo.hasConflict, isFalse);
+
+      compInfo = info.declaredComponents[1];
+      expect(compInfo.tagName, equals('x-bar'));
+      expect(compInfo.constructor, equals('Bar42'));
+      expect(compInfo.element, equals(bar));
+      expect(compInfo.hasConflict, isFalse);
+    });
+
+    test('invalid elements', () {
+      var doc = parse(
+        '<body>'
+          // without constructor
+          '<element name="x-baz"></element>'
+          // without tag name
+          '<element constructor="Baz"></element>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(info.declaredComponents.length, equals(0));
+      // TODO(jmesserly): validate warnings
+    });
+
+    test('duplicate tag name - is error', () {
+      var doc = parse(
+        '<body>'
+          '<element name="x-quux" constructor="Quux"></element>'
+          '<element name="x-quux" constructor="Quux2"></element>'
+        '</body>'
+      );
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile);
+      expect(info.declaredComponents.length, equals(2));
+
+      // no conflicts yet.
+      expect(info.declaredComponents[0].hasConflict, isFalse);
+      expect(info.declaredComponents[1].hasConflict, isFalse);
+
+      analyzeFile(srcFile, { 'main.html': info });
+
+      expect(info.components.length, equals(1));
+      var compInfo = info.components['x-quux'];
+      expect(compInfo.hasConflict);
+      expect(compInfo.tagName, equals('x-quux'));
+      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.element, equals(doc.query('element')));
+    });
+
+    test('duplicate constructor name - is valid', () {
+      var doc = parse(
+        '<body>'
+          '<element name="x-quux" constructor="Quux"></element>'
+          '<element name="x-quux2" constructor="Quux"></element>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+
+      var quux = doc.body.queryAll('element')[0];
+      var quux2 = doc.body.queryAll('element')[1];
+
+      expect(info.declaredComponents.length, equals(2));
+
+      var compInfo = info.declaredComponents[0];
+      expect(compInfo.tagName, equals('x-quux'));
+      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.element, equals(quux));
+      expect(compInfo.hasConflict, isFalse);
+
+      compInfo = info.declaredComponents[1];
+      expect(compInfo.tagName, equals('x-quux2'));
+      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.element, equals(quux2));
+      expect(compInfo.hasConflict, isFalse);
+    });
+  });
+
+  group('analyzeFile', () {
+    test('binds components in same file', () {
+      var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile);
+      expect(info.declaredComponents.length, equals(1));
+
+      analyzeFile(srcFile, { 'main.html': info });
+      expect(info.components.getKeys(), equals(['x-foo']));
+
+      var elemInfo = info.elements[doc.query('x-foo')];
+      expect(elemInfo.component, equals(info.declaredComponents[0]));
+    });
+
+    test('binds components from another file', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><x-foo>',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+
+      var info = fileInfo['index.html'];
+      expect(info.declaredComponents.length, isZero);
+      expect(info.components.getKeys(), equals(['x-foo']));
+      var elemInfo = info.elements[files[0].document.query('x-foo')];
+      var compInfo = fileInfo['foo.html'].declaredComponents[0];
+      expect(elemInfo.component, equals(compInfo));
+    });
+
+    test('ignores elements with multiple definitions', () {
+      var files = parseFiles({
+        'index.html': '<head>'
+                      '<link rel="components" href="foo.html">'
+                      '<link rel="components" href="bar.html">'
+                      '<body><x-foo>',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">',
+        'bar.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+
+      var info = fileInfo['index.html'];
+      expect(info.components.getKeys(), equals(['x-foo']));
+      var elemInfo = info.elements[files[0].document.query('x-foo')];
+      var compInfo = fileInfo['foo.html'].declaredComponents[0];
+      expect(compInfo.hasConflict);
+      expect(elemInfo.component, isNull);
+    });
+
+    test('shadowing of imported names is allowed', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><x-foo>',
+        'foo.html': '<head><link rel="components" href="bar.html">'
+                    '<body><element name="x-foo" constructor="Foo">',
+        'bar.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+
+      var info = fileInfo['index.html'];
+      expect(info.components.getKeys(), equals(['x-foo']));
+      var elemInfo = info.elements[files[0].document.query('x-foo')];
+      var compInfo = fileInfo['foo.html'].declaredComponents[0];
+      expect(elemInfo.component, equals(compInfo));
+    });
+
+    test('element imports are not transitive', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><x-foo>',
+        'foo.html': '<head><link rel="components" href="bar.html">',
+        'bar.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+
+      var info = fileInfo['index.html'];
+      expect(info.components.getKeys(), equals([]));
+      var elemInfo = info.elements[files[0].document.query('x-foo')];
+      expect(fileInfo['foo.html'].declaredComponents.length, isZero);
+      expect(elemInfo.component, isNull);
+    });
+  });
+}
+
+FileInfo analyzeDefinitionsInTree(Document doc) =>
+    analyzeDefinitions(new SourceFile('')..document = doc);
+
+/** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
+List<SourceFile> parseFiles(Map<String, String> fileContents,
+    [String mainHtmlFile = 'index.html']) {
+
+  var result = <SourceFile>[];
+  fileContents.forEach((filename, contents) {
+    var src = new SourceFile(filename, mainDocument: filename == mainHtmlFile);
+    src.document = parse(contents);
+    result.add(src);
+  });
+
+  return result;
+}
+
+/** Analyze all files. */
+Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
+  var result = new Map<String, FileInfo>();
+  // analyze definitions
+  for (var file in files) {
+    result[file.filename] = analyzeDefinitions(file);
+  }
+
+  // analyze file contents
+  for (var file in files) {
+    analyzeFile(file, result);
+  }
+
+  return result;
 }

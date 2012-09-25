@@ -9,7 +9,7 @@
 #import('dart:html');
 #import("package:web_components/watcher.dart");
 #import("package:web_components/mirror_polyfill/component.dart");
-#import("package:web_components/mirror_polyfill/web_components.dart");
+#import("package:web_components/mirror_polyfill/component_loader.dart");
 </script>
 </head>
 <body>
@@ -21,7 +21,7 @@
     </template>
   </template>
   <script type="application/dart">
-  
+
   String _loopVar;
   String _loopItems;
   Element _childTemplate;
@@ -36,7 +36,7 @@
           element.attributes['iterate']);
     _loopVar = match.group(1);
     _loopItems = match.group(2);
-    
+
     // TODO(sigmund): support document fragments, not just a single child.
     // TODO(sigmund): use logging and not assertions.
     assert(element.elements.length == 1);

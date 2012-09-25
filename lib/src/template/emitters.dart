@@ -192,7 +192,7 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
           var stopperName = attrInfo.stopperNames[i];
           var exp = attrInfo.bindings[i];
           context.insertedMethod.add('''
-              $stopperName = bind(() => $exp, (e) {
+              $stopperName = watchAndInvoke(() => $exp, (e) {
                 if (e.oldValue != null && e.oldValue != '') {
                   $elemField.classes.remove(e.oldValue);
                 }
@@ -206,7 +206,7 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
         var val = attrInfo.boundValue;
         var stopperName = attrInfo.stopperNames[0];
         context.insertedMethod.add('''
-            $stopperName = bind(() => $val, (e) {
+            $stopperName = watchAndInvoke(() => $val, (e) {
               $elemField.$name = e.newValue;
             });
         ''');
@@ -219,7 +219,7 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
       // TODO(sigmund): track all subexpressions, not just the first one.
       var val = elemInfo.contentBinding;
       context.insertedMethod.add('''
-          $stopperName = bind(() => $val, (e) {
+          $stopperName = watchAndInvoke(() => $val, (e) {
             $elemField.innerHTML = ${elemInfo.contentExpression};
           });
       ''');
@@ -239,21 +239,61 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
   }
 }
 
-/** Copies values from the scope into the object at component creation time. */
-class DataValueEmitter extends Emitter<ElementInfo> {
-  DataValueEmitter(Element elem, ElementInfo info) : super(elem, info);
+/**
+ * Emits code for web component instantiation. For example, if the source has:
+ *
+ *     <x-hello>John</x-hello>
+ *
+ * And the component has been defined as:
+ *
+ *    <element name="x-hello" extends="div" constructor="HelloComponent">
+ *      <template>Hello, <content>!</template>
+ *      <script type="application/dart"></script>
+ *    </element>
+ *
+ * This will ensure that the Dart HelloComponent for `x-hello` is created and
+ * attached to the appropriate DOM node.
+ *
+ * Also, this copies values from the scope into the object at component creation
+ * time, for example:
+ *
+ *     <x-foo data-value="bar:baz">
+ *
+ * This will set the "bar" property of FooComponent to be "baz".
+ */
+class ComponentInstanceEmitter extends Emitter<ElementInfo> {
+  ComponentInstanceEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   void emitCreated(Context context) {
-    var elemField = elemInfo.elemField;
-    var id = elemInfo.idAsIdentifier;
-    if (elemInfo.values.length == 0) return;
+    var component = elemInfo.component;
+    if (component == null) return;
 
-    context.createdMethod.add('var component$id = manager[$id];');
+    var id = elemInfo.idAsIdentifier;
+    context.createdMethod.add(
+        'var component$id = new ${component.constructor}.forElement($id);');
+
     elemInfo.values.forEach((name, value) {
       context.createdMethod.add('component$id.$name = $value;');
     });
+
+    context.createdMethod.add('component$id.createShadowRoot();');
+  }
+
+  void emitInserted(Context context) {
+    if (elemInfo.component == null) return;
+
+    var id = elemInfo.idAsIdentifier;
+    context.insertedMethod.add('($id as Dynamic).xtag.inserted();');
+  }
+
+  void emitRemoved(Context context) {
+    if (elemInfo.component == null) return;
+
+    var id = elemInfo.idAsIdentifier;
+    context.removedMethod.add('($id as Dynamic).xtag.removed();');
   }
 }
+
 
 /** Emitter of template conditionals like `<template instantiate='if test'>`. */
 class ConditionalEmitter extends Emitter<TemplateInfo> {
@@ -297,7 +337,7 @@ class ConditionalEmitter extends Emitter<TemplateInfo> {
     var id = elemInfo.idAsIdentifier;
     var condition = (elemInfo as TemplateInfo).ifCondition;
     context.insertedMethod.add('''
-        _stopWatcher_if$id = bind(() => $condition, (e) {
+        _stopWatcher_if$id = watchAndInvoke(() => $condition, (e) {
           bool showNow = e.newValue;
           if (_child$id != null && !showNow) {
             // Remove any listeners/watchers on children
@@ -310,11 +350,10 @@ class ConditionalEmitter extends Emitter<TemplateInfo> {
             _child$id = null;
           } else if (_child$id == null && showNow) {
             _child$id = _childTemplate$id.clone(true);
-            manager.expandDeclarations(_child$id);
             if (_childId$id != null && _childId$id != '') {
               _child$id.id = _childId$id;
             }
-            // Reassing pointers to children elements
+            // Initialize children
     ''');
     context.insertedMethod.add(childrenCreated);
     context.insertedMethod.add('$id.parent.nodes.add(_child$id);');
@@ -389,12 +428,11 @@ class ListEmitter extends Emitter<TemplateInfo> {
     // TODO(jmesserly): this should use fine grained updates.
     // TODO(jmesserly): watcher should give us the list, not a boolean.
     context.insertedMethod.add('''
-        _stopWatcher$id = bind(() => ${elemInfo.loopItems}, (e) {
+        _stopWatcher$id = watchAndInvoke(() => ${elemInfo.loopItems}, (e) {
           for (var remover in _removeChild$id) remover();
           _removeChild$id.clear();
           for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
             var $childElementName = _childTemplate$id.clone(true);
-            manager.expandDeclarations($childElementName);
     ''');
 
     context.insertedMethod
@@ -424,6 +462,7 @@ class ListEmitter extends Emitter<TemplateInfo> {
       queryFromElement: childElementName);
 }
 
+
 /**
  * An visitor that applies [ElementFieldEmitter], [EventListenerEmitter],
  * [DataBindingEmitter], [DataValueEmitter], [ConditionalEmitter], and
@@ -445,7 +484,7 @@ class RecursiveEmitter extends TreeVisitor {
     var emitters = [new ElementFieldEmitter(elem, elemInfo),
         new EventListenerEmitter(elem, elemInfo),
         new DataBindingEmitter(elem, elemInfo),
-        new DataValueEmitter(elem, elemInfo)];
+        new ComponentInstanceEmitter(elem, elemInfo)];
 
     var childContext = _context;
     if (elemInfo.hasIfCondition) {
@@ -475,15 +514,35 @@ class RecursiveEmitter extends TreeVisitor {
   }
 }
 
-/** Generates the class corresponding to a web component. */
+/** Generates the class corresponding to a single web component. */
 class WebComponentEmitter extends RecursiveEmitter {
   WebComponentEmitter(FileInfo info) : super(info);
 
-  String run(Node node) {
-    visit(node);
+  String run(ComponentInfo info) {
+    if (info.element.attributes['apply-author-styles'] != null) {
+      _context.createdMethod.add(
+          'if (root is ShadowRoot) root.applyAuthorStyles = true;');
+    }
+    if (info.template != null) {
+      // TODO(jmesserly): we don't need to emit the HTML file for components
+      // anymore, because we're handling it here.
+
+      // TODO(jmesserly): we need to emit code to run the <content> distribution
+      // algorithm for browsers without ShadowRoot support.
+
+      // TODO(jmesserly): is raw triple quote enough to escape the HTML?
+      // We have a similar issue in mainDartCode.
+      _context.createdMethod.add("""
+        root.innerHTML = r'''
+          ${info.template.innerHTML.trim()}
+        ''';
+      """);
+    }
+
+    visit(info.element);
+
     return codegen.componentCode(
-        _info.filename, _info.libraryName, _info.imports,
-        _info.webComponentClass, _info.webComponentName, _info.userCode,
+        info.constructor, info.tagName, info.userCode,
         _context.declarations.formatString(1),
         _context.createdMethod.formatString(2),
         _context.insertedMethod.formatString(2),
@@ -491,42 +550,28 @@ class WebComponentEmitter extends RecursiveEmitter {
   }
 }
 
+/** Emits the Dart code for all components in the [file]. */
+String emitComponents(FileInfo file) {
+  var result = new StringBuffer();
+  result.add(codegen.header(file));
+  for (var component in file.declaredComponents) {
+    result.add(new WebComponentEmitter(file).run(component));
+  }
+  return result.toString();
+}
+
 /** Generates the class corresponding to the main html page. */
 class MainPageEmitter extends RecursiveEmitter {
-  final List<SourceFile> _files;
-  final Map<SourceFile, FileInfo> _filesInfo;
-
-  MainPageEmitter(FileInfo mainFileInfo, this._files, this._filesInfo)
-      : super(mainFileInfo);
+  MainPageEmitter(FileInfo info) : super(info);
 
   String run(Document document) {
     visit(document);
-    var generatedImports = _files.map((file) => _filesInfo[file].dartFilename);
-
-    // TODO(jmesserly): seems like this should be done in analysis phase.
-    var usedComponents = new Set();
-    for (var file in _files) {
-      usedComponents.addAll(_filesInfo[file].usedComponents);
-    }
-
-    var mappings = [];
-    for (var file in _files) {
-      var fileInfo = _filesInfo[file];
-      var name = fileInfo.webComponentName;
-      if (name != null && usedComponents.contains(name)) {
-        var className = fileInfo.webComponentClass;
-        mappings.add("'$name': () => new $className()");
-      }
-    }
 
     return codegen.mainDartCode(
-        _info.filename, _info.libraryName,
-        generatedImports, _info.imports,
+        emitComponents(_info),
         _context.declarations.formatString(0),
         _context.createdMethod.formatString(1),
         _context.insertedMethod.formatString(1),
-        Strings.join(mappings, ',\n    '),
-        document.body.innerHTML.trim(),
-        _info.userCode);
+        document.body.innerHTML.trim());
   }
 }

@@ -14,11 +14,14 @@ import 'analyzer.dart';
  */
 class SourceFile implements Hashable {
   final String filename;
-  final bool isWebComponent;
+  final bool mainDocument;
   Document document;
 
-  /** Another files to process (e.g., web components). */
-  SourceFile(this.filename, [this.isWebComponent = true]);
+  /**
+   * An HTML file to process. This could be the main html file or a component
+   * file.
+   */
+  SourceFile(this.filename, [this.mainDocument = true]);
 
   String toString() => "<#SourceFile $filename>";
 

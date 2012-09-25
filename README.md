@@ -33,7 +33,7 @@ Dependencies are installed using the [Pub Package Manager][pub].
 
     # Run browser tests
     export DART_PACKAGE_ROOT=file://`pwd`/packages
-    dartium --allow-file-access-from-files --enable-experimental-webkit-features tests/browser_tests.html
+    dartium --enable-experimental-webkit-features --allow-file-access-from-files tests/browser_tests.html
 
 You can run `browser_tests.html` from [Dartium][Dartium] launched with
 `--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][drt],

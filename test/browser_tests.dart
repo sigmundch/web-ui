@@ -11,7 +11,7 @@ library browser_tests;
 import 'dart:html';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/html_config.dart';
-import 'package:web_components/mirror_polyfill/web_components.dart';
+import 'package:web_components/mirror_polyfill/component_loader.dart';
 import 'package:web_components/mirror_polyfill/component.dart';
 import 'package:web_components/watcher.dart';
 

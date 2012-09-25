@@ -1,8 +1,7 @@
 library footer;
 import 'dart:html';
-import 'package:web_components/mirror_polyfill/component.dart';
 import 'package:web_components/watcher.dart';
-import 'package:web_components/mirror_polyfill/web_components.dart';
+import 'package:web_components/mirror_polyfill/component.dart';
 import 'package:web_components/mirror_polyfill/component.dart' as polyfill;
 import 'model.dart';
 

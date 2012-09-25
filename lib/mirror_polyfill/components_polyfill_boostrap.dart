@@ -178,7 +178,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
   var sb = new StringBuffer()
     ..add("""
 #import("dart:html");
-#import("package:web_components/mirror_polyfill/web_components.dart", prefix: "polyfill");
+#import("package:web_components/mirror_polyfill/component_loader.dart", prefix: "polyfill");
 """);
 
   var sbMain = new StringBuffer()..add("void main() {");
@@ -219,7 +219,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
             new Uri(declaration.url).path).group(1);
     sbLibrary.add("""
 #library("$libraryName");
-#import("package:web_components/mirror_polyfill/web_components.dart", prefix: "polyfill");
+#import("package:web_components/mirror_polyfill/component_loader.dart", prefix: "polyfill");
 #import("package:web_components/mirror_polyfill/component.dart", prefix: "polyfill");
 $sbLibraryHeader
 """);
@@ -258,7 +258,7 @@ $sbLibraryHeader
         var classBody = script.text;
         sbLibrary.add("""
 class $className extends polyfill.Component implements ${_tagToClassName[extendz]} {
-    
+
   $className(element) : super('$className', element);
 
 $classBody

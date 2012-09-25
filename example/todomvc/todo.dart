@@ -11,11 +11,10 @@ library output_todo;
 import 'dart:html';
 
 // Code from components
-// TODO(jmesserly): ideally these would be package: imports
 
 import 'model.dart';
 import 'package:web_components/watcher.dart';
-import 'package:web_components/mirror_polyfill/web_components.dart';
+import 'package:web_components/mirror_polyfill/component_loader.dart';
 
 main() {
   initializeComponents(viewModel);

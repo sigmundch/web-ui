@@ -7,7 +7,8 @@
 <html lang="en">
 <body>
 <script type="application/dart" src="model.dart"></script>
-<element name="x-todo-footer" extends="footer" constructor="FooterComponent" apply-author-styles="">
+<element name="x-todo-footer" extends="footer" constructor="FooterComponent"
+         apply-author-styles>
   <template>
     <!-- TODO(terry): Moved id from span to strong (revert later). -->
     <span><strong id="todo-count">{{remaining}}</strong></span>

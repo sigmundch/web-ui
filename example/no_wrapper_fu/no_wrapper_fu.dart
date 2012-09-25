@@ -6,9 +6,9 @@ library no_wrapper_fu;
 
 import 'dart:html';
 
-import 'package:web_components/js_polyfill/web_components.dart';
+import 'package:web_components/js_polyfill/component_loader.dart';
 
-#source('components/components.dart');
+part 'components/components.dart';
 
 void main() {
   _componentsSetup();

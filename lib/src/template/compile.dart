@@ -4,6 +4,7 @@
 
 library compile;
 
+import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/html5parser.dart';
 import 'package:html5lib/tokenizer.dart';
@@ -23,10 +24,7 @@ import 'package:html5lib/src/constants.dart' as html5_constants;
 import 'package:html5lib/src/utils.dart' as html5_utils;
 
 
-// TODO(terry): Too many classes in this file need to break up walking, analysis
-//              and codegen to different files (started but needs to finished).
-// TODO(terry): Add obfuscation mapping file.
-parseHtml(String template, String sourcePath) {
+Document parseHtml(String template, String sourcePath) {
   var parser = new HTMLParser();
   var document = parser.parse(new HTMLTokenizer(template));
 
@@ -45,12 +43,14 @@ parseHtml(String template, String sourcePath) {
 class Compile {
   final FileSystem filesystem;
   final List<SourceFile> files;
-  final Map<SourceFile, FileInfo> info;
+
+  /** Information about source [files] given their href. */
+  final Map<String, FileInfo> info;
 
   /** Used by template tool to open a file. */
   Compile(this.filesystem)
       : files = <SourceFile>[],
-        info = new Map<SourceFile, FileInfo>();
+        info = new SplayTreeMap<String, FileInfo>();
 
   /** Compile the application starting from the given [mainFile]. */
   void run(String mainFile, [String baseDir = ""]) {
@@ -65,34 +65,28 @@ class Compile {
    */
   void _parseAndDiscover(String mainFile, String baseDir) {
     var pending = new Queue<String>(); // files to process
-    var parsed = new Set<String>();
     pending.addLast(mainFile);
     while (!pending.isEmpty()) {
       var filename = pending.removeFirst();
 
       // Parse the file.
-      if (parsed.contains(filename)) continue;
-      parsed.add(filename);
-      var file = _parseFile(filename, baseDir, filename != mainFile);
+      if (info.containsKey(filename)) continue;
+      var file = _parseFile(filename, baseDir, filename == mainFile);
       files.add(file);
 
       // Find additional components being loaded.
-      for (final elem in file.document.queryAll('link')) {
-        if (elem.attributes['rel'] == 'components') {
-          var href = elem.attributes['href'];
-          if (href == null || href == '') {
-            world.error("invalid webcomponent reference:\n ${elem.outerHTML}");
-          } else {
-            pending.addLast(href);
-          }
-        }
+      var fileInfo = time('Analyzed definitions ${file.filename}',
+          () => analyzeDefinitions(file));
+      info[file.filename] = fileInfo;
+      for (var href in fileInfo.componentLinks) {
+        pending.addLast(href);
       }
     }
   }
 
   /** Parse [filename] and treat it as a component if [isComponent] is true. */
-  SourceFile _parseFile(String filename, String baseDir, bool isComponent) {
-    var file = new SourceFile(filename, isComponent);
+  SourceFile _parseFile(String filename, String baseDir, bool mainDocument) {
+    var file = new SourceFile(filename, mainDocument);
     var source = filesystem.readAll("$baseDir/$filename");
     file.document = time("Parsed $filename", () => parseHtml(source, filename));
     if (options.dumpTree) {
@@ -106,24 +100,23 @@ class Compile {
   /** Run the analyzer on every input html file. */
   void _analyze() {
     for (var file in files) {
-      info[file] = time('Analyzed ${file.filename}', () => analyze(file));
+      time('Analyzed contents ${file.filename}', () => analyzeFile(file, info));
     }
   }
 
   /** Emit the generated code corresponding to each input file. */
   void _emit() {
     for (var file in files) {
-      var fileInfo = info[file];
+      var fileInfo = info[file.filename];
       time('Codegen ${file.filename}', () {
         _removeScriptTags(file.document);
-        if (file.isWebComponent) {
+        if (file.mainDocument) {
           fileInfo.generatedCode =
-              new WebComponentEmitter(fileInfo).run(file.document);
-          fileInfo.generatedHtml = _emitComponentHtml(file);
-        } else {
-          fileInfo.generatedCode =
-              new MainPageEmitter(fileInfo, files, info).run(file.document);
+              new MainPageEmitter(fileInfo).run(file.document);
           fileInfo.generatedHtml = _emitMainHtml(file);
+        } else {
+          fileInfo.generatedCode = emitComponents(fileInfo);
+          fileInfo.generatedHtml = _emitComponentHtml(file);
         }
       });
     }
@@ -144,7 +137,7 @@ class Compile {
   /** Generate an html file with the (trimmed down) main html page. */
   String _emitMainHtml(SourceFile file) {
 
-    String genDartFile = info[file].dartFilename;
+    String genDartFile = info[file.filename].dartFilename;
 
     // Clear the body, we moved all of it
     var body = file.document.body;
@@ -171,7 +164,7 @@ class Compile {
     if (linkParent != null) {
       StringBuffer buff = new StringBuffer();
       for (var file in files) {
-        var fileInfo = info[file];
+        var fileInfo = info[file.filename];
         buff.add('<link rel="components" href = "${fileInfo.htmlFilename}">\n');
       }
 
