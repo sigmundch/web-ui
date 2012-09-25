@@ -19,10 +19,13 @@
     <label for="x-toggle-all"></label>
   </template>
   <script type="application/dart">
+  #import('package:web_components/web_component.dart');
+  class ToggleComponent extends WebComponent {
     bool allChecked () => app.todos.length > 0 &&
         app.todos.every((t) => t.done);
 
     void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+  }
   </script>
 </element>
 </body>

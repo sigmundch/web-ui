@@ -541,8 +541,7 @@ class WebComponentEmitter extends RecursiveEmitter {
 
     visit(info.element);
 
-    return codegen.componentCode(
-        info.constructor, info.tagName, info.userCode,
+    return codegen.componentCode(info,
         _context.declarations.formatString(1),
         _context.createdMethod.formatString(2),
         _context.insertedMethod.formatString(2),

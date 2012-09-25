@@ -14,9 +14,12 @@
            data-action="change:addTodo()">
   </template>
   <script type="application/dart">
-  void addTodo() {
-    app.todos.add(new Todo(_newTodo.value));
-    _newTodo.value = '';
+  #import('package:web_components/web_component.dart');
+  class FormComponent extends WebComponent {
+    void addTodo() {
+      app.todos.add(new Todo(_newTodo.value));
+      _newTodo.value = '';
+    }
   }
   </script>
 </element>

@@ -23,6 +23,8 @@
     </div>
   </template>
   <script type="application/dart">
+  #import('package:web_components/web_component.dart');
+  class TodoItemComponent extends WebComponent {
     Todo todo;
     bool _editing = false;
     String _currValue;
@@ -47,6 +49,7 @@
         list.removeRange(index, 1);
       }
     }
+  }
   </script>
 </element>
 </body>

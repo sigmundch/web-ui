@@ -24,6 +24,8 @@
     </template>
   </template>
   <script type='application/dart'>
+  #import('package:web_components/web_component.dart');
+  class FooterComponent extends WebComponent {
     int get doneCount {
       int res = 0;
       app.todos.forEach((t) { if (t.done) res++; });
@@ -50,6 +52,7 @@
     }
 
     bool get anyDone => doneCount > 0;
+  }
   </script>
 </element>
 </body>

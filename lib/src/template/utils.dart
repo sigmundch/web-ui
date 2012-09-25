@@ -51,3 +51,28 @@ find(List list, bool matcher(elem)) {
   }
   return null;
 }
+
+
+/**
+ * Find the next closing brace (`}`) in [code] starting at [startPos], but
+ * ignore matching braces. This function is used (temporarily) by the analyzer
+ * to extract the body of classes defining a component's behavior.
+ */
+ // TODO(sigmund,terry): use dart2js as a library instead.
+int findEndBrace(String code, int startPos) {
+  int openBrace = '{'.charCodeAt(0);
+  int closeBrace = '}'.charCodeAt(0);
+  int pending = 1;
+  int pos = startPos;
+  while (pos < code.length) {
+    if (code.charCodeAt(pos) == closeBrace) {
+      if (--pending == 0) {
+        return pos;
+      }
+    } else if (code.charCodeAt(pos) == openBrace) {
+      pending++;
+    }
+    pos++;
+  }
+  return -1;
+}
