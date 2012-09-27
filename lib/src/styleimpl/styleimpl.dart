@@ -10,4 +10,4 @@
  */
 library styleimpl;
 
-#source('style_property.dart');
+part 'style_property.dart';

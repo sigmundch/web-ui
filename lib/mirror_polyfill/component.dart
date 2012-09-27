@@ -7,13 +7,13 @@
  * It uses [watch] and [WebComponent] to implement [Component], and in
  * particular [Component.bind].
  */
-#library('component');
+library component;
 
-#import('dart:mirrors');
-#import('dart:html');
-#import("../watcher.dart");
-#import("../web_component.dart");
-#import("component_loader.dart");
+import 'dart:mirrors';
+import 'dart:html';
+import 'package:web_components/watcher.dart';
+import 'package:web_components/web_component.dart';
+import 'component_loader.dart';
 
 typedef void Action();
 

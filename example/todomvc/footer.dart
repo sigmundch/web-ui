@@ -9,15 +9,15 @@ class FooterComponent extends polyfill.Component {
 
   FooterComponent(element) : super('FooterComponent', element);
 
-  int get doneCount() {
+  int get doneCount {
     int res = 0;
     app.todos.forEach((t) { if (t.done) res++; });
     return res;
   }
 
-  int get remaining() => app.todos.length - doneCount;
+  int get remaining => app.todos.length - doneCount;
 
-  String get allClass() {
+  String get allClass {
     if (window.location.hash == '' || window.location.hash == '#/') {
       return 'selected';
     } else {
@@ -25,15 +25,15 @@ class FooterComponent extends polyfill.Component {
     }
   }
 
-  String get activeClass() =>
+  String get activeClass =>
       window.location.hash == '#/active' ?  'selected' : null;
 
-  String get completedClass() =>
+  String get completedClass =>
       window.location.hash == '#/completed' ?  'selected' : null;
 
   void clearDone() {
     app.todos = app.todos.filter((t) => !t.done);
   }
 
-  bool get anyDone() => doneCount > 0;
+  bool get anyDone => doneCount > 0;
 }

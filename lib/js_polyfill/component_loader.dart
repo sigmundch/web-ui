@@ -13,12 +13,11 @@
  * This script does an XMLHTTP request, so to test using custom elements with
  * file:// URLs you must run Chrome with `--allow-file-access-from-files`.
  */
-#library('component_loader');
+library component_loader;
 
-#import('dart:html');
-#import('../web_component.dart');
-
-#source('../src/list_map.dart');
+import 'dart:html';
+import 'package:web_components/web_component.dart';
+import 'package:web_components/src/list_map.dart';
 
 /** Should we use prototype rewiring and the new WebComponent interface? */
 bool _usePrototypeRewiring;
@@ -252,7 +251,7 @@ bool get hasShadowRoot {
       // TODO(jmesserly): This is a workaround because we don't distribute
       // children correctly. It's not actually the right fix.
       var style = new Element.html(
-          @'<style type="text/css">template { display: none; }</style>');
+          r'<style type="text/css">template { display: none; }</style>');
       document.head.nodes.add(style);
     }
   }

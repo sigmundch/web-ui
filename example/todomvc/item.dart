@@ -12,7 +12,7 @@ class TodoItemComponent extends polyfill.Component {
 
   TodoItemComponent(element) : super('TodoItemComponent', element);
 
-  String get itemClass() =>
+  String get itemClass =>
       _editing ? 'editing' : (todo.done ? 'completed' : '');
 
   void edit() {

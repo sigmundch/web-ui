@@ -12,11 +12,11 @@ String header(FileInfo info) => """
 // Generated Dart class from HTML template ${info.filename}.
 // DO NOT EDIT.
 
-#library('${info.libraryName}');
+library ${info.libraryName};
 
-#import('dart:html');
-#import('package:web_components/web_component.dart');
-#import('package:web_components/watcher.dart');
+import 'dart:html';
+import 'package:web_components/web_component.dart';
+import 'package:web_components/watcher.dart';
 ${_importList(info.imports.getKeys())}
 
 ${info.userCode}
@@ -86,4 +86,4 @@ final String _INITIAL_PAGE = r'''
 
 /** Generate text for a list of imports. */
 String _importList(List<String> imports) =>
-  Strings.join(imports.map((url) => "#import('$url');"), '\n');
+  Strings.join(imports.map((url) => "import '$url';"), '\n');

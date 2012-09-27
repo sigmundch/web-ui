@@ -33,7 +33,7 @@ String sample(String sampleName) {
   final String with = '\${#with';
   final String endWith = '\${/with}';
 
-  final String simpleTemplate = @'''
+  final String simpleTemplate = r'''
 <html>
   <head>
     <title>Forms Validation</title>

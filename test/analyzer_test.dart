@@ -110,7 +110,7 @@ main() {
     var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
     expect(info[elem].contentBinding, equals('x'));
-    expect(info[elem].contentExpression, equals(@"'${x}'"));
+    expect(info[elem].contentExpression, equals(r"'${x}'"));
   });
 
   test('hasDataBinding - content with text and data', () {
@@ -119,7 +119,7 @@ main() {
     var info = analyzeNode(elem).elements;
     expect(info[elem].hasDataBinding);
     expect(info[elem].contentBinding, equals('x'));
-    expect(info[elem].contentExpression, equals(@"' a b ${x}c'"));
+    expect(info[elem].contentExpression, equals(r"' a b ${x}c'"));
   });
 
   test('attribute - no info', () {

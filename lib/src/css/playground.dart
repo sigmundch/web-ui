@@ -12,10 +12,10 @@
 
 import 'dart:html';
 import 'package:args/args.dart';
-import '../template/file_system_memory.dart';
-import '../template/source.dart';
-import '../template/world.dart';
-import '../template/cmd_options.dart';
+import 'package:web_components/src/template/file_system_memory.dart';
+import 'package:web_components/src/template/source.dart';
+import 'package:web_components/src/template/world.dart';
+import 'package:web_components/src/template/cmd_options.dart';
 import 'css.dart';
 
 void runCss([bool debug = false, bool parseOnly = false,

@@ -161,7 +161,7 @@ class ElementInfo {
   /**
    * Format [elementId] in camel case, suitable for using as a Dart identifier.
    */
-  String get idAsIdentifier() =>
+  String get idAsIdentifier =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
 
   ElementInfo()

@@ -11,7 +11,7 @@ class MainComponent {
 
   bool showDone = true;
 
-  bool get hasElements() => app.todos.length > 0;
+  bool get hasElements => app.todos.length > 0;
 }
 
 MainComponent _viewModel;
@@ -36,7 +36,7 @@ class Todo {
 
   Todo(this.task);
 
-  bool get isVisible() =>
+  bool get isVisible =>
       (viewModel.showIncomplete && !done) || (viewModel.showDone && done);
 
   String toString() => "$task ${done ? '(done)' : '(not done)'}";

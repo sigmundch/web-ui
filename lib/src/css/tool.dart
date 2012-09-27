@@ -6,12 +6,12 @@ library csstool;
 
 import 'dart:io';
 import 'package:args/args.dart';
-import '../template/file_system.dart';
-import '../template/file_system_vm.dart';
-import '../template/world.dart';
-import '../template/utils.dart';
-import '../template/source.dart';
-import '../template/cmd_options.dart';
+import 'package:web_components/src/template/cmd_options.dart';
+import 'package:web_components/src/template/file_system.dart';
+import 'package:web_components/src/template/file_system_vm.dart';
+import 'package:web_components/src/template/source.dart';
+import 'package:web_components/src/template/utils.dart';
+import 'package:web_components/src/template/world.dart';
 import 'css.dart';
 
 FileSystem files;

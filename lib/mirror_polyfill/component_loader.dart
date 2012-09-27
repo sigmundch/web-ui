@@ -13,18 +13,18 @@
  * This script does an XMLHTTP request, so to test using custom elements with
  * file:// URLs you must run Chrome with `--allow-file-access-from-files`.
  */
-#library('component_loader');
+library component_loader;
 
-#import('dart:html');
-#import('dart:mirrors');
+import 'dart:html';
+import 'dart:mirrors';
 
 // TODO(jmesserly): this is here so we can set up the lexical scopes.
 // A component needs a way of knowing the <element> tag that was in scope for
 // template expansions.
-#import("component.dart");
+import "component.dart";
 
-#import("../web_component.dart");
-#source('../src/list_map.dart');
+import 'package:web_components/web_component.dart';
+import 'package:web_components/src/list_map.dart';
 
 // typedefs
 typedef WebComponent WebComponentFactory(Element elt);
@@ -32,7 +32,7 @@ typedef WebComponent WebComponentFactory(Element elt);
 // Globals
 final int REQUEST_DONE = 4;
 CustomElementsManager _manager;
-CustomElementsManager get manager() {
+CustomElementsManager get manager {
   if (_manager == null)
     _manager = new CustomElementsManager._();
   return _manager;
@@ -214,7 +214,7 @@ bool _hasShadowRoot;
  * See the [Shadow DOM spec](http://www.w3.org/TR/shadow-dom/) for more
  * information about the ShadowRoot.
  */
-bool get hasShadowRoot() {
+bool get hasShadowRoot {
   if (_hasShadowRoot == null) {
     try {
       // TODO(jmesserly): it'd be nice if we could check this without causing
@@ -227,7 +227,7 @@ bool get hasShadowRoot() {
       // TODO(jmesserly): This is a workaround because we don't distribute
       // children correctly. It's not actually the right fix.
       var style = new Element.html(
-          @'<style type="text/css">template { display: none; }</style>');
+          r'<style type="text/css">template { display: none; }</style>');
       document.head.nodes.add(style);
     }
   }

@@ -17,10 +17,10 @@
  * flag -allow-file-access-from-files.
  */
 
-#library('webcomponents_bootstrap');
+library webcomponents_bootstrap;
 
-#import('dart:html');
-#import('dart:uri');
+import 'dart:html';
+import 'dart:uri';
 
 final int REQUEST_DONE = 4;
 
@@ -139,7 +139,7 @@ String rewritePaths(String script, String url) {
 
   var sb = new StringBuffer();
   for (String line in script.split(new RegExp('\n'))) {
-    Match match = const RegExp(@"""^(#import[(]["'])([^"']+)(["'][)];)$""")
+    Match match = const RegExp(r"""^(import ["'])([^"']+)(["'][^;]*;)$""")
         .firstMatch(line);
     if (match != null) {
       var absLocation = scriptLocation.resolve(match.group(2));
@@ -177,8 +177,8 @@ void runComponents(List<CustomElementDeclaration> declarations) {
   var sbHeader = new StringBuffer();
   var sb = new StringBuffer()
     ..add("""
-#import("dart:html");
-#import("package:web_components/mirror_polyfill/component_loader.dart", prefix: "polyfill");
+import "dart:html";
+import "package:web_components/mirror_polyfill/component_loader.dart" as polyfill;
 """);
 
   var sbMain = new StringBuffer()..add("void main() {");
@@ -191,7 +191,7 @@ void runComponents(List<CustomElementDeclaration> declarations) {
       String url = script.src;
       var libPrefix = uniqueLibPrefix(url);
       // TODO(jacobr): proper escaping.
-      sb.add('#import("$url", prefix: "$libPrefix");\n');
+      sb.add(' import "$url" as $libPrefix;\n');
       sbMainFooter.add("""
   // TODO(jacobr): enclose in try-catch block.
   $libPrefix.main();
@@ -215,14 +215,13 @@ void runComponents(List<CustomElementDeclaration> declarations) {
     }
 
     String libraryName =
-        const RegExp(@"([^/.]+)([^/]+)$").firstMatch(
+        const RegExp(r"([^/.]+)([^/]+)$").firstMatch(
             new Uri(declaration.url).path).group(1);
     sbLibrary.add("""
-#library("$libraryName");
-#import("package:web_components/mirror_polyfill/component_loader.dart", prefix: "polyfill");
-#import("package:web_components/mirror_polyfill/component.dart", prefix: "polyfill");
-$sbLibraryHeader
-""");
+library "$libraryName";
+import "package:web_components/mirror_polyfill/component_loader.dart" as polyfill;
+import "package:web_components/mirror_polyfill/component.dart" as polyfill;
+""").add(sbLibraryHeader);
 
     int numDartCustomElements = 0;
     for(Element element in declaration.html.queryAll('element')) {
@@ -270,8 +269,8 @@ $classBody
         var scriptLocation = location.resolve(declaration.url);
         var absLocation = scriptLocation.resolve(script.src);
         sbLibrary.add("""
-#import('dart:html');
-#import("$absLocation");
+import 'dart:html';
+import "$absLocation";
 """);
       }
 
@@ -290,7 +289,7 @@ void register() {
     var dataUrl =
         "data:application/dart;base64,${window.btoa(sbLibrary.toString())}";
 
-    sb.add('#import(@"""$dataUrl""", prefix: "$libraryName");\n');
+    sb.add('import r"""$dataUrl""" as $libraryName;\n');
     sbMain.add("  ${libraryName}.register();\n");
 
     // TODO(jacobr): remove this once b/4344 is fixed. This script tag is

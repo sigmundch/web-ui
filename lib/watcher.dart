@@ -44,7 +44,7 @@
  * of each event loop (e.g. after each UI event is fired). Our view library does
  * this automatically.
  */
-#library('watcher');
+library watcher;
 
 /**
  * Watch for changes in [target].  The [callback] function will be called when
@@ -251,7 +251,7 @@ class Handle<T> {
 
   Handle.of(T value) : this(() => value);
 
-  T get value() => _getter();
+  T get value => _getter();
 
   void set value(T value) {
     if (_setter != null) {

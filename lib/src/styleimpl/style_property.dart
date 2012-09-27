@@ -17,7 +17,7 @@ interface _StyleProperty {
    * then _cssExpression would return 'rgba(255,255,0)'.  See
    * <http://www.w3.org/TR/CSS21/grammar.html>
    */
-  String get cssExpression();
+  String get cssExpression;
 }
 
 
@@ -35,7 +35,7 @@ interface ColorBase {
   /**
    * Return argb as a value (int).
    */
-  int get argbValue();
+  int get argbValue;
 }
 
 
@@ -140,7 +140,7 @@ class Color implements _StyleProperty, ColorBase, Hashable {
   //              CSS if user uses hsl and would like to edit as hsl, etc.  If
   //              this is an issue we should keep the original value and not re-
   //              create the CSS from the normalized value.
-  String get cssExpression() {
+  String get cssExpression {
     if (_argb.length == 6) {
       return "#$_argb";         // RGB only, no alpha blending.
     } else {
@@ -153,7 +153,7 @@ class Color implements _StyleProperty, ColorBase, Hashable {
     }
   }
 
-  Rgba get rgba() {
+  Rgba get rgba {
     int nextIndex = 0;
     num a;
     if (_argb.length == 8) {
@@ -171,9 +171,9 @@ class Color implements _StyleProperty, ColorBase, Hashable {
     return new Rgba(r, g, b, a);
   }
 
-  Hsla get hsla() => new Hsla.fromRgba(rgba);
+  Hsla get hsla => new Hsla.fromRgba(rgba);
 
-  int get argbValue() => Color.hexToInt(_argb);
+  int get argbValue => Color.hexToInt(_argb);
 
   bool operator ==(Object other) => Color.equal(this, other);
 
@@ -620,7 +620,7 @@ class Rgba implements _StyleProperty, ColorBase, Hashable {
 
   bool operator ==(Object other) => Color.equal(this, other);
 
-  String get cssExpression() {
+  String get cssExpression {
     if (a == null) {
       return "#${Color.convertToHexString(r, g, b)}";
     } else {
@@ -630,7 +630,7 @@ class Rgba implements _StyleProperty, ColorBase, Hashable {
 
   String toHexArgbString() => Color.convertToHexString(r, g, b, a);
 
-  int get argbValue() {
+  int get argbValue {
     int value = 0;
     if (a != null) {
       value = (a << 0x18);
@@ -640,8 +640,8 @@ class Rgba implements _StyleProperty, ColorBase, Hashable {
     value += b;
   }
 
-  Color get color() => new Color.rgba(r, g, b, a);
-  Hsla get hsla() => new Hsla.fromRgba(this);
+  Color get color => new Color.rgba(r, g, b, a);
+  Hsla get hsla => new Hsla.fromRgba(this);
 
   Rgba darker(num amount) => Color._createNewTintShadeFromRgba(this, -amount);
   Rgba lighter(num amount) => Color._createNewTintShadeFromRgba(this, amount);
@@ -748,50 +748,50 @@ class Hsla implements _StyleProperty, ColorBase, Hashable {
   /**
    * Returns 0..1 fraction (ratio of 360°, e.g. 1° == 1/360).
    */
-  num get hue() => _h;
+  num get hue => _h;
 
   /**
    * Returns 0..1 fraction (1 == 100%)
    */
-  num get saturation() => _s;
+  num get saturation => _s;
 
   /**
    * Returns 0..1 fraction (1 == 100%).
    */
-  num get lightness() => _l;
+  num get lightness => _l;
 
   /**
    * Returns number as degrees 0..360.
    */
-  num get hueDegrees() => (_h * 360).round();
+  num get hueDegrees => (_h * 360).round();
 
   /**
    * Returns number as percentage 0..100
    */
-  num get saturationPercentage() => (_s * 100).round();
+  num get saturationPercentage => (_s * 100).round();
 
   /**
    * Returns number as percentage 0..100.
    */
-  num get lightnessPercentage() => (_l * 100).round();
+  num get lightnessPercentage => (_l * 100).round();
 
   /**
    * Returns number as 0..1
    */
-  num get alpha() => _a;
+  num get alpha => _a;
 
   bool operator ==(Object other) => Color.equal(this, other);
 
-  String get cssExpression() => (_a == null) ?
+  String get cssExpression => (_a == null) ?
       "hsl($hueDegrees,$saturationPercentage,$lightnessPercentage)" :
       "hsla($hueDegrees,$saturationPercentage,$lightnessPercentage,$_a)";
 
   String toHexArgbString() => new Rgba.fromHsla(this).toHexArgbString();
 
-  int get argbValue() => Color.hexToInt(this.toHexArgbString());
+  int get argbValue => Color.hexToInt(this.toHexArgbString());
 
-  Color get color() => new Color.hsla(_h, _s, _l, _a);
-  Rgba get rgba() => new Rgba.fromHsla(this);
+  Color get color => new Color.hsla(_h, _s, _l, _a);
+  Rgba get rgba => new Rgba.fromHsla(this);
 
   Hsla darker(num amount) =>
       new Hsla.fromRgba(new Rgba.fromHsla(this).darker(amount));
@@ -808,7 +808,7 @@ class PointXY implements _StyleProperty {
   final num x, y;
   const PointXY(this.x, this.y);
 
-  String get cssExpression() {
+  String get cssExpression {
     // TODO(terry): TBD
   }
 }
@@ -830,10 +830,10 @@ class Border implements _StyleProperty {
   Border.uniform(num amount) :
       top = amount, left = amount, bottom = amount, right = amount;
 
-  int get width() => left + right;
-  int get height() => top + bottom;
+  int get width => left + right;
+  int get height => top + bottom;
 
-  String get cssExpression() {
+  String get cssExpression {
     return (top == left && bottom == right && top == right) ? "${left}px" :
       "${top != null ? '$top' : '0'}px ${
       right != null ? '$right' : '0'}px ${
@@ -1073,7 +1073,7 @@ class Font implements _StyleProperty {
    * The font-size and font-family values are required. If any of the other
    * values are missing the default value is used.
    */
-  String get cssExpression() {
+  String get cssExpression {
     // TODO(jimhug): include variant, style, other options
     if (weight != null) {
       // TODO(jacobr): is this really correct for lineHeight?
@@ -1098,7 +1098,7 @@ class Font implements _StyleProperty {
    * computing line-height. The Font class constructor has the computation for
    * _lineHeight.
    */
-  num get lineHeightInPixels() {
+  num get lineHeightInPixels {
     if (lineHeight != null) {
       if (lineHeight.inPixels) {
         return lineHeight.height;
@@ -1125,7 +1125,7 @@ class Font implements _StyleProperty {
   // TODO(terry): This is fragile should probably just iterate through the list
   //              of fonts construction the font-family string.
   /** Return fonts as a comma seperated list sans the square brackets. */
-  String get _fontsAsString() {
+  String get _fontsAsString {
     String fonts = family.toString();
     return fonts.length > 2 ? fonts.substring(1, fonts.length - 1) : "";
   }
@@ -1227,13 +1227,13 @@ class BoxEdge {
    * The total size of the horizontal edges. Equal to [left] + [right], where
    * null is interpreted as 0px.
    */
-  num get width() => (left != null ? left : 0) + (right != null ? right : 0);
+  num get width => (left != null ? left : 0) + (right != null ? right : 0);
 
   /**
    * The total size of the vertical edges. Equal to [top] + [bottom], where
    * null is interpreted as 0px.
    */
-  num get height() => (top != null ? top : 0) + (bottom != null ? bottom : 0);
+  num get height => (top != null ? top : 0) + (bottom != null ? bottom : 0);
 }
 
 _mergeVal(x, y) => y != null ? y : x;

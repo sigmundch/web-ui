@@ -5,10 +5,8 @@
 library no_wrapper_fu;
 
 import 'dart:html';
-
 import 'package:web_components/js_polyfill/component_loader.dart';
-
-part 'components/components.dart';
+import 'components/components.dart';
 
 void main() {
   _componentsSetup();

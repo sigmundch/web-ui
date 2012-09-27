@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /** Declares the [WebComponent] base class (eventually: mixin). */
-#library('web_component');
-#import('dart:html');
+library web_component;
+import 'dart:html';
 
 /**
  * The base class for all Dart web components. In addition to the [Element]

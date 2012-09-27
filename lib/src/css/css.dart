@@ -7,24 +7,24 @@ library css;
 import 'dart:coreimpl';
 import 'dart:math' as Math;
 import 'package:args/args.dart';
-import '../template/file_system.dart';
-import '../template/file_system_memory.dart';
-import '../template/cmd_options.dart';
-import '../styleimpl/styleimpl.dart';
-import '../template/world.dart';
-import '../template/source.dart';
+import 'package:web_components/src/styleimpl/styleimpl.dart';
+import 'package:web_components/src/template/cmd_options.dart';
+import 'package:web_components/src/template/file_system.dart';
+import 'package:web_components/src/template/file_system_memory.dart';
+import 'package:web_components/src/template/source.dart';
+import 'package:web_components/src/template/world.dart';
 
-#source('tokenkind.dart');
-#source('token.dart');
-#source('tokenizer_base.dart');
-#source('tokenizer.dart');
-#source('treebase.dart');
-#source('tree.dart');
-#source('cssselectorexception.dart');
-#source('cssworld.dart');
-#source('parser.dart');
-#source('validate.dart');
-#source('generate.dart');
+part 'tokenkind.dart';
+part 'token.dart';
+part 'tokenizer_base.dart';
+part 'tokenizer.dart';
+part 'treebase.dart';
+part 'tree.dart';
+part 'cssselectorexception.dart';
+part 'cssworld.dart';
+part 'parser.dart';
+part 'validate.dart';
+part 'generate.dart';
 
 ArgParser commandOptions() {
   // tool.dart [options...] <css file>

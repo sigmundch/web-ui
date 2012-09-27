@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+library list_map;
+
 /**
  * ListMap class so that we have a dictionary usable with non-hashable keys.
  * Note: this class does NOT yet have full Map functionality

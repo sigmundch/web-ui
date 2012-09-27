@@ -4,7 +4,7 @@
 
 /** Common definitions used across several tests. */
 
-#library('common');
+library common;
 
 String topLevelVar = "hi";
 

@@ -145,7 +145,7 @@ class _Analyzer extends TreeVisitor {
           ' inserted and displayed.');
       }
     } else if (iterate != null) {
-      var match = const RegExp(@"(.*) in (.*)").firstMatch(iterate);
+      var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
         return new TemplateInfo(loopVariable: match[1], loopItems: match[2]);
       }
@@ -169,7 +169,7 @@ class _Analyzer extends TreeVisitor {
     if (name == 'data-bind') {
       _readDataBindAttribute(elem, elemInfo, value);
     } else {
-      var match = const RegExp(@'^\s*{{(.*)}}\s*$').firstMatch(value);
+      var match = const RegExp(r'^\s*{{(.*)}}\s*$').firstMatch(value);
       if (match == null) return;
       // Strip off the outer {{ }}.
       value = match[1];
@@ -259,7 +259,7 @@ class _Analyzer extends TreeVisitor {
     // Special support to bind each css class separately.
     // class="{{class1}} {{class2}} {{class3}}"
     List<String> bindings = [];
-    var parts = value.split(const RegExp(@'}}\s*{{'));
+    var parts = value.split(const RegExp(r'}}\s*{{'));
     for (var part in parts) {
       bindings.add(part);
     }
@@ -267,7 +267,7 @@ class _Analyzer extends TreeVisitor {
   }
 
   void visitText(Text text) {
-    var bindingRegex = const RegExp(@'{{(.*)}}');
+    var bindingRegex = const RegExp(r'{{(.*)}}');
     if (!bindingRegex.hasMatch(text.value)) return;
 
     var parentElem = text.parent;
@@ -501,7 +501,7 @@ void _importComponents(FileInfo info, Map<String, FileInfo> files) {
 void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
   var existing = fileInfo.components[componentInfo.tagName];
   if (existing != null) {
-    if (existing.file === fileInfo && componentInfo.file !== fileInfo) {
+    if (identical(existing.file, fileInfo) && !identical(componentInfo.file, fileInfo)) {
       // Components declared in [fileInfo] are allowed to shadow component
       // names declared in imported files.
       return;
@@ -514,7 +514,7 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
 
     existing.hasConflict = true;
 
-    if (componentInfo.file === fileInfo) {
+    if (identical(componentInfo.file, fileInfo)) {
       world.error('${fileInfo.filename}: duplicate custom element definition '
           'for "${componentInfo.tagName}":\n  ${existing.element.outerHTML}\n'
           'and:\n  ${componentInfo.element.outerHTML}');

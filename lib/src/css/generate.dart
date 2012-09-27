@@ -102,9 +102,8 @@ class Generate {
         "// This library is intended to be imported via a prefix.\n"
         "// Do not edit.\n\n"
 
-        "#library('$libName');\n"
-        "#import('package:third_party/dart_lang/lib/ui/view/view.dart');\n"
-        "#import('package:third_party/dart_lang/lib/ui/styleimpl/styleimpl.dart');\n\n");
+        "library $libName;\n"
+        "import 'package:web_components/src/styleimpl/styleimpl.dart';\n\n");
 
     // Find all known classes.
     for (final production in stylesheet._topLevels) {
