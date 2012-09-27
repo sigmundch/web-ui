@@ -162,7 +162,7 @@ class _Analyzer extends TreeVisitor {
       _readDataValueAttribute(elem, elemInfo, value);
       return;
     } else if (name == 'data-action') {
-      _readDataActionAttribute(elem, elemInfo, value);
+      _readDataActionAttribute(elemInfo, value);
       return;
     }
 
@@ -197,20 +197,32 @@ class _Analyzer extends TreeVisitor {
     elemInfo.values[name] = value;
   }
 
-  void _readDataActionAttribute(
-      Element elem, ElementInfo elemInfo, String value) {
+  void _readDataActionAttribute(ElementInfo elemInfo, String value) {
+    // Bind each event, stopping if we hit an error.
+    for (var action in value.split(',')) {
+      if (!_readDataAction(elemInfo, action)) return;
+    }
+  }
+
+  bool _readDataAction(ElementInfo elemInfo, String value) {
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       world.error('data-action attribute should be of the form '
-          'data-action="eventName:action"');
-      return;
+          'data-action="eventName:action", or data-action='
+          '"eventName1:action1,eventName2:action2,..." for multiple events.');
+      return false;
     }
+
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
-    var eventInfo = new EventInfo(name, ([elemVarName]) => value);
-    elemInfo.events[name] = eventInfo;
-    return;
+    _addEvent(elemInfo, name, (elem, args) => '${value}($args)');
+    return true;
+  }
+
+  void _addEvent(ElementInfo elemInfo, String name, ActionDefinition action) {
+    var events = elemInfo.events.putIfAbsent(name, () => <EventInfo>[]);
+    events.add(new EventInfo(name, action));
   }
 
   AttributeInfo _readDataBindAttribute(
@@ -230,23 +242,12 @@ class _Analyzer extends TreeVisitor {
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
       attrInfo = new AttributeInfo(value);
-      // TODO(sigmund): deal with conflicts, e.g. I have a click listener too
-      if (elemInfo.events['click'] != null) {
-        throw const NotImplementedException(
-            'a click listener + a data-bound check box');
-      }
-      elemInfo.events['click'] = new EventInfo('click',
-          // Assume [value] is a property with a setter.
-          ([elemVarName]) => '$value = $elemVarName.checked');
+      // Assume [value] is a field or property setter.
+      _addEvent(elemInfo, 'click', (elem, args) => '$value = $elem.checked');
     } else if (isInput && name == 'value') {
       attrInfo = new AttributeInfo(value);
-      if (elemInfo.events['keyUp'] != null) {
-        throw const NotImplementedException(
-            'a keyUp listener + a data-bound input value');
-      }
-      elemInfo.events['keyUp'] = new EventInfo('keyUp',
-          // Assume [value] is a property with a setter.
-          ([elemVarName]) => '$value = $elemVarName.value');
+      // Assume [value] is a field or property setter.
+      _addEvent(elemInfo, 'keyUp', (elem, args) => '$value = $elem.value');
     } else {
       world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}');
       return;

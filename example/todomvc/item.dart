@@ -15,17 +15,17 @@ class TodoItemComponent extends polyfill.Component {
   String get itemClass =>
       _editing ? 'editing' : (todo.done ? 'completed' : '');
 
-  void edit() {
+  void edit(e) {
     _editing = true;
   }
 
-  void update() {
+  void update(e) {
     // TODO(jmesserly): do the two way binding automatically
     todo.task = root.query('input.edit').value;
     _editing = false;
   }
 
-  void delete() {
+  void delete(e) {
     var list = app.todos;
     var index = list.indexOf(todo);
     if (index != -1) {
@@ -33,7 +33,7 @@ class TodoItemComponent extends polyfill.Component {
     }
   }
 
-  void markDone() {
+  void markDone(e) {
     // TODO(jmesserly): do the two way binding automatically
     todo.done = root.query('#checkbox').checked;
   }

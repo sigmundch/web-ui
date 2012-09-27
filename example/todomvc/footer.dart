@@ -31,7 +31,7 @@ class FooterComponent extends polyfill.Component {
   String get completedClass =>
       window.location.hash == '#/completed' ?  'selected' : null;
 
-  void clearDone() {
+  void clearDone(e) {
     app.todos = app.todos.filter((t) => !t.done);
   }
 

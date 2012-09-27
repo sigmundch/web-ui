@@ -135,7 +135,7 @@ main() {
       var elem = parseSubtree('<div data-action="foo:bar"></div>');
       var emitter = new EventListenerEmitter(elem, _elemInfo(elem));
       expect(_inserted(emitter), equalsIgnoringWhitespace(
-          '_listener_foo_1 = (_) { bar; dispatch(); }; '
+          '_listener_foo_1 = (e) { bar(e); dispatch(); }; '
           '___e0.on.foo.add(_listener_foo_1);'));
     });
 
@@ -143,7 +143,7 @@ main() {
       var elem = parseSubtree('<input data-bind="value:bar"></input>');
       var emitter = new EventListenerEmitter(elem, _elemInfo(elem));
       expect(_inserted(emitter), equalsIgnoringWhitespace(
-          '_listener_keyUp_1 = (_) { bar = ___e0.value; dispatch(); }; '
+          '_listener_keyUp_1 = (e) { bar = ___e0.value; dispatch(); }; '
           '___e0.on.keyUp.add(_listener_keyUp_1);'));
     });
 

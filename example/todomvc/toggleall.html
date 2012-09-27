@@ -10,7 +10,7 @@ import 'model.dart';
          apply-author-styles>
   <template>
     <input id="toggle-all" type="checkbox"
-           checked="{{allChecked}}" data-action="click:markAll()">
+           checked="{{allChecked}}" data-action="click:markAll">
     <label for="toggle-all">Mark all as complete</label>
   </template>
   <script type="application/dart">
@@ -19,7 +19,7 @@ import 'model.dart';
 
   get _toggleAll() => root.query('#toggle-all');
 
-  void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+  void markAll(e) => app.todos.forEach((t) { t.done = _toggleAll.checked; });
   </script>
 </element>
 </body>

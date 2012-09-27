@@ -149,8 +149,10 @@ main() {
     expect(info[elem].attributes['value'], isNotNull);
     expect(!info[elem].attributes['value'].isClass);
     expect(info[elem].attributes['value'].boundValue, equals('x'));
-    expect(info[elem].events.length, equals(1));
-    expect(info[elem].events['keyUp'].action('foo'), equals('x = foo.value'));
+    expect(info[elem].events.getKeys(), equals(['keyUp']));
+    expect(info[elem].events['keyUp'].length, equals(1));
+    expect(info[elem].events['keyUp'][0].action('foo', 'e'),
+        equals('x = foo.value'));
   });
 
   test('attribute - 1 way binding checkbox', () {
@@ -172,8 +174,10 @@ main() {
     expect(info[elem].attributes['checked'], isNotNull);
     expect(!info[elem].attributes['checked'].isClass);
     expect(info[elem].attributes['checked'].boundValue, equals('x'));
-    expect(info[elem].events.length, equals(1));
-    expect(info[elem].events['click'].action('foo'), equals('x = foo.checked'));
+    expect(info[elem].events.getKeys(), equals(['click']));
+    expect(info[elem].events['click'].length, equals(1));
+    expect(info[elem].events['click'][0].action('foo', 'e'),
+        equals('x = foo.checked'));
   });
 
   test('attribute - 1 way binding, normal field', () {
@@ -208,13 +212,15 @@ main() {
   });
 
   test('attribute - ui-event hookup', () {
-    var input = '<input data-action="change:foo()">';
+    var input = '<input data-action="change:foo">';
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isEmpty);
-    expect(info[elem].events['change'], isNotNull);
-    expect(info[elem].events['change'].eventName, 'change');
-    expect(info[elem].events['change'].action(), 'foo()');
+    expect(info[elem].events.getKeys(), equals(['change']));
+    var changeEvents = info[elem].events['change'];
+    expect(changeEvents.length, equals(1));
+    expect(changeEvents[0].eventName, 'change');
+    expect(changeEvents[0].action('bar', 'args'), 'foo(args)');
   });
 
   test('template element', () {

@@ -153,7 +153,7 @@ class ElementInfo {
   final Map<String, AttributeInfo> attributes;
 
   /** Collected information for UI events on the corresponding element. */
-  final Map<String, EventInfo> events;
+  final Map<String, List<EventInfo>> events;
 
   /** Collected information about `data-value="name:value"` expressions. */
   final Map<String, String> values;
@@ -164,10 +164,15 @@ class ElementInfo {
   String get idAsIdentifier =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
 
+  // Note: we're using sorted maps so items are enumerated in a consistent order
+  // between runs, resulting in less "diff" in the generated code.
+  // TODO(jmesserly): An alternative approach would be to use LinkedHashMap to
+  // preserve the order of the input, but we'd need to be careful about our tree
+  // traversal order.
   ElementInfo()
-      : attributes = <AttributeInfo>{},
-        events = <EventInfo>{},
-        values = {};
+      : attributes = new SplayTreeMap<String, AttributeInfo>(),
+        events = new SplayTreeMap<String, List<EventInfo>>(),
+        values = new SplayTreeMap<String, String>();
 
 
   /** Whether the template element has `iterate="... in ...". */
@@ -225,13 +230,13 @@ class AttributeInfo {
 /** Information extracted for each declared event in an element. */
 class EventInfo {
   /** Event name for attributes representing actions. */
-  String eventName;
+  final String eventName;
+
+  /** Action associated for event listener attributes. */
+  final ActionDefinition action;
 
   /** Generated field name, if any, associated with this event. */
   String listenerField;
-
-  /** Action associated for event listener attributes. */
-  ActionDefinition action;
 
   EventInfo(this.eventName, this.action);
 
@@ -276,7 +281,9 @@ class TemplateInfo extends ElementInfo {
 /**
  * Specifies the action to take on a particular event. Some actions need to read
  * attributes from the DOM element that has the event listener (e.g. two way
- * bindings do this). A reference to this element ([elementVarName]) is
- * generated outside of the analyzer, thus, we parameterize actions here.
+ * bindings do this). [elementVarName] stores a reference to this element, and
+ * [eventArgName] stores a reference to the event parameter name.
+ * They are generated outside of the analyzer (in the emitter), so they are
+ * passed here as arguments.
  */
-typedef String ActionDefinition([String elemVarName]);
+typedef String ActionDefinition(String elemVarName, String eventArgName);

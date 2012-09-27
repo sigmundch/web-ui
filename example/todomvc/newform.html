@@ -12,12 +12,12 @@ import 'model.dart';
          apply-author-styles>
   <template>
     <input id="new-todo" placeholder="What needs to be done?" autofocus
-           data-action="change:addTodo()">
+           data-action="change:addTodo">
   <template>
   <script type="application/dart">
   get _newTodo() => root.query("#new-todo");
 
-  void addTodo() {
+  void addTodo(e) {
     if (_newTodo.value == '') return;
     app.todos.add(new Todo(_newTodo.value));
     _newTodo.value = '';

@@ -124,9 +124,11 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
 
   /** Generate a field for each listener, so it can be detached on `removed`. */
   void emitDeclarations(Context context) {
-    elemInfo.events.forEach((name, eventInfo) {
-      eventInfo.listenerField = newName(context, '_listener_${name}_');
-      context.declarations.add('EventListener ${eventInfo.listenerField};');
+    elemInfo.events.forEach((name, events) {
+      for (var event in events) {
+        event.listenerField = newName(context, '_listener_${name}_');
+        context.declarations.add('EventListener ${event.listenerField};');
+      }
     });
   }
 
@@ -134,27 +136,31 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
   // TODO(sigmund): should the definition of listener be done in `created`?
   void emitInserted(Context context) {
     var elemField = elemInfo.elemField;
-    elemInfo.events.forEach((name, eventInfo) {
-      var field = eventInfo.listenerField;
-      context.insertedMethod.add('''
-          $field = (_) {
-            ${eventInfo.action(elemField)};
+    elemInfo.events.forEach((name, events) {
+      for (var event in events) {
+        var field = event.listenerField;
+        context.insertedMethod.add('''
+          $field = (e) {
+            ${event.action(elemField, "e")};
             dispatch();
           };
-          $elemField.on.${eventInfo.eventName}.add($field);
-      ''');
+          $elemField.on.${event.eventName}.add($field);
+        ''');
+      }
     });
   }
 
   /** Emit feature-related statemetns in the `removed` method. */
   void emitRemoved(Context context) {
     var elemField = elemInfo.elemField;
-    elemInfo.events.forEach((name, eventInfo) {
-      var field = eventInfo.listenerField;
-      context.removedMethod.add('''
-          $elemField.on.${eventInfo.eventName}.remove($field);
+    elemInfo.events.forEach((name, events) {
+      for (var event in events) {
+        var field = event.listenerField;
+        context.removedMethod.add('''
+          $elemField.on.${event.eventName}.remove($field);
           $field = null;
-      ''');
+        ''');
+      }
     });
   }
 }
