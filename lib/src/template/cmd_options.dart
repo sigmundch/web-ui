@@ -8,8 +8,7 @@ import 'package:args/args.dart';
 import 'world.dart';
 
 /** Extracts options from command-line arguments. */
-CmdOptions parseOptions(ArgResults args, var files) {
-  assert(options == null);
+CmdOptions parseOptions(ArgResults args, files) {
   return new CmdOptions(args, files);
 }
 
@@ -30,7 +29,7 @@ class CmdOptions {
   bool showWarnings;
   bool useColors;
 
-  CmdOptions(ArgResults args, var files) {
+  CmdOptions(ArgResults args, files) {
     warningsAsErrors = args['warnings_as_errors'];
     throwOnErrors = args['throw_on_errors'];
     throwOnWarnings = args['throw_on_warnings'];

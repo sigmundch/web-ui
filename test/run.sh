@@ -19,7 +19,6 @@ DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
 DART_FLAGS="--enable-type-checks --enable-asserts"
 TEST_PATTERN=$1
 
-
 function show_diff {
   echo -en "[33mExpected[0m"
   echo -n "                                                           "
@@ -47,17 +46,17 @@ function compare {
   diff -q -s $1 $2 || show_diff $1 $2 || update $1 $2
 }
 
-for test in $DIR/*_test.dart; do
-  if [[ ($TEST_PATTERN == "") || ($test =~ $TEST_PATTERN) ]]; then
-    dart $DART_FLAGS $test
-  fi
-done
+pushd $DIR
+dart $DART_FLAGS run_all.dart $TEST_PATTERN
+popd
 
+# TODO(jmesserly): bash and dart regexp might not be 100% the same. Ideally we
+# could do all the heavy lifting in Dart code, and keep this script as a thin
+# wrapper that sets `--enable-type-checks --enable-asserts`
 for input in $DIR/data/input/*_test.html; do
   if [[ ($TEST_PATTERN == "") || ($input =~ $TEST_PATTERN) ]]; then
     echo -e "\nTesting $input:"
     FILENAME=`basename $input.html`
-    dart $DART_FLAGS bin/dwc.dart $input $DIR/data/output/
     DUMP="$DIR/data/output/$FILENAME.txt"
     EXPECTATION="$DIR/data/expected/$FILENAME.txt"
     DART_PACKAGE_ROOT="file://$DIR/packages/" \

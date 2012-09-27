@@ -21,7 +21,6 @@ typedef void PrintHandler(String message);
  * Can use world.reset() to reinitialize.
  */
 void initializeWorld(var files, var opts) {
-  assert(world == null);
   options = opts;
   world = new World(files);
   world.init();
