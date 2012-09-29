@@ -16,7 +16,7 @@ set -e
 # set -x
 
 DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
-DART_FLAGS="--enable-type-checks --enable-asserts"
+DART_FLAGS="--checked"
 TEST_PATTERN=$1
 
 function show_diff {

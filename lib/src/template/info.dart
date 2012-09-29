@@ -89,14 +89,8 @@ class ComponentInfo {
 
   // TODO(sigmund): allow component code on a separate .dart file (issue #47)
 
-  /** Component's library-level code. */
-  String libraryCode;
-
-  /** Component's class declaration line (e.g. may include extra interfaces). */
-  String classDeclaration;
-
-  /** Component's class body. */
-  String body;
+  /** User code associated with this component. */
+  String userCode;
 
   /**
    * True if [tagName] was defined by more than one component. If this happened

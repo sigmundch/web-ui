@@ -379,8 +379,6 @@ class _ElementLoader extends TreeVisitor {
     result.declaredComponents.add(_component);
 
     super.visitElement(node);
-    _completeComponentCode();
-
     _component = savedComponent;
   }
 
@@ -421,62 +419,17 @@ class _ElementLoader extends TreeVisitor {
     assert(node.nodes.length == 1);
     Text text = node.nodes[0];
     if (_component != null) {
-      if (_component.libraryCode != null) {
+      if (_component.userCode != null) {
         world.error('${result.filename}: there should be only one dart script'
             'tag in a custom element declaration:\n ${node.outerHTML}');
       } else {
-        _sliceComponentCode(text.value);
+        _component.userCode = text.value;
       }
     } else if (result.userCode != '') {
       world.error('${result.filename}: there should be only one dart script tag'
           'in the page:\n ${node.outerHTML}');
     } else {
       result.userCode = text.value;
-    }
-  }
-
-  void _sliceComponentCode(String code) {
-    if (!code.isEmpty()) {
-      // TODO(sigmund): revert this logic of searching for the end brace, just
-      // inject the code at the beginning of the class and ensure that each
-      // element is defined on it's own library.
-      var start = code.indexOf('class ${_component.constructor}');
-      if (start != -1) {
-        var openBrace = code.indexOf('{', start);
-        if (openBrace != -1) {
-          var end = findEndBrace(code, openBrace + 1);
-          if (end != -1) {
-            _component.classDeclaration = code.substring(start, openBrace);
-            _component.body = code.substring(openBrace + 1, end);
-            _component.libraryCode =
-                '${code.substring(0, start)}${code.substring(end + 1)}';
-          }
-        }
-      }
-    }
-  }
-
-
-  // TODO(sigmund,jmesserly): we should consider changing our .lifecycle
-  // mechanism to not require patching the class (which messes with debugging).
-  // For example, using a subclass, or registering created/inserted/removed some
-  // other way. We may want to do this for other reasons
-  // anyway--attributeChanged in its current form doesn't work, and created()
-  // has a similar bug with the one-ShadowRoot-per-inherited-class.
-  void _completeComponentCode() {
-    if (_component.libraryCode == null) {
-      _component.libraryCode = '';
-      _component.classDeclaration =
-          'class ${_component.constructor} extends WebComponent';
-      _component.body = '';
-    }
-
-    // TODO(sigmund): should we check this or just leave it as a runtime error?
-    // If we want to check this, we need to fix it to also check for
-    // transitively inheriting from WebComponent.
-    if (!_component.classDeclaration.contains('extends WebComponent')) {
-      world.error('${result.filename}: component classes should extend '
-          'from [WebComponent]:\n ${_component.classDeclaration}');
     }
   }
 }

@@ -6,13 +6,16 @@
 -->
 <html lang="en">
 <body>
-<script type="application/dart">
-String topLevelVar = 'hello';
-</script>
 <element name="x-watch-global" extends="div" constructor="WatchGlobal">
   <template>
     <div>{{topLevelVar}}</div>
   </template>
+  <script type="application/dart">
+    import '../input/common.dart';
+    import 'package:web_components/web_component.dart';
+    class WatchGlobal extends WebComponent {
+    }
+  </script>
 </element>
 </body>
 </html>

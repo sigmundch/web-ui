@@ -14,6 +14,7 @@ import 'code_printer.dart';
 import 'codegen.dart' as codegen;
 import 'info.dart';
 import 'source_file.dart';
+import 'world.dart';
 
 /**
  * An emitter for a web component feature.  It collects all the logic for
@@ -547,11 +548,36 @@ class WebComponentEmitter extends RecursiveEmitter {
 
     visit(info.element);
 
-    return codegen.componentCode(info,
-        _context.declarations.formatString(1),
-        _context.createdMethod.formatString(2),
-        _context.insertedMethod.formatString(2),
-        _context.removedMethod.formatString(2));
+
+    // TODO(sigmund,jmesserly): we should consider changing our .lifecycle
+    // mechanism to not require patching the class (which messes with
+    // debugging). For example, using a subclass, or registering
+    // created/inserted/removed some other way. We may want to do this for other
+    // reasons anyway--attributeChanged in its current form doesn't work, and
+    // created() has a similar bug with the one-ShadowRoot-per-inherited-class.
+    var code = info.userCode;
+    if (code == null) {
+      code = '''
+          import 'package:web_components/web_component.dart';
+          class ${info.constructor} extends WebComponent {\n}
+      ''';
+    }
+    var match = new RegExp('class ${info.constructor}[^{]*{').firstMatch(code);
+    if (match != null) {
+      var printer = new CodePrinter();
+      printer.add(code.substring(0, match.end()))
+          .add('\n')
+          .add(codegen.componentCode(info.constructor,
+              _context.declarations.formatString(1),
+              _context.createdMethod.formatString(2),
+              _context.insertedMethod.formatString(2),
+              _context.removedMethod.formatString(2)))
+          .add(code.substring(match.end()));
+      return printer.formatString();
+    } else {
+      world.error('please provide a class definition for ${info.constructor}');
+      return code;
+    }
   }
 }
 
