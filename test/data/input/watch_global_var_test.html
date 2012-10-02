@@ -16,9 +16,11 @@
 <body>
   <div is="x-watch-global"></div>
   <script type="application/dart">
+    import '../input/common.dart';
     main() {
       init();
-      // TODO(sigmund): update [topLevelVar] here (issue #43)
+      topLevelVar = 'hello';
+      dispatch();
       window.setTimeout(() => window.postMessage('done', '*'), 0);
     }
   </script>
