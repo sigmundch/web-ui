@@ -1,4 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -6,16 +11,9 @@
   <link rel="components" href="footer.html">
   <link rel="components" href="newform.html">
   <link rel="components" href="toggleall.html">
-  <!-- TODO(jmesserly): we need to remove the dependency on if/list. -->
-  <link rel="components" href="../../lib/mirror_polyfill/if_component.html">
-  <link rel="components" href="../../lib/mirror_polyfill/list_component.html">
   <link rel="components" href="item.html">
   <link rel="stylesheet" href="base.css">
   <title>dart - TodoMVC</title>
-  <script type="application/dart" src='todo.dart'></script>
-  <script type="application/javascript"
-          src="../../lib/mirror_polyfill/components_polyfill_boostrap.dart.js">
-  </script>
 </head>
 <body>
   <section id="todoapp">
@@ -26,25 +24,40 @@
     <section id="main">
       <div is="x-toggle-all"></div>
       <ul id="todo-list">
-        <template iterate="{{x in app.todos}}" is="x-list">
-          <template instantiate="if x.isVisible" is="x-if">
-            <li is="x-todo-row" data-bind-todo="x"></li>
+        <template iterate="x in app.todos">
+          <template instantiate="if viewModel.isVisible(x)">
+            <li is="x-todo-row" data-value="todo:x"></li>
           </template>
         </template>
       </ul>
     </section>
-    <template is="x-if" instantiate="if viewModel.hasElements">
+    <template instantiate="if viewModel.hasElements">
       <footer is="x-todo-footer" id="footer"></footer>
     </template>
   </section>
   <footer id="info">
     <p>Double-click to edit a todo.</p>
-    <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team </p>
-    <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team.</p>
+    <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
-  <!--
-   TODO(terry): Should be able to auto-generate?
-  <script type="text/javascript" src="http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"></script>
-  -->
+  <script type="application/dart">
+import 'model.dart';
+
+main() {
+  init();
+
+  // listen on changes to #hash in the URL
+  // Note: listen on both popState and hashChange, because IE9 doens't support
+  // history API, and it doesn't work properly on Opera 12.
+  // See http://dartbug.com/5483
+  updateFilters(e) {
+    viewModel.showIncomplete = window.location.hash != '#/completed';
+    viewModel.showDone = window.location.hash != '#/active';
+    dispatch();
+  }
+  window.on.hashChange.add(updateFilters);
+  window.on.popState.add(updateFilters);
+}
+  </script>
 </body>
 </html>

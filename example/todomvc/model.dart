@@ -7,6 +7,9 @@ library model;
 class MainComponent {
   MainComponent();
 
+  bool isVisible(Todo todo) => todo != null &&
+      ((showIncomplete && !todo.done) || (showDone && todo.done));
+
   bool showIncomplete = true;
 
   bool showDone = true;
@@ -35,9 +38,6 @@ class Todo {
   bool done = false;
 
   Todo(this.task);
-
-  bool get isVisible =>
-      (viewModel.showIncomplete && !done) || (viewModel.showDone && done);
 
   String toString() => "$task ${done ? '(done)' : '(not done)'}";
 }

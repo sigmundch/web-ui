@@ -1,29 +1,33 @@
-<!doctype html>
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
 <html lang="en">
 <body>
-<script type="application/dart">
-import 'dart:html';
-import 'package:web_components/mirror_polyfill/component.dart';
-import 'package:web_components/watcher.dart';
-
-import 'model.dart';
-</script>
 <element name="x-todo-form" extends="div" constructor="FormComponent"
          apply-author-styles>
   <template>
-    <input id="new-todo" placeholder="What needs to be done?" autofocus
-           data-action="change:addTodo">
-  <template>
+    <!-- Note: <form> is to make "enter" work on Opera/IE. -->
+    <form data-action="submit:addTodo">
+      <input id="new-todo" placeholder="What needs to be done?" autofocus
+             data-action="change:addTodo">
+    </form>
+  </template>
   <script type="application/dart">
-  get _newTodo() => root.query("#new-todo");
+  import 'model.dart';
+  import 'package:web_components/web_component.dart';
 
-  void addTodo(e) {
-    if (_newTodo.value == '') return;
-    app.todos.add(new Todo(_newTodo.value));
-    _newTodo.value = '';
+  class FormComponent extends WebComponent {
+    void addTodo(e) {
+      e.preventDefault(); // don't submit the form
+      if (_newTodo.value == '') return;
+      app.todos.add(new Todo(_newTodo.value));
+      _newTodo.value = '';
+    }
   }
   </script>
 </element>
 </body>
 </html>
-

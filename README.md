@@ -18,6 +18,12 @@ We believe that:
 
 This library is under construction. More coming soon!
 
+Running Examples
+----------------
+
+To run our implementation of [TodoMVC][] that uses web components and data
+binding, look at the [README.md][todo_readme] in `example/todomvc`.
+
 
 Running Tests
 -------------
@@ -30,10 +36,6 @@ Dependencies are installed using the [Pub Package Manager][pub].
     # executables on your path: `dart` and `DumpRenderTree` (see below
     # for links to download `DumpRenderTree`)
     test/run.sh
-
-    # Run browser tests
-    export DART_PACKAGE_ROOT=file://`pwd`/packages
-    dartium --enable-experimental-webkit-features --allow-file-access-from-files tests/browser_tests.html
 
 You can run `browser_tests.html` from [Dartium][Dartium] launched with
 `--allow-file-access-from-files` or from a Dart enabled [DumpRenderTree][drt],
@@ -52,3 +54,5 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [drtmac]: http://gsdview.appspot.com/dartium-archive/continuous/drt-mac.zip
 [drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
 [drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
+[TodoMVC]: http://addyosmani.github.com/todomvc/
+[todo_readme]: https://github.com/dart-lang/dart-web-components/blob/master/example/todomvc/README.md

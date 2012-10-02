@@ -2,17 +2,27 @@ TodoMVC sample application written with web-components and templates bound to
 models. You can run it out of the box on Dartium using dart:mirrors.
 That means you can edit it and refresh and see it automatically update.
 
-To run this code, launch [Dartium][] with these flags:
+To run this code, first run our template compiler:
 
-    --enable-experimental-webkit-features --allow-file-access-from-files --enable-devtools-experiments
+    ../../bin/dwc.dart ./main.html
 
-Then open `main.html`.
+This will generated a number of files with the *.html.dart and *.html.html.
+Then you can launch in [Dartium][] with these flags:
 
-Please note that this sample is intended to work on all [modern browsers][m] but
-at the moment we rely on features like scoped styles and shadow DOM that have
-only been implemented in Chrome. The `output` verion will run on these browsers
-using the [dart2js][] compiler.
+    --allow-file-access-from-files --enable-experimental-webkit-features --enable-devtools-experiments
+
+And open `main.html.html`.
+
+You can also compile with [dart2js][] and run it in any of the
+[modern browsers][browsers] supported by Dart:
+
+    dart2js -omain.html.dart.js main.html.dart
+
+Note that [TodoMVC][] use CSS features that are not supported yet in all of our
+target browsers. If you try running the examples on that site you'll see similar problems with other frameworks. This causes some things to render incorrectly in Firefox, IE9 and Opera, such as checkboxes. We'd like to fix the stylesheet so
+it renders the same everywhere, but we haven't done it yet.
 
 [Dartium]: http://www.dartlang.org/dartium/
 [dart2js]: http://www.dartlang.org/docs/dart2js/
-[m]: http://www.dartlang.org/support/faq.html#what-browsers-supported
+[browsers]: http://www.dartlang.org/support/faq.html#what-browsers-supported
+[TodoMVC]: http://addyosmani.github.com/todomvc/

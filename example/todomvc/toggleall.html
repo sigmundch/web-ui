@@ -1,27 +1,33 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
 <html>
 <body>
-<script type="application/dart">
-import 'dart:html';
-import 'package:web_components/mirror_polyfill/component.dart';
-import 'package:web_components/watcher.dart';
-import 'model.dart';
-</script>
 <element name="x-toggle-all" extends="div" constructor="ToggleComponent"
-         apply-author-styles>
+         apply-author-styles="">
   <template>
+    <!-- TODO(terry): checked attribute expression uses () to know it's a getter
+                      only.  Should be able to know that allChecked is a getter
+                      and do the right 1-way binding.
+    -->
     <input id="toggle-all" type="checkbox"
-           checked="{{allChecked}}" data-action="click:markAll">
-    <label for="toggle-all">Mark all as complete</label>
+           checked="{{allChecked()}}" data-action="click:markAll">
+    <label for="x-toggle-all"></label>
   </template>
   <script type="application/dart">
-  bool get allChecked() => app.todos.length > 0 &&
-      app.todos.every((t) => t.done);
+  import 'model.dart';
+  import 'package:web_components/web_component.dart';
 
-  get _toggleAll() => root.query('#toggle-all');
+  class ToggleComponent extends WebComponent {
+    bool allChecked () => app.todos.length > 0 &&
+        app.todos.every((t) => t.done);
 
-  void markAll(e) => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+    void markAll() => app.todos.forEach((t) { t.done = _toggleAll.checked; });
+  }
   </script>
 </element>
 </body>
 </html>
-
