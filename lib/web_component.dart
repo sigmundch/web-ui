@@ -37,7 +37,7 @@ abstract class WebComponent implements Element {
    * Creates the [ShadowRoot] backing this component. This is an implementation
    * helper and should not need to be called from your code.
    */
-  void createShadowRoot() {
+  createShadowRoot() {
     var shadowRoot;
     if (_hasShadowRoot) {
       try {
@@ -56,28 +56,26 @@ abstract class WebComponent implements Element {
       nodes.add(shadowRoot);
     }
 
-    // TODO(jmesserly): this doesn't work for inherited components, each of
-    // which should get their own ShadowRoot.
-    created(shadowRoot);
+    return shadowRoot;
   }
 
   /**
    * Invoked when this component gets created.
    * Note that [root] will be a [ShadowRoot] if the browser supports Shadow DOM.
    */
-  void created(Element root) {}
+  void created() {}
 
   /** Invoked when this component gets inserted in the DOM tree. */
   void inserted() {}
+
+  /** Invoked when this component is removed from the DOM tree. */
+  void removed() {}
 
   // TODO(jmesserly): how do we implement this efficiently?
   // See https://github.com/dart-lang/dart-web-components/issues/37
   /** Invoked when any attribute of the component is modified. */
   void attributeChanged(
       String name, String oldValue, String newValue) {}
-
-  /** Invoked when this component is removed from the DOM tree. */
-  void removed() {}
 
 
   // TODO(jmesserly): this forwarding is temporary until Dart supports

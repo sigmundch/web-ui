@@ -75,38 +75,38 @@ main() {
       test('action with no id', () {
         var elem = parseSubtree('<div data-action="foo:bar"></div>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("___e0 = root.query('#__e-0');"));
+        expect(_created(emitter), equals("___e0 = _root.query('#__e-0');"));
       });
 
       test('action with id', () {
         var elem = parseSubtree('<div id="my-id" data-action="foo:bar"></div>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("_myId = root.query('#my-id');"));
+        expect(_created(emitter), equals("_myId = _root.query('#my-id');"));
       });
 
       test('1 way binding with no id', () {
         var elem = parseSubtree('<div class="{{bar}}"></div>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("___e0 = root.query('#__e-0');"));
+        expect(_created(emitter), equals("___e0 = _root.query('#__e-0');"));
       });
 
       test('1 way binding with id', () {
         var elem = parseSubtree('<div id="my-id" class="{{bar}}"></div>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("_myId = root.query('#my-id');"));
+        expect(_created(emitter), equals("_myId = _root.query('#my-id');"));
       });
 
       test('2 way binding with no id', () {
         var elem = parseSubtree('<input data-bind="value:bar"></input>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("___e0 = root.query('#__e-0');"));
+        expect(_created(emitter), equals("___e0 = _root.query('#__e-0');"));
       });
 
       test('2 way binding with id', () {
         var elem = parseSubtree(
           '<input id="my-id" data-bind="value:bar"></input>');
         var emitter = new ElementFieldEmitter(elem, _elemInfo(elem));
-        expect(_created(emitter), equals("_myId = root.query('#my-id');"));
+        expect(_created(emitter), equals("_myId = _root.query('#my-id');"));
       });
     });
   });
