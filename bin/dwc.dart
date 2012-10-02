@@ -43,7 +43,9 @@ void run(List<String> args) {
 
   Path srcPath = new Path(sourceFullFn);
 
-  Directory srcDir = new Directory.fromPath(srcPath.directoryPath);
+  Path srcDirPath = srcPath.directoryPath;
+  Directory srcDir = srcDirPath.isEmpty
+      ? new Directory.current() : new Directory.fromPath(srcDirPath);
   if (!srcDir.existsSync()) {
     world.fatal("Input directory doesn't exist - ${srcDir.path}");
     return;
