@@ -14,7 +14,7 @@ import 'dart:html';
 import 'cmd_options.dart';
 import 'compile.dart';
 import 'file_system_memory.dart';
-import 'source_file.dart';
+import 'files.dart';
 import 'template.dart';
 import 'world.dart';
 

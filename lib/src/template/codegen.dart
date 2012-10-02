@@ -8,17 +8,14 @@ library codegen;
 import 'info.dart';
 
 /** Header with common imports, used in every generated .dart file. */
-String header(FileInfo info) => """
-// Generated Dart class from HTML template ${info.filename}.
+String header(String filename, String libraryName) => """
+// Auto-generated from $filename.
 // DO NOT EDIT.
 
-library ${info.libraryName};
+library $libraryName;
 
 import 'dart:html';
 import 'package:web_components/watcher.dart';
-${_importList(info.imports.getKeys())}
-
-${info.userCode}
 """;
 
 /** The code in .dart files generated for a web component. */
@@ -45,17 +42,23 @@ $insertedBody
   void removed() {
 $removedBody
   }
+
+  /** Original code from the component. */
 """;
 
 // TODO(jmesserly): is raw triple quote enough to escape the HTML?
 /** The code in the main.html.dart generated file. */
 String mainDartCode(
-    String headerAndComponents,
+    FileInfo info,
     String topLevelFields,
     String fieldInitializers,
     String modelBinding,
     String initialPage) => """
-$headerAndComponents
+${header(info.filename, info.libraryName)}
+
+${importList(info.imports.getKeys())}
+
+${info.userCode}
 
 /** Generated code. */
 $topLevelFields
@@ -80,5 +83,10 @@ final String _INITIAL_PAGE = r'''
 """;
 
 /** Generate text for a list of imports. */
-String _importList(List<String> imports) =>
+String importList(List<String> imports) =>
   Strings.join(imports.map((url) => "import '$url';"), '\n');
+
+/** Generate text for a list of export. */
+// TODO(sigmund): uncomment exports below (issue #58)
+String exportList(List<String> exports) =>
+  Strings.join(exports.map((url) => "// export '$url';"), '\n');

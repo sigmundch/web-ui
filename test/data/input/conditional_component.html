@@ -6,8 +6,6 @@
 -->
 <html lang="en">
 <body>
-<!-- TODO(sigmund): this should be an import, see issue #43 -->
-<script type='application/dart' src="../input/common.dart"></script>
 <element name="x-conditional" extends="div" constructor="ConditionalExample">
   <template>
     <template instantiate="if cond">
@@ -17,6 +15,11 @@
       <span>you should see 'yes': no</span>
     </template>
   </template>
+  <script type='application/dart'>
+    import '../input/common.dart';
+    import 'package:web_components/web_component.dart';
+    class ConditionalExample extends WebComponent {}
+  </script>
 </element>
 </body>
 </html>

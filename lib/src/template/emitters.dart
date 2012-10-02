@@ -13,7 +13,7 @@ import 'package:html5lib/dom.dart';
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;
 import 'info.dart';
-import 'source_file.dart';
+import 'files.dart';
 import 'world.dart';
 
 /**
@@ -564,7 +564,14 @@ class WebComponentEmitter extends RecursiveEmitter {
     }
     var match = new RegExp('class ${info.constructor}[^{]*{').firstMatch(code);
     if (match != null) {
+      // TODO(sigmund): clean up and make this more robust. Issue #59.
       var printer = new CodePrinter();
+      if (const RegExp('^library ').firstMatch(code) == null) {
+        var libraryName = info.tagName.replaceAll(const RegExp('[-./]'), '_');
+        printer.add(codegen.header(info.file.filename, libraryName));
+      } else {
+        printer.add('// Generated from ${info.inputFile}\n// DO NOT EDIT.');
+      }
       printer.add(code.substring(0, match.end()))
           .add('\n')
           .add(codegen.componentCode(info.constructor,
@@ -575,20 +582,11 @@ class WebComponentEmitter extends RecursiveEmitter {
           .add(code.substring(match.end()));
       return printer.formatString();
     } else {
-      world.error('please provide a class definition for ${info.constructor}');
+      world.error('${info.inputFile}: please provide a class definition '
+          'for ${info.constructor}:\n $code');
       return code;
     }
   }
-}
-
-/** Emits the Dart code for all components in the [file]. */
-String emitComponents(FileInfo file) {
-  var result = new StringBuffer();
-  result.add(codegen.header(file));
-  for (var component in file.declaredComponents) {
-    result.add(new WebComponentEmitter(file).run(component));
-  }
-  return result.toString();
 }
 
 /** Generates the class corresponding to the main html page. */
@@ -598,11 +596,12 @@ class MainPageEmitter extends RecursiveEmitter {
   String run(Document document) {
     visit(document);
 
-    return codegen.mainDartCode(
-        emitComponents(_info),
-        _context.declarations.formatString(0),
-        _context.createdMethod.formatString(1),
-        _context.insertedMethod.formatString(1),
-        document.body.innerHTML.trim());
+    return new CodePrinter().add(
+        codegen.mainDartCode(
+          _info,
+          _context.declarations.formatString(0),
+          _context.createdMethod.formatString(1),
+          _context.insertedMethod.formatString(1),
+          document.body.innerHTML.trim())).formatString();
   }
 }

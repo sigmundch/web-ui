@@ -6,7 +6,6 @@ BSD-style license that can be found in the LICENSE file.
 -->
 <html lang="en">
 <body>
-<script type="application/dart" src='model.dart'></script>
 <element name="x-todo-form" extends="div" constructor="FormComponent"
          apply-author-styles>
   <template>
@@ -17,7 +16,9 @@ BSD-style license that can be found in the LICENSE file.
     </form>
   </template>
   <script type="application/dart">
+  import 'model.dart';
   import 'package:web_components/web_component.dart';
+
   class FormComponent extends WebComponent {
     void addTodo(e) {
       e.preventDefault(); // don't submit the form

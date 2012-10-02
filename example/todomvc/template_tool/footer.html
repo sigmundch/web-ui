@@ -6,7 +6,6 @@ BSD-style license that can be found in the LICENSE file.
 -->
 <html lang="en">
 <body>
-<script type="application/dart" src="model.dart"></script>
 <element name="x-todo-footer" extends="footer" constructor="FooterComponent"
          apply-author-styles>
   <template>
@@ -24,7 +23,9 @@ BSD-style license that can be found in the LICENSE file.
     </template>
   </template>
   <script type='application/dart'>
+  import 'model.dart';
   import 'package:web_components/web_component.dart';
+
   class FooterComponent extends WebComponent {
     int get doneCount {
       int res = 0;

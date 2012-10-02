@@ -12,7 +12,7 @@ import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
 
 import 'info.dart';
-import 'source_file.dart';
+import 'files.dart';
 import 'utils.dart';
 import 'world.dart';
 
@@ -22,7 +22,7 @@ import 'world.dart';
  * component declarations. This is the first pass of analysis on a file.
  */
 FileInfo analyzeDefinitions(SourceFile file) {
-  var result = new FileInfo(file.filename);
+  var result = new FileInfo(file.filename, file.isMainHtml);
   new _ElementLoader(result).visit(file.document);
   return result;
 }
@@ -41,7 +41,7 @@ FileInfo analyzeNode(Node source) {
 /** Extract relevant information from all files found from the root document. */
 void analyzeFile(SourceFile file, Map<String, FileInfo> info) {
   var fileInfo = info[file.filename];
-  _importComponents(fileInfo, info);
+  _normalize(fileInfo, info);
   new _Analyzer(fileInfo).visit(file.document);
 }
 
@@ -403,11 +403,23 @@ class _ElementLoader extends TreeVisitor {
 
     var src = node.attributes["src"];
     if (src != null) {
-      result.imports[src] = true;
+      if (!src.endsWith('.dart')) {
+        world.warning('${result.filename}: "application/dart" scripts should'
+            'use the .dart file extension:\n ${node.outerHTML}');
+      }
 
-      if (node.nodes.length > 0) {
+      if (node.innerHTML.trim() != '') {
         world.error('${result.filename}: script tag has "src" attribute and '
             'also has script text:\n  ${node.outerHTML}');
+      }
+
+      if (_component == null) {
+        result.imports[src] = true;
+      } else if (_component.externalFile != null) {
+        world.error('${result.filename}: there should be only one dart script'
+            ' tag in a custom element declaration:\n ${node.outerHTML}');
+      } else {
+        _component.externalFile = src;
       }
       return;
     }
@@ -419,15 +431,19 @@ class _ElementLoader extends TreeVisitor {
     assert(node.nodes.length == 1);
     Text text = node.nodes[0];
     if (_component != null) {
-      if (_component.userCode != null) {
+      if (_component.inlinedCode != null) {
         world.error('${result.filename}: there should be only one dart script'
             'tag in a custom element declaration:\n ${node.outerHTML}');
       } else {
-        _component.userCode = text.value;
+        _component.inlinedCode = text.value;
       }
     } else if (result.userCode != '') {
       world.error('${result.filename}: there should be only one dart script tag'
           'in the page:\n ${node.outerHTML}');
+    } else if (!result.isMainHtml) {
+      world.warning('${result.filename}: top-level dart code is ignored on '
+          ' HTML pages that define components, but are not the entry HTML file:'
+          '\n ${node.outerHTML}');
     } else {
       result.userCode = text.value;
     }
@@ -435,13 +451,31 @@ class _ElementLoader extends TreeVisitor {
 }
 
 /**
- * Initializes the [components] map by importing all [declaredComponents] in
- * [info], then scans all [componentLinks] and imports their
- * [declaredComponents], using [files] to map the href to the file info.
- * Names in [info] will shadow names from imported files.
+ * Normalizes references in [info]. On the [analyzeDefinitions] phase, the
+ * analyzer extracted names of files and components. Here we link those names to
+ * actual info classes. In particular:
+ *   * we initialize the [components] map in [info] by importing all
+ *     [declaredComponents],
+ *   * we scan all [componentLinks] and import their [declaredComponents],
+ *     using [files] to map the href to the file info. Names in [info] will
+ *     shadow names from imported files.
+ *   * we fill [externalCode] on each component declared in [info].
  */
-void _importComponents(FileInfo info, Map<String, FileInfo> files) {
-  info.declaredComponents.forEach((c) => _addComponent(info, c));
+void _normalize(FileInfo info, Map<String, FileInfo> files) {
+  for (var component in info.declaredComponents) {
+    _addComponent(info, component);
+    var filename = component.externalFile;
+    if (filename != null) {
+      var file = files[filename];
+      if (component.externalCode == null) {
+        component.externalCode = file;
+        info.imports[file.dartFilename] = true;
+      } else if (!identical(component.externalCode, file)) {
+        world.error('${info.filename}: unexpected error - '
+            'two definitions for $filename.');
+      }
+    }
+  }
 
   for (var link in info.componentLinks) {
     var file = files[link];

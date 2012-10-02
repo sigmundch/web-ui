@@ -10,7 +10,7 @@ import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/template/analyzer.dart';
 import 'package:web_components/src/template/info.dart';
-import 'package:web_components/src/template/source_file.dart';
+import 'package:web_components/src/template/files.dart';
 import 'testing.dart';
 
 main() {
@@ -479,7 +479,7 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
   var result = <SourceFile>[];
   fileContents.forEach((filename, contents) {
-    var src = new SourceFile(filename, mainDocument: filename == mainHtmlFile);
+    var src = new SourceFile(filename, isMainHtml: filename == mainHtmlFile);
     src.document = parse(contents);
     result.add(src);
   });

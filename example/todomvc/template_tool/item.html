@@ -6,7 +6,6 @@ BSD-style license that can be found in the LICENSE file.
 -->
 <html lang="en">
 <body>
-<script type="application/dart" src='model.dart'></script>
 <element name="x-todo-row" extends="li" constructor="TodoItemComponent"
          apply-author-styles="">
   <template>
@@ -24,7 +23,9 @@ BSD-style license that can be found in the LICENSE file.
     </div>
   </template>
   <script type="application/dart">
+  import 'model.dart';
   import 'package:web_components/web_component.dart';
+
   class TodoItemComponent extends WebComponent {
     Todo todo;
     bool _editing = false;
