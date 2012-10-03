@@ -397,10 +397,6 @@ class _ElementLoader extends TreeVisitor {
 
     if (scriptType != 'application/dart') return;
 
-    // TODO(jmesserly,sigmund): reconcile behavior of <script src=""> vs
-    // inline <script>. Also need to figure out what to do about scripts that
-    // aren't inside a component.
-
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
@@ -414,10 +410,14 @@ class _ElementLoader extends TreeVisitor {
       }
 
       if (_component == null) {
-        result.imports[src] = true;
-      } else if (_component.externalFile != null) {
-        world.error('${result.filename}: there should be only one dart script'
-            ' tag in a custom element declaration:\n ${node.outerHTML}');
+        if (!result.imports.isEmpty() || result.userCode != '') {
+          _tooManyScriptsError(node, 'the top-level HTML page');
+        } else {
+          result.imports[src] = true;
+        }
+      } else if (_component.externalFile != null
+          || _component.inlinedCode != null) {
+        _tooManyScriptsError(node, 'a custom element declaration');
       } else {
         _component.externalFile = src;
       }
@@ -431,15 +431,13 @@ class _ElementLoader extends TreeVisitor {
     assert(node.nodes.length == 1);
     Text text = node.nodes[0];
     if (_component != null) {
-      if (_component.inlinedCode != null) {
-        world.error('${result.filename}: there should be only one dart script'
-            'tag in a custom element declaration:\n ${node.outerHTML}');
+      if (_component.externalFile != null || _component.inlinedCode != null) {
+        _tooManyScriptsError(node, 'a custom element declaration');
       } else {
         _component.inlinedCode = text.value;
       }
-    } else if (result.userCode != '') {
-      world.error('${result.filename}: there should be only one dart script tag'
-          'in the page:\n ${node.outerHTML}');
+    } else if (!result.imports.isEmpty() || result.userCode != '') {
+      _tooManyScriptsError(node, 'the top-level HTML page');
     } else if (!result.isMainHtml) {
       world.warning('${result.filename}: top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
@@ -447,6 +445,11 @@ class _ElementLoader extends TreeVisitor {
     } else {
       result.userCode = text.value;
     }
+  }
+
+  void _tooManyScriptsError(Node node, String location) {
+    world.error('${result.filename}: there should be only one dart script'
+        ' tag in $location:\n ${node.outerHTML}');
   }
 }
 
