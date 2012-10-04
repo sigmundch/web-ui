@@ -149,9 +149,9 @@ main() {
     expect(info[elem].attributes['value'], isNotNull);
     expect(!info[elem].attributes['value'].isClass);
     expect(info[elem].attributes['value'].boundValue, equals('x'));
-    expect(info[elem].events.getKeys(), equals(['keyUp']));
-    expect(info[elem].events['keyUp'].length, equals(1));
-    expect(info[elem].events['keyUp'][0].action('foo', 'e'),
+    expect(info[elem].events.getKeys(), equals(['input']));
+    expect(info[elem].events['input'].length, equals(1));
+    expect(info[elem].events['input'][0].action('foo', 'e'),
         equals('x = foo.value'));
   });
 

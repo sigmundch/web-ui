@@ -15,6 +15,7 @@
 <body>
   <div is="x-empty"></div>
   <script type="application/dart">
+    import 'dart:html';
     main() {
       window.setTimeout(() => window.postMessage('done', '*'), 0);
     }

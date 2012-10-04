@@ -247,7 +247,7 @@ class _Analyzer extends TreeVisitor {
     } else if (isInput && name == 'value') {
       attrInfo = new AttributeInfo(value);
       // Assume [value] is a field or property setter.
-      _addEvent(elemInfo, 'keyUp', (elem, args) => '$value = $elem.value');
+      _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {
       world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}');
       return;

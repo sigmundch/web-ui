@@ -175,10 +175,12 @@ class Compile {
     // Clear the body, we moved all of it
     var document = file.document;
     document.body.nodes.clear();
-    var dartCode = codegen.bootstrapCode(fileInfo.dartFilename);
+    output.add(new OutputFile('${file.filename}_bootstrap.dart',
+          codegen.bootstrapCode(fileInfo.dartFilename)));
     document.body.nodes.add(parseFragment(
       '<script type="text/javascript" src="$DARTJS_LOADER"></script>'
-      '<script type="application/dart">$dartCode</script>'
+      '<script type="application/dart" src="${file.filename}_bootstrap.dart">'
+      '</script>'
     ));
 
     for (var link in document.head.queryAll('link')) {
