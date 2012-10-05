@@ -22,7 +22,10 @@ class FileInfo {
    * Whether this is the entry point of the web app, i.e. the file users
    * navigate to in their browser.
    */
-  bool isMainHtml;
+  final bool isEntryPoint;
+
+  /** Whether this file contains a top level script tag. */
+  bool hasTopLevelScript = false;
 
   // TODO(terry): Ensure that that the libraryName is a valid identifier:
   //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
@@ -59,7 +62,7 @@ class FileInfo {
   /** Files imported with `<link rel="component">` */
   final List<String> componentLinks;
 
-  FileInfo([this.filename, this.isMainHtml = false])
+  FileInfo([this.filename, this.isEntryPoint = false])
       : elements = new Map<Node, ElementInfo>(),
         declaredComponents = new List<ComponentInfo>(),
         components = new SplayTreeMap<String, ComponentInfo>(),

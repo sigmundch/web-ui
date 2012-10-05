@@ -56,32 +56,33 @@ class Compile {
         output = <OutputFile>[],
         info = new SplayTreeMap<String, FileInfo>();
 
-  /** Compile the application starting from the given [mainFile]. */
-  void run(String mainFile, [String baseDir = ""]) {
-    _parseAndDiscover(mainFile, baseDir);
+  /** Compile the application starting from the given [inputFile]. */
+  void run(String inputFile, [String baseDir = ""]) {
+    _parseAndDiscover(inputFile, baseDir);
     _analyze();
     _emit();
   }
 
   /**
-   * Parse [mainFile] and recursively discover web components to load and
+   * Parse [inputFile] and recursively discover web components to load and
    * parse.
    */
-  void _parseAndDiscover(String mainFile, String baseDir) {
+  void _parseAndDiscover(String inputFile, String baseDir) {
     var pending = new Queue<String>(); // files to process
-    pending.addLast(mainFile);
+    pending.addLast(inputFile);
     while (!pending.isEmpty()) {
       var filename = pending.removeFirst();
 
       // Parse the file.
       if (info.containsKey(filename)) continue;
-      var file = _parseHtmlFile(filename, baseDir, filename == mainFile);
+      var file = _parseHtmlFile(filename, baseDir);
       files.add(file);
 
       // Find additional components being loaded.
       var fileInfo = time('Analyzed definitions ${file.filename}',
-          () => analyzeDefinitions(file));
+          () => analyzeDefinitions(file, isEntryPoint: filename == inputFile));
       info[file.filename] = fileInfo;
+
       for (var href in fileInfo.componentLinks) {
         pending.addLast(href);
       }
@@ -100,9 +101,9 @@ class Compile {
     }
   }
 
-  /** Parse [filename] and treat it as a component if [isMain] is false. */
-  SourceFile _parseHtmlFile(String filename, String baseDir, bool isMain) {
-    var file = new SourceFile(filename, isMainHtml: isMain);
+  /** Parse [filename]. */
+  SourceFile _parseHtmlFile(String filename, String baseDir) {
+    var file = new SourceFile(filename);
     var source = filesystem.readAll("$baseDir/$filename");
     file.document = time("Parsed $filename", () => parseHtml(source, filename));
     if (options.dumpTree) {
@@ -115,7 +116,7 @@ class Compile {
 
   /** Parse [filename] and treat it as a .dart file. */
   SourceFile _parseDartFile(String filename, String baseDir) {
-    var file = new SourceFile(filename, isDart: true, isMainHtml: false);
+    var file = new SourceFile(filename, isDart: true);
     file.code = time("Read $baseDir/$filename",
         () => filesystem.readAll("$baseDir/$filename"));
     return file;
@@ -137,7 +138,9 @@ class Compile {
           _removeScriptTags(file.document);
           _fixImports(file);
           _emitComponents(file);
-          if (file.isMainHtml) {
+
+          var fileInfo = info[file.filename];
+          if (fileInfo.hasTopLevelScript && fileInfo.isEntryPoint) {
             _emitMainDart(file);
             _emitMainHtml(file);
           } else {

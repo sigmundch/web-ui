@@ -12,11 +12,10 @@ class SourceFile {
   final String filename;
 
   final bool isDart;
-  final bool isMainHtml;
   Document document;
   String code;
 
-  SourceFile(this.filename, {this.isDart: false, this.isMainHtml: true});
+  SourceFile(this.filename, {this.isDart: false});
 
   String toString() => "<#SourceFile $filename>";
 }

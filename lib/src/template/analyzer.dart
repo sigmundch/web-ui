@@ -21,8 +21,8 @@ import 'world.dart';
  * Finds custom elements in this file and the list of referenced files with
  * component declarations. This is the first pass of analysis on a file.
  */
-FileInfo analyzeDefinitions(SourceFile file) {
-  var result = new FileInfo(file.filename, file.isMainHtml);
+FileInfo analyzeDefinitions(SourceFile file, [bool isEntryPoint = false]) {
+  var result = new FileInfo(file.filename, isEntryPoint: isEntryPoint);
   new _ElementLoader(result).visit(file.document);
   return result;
 }
@@ -297,7 +297,7 @@ class _Analyzer extends TreeVisitor {
   }
 }
 
-/** A visitor that finds `<link rel="components">` and `<element>` tags. */
+/** A visitor that finds `<link rel="components">` and `<element>` tags.  */
 class _ElementLoader extends TreeVisitor {
   final FileInfo result;
   ComponentInfo _component;
@@ -438,12 +438,13 @@ class _ElementLoader extends TreeVisitor {
       }
     } else if (!result.imports.isEmpty() || result.userCode != '') {
       _tooManyScriptsError(node, 'the top-level HTML page');
-    } else if (!result.isMainHtml) {
+    } else if (!result.isEntryPoint) {
       world.warning('${result.filename}: top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
           '\n ${node.outerHTML}');
     } else {
       result.userCode = text.value;
+      result.hasTopLevelScript = true;
     }
   }
 

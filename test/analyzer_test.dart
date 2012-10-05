@@ -479,7 +479,7 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
   var result = <SourceFile>[];
   fileContents.forEach((filename, contents) {
-    var src = new SourceFile(filename, isMainHtml: filename == mainHtmlFile);
+    var src = new SourceFile(filename);
     src.document = parse(contents);
     result.add(src);
   });

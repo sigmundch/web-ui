@@ -57,6 +57,11 @@ void run(List<String> args) {
     return;
   }
 
+  if (!fileSrc.name.endsWith('.html')) {
+    world.fatal("Source file is not an html file - ${fileSrc.name}");
+    return;
+  }
+
   String sourceFilename = fileSrc.name;
 
   // If outputFullDirectory not specified use the directory of the source file.
