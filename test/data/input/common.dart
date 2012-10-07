@@ -13,3 +13,5 @@ bool cond = false;
 bool get notCond => !cond;
 
 List<String> loopItemList = ["a", "b"];
+
+List<String> initNullLoopItemList = null;
