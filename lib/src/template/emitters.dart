@@ -605,6 +605,10 @@ class MainPageEmitter extends RecursiveEmitter {
   MainPageEmitter(FileInfo info) : super(info);
 
   String run(Document document) {
+    // The body of an element tag will not be part of the main HTML page. Each
+    // element will be generated programatically as a dart web component by
+    // [WebComponentEmitter] above.
+    document.queryAll('element').forEach((tag) => tag.remove());
     visit(document);
 
     return new CodePrinter().add(

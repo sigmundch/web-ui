@@ -117,7 +117,7 @@ abstract class WebComponent implements Element {
     _element.attributes = value;
   }
 
-  ElementList get elements => _element.elements;
+  List<Element> get elements => _element.elements;
 
   set elements(Collection<Element> value) {
     _element.elements = value;
