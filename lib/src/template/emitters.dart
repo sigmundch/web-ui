@@ -443,8 +443,9 @@ class ListEmitter extends Emitter<TemplateInfo> {
             () => ${elemInfo.loopItems}, (e) {
               for (var remover in _removeChild$id) remover();
               _removeChild$id.clear();
-              for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
-                var $childElementName = _childTemplate$id.clone(true);
+              if (${elemInfo.loopItems} != null) {
+                for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
+                  var $childElementName = _childTemplate$id.clone(true);
     ''');
 
     context.insertedMethod
@@ -457,7 +458,7 @@ class ListEmitter extends Emitter<TemplateInfo> {
         .add('_removeChild$id.add(() {')
         .add('$childElementName.remove();')
         .add(childrenRemoved)
-        .add('});\n}\n});');
+        .add('});\n}\n}\n});');
   }
 
   void emitRemoved(Context context) {
