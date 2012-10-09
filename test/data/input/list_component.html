@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<!--
+   This component tests iteration in a component.
+-->
+<html lang="en">
+<body>
+<element name="x-list" extends="div" constructor="ListExample">
+  <template>
+    <template iterate="item in loopItemList">
+      <span>{{item}}</span>
+    </template>
+  </template>
+  <script type='application/dart'>
+    import '../input/common.dart';
+    import 'package:web_components/web_component.dart';
+    class ListExample extends WebComponent {}
+  </script>
+</element>
+</body>
+</html>
+
