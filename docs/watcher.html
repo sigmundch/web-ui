@@ -1,0 +1,249 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>watcher Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="styles.css">
+        <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        
+        </head>
+        <body data-library="watcher">
+        <div class="page">
+        <div class="header">
+          <a href="index.html"><div class="logo"></div></a>
+          <a href="index.html">Dart Documentation</a>
+         &rsaquo; <a href="watcher.html">watcher</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+<h2><strong>watcher</strong> library</h2>
+<div class="doc"><p>A library to observe changes on Dart objects.</p>
+<p>Similar to the principle of watchers in AngularJS, this library provides the
+mechanisms to observe and react to changes that happen in an application's
+data model.</p>
+<p>Watchers have a simple lifetime:</p><ul><li>
+<p>they are created calling <a class="crossref" href="watcher.html#watch">watch</a>,</p></li><li>
+<p>they are fired whenever <a class="crossref" href="watcher.html#dispatch">dispatch</a> is called and the watched values
+  changed since the last time <a class="crossref" href="watcher.html#dispatch">dispatch</a> was invoked, and</p></li><li>
+<p>they are unregistered using a function that was returned by <a class="crossref" href="watcher.html#watch">watch</a> when
+  they were created.</p></li></ul>
+<p>For example, you can create a watcher that observes changes to a variable by
+calling <a class="crossref" href="watcher.html#watch">watch</a> as follows:</p>
+<pre><code>var x = 0;
+var stop = watch(() =&gt; x, (_) =&gt; print('hi'));
+</code></pre>
+<p>Changes to the variable 'x' will be detected whenever we call <a class="crossref" href="watcher.html#dispatch">dispatch</a>:</p>
+<pre><code>x = 12;
+x = 13;
+dispatch(); // the watcher is invoked ('hi' will be printed once).
+</code></pre>
+<p>After deregistering the watcher, events are no longer fired:</p>
+<pre><code>stop();
+x = 14;
+dispatch(); // nothing happens.
+</code></pre>
+<p>You can watch several kinds of expressions, including lists. See <a class="crossref" href="watcher.html#watch">watch</a> for
+more details.</p>
+<p>A common design pattern for MVC applications is to call <a class="crossref" href="watcher.html#dispatch">dispatch</a> at the end
+of each event loop (e.g. after each UI event is fired). Our view library does
+this automatically.</p></div>
+<div>
+<h3>Functions</h3>
+<div class="method"><h4 id="dispatch">
+<button class="show-code">Code</button>
+void <strong>dispatch</strong>() <a class="anchor-link" href="#dispatch"
+              title="Permalink to dispatch">#</a></h4>
+<div class="doc">
+<p>Scan all registered watchers and invoke their callbacks if the watched value
+has changed. Because we allow listeners to modify other watched expressions,
+<a class="crossref" href="watcher.html#dispatch">dispatch</a> will reiterate until no changes occur or until we reach a
+particular limit (10) to ensure termination.</p>
+<pre class="source">
+void dispatch() {
+  if (_watchers == null) return;
+  bool dirty = false;
+  int total = 0;
+  do {
+    dirty = false;
+    for (var watcher in _watchers) {
+        var oldValue = watcher._lastValue;
+        var newValue;
+        try {
+          newValue = watcher._getter();
+        } catch (e, trace) {
+          print('error: evaluating $watcher watcher threw an exception '
+              '($e, $trace)');
+          newValue = oldValue;
+        }
+        if (oldValue != newValue) {
+          watcher._lastValue = newValue;
+          watcher._callback(new WatchEvent(oldValue, newValue));
+          dirty = true;
+        }
+    }
+  } while (dirty &amp;&amp; total++ &lt; _maxIter);
+  if (total == _maxIter) {
+    print('Possible loop in watchers propagation, stopped dispatch.');
+  }
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="watch">
+<button class="show-code">Code</button>
+<a href="watcher/WatcherDisposer.html">WatcherDisposer</a> <strong>watch</strong>(target, <a href="watcher/ValueWatcher.html">ValueWatcher</a> callback, [<a href="http://api.dartlang.org/dart_core/String.html">String</a> debugName]) <a class="anchor-link" href="#watch"
+              title="Permalink to watch">#</a></h4>
+<div class="doc">
+<p>Watch for changes in 
+<span class="param">target</span>.  The 
+<span class="param">callback</span> function will be called when
+<a class="crossref" href="watcher.html#dispatch">dispatch</a> is called and the value represented by 
+<span class="param">target</span> had changed.  The
+returned function can be used to unregister this watcher.</p>
+<p>There are several values you can use for 
+<span class="param">target</span>:</p><ul><li>
+<p>A <a class="crossref" href="watcher/Getter.html">Getter</a> function.
+  Use this to watch expressions as they change. For instance, to watch
+  whether <code>a.b.c</code> changes, wrap it in a getter and call <a class="crossref" href="watcher.html#watch">watch</a> as follows:</p>
+<pre><code>watch(() =&gt; a.b.c, ...)
+</code></pre>
+<p>  These targets are tracked to check for equality. If calling <code>target()</code>
+  returns the same result, then the 
+<span class="param">callback</span> will not be invoked. In the
+  special case whe the getter returns a <code>List</code>, we will treat the value in a
+  special way, similar to passing <code>List</code> directly as 
+<span class="param">target</span>.
+  <strong>Important</strong>: this library assumes that <a class="crossref" href="watcher/Getter.html">Getter</a> is a read-only function
+  and that it will consistently return the same value if called multiple
+  times in a row.</p></li><li>
+<p>A <code>List</code>.
+  Use this to watch whether a list object changes. For instance, to detect
+  if an element is added or changed in a list can call <a class="crossref" href="watcher.html#watch">watch</a> as follows:</p>
+<pre><code>watch(list, ...)
+</code></pre></li><li>
+<p>A <a class="crossref" href="watcher/Handle.html">Handle</a>.
+  This is syntactic sugar for using the getter portion of a <a class="crossref" href="watcher/Handle.html">Handle</a>.</p>
+<pre><code>watch(handle, ...)  // equivalent to `watch(handle._getter, ...)`
+</code></pre></li></ul>
+<pre class="source">
+WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
+  if (callback == null) return () {}; // no use in passing null as a callback.
+  if (_watchers == null) _watchers = [];
+  Function exp;
+  if (target is Handle) {
+    // TODO(sigmund): replace by 'as' operator when supported by dart2js
+    Handle t = target;
+    exp = t._getter;
+  } else if (target is Function) {
+    try {
+      if (target() is List) {
+        exp = new _ListWatcher.getter(target).watchValue;
+      } else {
+        exp = target;
+      }
+    } catch (e, trace) { // in case target() throws some error
+      // TODO(sigmund): use logging instead of print when logger is in the SDK
+      // and available via pub (see dartbug.com/4363)
+      print('error: evaluating ${debugName != null ? debugName : "&lt;unnamed&gt;"} '
+            'watcher threw error ($e, $trace)');
+      exp = target;
+    }
+  } else if (target is List) {
+    exp = new _ListWatcher(target).watchValue;
+  }
+  var watcher = new _Watcher(exp, callback, debugName);
+  _watchers.add(watcher);
+  return () =&gt; _unregister(watcher);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="watchAndInvoke">
+<button class="show-code">Code</button>
+<a href="watcher/WatcherDisposer.html">WatcherDisposer</a> <strong>watchAndInvoke</strong>(exp, callback, [debugName]) <a class="anchor-link" href="#watchAndInvoke"
+              title="Permalink to watchAndInvoke">#</a></h4>
+<div class="doc">
+<p>Add a watcher for 
+<span class="param">exp</span> and immediatly invoke 
+<span class="param">callback</span>. The watch event
+passed to 
+<span class="param">callback</span> will have <code>null</code> as the old value, and the current
+evaluation of 
+<span class="param">exp</span> as the new value.</p>
+<pre class="source">
+WatcherDisposer watchAndInvoke(exp, callback, [debugName]) {
+  var res = watch(exp, callback, debugName);
+  // TODO(jmesserly): this should be "is Getter" once dart2js bug is fixed.
+  if (exp is Function) {
+    callback(new WatchEvent(null, exp()));
+  } else {
+    callback(new WatchEvent(null, exp));
+  }
+  return res;
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Classes</h3>
+          <div class="type">
+          <h4>
+            <a href="watcher/Handle.html"><strong>Handle&lt;T&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="watcher/WatchEvent.html"><strong>WatchEvent</strong></a>
+          </h4>
+          </div>
+          
+</div>
+<div>
+<h3>Typedefs</h3>
+          <div class="type">
+          <h4>
+            <a href="watcher/Getter.html"><strong>Getter&lt;T&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="watcher/Setter.html"><strong>Setter&lt;T&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="watcher/ValueWatcher.html"><strong>ValueWatcher</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="watcher/WatcherDisposer.html"><strong>WatcherDisposer</strong></a>
+          </h4>
+          </div>
+          
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        
+        <div class="footer">
+          <div>This page was generated at 2012-10-09 19:04:13.265</div>
+        </div>
+        <script async src="client-live-nav.js"></script>
+        </body></html>
+        

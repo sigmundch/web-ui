@@ -1,0 +1,1408 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>WebComponent class / web_component Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="web_component" data-type="WebComponent">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../web_component.html">web_component</a> &rsaquo; <a href="../web_component/WebComponent.html">WebComponent</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>WebComponent</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>The base class for all Dart web components. In addition to the <code>Element</code>
+interface, it also provides lifecycle methods:
+- <a class="crossref" href="../web_component/WebComponent.html#created">created</a>
+- <a class="crossref" href="../web_component/WebComponent.html#inserted">inserted</a>
+- <a class="crossref" href="../web_component/WebComponent.html#attributeChanged">attributeChanged</a>
+- <a class="crossref" href="../web_component/WebComponent.html#removed">removed</a></p>
+</div>
+<h3>Implements</h3>
+<p>
+<span class="type-box"><span class="icon-class"></span><a href="../dart_html/Element.html">Element</a></span></p>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="WebComponent.forElement">
+<button class="show-code">Code</button>
+new <strong>WebComponent.forElement</strong>(<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> element) <a class="anchor-link" href="#WebComponent.forElement"
+              title="Permalink to WebComponent.WebComponent.forElement">#</a></h4>
+<div class="doc">
+<p>Temporary constructor until components extend <code>Element</code>. Attaches this
+component to the provided 
+<span class="param">element</span>. The element must not already have a
+component associated with it.</p>
+<pre class="source">
+WebComponent.forElement(Element element) : _element = element {
+  if (element == null || (_element as Dynamic).xtag != null) {
+    throw new IllegalArgumentException(
+        'element must be provided and not have its xtag property set');
+  }
+  (_element as Dynamic).xtag = this;
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Fields</h3>
+<div class="field inherited"><h4 id="scrollLeft">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/int.html">int</a>         <strong>scrollLeft</strong> <a class="anchor-link"
+            href="#scrollLeft"
+            title="Permalink to WebComponent.scrollLeft">#</a>
+        </h4>
+        <div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.scrollLeft</p>
+<pre class="source">
+int scrollLeft;
+</pre>
+</div>
+</div>
+<div class="field inherited"><h4 id="scrollTop">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/int.html">int</a>         <strong>scrollTop</strong> <a class="anchor-link"
+            href="#scrollTop"
+            title="Permalink to WebComponent.scrollTop">#</a>
+        </h4>
+        <div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.scrollTop</p>
+<pre class="source">
+int scrollTop;
+</pre>
+</div>
+</div>
+<div class="field inherited"><h4 id="xtag">
+<button class="show-code">Code</button>
+var         <strong>xtag</strong> <a class="anchor-link"
+            href="#xtag"
+            title="Permalink to WebComponent.xtag">#</a>
+        </h4>
+        <div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>Experimental support for <a href="http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">web components</a>. This field stores a
+reference to the component implementation. It was inspired by Mozilla's
+<a href="http://x-tags.org/">x-tags</a> project. Please note: in the future it may be possible to
+<code>extend Element</code> from your class, in which case this field will be
+deprecated and will simply return this <code>Element</code> object.</p>
+<pre class="source">
+var xtag;
+</pre>
+</div>
+</div>
+<div class="field inherited"><h4 id="$dom_className">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a>         <strong>$dom_className</strong> <a class="anchor-link"
+            href="#$dom_className"
+            title="Permalink to WebComponent.$dom_className">#</a>
+        </h4>
+        <div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.className</p>
+<pre class="source">
+String $dom_className;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method inherited"><h4 id="==">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>operator ==</strong>(other) <a class="anchor-link" href="#=="
+              title="Permalink to WebComponent.operator ==">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div><div class="doc">
+<p>The equality operator.</p>
+<p>The default behavior for all <code>Object</code>s is to return true if and
+only if <code>this</code> and 
+<span class="param">other</span> are the same object.</p>
+<p>If a subclass overrides the equality operator it should override
+the <code>hashCode</code> method as well to maintain consistency.</p>
+<pre class="source">
+bool operator ==(other) =&gt; identical(this, other);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="addHTML">
+<button class="show-code">Code</button>
+void <strong>addHTML</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> html) <a class="anchor-link" href="#addHTML"
+              title="Permalink to WebComponent.addHTML">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>Parses the specified text as HTML and adds the resulting node after the
+last child of this.</p>
+<pre class="source">
+void addHTML(String html);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="addText">
+<button class="show-code">Code</button>
+void <strong>addText</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> text) <a class="anchor-link" href="#addText"
+              title="Permalink to WebComponent.addText">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>Adds the specified text as a text node after the last child of this.</p>
+<pre class="source">
+void addText(String text);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="attributeChanged">
+<button class="show-code">Code</button>
+void <strong>attributeChanged</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name, <a href="http://api.dartlang.org/dart_core/String.html">String</a> oldValue, <a href="http://api.dartlang.org/dart_core/String.html">String</a> newValue) <a class="anchor-link" href="#attributeChanged"
+              title="Permalink to WebComponent.attributeChanged">#</a></h4>
+<div class="doc">
+<p>Invoked when any attribute of the component is modified.</p>
+<pre class="source">
+void attributeChanged(
+    String name, String oldValue, String newValue) {}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="attributes">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/AttributeMap.html">AttributeMap</a> <strong>get attributes</strong>() <a class="anchor-link" href="#attributes"
+              title="Permalink to WebComponent.get attributes">#</a></h4>
+<div class="doc">
+<pre class="source">
+AttributeMap get attributes =&gt; _element.attributes;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="attributes=">
+<button class="show-code">Code</button>
+<strong>set attributes</strong>(<a href="http://api.dartlang.org/dart_core/Map.html">Map</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>, <a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; value) <a class="anchor-link" href="#attributes="
+              title="Permalink to WebComponent.set attributes">#</a></h4>
+<div class="doc">
+<pre class="source">
+set attributes(Map&lt;String, String&gt; value) {
+  _element.attributes = value;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="blur">
+<button class="show-code">Code</button>
+void <strong>blur</strong>() <a class="anchor-link" href="#blur"
+              title="Permalink to WebComponent.blur">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.blur</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void blur() { _element.blur(); }
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="classes">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Set.html">Set</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; <strong>get classes</strong>() <a class="anchor-link" href="#classes"
+              title="Permalink to WebComponent.get classes">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName className, classList</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Set&lt;String&gt; get classes =&gt; _element.classes;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="classes=">
+<button class="show-code">Code</button>
+<strong>set classes</strong>(<a href="http://api.dartlang.org/dart_core/Collection.html">Collection</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; value) <a class="anchor-link" href="#classes="
+              title="Permalink to WebComponent.set classes">#</a></h4>
+<div class="doc">
+<pre class="source">
+set classes(Collection&lt;String&gt; value) {
+  _element.classes = value;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="click">
+<button class="show-code">Code</button>
+void <strong>click</strong>() <a class="anchor-link" href="#click"
+              title="Permalink to WebComponent.click">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.click</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void click() { _element.click(); }
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="clientHeight">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get clientHeight</strong>() <a class="anchor-link" href="#clientHeight"
+              title="Permalink to WebComponent.get clientHeight">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.clientHeight</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="clientLeft">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get clientLeft</strong>() <a class="anchor-link" href="#clientLeft"
+              title="Permalink to WebComponent.get clientLeft">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.clientLeft</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="clientTop">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get clientTop</strong>() <a class="anchor-link" href="#clientTop"
+              title="Permalink to WebComponent.get clientTop">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.clientTop</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="clientWidth">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get clientWidth</strong>() <a class="anchor-link" href="#clientWidth"
+              title="Permalink to WebComponent.get clientWidth">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.clientWidth</p>
+</div>
+</div>
+<div class="method"><h4 id="clone">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>clone</strong>(<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> deep) <a class="anchor-link" href="#clone"
+              title="Permalink to WebComponent.clone">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.cloneNode</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Element clone(bool deep) =&gt; _element.clone(deep);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="computedStyle">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Future.html">Future</a>&lt;<a href="http://api.dartlang.org/dart_html/CSSStyleDeclaration.html">CSSStyleDeclaration</a>&gt; <strong>get computedStyle</strong>() <a class="anchor-link" href="#computedStyle"
+              title="Permalink to WebComponent.get computedStyle">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Window.getComputedStyle</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Future&lt;CSSStyleDeclaration&gt; get computedStyle =&gt; _element.computedStyle;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="contains">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>contains</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> other) <a class="anchor-link" href="#contains"
+              title="Permalink to WebComponent.contains">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.contains</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+bool contains(Node other) =&gt; _element.contains(other);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="contentEditable">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get contentEditable</strong>() <a class="anchor-link" href="#contentEditable"
+              title="Permalink to WebComponent.get contentEditable">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.contentEditable</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get contentEditable =&gt; _element.contentEditable;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="created">
+<button class="show-code">Code</button>
+void <strong>created</strong>() <a class="anchor-link" href="#created"
+              title="Permalink to WebComponent.created">#</a></h4>
+<div class="doc">
+<p>Invoked when this component gets created.
+Note that <code>root</code> will be a <code>ShadowRoot</code> if the browser supports Shadow DOM.</p>
+<pre class="source">
+void created() {}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="createShadowRoot">
+<button class="show-code">Code</button>
+<strong>createShadowRoot</strong>() <a class="anchor-link" href="#createShadowRoot"
+              title="Permalink to WebComponent.createShadowRoot">#</a></h4>
+<div class="doc">
+<p>Creates the <code>ShadowRoot</code> backing this component. This is an implementation
+helper and should not need to be called from your code.</p>
+<pre class="source">
+createShadowRoot() {
+  var shadowRoot;
+  if (_hasShadowRoot) {
+    try {
+      shadowRoot = new ShadowRoot(_element);
+      // TODO(jmesserly): what's up with this flag? Why are we setting it?
+      shadowRoot.resetStyleInheritance = false;
+    } catch (e) {
+      // TODO(jmesserly): need a way to detect this that won't throw an
+      // exception. Throw+catch creates a bad user experience in the editor.
+      _hasShadowRoot = false;
+    }
+  }
+
+  if (!_hasShadowRoot) {
+    shadowRoot = new Element.html('&lt;div class="shadowroot"&gt;&lt;/div&gt;');
+    nodes.add(shadowRoot);
+  }
+
+  return shadowRoot;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="dataAttributes">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/AttributeMap.html">AttributeMap</a> <strong>get dataAttributes</strong>() <a class="anchor-link" href="#dataAttributes"
+              title="Permalink to WebComponent.get dataAttributes">#</a></h4>
+<div class="doc">
+<pre class="source">
+AttributeMap get dataAttributes =&gt; _element.dataAttributes;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="dataAttributes=">
+<button class="show-code">Code</button>
+<strong>set dataAttributes</strong>(<a href="http://api.dartlang.org/dart_core/Map.html">Map</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>, <a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; value) <a class="anchor-link" href="#dataAttributes="
+              title="Permalink to WebComponent.set dataAttributes">#</a></h4>
+<div class="doc">
+<pre class="source">
+set dataAttributes(Map&lt;String, String&gt; value) {
+  _element.dataAttributes = value;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="dataset">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Map.html">Map</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>, <a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; <strong>get dataset</strong>() <a class="anchor-link" href="#dataset"
+              title="Permalink to WebComponent.get dataset">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.dataset</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Map&lt;String, String&gt; get dataset =&gt; _element.dataset;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="dir">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get dir</strong>() <a class="anchor-link" href="#dir"
+              title="Permalink to WebComponent.get dir">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.dir</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get dir =&gt; _element.dir;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="document">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Document.html">Document</a> <strong>get document</strong>() <a class="anchor-link" href="#document"
+              title="Permalink to WebComponent.get document">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.ownerDocument</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Document get document =&gt; _element.document;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="draggable">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>get draggable</strong>() <a class="anchor-link" href="#draggable"
+              title="Permalink to WebComponent.get draggable">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.draggable</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool get draggable =&gt; _element.draggable;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="elements">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Element.html">Element</a>&gt; <strong>get elements</strong>() <a class="anchor-link" href="#elements"
+              title="Permalink to WebComponent.get elements">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName childElementCount, firstElementChild, lastElementChild,
+  children, Node.nodes.add</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+List&lt;Element&gt; get elements =&gt; _element.elements;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="elements=">
+<button class="show-code">Code</button>
+<strong>set elements</strong>(<a href="http://api.dartlang.org/dart_core/Collection.html">Collection</a>&lt;<a href="http://api.dartlang.org/dart_html/Element.html">Element</a>&gt; value) <a class="anchor-link" href="#elements="
+              title="Permalink to WebComponent.set elements">#</a></h4>
+<div class="doc">
+<pre class="source">
+set elements(Collection&lt;Element&gt; value) {
+  _element.elements = value;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="focus">
+<button class="show-code">Code</button>
+void <strong>focus</strong>() <a class="anchor-link" href="#focus"
+              title="Permalink to WebComponent.focus">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.focus</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void focus() { _element.focus(); }
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="getBoundingClientRect">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/ClientRect.html">ClientRect</a> <strong>getBoundingClientRect</strong>() <a class="anchor-link" href="#getBoundingClientRect"
+              title="Permalink to WebComponent.getBoundingClientRect">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.getBoundingClientRect</p>
+<pre class="source">
+ClientRect getBoundingClientRect();
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="getClientRects">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/ClientRect.html">ClientRect</a>&gt; <strong>getClientRects</strong>() <a class="anchor-link" href="#getClientRects"
+              title="Permalink to WebComponent.getClientRects">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.getClientRects</p>
+<pre class="source">
+List&lt;ClientRect&gt; getClientRects();
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getComputedStyle">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Future.html">Future</a>&lt;<a href="http://api.dartlang.org/dart_html/CSSStyleDeclaration.html">CSSStyleDeclaration</a>&gt; <strong>getComputedStyle</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> pseudoElement) <a class="anchor-link" href="#getComputedStyle"
+              title="Permalink to WebComponent.getComputedStyle">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Window.getComputedStyle</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Future&lt;CSSStyleDeclaration&gt; getComputedStyle(String pseudoElement)
+  =&gt; _element.getComputedStyle(pseudoElement);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="hasChildNodes">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>hasChildNodes</strong>() <a class="anchor-link" href="#hasChildNodes"
+              title="Permalink to WebComponent.hasChildNodes">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.hasChildNodes</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+bool hasChildNodes() =&gt; _element.hasChildNodes();
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="hashCode">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>hashCode</strong>() <a class="anchor-link" href="#hashCode"
+              title="Permalink to WebComponent.hashCode">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div><div class="doc">
+<p>Get a hash code for this object.</p>
+<p>All objects have hash codes. Hash codes are guaranteed to be the
+same for objects that are equal when compared using the equality
+operator <code>==</code>. Other than that there are no guarantees about
+the hash codes. They will not be consistent between runs and
+there are no distribution guarantees.</p>
+<p>If a subclass overrides <code>hashCode</code> it should override the
+equality operator as well to maintain consistency.</p>
+<pre class="source">
+external int hashCode();
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="hidden">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>get hidden</strong>() <a class="anchor-link" href="#hidden"
+              title="Permalink to WebComponent.get hidden">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.hidden</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool get hidden =&gt; _element.hidden;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="id">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get id</strong>() <a class="anchor-link" href="#id"
+              title="Permalink to WebComponent.get id">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.id</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get id =&gt; _element.id;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="innerHTML">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get innerHTML</strong>() <a class="anchor-link" href="#innerHTML"
+              title="Permalink to WebComponent.get innerHTML">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.innerHTML</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get innerHTML =&gt; _element.innerHTML;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="insertAdjacentElement">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>insertAdjacentElement</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> where, <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> element) <a class="anchor-link" href="#insertAdjacentElement"
+              title="Permalink to WebComponent.insertAdjacentElement">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.insertAdjacentElement</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Element insertAdjacentElement(String where, Element element) =&gt;
+  _element.insertAdjacentElement(where, element);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="insertAdjacentHTML">
+<button class="show-code">Code</button>
+void <strong>insertAdjacentHTML</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> where, <a href="http://api.dartlang.org/dart_core/String.html">String</a> html) <a class="anchor-link" href="#insertAdjacentHTML"
+              title="Permalink to WebComponent.insertAdjacentHTML">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.insertAdjacentHTML</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void insertAdjacentHTML(String where, String html) {
+  _element.insertAdjacentHTML(where, html);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="insertAdjacentText">
+<button class="show-code">Code</button>
+void <strong>insertAdjacentText</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> where, <a href="http://api.dartlang.org/dart_core/String.html">String</a> text) <a class="anchor-link" href="#insertAdjacentText"
+              title="Permalink to WebComponent.insertAdjacentText">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.insertAdjacentText</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void insertAdjacentText(String where, String text) {
+  _element.insertAdjacentText(where, text);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="insertBefore">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>insertBefore</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> newChild, <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> refChild) <a class="anchor-link" href="#insertBefore"
+              title="Permalink to WebComponent.insertBefore">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.insertBefore</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Node insertBefore(Node newChild, Node refChild) =&gt;
+  _element.insertBefore(newChild, refChild);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="inserted">
+<button class="show-code">Code</button>
+void <strong>inserted</strong>() <a class="anchor-link" href="#inserted"
+              title="Permalink to WebComponent.inserted">#</a></h4>
+<div class="doc">
+<p>Invoked when this component gets inserted in the DOM tree.</p>
+<pre class="source">
+void inserted() {}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="isContentEditable">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>get isContentEditable</strong>() <a class="anchor-link" href="#isContentEditable"
+              title="Permalink to WebComponent.get isContentEditable">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.isContentEditable</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool get isContentEditable =&gt; _element.isContentEditable;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="lang">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get lang</strong>() <a class="anchor-link" href="#lang"
+              title="Permalink to WebComponent.get lang">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.lang</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get lang =&gt; _element.lang;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="matchesSelector">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>matchesSelector</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> selectors) <a class="anchor-link" href="#matchesSelector"
+              title="Permalink to WebComponent.matchesSelector">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.webkitMatchesSelector</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool matchesSelector(String selectors) =&gt; _element.matchesSelector(selectors);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="nextElementSibling">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get nextElementSibling</strong>() <a class="anchor-link" href="#nextElementSibling"
+              title="Permalink to WebComponent.get nextElementSibling">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.nextElementSibling</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Element get nextElementSibling =&gt; _element.nextElementSibling;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="nextNode">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>get nextNode</strong>() <a class="anchor-link" href="#nextNode"
+              title="Permalink to WebComponent.get nextNode">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.nextSibling</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Node get nextNode =&gt; _element.nextNode;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="nodes">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/NodeList.html">NodeList</a> <strong>get nodes</strong>() <a class="anchor-link" href="#nodes"
+              title="Permalink to WebComponent.get nodes">#</a></h4>
+<div class="doc">
+<pre class="source">
+NodeList get nodes =&gt; _element.nodes;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="nodes=">
+<button class="show-code">Code</button>
+<strong>set nodes</strong>(<a href="http://api.dartlang.org/dart_core/Collection.html">Collection</a>&lt;<a href="http://api.dartlang.org/dart_html/Node.html">Node</a>&gt; value) <a class="anchor-link" href="#nodes="
+              title="Permalink to WebComponent.set nodes">#</a></h4>
+<div class="doc">
+<pre class="source">
+set nodes(Collection&lt;Node&gt; value) { _element.nodes = value; }
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="noSuchMethod">
+<button class="show-code">Code</button>
+<strong>noSuchMethod</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name, <a href="http://api.dartlang.org/dart_core/List.html">List</a> args) <a class="anchor-link" href="#noSuchMethod"
+              title="Permalink to WebComponent.noSuchMethod">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div><div class="doc">
+<p><code>noSuchMethod</code> is invoked when users invoke a non-existant method
+on an object. The name of the method and the arguments of the
+invocation are passed to <code>noSuchMethod</code>. If <code>noSuchMethod</code>
+returns a value, that value becomes the result of the original
+invocation.</p>
+<p>The default behavior of <code>noSuchMethod</code> is to throw a
+<code>noSuchMethodError</code>.</p>
+<pre class="source">
+external Dynamic noSuchMethod(String name, List args);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="offsetHeight">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get offsetHeight</strong>() <a class="anchor-link" href="#offsetHeight"
+              title="Permalink to WebComponent.get offsetHeight">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.offsetHeight</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="offsetLeft">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get offsetLeft</strong>() <a class="anchor-link" href="#offsetLeft"
+              title="Permalink to WebComponent.get offsetLeft">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.offsetLeft</p>
+</div>
+</div>
+<div class="method"><h4 id="offsetParent">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get offsetParent</strong>() <a class="anchor-link" href="#offsetParent"
+              title="Permalink to WebComponent.get offsetParent">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.offsetParent</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Element get offsetParent =&gt; _element.offsetParent;
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="offsetTop">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get offsetTop</strong>() <a class="anchor-link" href="#offsetTop"
+              title="Permalink to WebComponent.get offsetTop">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.offsetTop</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="offsetWidth">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get offsetWidth</strong>() <a class="anchor-link" href="#offsetWidth"
+              title="Permalink to WebComponent.get offsetWidth">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.offsetWidth</p>
+</div>
+</div>
+<div class="method"><h4 id="on">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/ElementEvents.html">ElementEvents</a> <strong>get on</strong>() <a class="anchor-link" href="#on"
+              title="Permalink to WebComponent.get on">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName EventTarget.addEventListener, EventTarget.removeEventListener, EventTarget.dispatchEvent</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+ElementEvents get on =&gt; _element.on;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="outerHTML">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get outerHTML</strong>() <a class="anchor-link" href="#outerHTML"
+              title="Permalink to WebComponent.get outerHTML">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.outerHTML</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get outerHTML =&gt; _element.outerHTML;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="parent">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get parent</strong>() <a class="anchor-link" href="#parent"
+              title="Permalink to WebComponent.get parent">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.parentNode</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Element get parent =&gt; _element.parent;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="previousElementSibling">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get previousElementSibling</strong>() <a class="anchor-link" href="#previousElementSibling"
+              title="Permalink to WebComponent.get previousElementSibling">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.previousElementSibling</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Element get previousElementSibling =&gt; _element.previousElementSibling;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="previousNode">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>get previousNode</strong>() <a class="anchor-link" href="#previousNode"
+              title="Permalink to WebComponent.get previousNode">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.previousSibling</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+Node get previousNode =&gt; _element.previousNode;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="query">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>query</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> selectors) <a class="anchor-link" href="#query"
+              title="Permalink to WebComponent.query">#</a></h4>
+<div class="doc">
+<pre class="source">
+Element query(String selectors) =&gt; _element.query(selectors);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="queryAll">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Element.html">Element</a>&gt; <strong>queryAll</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> selectors) <a class="anchor-link" href="#queryAll"
+              title="Permalink to WebComponent.queryAll">#</a></h4>
+<div class="doc">
+<pre class="source">
+List&lt;Element&gt; queryAll(String selectors) =&gt; _element.queryAll(selectors);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="rect">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Future.html">Future</a>&lt;<a href="http://api.dartlang.org/dart_html/ElementRect.html">ElementRect</a>&gt; <strong>get rect</strong>() <a class="anchor-link" href="#rect"
+              title="Permalink to WebComponent.get rect">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName getClientRects, getBoundingClientRect, clientHeight, clientWidth,
+clientTop, clientLeft, offsetHeight, offsetWidth, offsetTop, offsetLeft,
+scrollHeight, scrollWidth, scrollTop, scrollLeft</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+Future&lt;ElementRect&gt; get rect =&gt; _element.rect;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="remove">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>remove</strong>() <a class="anchor-link" href="#remove"
+              title="Permalink to WebComponent.remove">#</a></h4>
+<div class="doc">
+<p>Removes this node from the DOM.</p>
+<pre class="source">
+Node remove() =&gt; _element.remove();
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="removed">
+<button class="show-code">Code</button>
+void <strong>removed</strong>() <a class="anchor-link" href="#removed"
+              title="Permalink to WebComponent.removed">#</a></h4>
+<div class="doc">
+<p>Invoked when this component is removed from the DOM tree.</p>
+<pre class="source">
+void removed() {}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="replaceWith">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>replaceWith</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> otherNode) <a class="anchor-link" href="#replaceWith"
+              title="Permalink to WebComponent.replaceWith">#</a></h4>
+<div class="doc">
+<p>Replaces this node with another node.</p>
+<pre class="source">
+Node replaceWith(Node otherNode) { _element.replaceWith(otherNode); }
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="runtimeType">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/Type.html">Type</a> <strong>get runtimeType</strong>() <a class="anchor-link" href="#runtimeType"
+              title="Permalink to WebComponent.get runtimeType">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div><div class="doc">
+<p>A representation of the runtime type of the object.</p>
+<pre class="source">
+external Type get runtimeType;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="scrollByLines">
+<button class="show-code">Code</button>
+void <strong>scrollByLines</strong>(<a href="http://api.dartlang.org/dart_core/int.html">int</a> lines) <a class="anchor-link" href="#scrollByLines"
+              title="Permalink to WebComponent.scrollByLines">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.scrollByLines</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void scrollByLines(int lines) {
+  _element.scrollByLines(lines);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="scrollByPages">
+<button class="show-code">Code</button>
+void <strong>scrollByPages</strong>(<a href="http://api.dartlang.org/dart_core/int.html">int</a> pages) <a class="anchor-link" href="#scrollByPages"
+              title="Permalink to WebComponent.scrollByPages">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.scrollByPages</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void scrollByPages(int pages) {
+  _element.scrollByPages(pages);
+}
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="scrollHeight">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get scrollHeight</strong>() <a class="anchor-link" href="#scrollHeight"
+              title="Permalink to WebComponent.get scrollHeight">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.scrollHeight</p>
+</div>
+</div>
+<div class="method"><h4 id="scrollIntoView">
+<button class="show-code">Code</button>
+void <strong>scrollIntoView</strong>([<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> centerIfNeeded]) <a class="anchor-link" href="#scrollIntoView"
+              title="Permalink to WebComponent.scrollIntoView">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.scrollIntoViewIfNeeded</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void scrollIntoView([bool centerIfNeeded]) {
+  if (centerIfNeeded == null) {
+    _element.scrollIntoView();
+  } else {
+    _element.scrollIntoView(centerIfNeeded);
+  }
+}
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="scrollWidth">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get scrollWidth</strong>() <a class="anchor-link" href="#scrollWidth"
+              title="Permalink to WebComponent.get scrollWidth">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.scrollWidth</p>
+</div>
+</div>
+<div class="method"><h4 id="spellcheck">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>get spellcheck</strong>() <a class="anchor-link" href="#spellcheck"
+              title="Permalink to WebComponent.get spellcheck">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.spellcheck</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool get spellcheck =&gt; _element.spellcheck;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="style">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/CSSStyleDeclaration.html">CSSStyleDeclaration</a> <strong>get style</strong>() <a class="anchor-link" href="#style"
+              title="Permalink to WebComponent.get style">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.style</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+CSSStyleDeclaration get style =&gt; _element.style;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="tabIndex">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get tabIndex</strong>() <a class="anchor-link" href="#tabIndex"
+              title="Permalink to WebComponent.get tabIndex">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.tabIndex</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+int get tabIndex =&gt; _element.tabIndex;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="tagName">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get tagName</strong>() <a class="anchor-link" href="#tagName"
+              title="Permalink to WebComponent.get tagName">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.tagName</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get tagName =&gt; _element.tagName;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="text">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get text</strong>() <a class="anchor-link" href="#text"
+              title="Permalink to WebComponent.get text">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Node.textContent</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div></div>
+<pre class="source">
+String get text =&gt; _element.text;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="text=">
+<button class="show-code">Code</button>
+<strong>set text</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> v) <a class="anchor-link" href="#text="
+              title="Permalink to WebComponent.set text">#</a></h4>
+<div class="doc">
+<pre class="source">
+set text(String v) { _element.text = v; }
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="title">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get title</strong>() <a class="anchor-link" href="#title"
+              title="Permalink to WebComponent.get title">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.title</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get title =&gt; _element.title;
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="toString">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>toString</strong>() <a class="anchor-link" href="#toString"
+              title="Permalink to WebComponent.toString">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div><div class="doc">
+<p>Returns a string representation of this object.</p>
+<pre class="source">
+external String toString();
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="translate">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>get translate</strong>() <a class="anchor-link" href="#translate"
+              title="Permalink to WebComponent.get translate">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.translate</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+bool get translate =&gt; _element.translate;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="webkitdropzone">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>get webkitdropzone</strong>() <a class="anchor-link" href="#webkitdropzone"
+              title="Permalink to WebComponent.get webkitdropzone">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName HTMLElement.webkitdropzone</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+String get webkitdropzone =&gt; _element.webkitdropzone;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="webkitRequestFullscreen">
+<button class="show-code">Code</button>
+void <strong>webkitRequestFullscreen</strong>() <a class="anchor-link" href="#webkitRequestFullscreen"
+              title="Permalink to WebComponent.webkitRequestFullscreen">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.webkitRequestFullscreen</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void webkitRequestFullscreen() { _element.webkitRequestFullscreen(); }
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="webkitRequestFullScreen">
+<button class="show-code">Code</button>
+void <strong>webkitRequestFullScreen</strong>(<a href="http://api.dartlang.org/dart_core/int.html">int</a> flags) <a class="anchor-link" href="#webkitRequestFullScreen"
+              title="Permalink to WebComponent.webkitRequestFullScreen">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.webkitRequestFullScreen</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void webkitRequestFullScreen(int flags) {
+  _element.webkitRequestFullScreen(flags);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="webkitRequestPointerLock">
+<button class="show-code">Code</button>
+void <strong>webkitRequestPointerLock</strong>() <a class="anchor-link" href="#webkitRequestPointerLock"
+              title="Permalink to WebComponent.webkitRequestPointerLock">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>@domName Element.webkitRequestPointerLock</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div></div>
+<pre class="source">
+void webkitRequestPointerLock() { _element.webkitRequestPointerLock(); }
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_addEventListener">
+<button class="show-code">Code</button>
+void <strong>$dom_addEventListener</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> type, <a href="http://api.dartlang.org/dart_html/EventListener.html">EventListener</a> listener, [<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> useCapture]) <a class="anchor-link" href="#$dom_addEventListener"
+              title="Permalink to WebComponent.$dom_addEventListener">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.addEventListener</p>
+<pre class="source">
+void $dom_addEventListener(String type, EventListener listener, [bool useCapture]);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_appendChild">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>$dom_appendChild</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> newChild) <a class="anchor-link" href="#$dom_appendChild"
+              title="Permalink to WebComponent.$dom_appendChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.appendChild</p>
+<pre class="source">
+Node $dom_appendChild(Node newChild);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_attributes">
+abstract <a href="http://api.dartlang.org/dart_html/NamedNodeMap.html">NamedNodeMap</a> <strong>get $dom_attributes</strong>() <a class="anchor-link" href="#$dom_attributes"
+              title="Permalink to WebComponent.get $dom_attributes">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.attributes</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_childElementCount">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get $dom_childElementCount</strong>() <a class="anchor-link" href="#$dom_childElementCount"
+              title="Permalink to WebComponent.get $dom_childElementCount">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.childElementCount</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_childNodes">
+abstract <a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Node.html">Node</a>&gt; <strong>get $dom_childNodes</strong>() <a class="anchor-link" href="#$dom_childNodes"
+              title="Permalink to WebComponent.get $dom_childNodes">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.childNodes</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_children">
+abstract <a href="http://api.dartlang.org/dart_html/HTMLCollection.html">HTMLCollection</a> <strong>get $dom_children</strong>() <a class="anchor-link" href="#$dom_children"
+              title="Permalink to WebComponent.get $dom_children">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName HTMLElement.children</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_dispatchEvent">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>$dom_dispatchEvent</strong>(<a href="http://api.dartlang.org/dart_html/Event.html">Event</a> event) <a class="anchor-link" href="#$dom_dispatchEvent"
+              title="Permalink to WebComponent.$dom_dispatchEvent">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.dispatchEvent</p>
+<pre class="source">
+bool $dom_dispatchEvent(Event event);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_firstChild">
+abstract <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>get $dom_firstChild</strong>() <a class="anchor-link" href="#$dom_firstChild"
+              title="Permalink to WebComponent.get $dom_firstChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.firstChild</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_firstElementChild">
+abstract <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get $dom_firstElementChild</strong>() <a class="anchor-link" href="#$dom_firstElementChild"
+              title="Permalink to WebComponent.get $dom_firstElementChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.firstElementChild</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_getAttribute">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>$dom_getAttribute</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name) <a class="anchor-link" href="#$dom_getAttribute"
+              title="Permalink to WebComponent.$dom_getAttribute">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.getAttribute</p>
+<pre class="source">
+String $dom_getAttribute(String name);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_getElementsByClassName">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Node.html">Node</a>&gt; <strong>$dom_getElementsByClassName</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name) <a class="anchor-link" href="#$dom_getElementsByClassName"
+              title="Permalink to WebComponent.$dom_getElementsByClassName">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.getElementsByClassName</p>
+<pre class="source">
+List&lt;Node&gt; $dom_getElementsByClassName(String name);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_getElementsByTagName">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Node.html">Node</a>&gt; <strong>$dom_getElementsByTagName</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name) <a class="anchor-link" href="#$dom_getElementsByTagName"
+              title="Permalink to WebComponent.$dom_getElementsByTagName">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.getElementsByTagName</p>
+<pre class="source">
+List&lt;Node&gt; $dom_getElementsByTagName(String name);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_hasAttribute">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>$dom_hasAttribute</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name) <a class="anchor-link" href="#$dom_hasAttribute"
+              title="Permalink to WebComponent.$dom_hasAttribute">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.hasAttribute</p>
+<pre class="source">
+bool $dom_hasAttribute(String name);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_lastChild">
+abstract <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>get $dom_lastChild</strong>() <a class="anchor-link" href="#$dom_lastChild"
+              title="Permalink to WebComponent.get $dom_lastChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.lastChild</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_lastElementChild">
+abstract <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>get $dom_lastElementChild</strong>() <a class="anchor-link" href="#$dom_lastElementChild"
+              title="Permalink to WebComponent.get $dom_lastElementChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.lastElementChild</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_nodeType">
+abstract <a href="http://api.dartlang.org/dart_core/int.html">int</a> <strong>get $dom_nodeType</strong>() <a class="anchor-link" href="#$dom_nodeType"
+              title="Permalink to WebComponent.get $dom_nodeType">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.nodeType</p>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_querySelector">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Element.html">Element</a> <strong>$dom_querySelector</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> selectors) <a class="anchor-link" href="#$dom_querySelector"
+              title="Permalink to WebComponent.$dom_querySelector">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.querySelector</p>
+<pre class="source">
+Element $dom_querySelector(String selectors);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_querySelectorAll">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="http://api.dartlang.org/dart_html/Node.html">Node</a>&gt; <strong>$dom_querySelectorAll</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> selectors) <a class="anchor-link" href="#$dom_querySelectorAll"
+              title="Permalink to WebComponent.$dom_querySelectorAll">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.querySelectorAll</p>
+<pre class="source">
+List&lt;Node&gt; $dom_querySelectorAll(String selectors);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_removeAttribute">
+<button class="show-code">Code</button>
+void <strong>$dom_removeAttribute</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name) <a class="anchor-link" href="#$dom_removeAttribute"
+              title="Permalink to WebComponent.$dom_removeAttribute">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.removeAttribute</p>
+<pre class="source">
+void $dom_removeAttribute(String name);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_removeChild">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>$dom_removeChild</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> oldChild) <a class="anchor-link" href="#$dom_removeChild"
+              title="Permalink to WebComponent.$dom_removeChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.removeChild</p>
+<pre class="source">
+Node $dom_removeChild(Node oldChild);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_removeEventListener">
+<button class="show-code">Code</button>
+void <strong>$dom_removeEventListener</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> type, <a href="http://api.dartlang.org/dart_html/EventListener.html">EventListener</a> listener, [<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> useCapture]) <a class="anchor-link" href="#$dom_removeEventListener"
+              title="Permalink to WebComponent.$dom_removeEventListener">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.removeEventListener</p>
+<pre class="source">
+void $dom_removeEventListener(String type, EventListener listener, [bool useCapture]);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_replaceChild">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> <strong>$dom_replaceChild</strong>(<a href="http://api.dartlang.org/dart_html/Node.html">Node</a> newChild, <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> oldChild) <a class="anchor-link" href="#$dom_replaceChild"
+              title="Permalink to WebComponent.$dom_replaceChild">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Node.html">Node</a> </div><div class="doc">
+<p>@domName Node.replaceChild</p>
+<pre class="source">
+Node $dom_replaceChild(Node newChild, Node oldChild);
+</pre>
+</div>
+</div>
+<div class="method inherited"><h4 id="$dom_setAttribute">
+<button class="show-code">Code</button>
+void <strong>$dom_setAttribute</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> name, <a href="http://api.dartlang.org/dart_core/String.html">String</a> value) <a class="anchor-link" href="#$dom_setAttribute"
+              title="Permalink to WebComponent.$dom_setAttribute">#</a></h4>
+<div class="inherited-from">inherited from <a href="http://api.dartlang.org/dart_html/Element.html">Element</a> </div><div class="doc">
+<p>@domName Element.setAttribute</p>
+<pre class="source">
+void $dom_setAttribute(String name, String value);
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        
+        <div class="footer">
+          <div>This page was generated at 2012-10-09 19:04:13.640</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        
