@@ -11,9 +11,7 @@ library build_examples;
 
 import 'dart:io';
 import 'package:args/args.dart';
-
-// TODO(jmesserly): use package: import once dwc moves under lib.
-import '../../bin/dwc.dart' as dwc;
+import 'package:web_components/dwc.dart' as dwc;
 
 main() {
   var argParser = new ArgParser();
