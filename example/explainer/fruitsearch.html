@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="stylesheet"
+  href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
+</head>
+<body>
+  <div style="width:250px;" class="well">
+    <span>Search for something:</span>
+    <input type="text" data-bind="value:query">
+    <div>
+      <template instantiate='if noMatches'><span>No matches</span></template>
+      <template instantiate='if !noMatches'><span>Top results:</span></template>
+    </div>
+    <div>
+      <ul>
+        <template iterate='fruit in results'>
+          <li>{{fruit}}</li>
+        </template>
+      </ul>
+    </div>
+  </div>
+  <script type="application/dart">
+    String query = '';
+
+    List<String> values = const [ 'Apple', 'Apricot', 'Avocado', 'Banana',
+        'Blackberry', 'Blackcurrant', 'Blueberry', 'Currant', 'Cherry',
+        'Clementine', 'Date', 'Durian', 'Fig', 'Gooseberry', 'Grape',
+        'Grapefruit', 'Guava', 'Huckleberry', 'Kiwi', 'Lemon', 'Lime',
+        'Lychee', 'Mandarine', 'Mango', 'Cantaloupe', 'Honeydew melon',
+        'Nectarine', 'Orange', 'Peach', 'Pear', 'Plum', 'Pineapple',
+        'Pomegranate', 'Raspberry', 'Redcurrant', 'Star fruit', 'Strawberry',
+        'Tangerine', 'Tomato', 'Watermelon'];
+
+    List<String> get results {
+      var res = values.filter(
+          (v) => v.toLowerCase().contains(query.toLowerCase()));
+      if (res.length > 20) { 
+        res.length = 20;
+        res.add('... and many more');
+      }
+      return res;
+    }
+
+    bool get noMatches => results.isEmpty();
+
+    main() {}
+  </script>
+</body>
+</html>

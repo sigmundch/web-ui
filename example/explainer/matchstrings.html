@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="stylesheet"
+  href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
+</head>
+<body>
+  <div class="well">
+    <div> Input1: <input type="text" data-bind="value:str1"></div>
+    <div> Input2: <input type="text" data-bind="value:str2"></div>
+    <template instantiate='if str1 == str2'>
+      <div>They match!</div>
+    </template>
+  </div>
+  <script type="application/dart">
+    String str1 = '';
+    String str2 = '';
+    main() {}
+  </script>
+</body>
+</html>
