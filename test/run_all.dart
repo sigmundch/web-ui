@@ -11,11 +11,11 @@ library run_impl;
 import 'dart:io';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
+import 'package:web_components/dwc.dart' as dwc;
 import 'analyzer_test.dart' as analyzer_test;
 import 'emitter_test.dart' as emitter_test;
 import 'utils_test.dart' as utils_test;
 import 'watcher_test.dart' as watcher_test;
-import '../bin/dwc.dart' as dwc;
 
 // TODO(jmesserly): command line args to filter tests
 main() {

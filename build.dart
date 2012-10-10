@@ -2,12 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+/** Build logic for finding .html files and automatically compiling them. */
+library build;
+
 import 'dart:io';
 import 'package:args/args.dart';
-import 'bin/dwc.dart' as dwc;
+import 'package:web_components/dwc.dart' as dwc;
 
 bool cleanBuild;
 bool fullBuild;
+bool forceBuild;
 List<String> changedFiles;
 List<String> removedFiles;
 
@@ -18,8 +22,13 @@ List<String> removedFiles;
  * legal command line options.
  */
 void main() {
-  print("running build.dart...");
   processArgs();
+
+  if (!forceBuild) {
+    print('build.dart is currently disabled until we have an easy way to \n'
+          'ignore and clean output files. You can override this with --force.');
+    return;
+  }
 
   if (cleanBuild) {
     handleCleanCommand();
@@ -42,6 +51,7 @@ void processArgs() {
       allowMultiple: true);
   parser.addFlag("clean", negatable: false, help: "remove any build artifacts");
   parser.addFlag("help", negatable: false, help: "displays this help and exit");
+  parser.addFlag("force", negatable: false, help: "forces a build");
   var args = parser.parse(new Options().arguments);
   if (args["help"]) {
     print(parser.getUsage());
@@ -51,6 +61,7 @@ void processArgs() {
   changedFiles = args["changed"];
   removedFiles = args["removed"];
   cleanBuild = args["clean"];
+  forceBuild = args["force"];
   fullBuild = changedFiles.isEmpty() && removedFiles.isEmpty() && !cleanBuild;
 }
 
@@ -76,17 +87,23 @@ void handleChangedFiles(List<String> files) => files.forEach(_processFile);
 /** Process the given list of removed files. */
 void handleRemovedFiles(List<String> files) => files.forEach(_maybeClean);
 
-/** Compile .tmpl files with the template tool. */
-void _processFile(String arg) {
-  if (arg.endsWith(".tmpl")) {
-    print("processing: ${arg}");
-    dwc.run([arg]);
+/** Compile .html files with the template tool. */
+void _processFile(String filePath) {
+  var path = new Path.fromNative(filePath);
+  if (path.segments().indexOf('packages') >= 0) {
+    // Don't recurse into "packages" symlinks.
+    // TODO(jmesserly): ideally we could skip all symlinks.
+    return;
+  }
+
+  if (path.filename.endsWith(".html") && !path.filename.startsWith("_")) {
+    print("processing: $filePath");
+    dwc.run([filePath]);
   }
 }
 
 /** If this file is a generated file (based on the extension), delete it. */
-void _maybeClean(String file) {
-  if (file.endsWith(".tmpl.dart")) {
-    new File(file).delete();
-  }
+void _maybeClean(String filePath) {
+  // TODO(jmesserly): not sure how to implement this safely.
+  // We need to avoid clobbering user's files.
 }

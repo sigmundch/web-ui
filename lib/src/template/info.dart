@@ -30,7 +30,7 @@ class FileInfo {
   // TODO(terry): Ensure that that the libraryName is a valid identifier:
   //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
   String get libraryName => filename.replaceAll('.', '_');
-  String get dartFilename => '$filename.dart';
+  String get dartFilename => '_$filename.dart';
 
   /**
    * Target dart scripts loaded via `script` tags, or generated imports.
@@ -124,7 +124,7 @@ class ComponentInfo {
     if (externalCode != null) return externalCode.dartFilename;
     var prefix = file.filename;
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
-    return '$prefix.$componentSegment.dart';
+    return '_$prefix.$componentSegment.dart';
   }
 
   /**

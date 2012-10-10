@@ -11,11 +11,11 @@
  */
 
 import 'dart:html';
+import 'package:web_components/dwc.dart';
 import 'cmd_options.dart';
 import 'compile.dart';
 import 'file_system_memory.dart';
 import 'files.dart';
-import 'template.dart';
 import 'world.dart';
 
 String currSampleTemplate;

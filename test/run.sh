@@ -60,7 +60,7 @@ for input in $DIR/data/input/*_test.html; do
     DUMP="$DIR/data/output/$FILENAME.txt"
     EXPECTATION="$DIR/data/expected/$FILENAME.txt"
     DART_PACKAGE_ROOT="file://$DIR/packages/" \
-        DumpRenderTree $DIR/data/output/$FILENAME > $DUMP
+        DumpRenderTree $DIR/data/output/_$FILENAME > $DUMP
 
     compare $EXPECTATION $DUMP
   fi
