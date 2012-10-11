@@ -23,20 +23,22 @@ main() {
   var output = args['out'];
   if (args.rest.isEmpty()) {
     var dir = new Directory.current();
-    listFiles(dir, (file) => file.endsWith('.html')).then((inputs) {
-      buildAll(inputs.map((file) => new Path(file).filename), output);
-    });
+    listFiles(dir,
+        (filename) => filename.endsWith('.html') && !filename.startsWith('_'))
+        .then((inputs) {
+          buildAll(inputs.map((file) => new Path(file).filename), output);
+        });
   } else {
     buildAll(args.rest, output);
   }
 }
 
-Future<List<String>> listFiles(Directory dir, bool filter(String name)) {
+Future<List<String>> listFiles(Directory dir, bool filter(String filename)) {
   var res = [];
   var completer = new Completer();
   var lister = dir.list();
   lister.onFile = (file) {
-    if (filter(file)) res.add(file);
+    if (filter(new Path(file).filename)) res.add(file);
   };
   lister.onDone = (completed) {
     if (completed) completer.complete(res);
@@ -61,14 +63,14 @@ Future buildSingle(String input, String output) {
   stopTime(timer, 'dwc - compile $input');
 
   timer = startTime();
-  var dartFile ='$output/${input}_bootstrap.dart';
+  var dartFile ='$output/_${input}_bootstrap.dart';
   var res = Process.run('dart2js', ['-ppackages/', dartFile, '-o$dartFile.js']);
   return res.transform((r) {
     if (r.exitCode != 0) {
       print(r.stdout);
       print(r.stderr);
     }
-    stopTime(timer, 'dart2js - compile ${input}_boostrap.dart');
+    stopTime(timer, 'dart2js - compile _${input}_boostrap.dart');
   });
 }
 
