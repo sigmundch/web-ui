@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>list_test</title>
+  <!-- use ../input/ so that the url also works from the output directory -->
+  <script type='application/javascript' src="../input/testing.js"></script>
+  <style>
+  x-test { display: block; }
+  </style>
+</head>
+<body>
+  <element name="x-test" extends="div" constructor="Empty">
+    <template>
+      <div>This tests a component with </div>
+      <div>multiple children of &lt;template&gt; tag.</div>
+    </template>
+  </element>
+  <x-test></x-test>
+  <script type="application/dart">
+    import 'dart:html';
+    import '../input/common.dart';
+    main() {
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    }
+  </script>
+</body>
+</html>
