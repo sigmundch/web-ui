@@ -16,7 +16,7 @@
  *
  *     main() => build(new Options().arguments, ['web/main.html']);
  *
- * 
+ *
  */
 library build_utils;
 
@@ -29,7 +29,7 @@ bool _fullBuild;
 List<String> _changedFiles;
 List<String> _removedFiles;
 List<String> _entryPoints = [];
-List<String> _trackDirs = [];
+List<Directory> _trackDirs = [];
 
 /**
  * Set up 'build.dart' to compile with the dart web components compiler every

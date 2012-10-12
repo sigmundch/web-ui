@@ -21,16 +21,30 @@ abstract class WebComponent implements Element {
   static bool _hasShadowRoot = true;
 
   /**
+   * Default constructor for web components. This contructor is only provided
+   * for tooling, and is *not* currently supported.
+   * Use [WebComponent.forElement] instead.
+   */
+  WebComponent() : _element = null {
+    throw new UnsupportedOperationException(
+        'Directly constructing web components is not currently supported. '
+        'You need to use the WebComponent.forElement constructor to associate '
+        'a component with its DOM element. If you run "bin/dwc.dart" on your '
+        'component, the compiler will create the approriate construction '
+        'logic.');
+  }
+
+  /**
    * Temporary constructor until components extend [Element]. Attaches this
    * component to the provided [element]. The element must not already have a
    * component associated with it.
    */
   WebComponent.forElement(Element element) : _element = element {
-    if (element == null || (_element as Dynamic).xtag != null) {
+    if (element == null || _element.xtag != null) {
       throw new IllegalArgumentException(
           'element must be provided and not have its xtag property set');
     }
-    (_element as Dynamic).xtag = this;
+    _element.xtag = this;
   }
 
   /**
@@ -39,23 +53,14 @@ abstract class WebComponent implements Element {
    */
   createShadowRoot() {
     var shadowRoot;
-    if (_hasShadowRoot) {
-      try {
-        shadowRoot = new ShadowRoot(_element);
-        // TODO(jmesserly): what's up with this flag? Why are we setting it?
-        shadowRoot.resetStyleInheritance = false;
-      } catch (e) {
-        // TODO(jmesserly): need a way to detect this that won't throw an
-        // exception. Throw+catch creates a bad user experience in the editor.
-        _hasShadowRoot = false;
-      }
-    }
-
-    if (!_hasShadowRoot) {
+    if (ShadowRoot.supported) {
+      shadowRoot = new ShadowRoot(_element);
+      // TODO(jmesserly): what's up with this flag? Why are we setting it?
+      shadowRoot.resetStyleInheritance = false;
+    } else {
       shadowRoot = new Element.html('<div class="shadowroot"></div>');
       nodes.add(shadowRoot);
     }
-
     return shadowRoot;
   }
 
@@ -77,7 +82,6 @@ abstract class WebComponent implements Element {
   void attributeChanged(
       String name, String oldValue, String newValue) {}
 
-
   // TODO(jmesserly): this forwarding is temporary until Dart supports
   // subclassing Elements.
 
@@ -93,7 +97,7 @@ abstract class WebComponent implements Element {
   /**
    * Removes this node from the DOM.
    */
-  Node remove() => _element.remove();
+  void remove() => _element.remove();
 
   Node get nextNode => _element.nextNode;
 
@@ -233,4 +237,108 @@ abstract class WebComponent implements Element {
   Element query(String selectors) => _element.query(selectors);
 
   List<Element> queryAll(String selectors) => _element.queryAll(selectors);
+
+  HTMLCollection get $dom_children => _element.$dom_children;
+
+  int get $dom_childElementCount => _element.$dom_childElementCount;
+
+  String get $dom_className => _element.$dom_className;
+  set $dom_className(String value) { _element.$dom_className = value; }
+
+  int get clientHeight => _element.clientHeight;
+
+  int get clientLeft => _element.clientLeft;
+
+  int get clientTop => _element.clientTop;
+
+  int get clientWidth => _element.clientWidth;
+
+  Element get $dom_firstElementChild => _element.$dom_firstElementChild;
+
+  Element get $dom_lastElementChild => _element.$dom_lastElementChild;
+
+  int get offsetHeight => _element.offsetHeight;
+
+  int get offsetLeft => _element.offsetLeft;
+
+  int get offsetTop => _element.offsetTop;
+
+  int get offsetWidth => _element.offsetWidth;
+
+  int get scrollHeight => _element.scrollHeight;
+
+  int get scrollLeft => _element.scrollLeft;
+
+  int get scrollTop => _element.scrollTop;
+
+  set scrollLeft(int value) { _element.scrollLeft = value; }
+
+  set scrollTop(int value) { _element.scrollTop = value; }
+
+  int get scrollWidth => _element.scrollWidth;
+
+  String $dom_getAttribute(String name) =>
+      _element.$dom_getAttribute(name);
+
+  ClientRect getBoundingClientRect() => _element.getBoundingClientRect();
+
+  List<ClientRect> getClientRects() => _element.getClientRects();
+
+  NodeList $dom_getElementsByClassName(String name) =>
+      _element.$dom_getElementsByClassName(name);
+
+  NodeList $dom_getElementsByTagName(String name) =>
+      _element.$dom_getElementsByTagName(name);
+
+  bool $dom_hasAttribute(String name) =>
+      _element.$dom_hasAttribute(name);
+
+  Element $dom_querySelector(String selectors) =>
+      _element.$dom_querySelector(selectors);
+
+  NodeList $dom_querySelectorAll(String selectors) =>
+      _element.$dom_querySelectorAll(selectors);
+
+  void $dom_removeAttribute(String name) =>
+      _element.$dom_removeAttribute(name);
+
+  void $dom_setAttribute(String name, String value) =>
+      _element.$dom_setAttribute(name, value);
+
+  NamedNodeMap get $dom_attributes => _element.$dom_attributes;
+
+  NodeList get $dom_childNodes => _element.$dom_childNodes;
+
+  Node get $dom_firstChild => _element.$dom_firstChild;
+
+  Node get $dom_lastChild => _element.$dom_lastChild;
+
+  int get $dom_nodeType => _element.$dom_nodeType;
+
+  void $dom_addEventListener(String type, EventListener listener,
+                             [bool useCapture]) {
+    _element.$dom_addEventListener(type, listener, useCapture);
+  }
+
+  Node $dom_appendChild(Node newChild) => _element.$dom_appendChild(newChild);
+
+  bool $dom_dispatchEvent(Event event) => _element.$dom_dispatchEvent(event);
+
+  Node $dom_removeChild(Node oldChild) => _element.$dom_removeChild(oldChild);
+
+  void $dom_removeEventListener(String type, EventListener listener,
+                                [bool useCapture]) {
+    _element.$dom_removeEventListener(type, listener, useCapture);
+  }
+
+  Node $dom_replaceChild(Node newChild, Node oldChild) =>
+      _element.$dom_replaceChild(newChild, oldChild);
+
+  get xtag => _element.xtag;
+
+  set xtag(value) { _element.xtag = value; }
+
+  void addText(String text) => _element.addText(text);
+
+  void addHTML(String html) => _element.addHTML(html);
 }

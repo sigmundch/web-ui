@@ -88,7 +88,7 @@ class _Analyzer extends TreeVisitor {
         node.attributes['id'] = info.elementId;
         _uniqueId++;
       }
-      info.elemField = info.idAsIdentifier;
+      info.fieldName = info.idAsIdentifier;
     }
   }
 
@@ -233,7 +233,7 @@ class _Analyzer extends TreeVisitor {
       // TODO(jmesserly): get the node's span here
       world.error('data-bind attribute should be of the form '
           'data-bind="name:value"');
-      return;
+      return null;
     }
 
     var attrInfo;
@@ -243,15 +243,17 @@ class _Analyzer extends TreeVisitor {
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
       attrInfo = new AttributeInfo(value);
+      elemInfo.fieldType = 'InputElement';
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'click', (elem, args) => '$value = $elem.checked');
     } else if (isInput && name == 'value') {
       attrInfo = new AttributeInfo(value);
+      elemInfo.fieldType = 'InputElement';
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {
       world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}');
-      return;
+      return null;
     }
     elemInfo.attributes[name] = attrInfo;
   }
@@ -367,7 +369,7 @@ class _ElementLoader extends TreeVisitor {
     }
 
     Element template = null;
-    var templates = node.nodes.filter((n) => n.tagName == 'template');
+    List templates = node.nodes.filter((n) => n.tagName == 'template');
     if (templates.length != 1) {
       world.warning('${result.filename}: an <element> should have exactly one '
           '<template> child:\n  ${node.outerHTML}');

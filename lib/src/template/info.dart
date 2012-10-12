@@ -145,7 +145,11 @@ class ElementInfo {
 
   /** Generated field name, if any, associated with this element. */
   // TODO(sigmund): move this to Emitter?
-  String elemField;
+  String fieldName;
+
+  /** The type of the generated field. */
+  // TODO(jmesserly): we should infer this always, see issue #83.
+  String fieldType = 'Element';
 
   /**
    * Whether code generators need to create a field to store a reference to this
@@ -212,7 +216,8 @@ class ElementInfo {
 
   String toString() => '#<ElementInfo '
       'elementId: $elementId, '
-      'elemField: $elemField, '
+      'fieldName: $fieldName, '
+      'fieldType: fieldType, '
       'needsHtmlId: $needsHtmlId, '
       'component: $component, '
       'hasIterate: $hasIterate, '
