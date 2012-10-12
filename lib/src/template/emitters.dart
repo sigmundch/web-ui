@@ -445,7 +445,7 @@ class ListEmitter extends Emitter<TemplateInfo> {
             () => ${elemInfo.loopItems}, (e) {
               for (var remover in _removeChild$id) remover();
               _removeChild$id.clear();
-              if (${elemInfo.loopItems} != null) {
+              if (${elemInfo.loopItems} is Iterable) {
                 for (var ${elemInfo.loopVariable} in ${elemInfo.loopItems}) {
                   var $childElementName = _childTemplate$id.clone(true);
     ''');
