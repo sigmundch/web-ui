@@ -1,0 +1,21 @@
+{
+  "name": "Dart Web Components",
+  "version": "1.0",
+  "description": "An implementation for Dart Web Components. Requires the experimental webRequest chrome extension API.",
+  "permissions": ["declarativeWebRequest", "http://*/*", "https://*/*"],
+  "background": {
+    "page": "background.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    "dwc/dart.js"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "manifest_version": 2
+}

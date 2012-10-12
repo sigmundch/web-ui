@@ -6,8 +6,7 @@ library compile;
 
 import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
-import 'package:html5lib/html5parser.dart';
-import 'package:html5lib/tokenizer.dart';
+import 'package:html5lib/parser.dart';
 
 import 'analyzer.dart';
 import 'code_printer.dart';
@@ -27,8 +26,8 @@ import 'package:html5lib/src/utils.dart' as html5_utils;
 
 
 Document parseHtml(String template, String sourcePath) {
-  var parser = new HTMLParser();
-  var document = parser.parse(new HTMLTokenizer(template));
+  var parser = new HtmlParser(template, generateSpans: true);
+  var document = parser.parse();
 
   // Note: errors aren't fatal in HTML (unless strict mode is on).
   // So just print them as warnings.
@@ -56,70 +55,102 @@ class Compile {
         output = <OutputFile>[],
         info = new SplayTreeMap<String, FileInfo>();
 
-  /** Compile the application starting from the given [inputFile]. */
-  void run(String inputFile, [String baseDir = ""]) {
-    _parseAndDiscover(inputFile, baseDir);
-    _analyze();
-    _emit();
+  /** Compile the application starting from the given [mainFile]. */
+  Future run(String mainFile, [String baseDir = ""]) {
+    return _parseAndDiscover(mainFile, baseDir).transform((_) {
+      _analyze();
+      _emit();
+      return null;
+    });
   }
 
   /**
-   * Parse [inputFile] and recursively discover web components to load and
-   * parse.
+   * Asynchronously parse [inputFile] and recursively discover web components to
+   * load and parse.  Returns a future that completes when all files are
+   * processed.
    */
-  void _parseAndDiscover(String inputFile, String baseDir) {
+  Future _parseAndDiscover(String inputFile, String baseDir) {
     var pending = new Queue<String>(); // files to process
-    pending.addLast(inputFile);
-    while (!pending.isEmpty()) {
-      var filename = pending.removeFirst();
 
-      // Parse the file.
-      if (info.containsKey(filename)) continue;
-      var file = _parseHtmlFile(filename, baseDir);
-      files.add(file);
+    Completer done = new Completer();
+    // We are not done until the number of in progress requests goes back to 0.
+    int inProgress = 0;
 
-      // Find additional components being loaded.
-      var fileInfo = time('Analyzed definitions ${file.filename}',
-          () => analyzeDefinitions(file, isEntryPoint: filename == inputFile));
-      info[file.filename] = fileInfo;
-
-      for (var href in fileInfo.componentLinks) {
-        pending.addLast(href);
-      }
-
-      // Load .dart files being referenced in components.
-      for (var component in fileInfo.declaredComponents) {
-        var src = component.externalFile;
-        if (src != null) {
-          var dartFile = _parseDartFile(src, baseDir);
-          var fileInfo = new FileInfo(dartFile.filename);
-          info[dartFile.filename] = fileInfo;
-          fileInfo.userCode = dartFile.code;
-          files.add(dartFile);
-        }
+    notifyIfDone() {
+      assert(inProgress >= 0);
+      if (inProgress == 0) {
+        done.complete(null);
       }
     }
+
+    pending.addLast(inputFile);
+
+    parsePending() {
+      while (!pending.isEmpty()) {
+        var filename = pending.removeFirst();
+
+        // Parse the file.
+        if (info.containsKey(filename)) continue;
+
+        inProgress++;
+
+        _parseHtmlFile(filename, baseDir).then((file) {
+          files.add(file);
+
+          // Find additional components being loaded.
+          var fileInfo = time('Analyzed definitions ${file.filename}',
+              () => analyzeDefinitions(
+                  file, isEntryPoint: filename == inputFile));
+          info[file.filename] = fileInfo;
+          for (var href in fileInfo.componentLinks) {
+            pending.addLast(href);
+          }
+          // Load .dart files being referenced in components.
+          for (var component in fileInfo.declaredComponents) {
+            var src = component.externalFile;
+            if (src != null) {
+              inProgress++;
+              _parseDartFile(src, baseDir).then((dartFile) {
+                var fileInfo = new FileInfo(dartFile.filename);
+                info[dartFile.filename] = fileInfo;
+                fileInfo.userCode = dartFile.code;
+                files.add(dartFile);
+                inProgress--;
+                notifyIfDone();
+              });
+            }
+          }
+          inProgress--;
+          parsePending();
+        });
+      }
+      notifyIfDone();
+    }
+
+    parsePending();
+    return done.future;
   }
 
-  /** Parse [filename]. */
-  SourceFile _parseHtmlFile(String filename, String baseDir) {
-    var file = new SourceFile(filename);
-    var source = filesystem.readAll("$baseDir/$filename");
-    file.document = time("Parsed $filename", () => parseHtml(source, filename));
-    if (options.dumpTree) {
-      print("\n\n Dump Tree $filename:\n\n");
-      print(file.document.outerHTML);
-      print("\n=========== End of AST ===========\n\n");
-    }
-    return file;
+  /** Asynchronously parse [filename]. */
+  Future<SourceFile> _parseHtmlFile(String filename, String baseDir) {
+    return filesystem.readAll("$baseDir/$filename").transform((source) {
+      var file = new SourceFile(filename);
+      file.document = time("Parsed $filename",
+          () => parseHtml(source, filename));
+      if (options.dumpTree) {
+        print("\n\n Dump Tree $filename:\n\n");
+        print(file.document.outerHTML);
+        print("\n=========== End of AST ===========\n\n");
+      }
+      return file;
+    });
   }
 
   /** Parse [filename] and treat it as a .dart file. */
-  SourceFile _parseDartFile(String filename, String baseDir) {
-    var file = new SourceFile(filename, isDart: true);
-    file.code = time("Read $baseDir/$filename",
-        () => filesystem.readAll("$baseDir/$filename"));
-    return file;
+  Future<SourceFile> _parseDartFile(String filename, String baseDir) {
+    return filesystem.readAll("$baseDir/$filename").transform((source) =>
+      new SourceFile(filename, isDart: true)
+        ..code = source);
   }
 
   /** Run the analyzer on every input html file. */

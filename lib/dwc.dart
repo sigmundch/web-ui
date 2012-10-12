@@ -5,7 +5,6 @@
 /** The entry point to the compiler. Used to implement `bin/dwc.dart`. */
 library dwc;
 
-import 'dart:io';
 import 'package:args/args.dart';
 import 'src/template/cmd_options.dart';
 import 'src/template/file_system.dart';
@@ -14,43 +13,13 @@ import 'src/template/file_system_memory.dart';
 import 'src/template/compile.dart';
 import 'src/template/utils.dart';
 import 'src/template/world.dart';
-
-ArgParser commandOptions() {
-  var args = new ArgParser();
-  args.addFlag('verbose', help: 'Display detail info', defaultsTo: false);
-  args.addFlag('clean', help: 'Remove all generated files', defaultsTo: false);
-  args.addFlag('dump', help: 'Dump AST', defaultsTo: false);
-  args.addFlag('suppress_warnings', help: 'Warnings not displayed',
-      defaultsTo: true);
-  args.addFlag('warnings_as_errors', help: 'Warning handled as errors',
-      defaultsTo: false);
-  args.addFlag('throw_on_errors', help: 'Throw on errors encountered',
-      defaultsTo: false);
-  args.addFlag('throw_on_warnings', help: 'Throw on warnings encountered',
-      defaultsTo: false);
-  args.addFlag('no_colors', help: 'Display errors/warnings in colored text',
-      defaultsTo: true);
-  args.addFlag('help', help: 'Displays this help message', defaultsTo: false);
-
-  return args;
-}
-
-void initHtmlWorld(CmdOptions opts) {
-  var fs = new MemoryFileSystem();
-  initializeWorld(fs, opts);
-
-  // TODO(terry): Should be set by arguments.  When run as a tool these aren't
-  // set when run internaly set these so we can compile CSS and catch any
-  // problems programmatically.
-  //  options.throwOnErrors = true;
-  //  options.throwOnFatal = true;
-  //  options.useColors = commandLine ? true : false;
-}
+import 'dwc_shared.dart';
+import 'dart:io';
 
 FileSystem fileSystem;
 
 /** bin/dwc.dart [options...] <sourcefile fullpath> <outputfile fullpath> */
-void run(List<String> args) {
+Future run(List<String> args) {
   var argParser = commandOptions();
   ArgResults results = argParser.parse(args);
   if (results['help'] || results.rest.length == 0) {
@@ -104,17 +73,19 @@ void run(List<String> args) {
     outDirectory.createSync();
   }
 
-  String source = fileSystem.readAll(sourceFullFn);
-  time('Compiled $sourceFullFn', () {
-    var compiler = new Compile(fileSystem);
-    compiler.run(srcPath.filename, srcDir.path);
-
-    // Write out the code associated with each source file.
-    print("Write files to ${outDirectory.path}:");
-    for (var file in compiler.output) {
-      writeFile(file.filename, outDirectory, file.contents);
-    }
-  }, printTime: true);
+  return fileSystem.readAll(sourceFullFn).chain((source) {
+    return asyncTime('Compiled $sourceFullFn', () {
+      var compiler = new Compile(fileSystem);
+      return compiler.run(srcPath.filename, srcDir.path).chain((_) {
+        // Write out the code associated with each source file.
+        print("Write files to ${outDirectory.path}:");
+        for (var file in compiler.output) {
+          writeFile(file.filename, outDirectory, file.contents);
+        }
+        return fileSystem.flush();
+      });
+    }, printTime: true);
+  });
 }
 
 void writeFile(String filename, Directory outdir, String contents) {

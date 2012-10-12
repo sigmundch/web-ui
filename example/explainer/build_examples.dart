@@ -59,18 +59,20 @@ void buildAll(List<String> inputs, output) {
 
 Future buildSingle(String input, String output) {
   var timer = startTime();
-  dwc.run([input, output]);
-  stopTime(timer, 'dwc - compile $input');
+  return dwc.run([input, output]).chain((_) {
+    stopTime(timer, 'dwc - compile $input');
 
-  timer = startTime();
-  var dartFile ='$output/_${input}_bootstrap.dart';
-  var res = Process.run('dart2js', ['-ppackages/', dartFile, '-o$dartFile.js']);
-  return res.transform((r) {
-    if (r.exitCode != 0) {
-      print(r.stdout);
-      print(r.stderr);
-    }
-    stopTime(timer, 'dart2js - compile _${input}_boostrap.dart');
+    timer = startTime();
+    var dartFile ='$output/_${input}_bootstrap.dart';
+    var res = Process.run(
+        'dart2js', ['-ppackages/', dartFile,'-o$dartFile.js']);
+    return res.transform((r) {
+      if (r.exitCode != 0) {
+        print(r.stdout);
+        print(r.stderr);
+      }
+      stopTime(timer, 'dart2js - compile _${input}_boostrap.dart');
+    });
   });
 }
 

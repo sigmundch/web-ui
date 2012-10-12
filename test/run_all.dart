@@ -34,6 +34,7 @@ main() {
   lister.onFile = (path) {
     if (!path.endsWith('_test.html') || !pattern.hasMatch(path)) return;
 
-    test(path, () => dwc.run(['--verbose', path, 'data/output/']));
+    test(path, () => expect(dwc.run(['--verbose', path, 'data/output/']),
+        completes));
   };
 }

@@ -26,7 +26,7 @@ String toCamelCase(String hyphenedName) {
  * whatever [callback] returns. The log message will be printed if either
  * [:options.showInfo:] or [printTime] are true.
  */
-time(String logMessage, callback(), [bool printTime = false]) {
+time(String logMessage, callback(), {bool printTime: false}) {
   final watch = new Stopwatch();
   watch.start();
   var result = callback();
@@ -36,6 +36,25 @@ time(String logMessage, callback(), [bool printTime = false]) {
     print('$logMessage in $GREEN_COLOR$duration ms$NO_COLOR');
   }
   return result;
+}
+
+/**
+ *  Invokes [callback], logs how long it takes from the moment [callback] is
+ *  executed until the future it returns is completed. Returns the future
+ *  returned by [callback]. The log message will be printed if either
+ *  [:options.showInfo:] or [printTime] are true.
+ */
+Future asyncTime(String logMessage, Future callback(),
+                 {bool printTime: false}) {
+  final watch = new Stopwatch();
+  watch.start();
+  return callback()..then((_) {
+    watch.stop();
+    final duration = watch.elapsedInMs();
+    if (options.showInfo || printTime) {
+      print('$logMessage in $GREEN_COLOR$duration ms$NO_COLOR');
+    }
+  });
 }
 
 // Color constants used for generating messages.

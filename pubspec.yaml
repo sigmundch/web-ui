@@ -6,4 +6,5 @@ version: 0.0.4
 dependencies:
   unittest: { sdk: unittest }
   args: { sdk: args }
-  html5lib: 0.0.10
+  js: any
+  html5lib: 0.0.12

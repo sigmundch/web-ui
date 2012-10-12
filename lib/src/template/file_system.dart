@@ -12,8 +12,17 @@ library file_system;
  * environments.
  */
 interface FileSystem {
-  String readAll(String filename);
+  /**
+   * Apply all pending writes.  Until this method is called, writeString is not
+   * guaranteed to have any observable impact.
+   */
+  Future flush();
 
+  Future<String> readAll(String filename);
+
+  /**
+   * Writes [text] to [outfile]. Call flush to insure that changes are visible.
+   */
   void writeString(String outfile, String text);
 
   void createDirectory(String path, [bool recursive]);

@@ -10,19 +10,43 @@ import 'file_system.dart';
 
 /** File system implementation using the vm api's. */
 class VMFileSystem implements FileSystem {
+
+  /** Pending futures for file write requests. */
+  List<Future> _pending = <Future>[];
+
+  Future flush() {
+    return Futures.wait(_pending).transform((_) {
+      // Some new work might be pending that was only queued up after the call
+      // to flush so we cannot simply clear the future list.
+      _pending = _pending.filter((f) => !f.hasValue);
+      return null;
+    });
+  }
+
   void writeString(String path, String text) {
+    // TODO(jacobr): the following async code mysterously leads to sporadic
+    // data corruption in the Dart VM. We need to create a reliable repro and
+    // file a bug with the VM team.
+    /*
+    _pending.add(new File(path).open(FileMode.WRITE).chain(
+        (file) => file.writeString(text).chain((_) => file.close())));
+    */
     var file = new File(path).openSync(FileMode.WRITE);
     file.writeStringSync(text);
     file.closeSync();
   }
 
-  String readAll(String filename) {
-    var file = (new File(filename)).openSync();
-    var length = file.lengthSync();
-    var buffer = new List<int>(length);
-    var bytes = file.readListSync(buffer, 0, length);
-    file.closeSync();
-    return new String.fromCharCodes(new Utf8Decoder(buffer).decodeRest());
+  Future<String> readAll(String filename) {
+    return new File(filename).open().chain((file) =>
+        file.length().chain((int length) {
+      var buffer = new List<int>(length);
+
+      return file.readList(buffer, 0, length).transform((length) {
+        file.close();
+        // TODO(jmesserly): support all html5 encodings not just UTF8.
+        return new String.fromCharCodes(new Utf8Decoder(buffer).decodeRest());
+      });
+    }));
   }
 
   void createDirectory(String path, [bool recursive = false]) {

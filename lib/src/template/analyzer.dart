@@ -10,6 +10,7 @@ library analyzer;
 
 import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
+import 'package:html5lib/dom_parsing.dart';
 
 import 'info.dart';
 import 'files.dart';

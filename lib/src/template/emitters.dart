@@ -9,6 +9,7 @@
 library emitters;
 
 import 'package:html5lib/dom.dart';
+import 'package:html5lib/dom_parsing.dart';
 
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;

@@ -6,7 +6,7 @@
 library testing;
 
 import 'package:html5lib/dom.dart';
-import 'package:html5lib/html5parser.dart';
+import 'package:html5lib/parser.dart';
 import 'package:web_components/src/template/world.dart';
 
 // TODO(jmesserly): we need tests for warnings from the analyzer.

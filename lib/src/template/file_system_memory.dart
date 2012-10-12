@@ -16,12 +16,16 @@ class MemoryFileSystem implements FileSystem {
 
   MemoryFileSystem() : this.buffer = new StringBuffer();
 
+  Future flush() {
+    return new Future.immediate(null);
+  }
+
   void writeString(String outfile, String text) {
     buffer.add(text);
   }
 
-  String readAll(String filename) {
-    return buffer.toString();
+  Future<String> readAll(String filename) {
+    return new Future<String>.immediate(buffer.toString());
   }
 
   void createDirectory(String path, [bool recursive]) {
