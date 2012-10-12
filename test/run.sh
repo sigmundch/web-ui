@@ -46,6 +46,10 @@ function compare {
   diff -q -s $1 $2 || show_diff $1 $2 || update $1 $2
 }
 
+# First clear the output folder. Otherwise we can miss bugs when we fail to
+# generate a file.
+rm $DIR/data/output/*
+
 pushd $DIR
 dart $DART_FLAGS run_all.dart $TEST_PATTERN
 popd
@@ -65,3 +69,5 @@ for input in $DIR/data/input/*_test.html; do
     compare $EXPECTATION $DUMP
   fi
 done
+
+echo All tests pass.

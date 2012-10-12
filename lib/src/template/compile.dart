@@ -175,6 +175,7 @@ class Compile {
             _emitMainDart(file);
             _emitMainHtml(file);
           } else {
+            _emitComponentDart(file);
             _emitComponentHtml(file);
           }
         }
@@ -234,6 +235,11 @@ class Compile {
       var code = new WebComponentEmitter(fileInfo).run(component);
       output.add(new OutputFile(component.outputFile, code));
     }
+  }
+
+  /** Emit the wrapper .dart file for a component page. */
+  void _emitComponentDart(SourceFile file) {
+    var fileInfo = info[file.filename];
     output.add(new OutputFile(fileInfo.dartFilename, new CodePrinter().add('''
         // Auto-generated from ${file.filename}.
         // DO NOT EDIT.
