@@ -52,12 +52,12 @@ Future run(List<String> args) {
 
   File fileSrc = new File.fromPath(srcPath);
   if (!fileSrc.existsSync()) {
-    world.fatal("Source file doesn't exist - ${fileSrc.name}");
+    world.fatal("Source file doesn't exist.", filename: fileSrc.name);
     return;
   }
 
   if (!fileSrc.name.endsWith('.html')) {
-    world.fatal("Source file is not an html file - ${fileSrc.name}");
+    world.fatal("Source file is not an html file.", filename: fileSrc.name);
     return;
   }
 

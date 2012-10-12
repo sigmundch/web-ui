@@ -598,8 +598,8 @@ class WebComponentEmitter extends RecursiveEmitter {
           .add(code.substring(match.end()));
       return printer.formatString();
     } else {
-      world.error('${info.inputFile}: please provide a class definition '
-          'for ${info.constructor}:\n $code');
+      world.error('please provide a class definition '
+          'for ${info.constructor}:\n $code', filename: info.inputFile);
       return code;
     }
   }

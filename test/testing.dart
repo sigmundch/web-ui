@@ -12,8 +12,8 @@ import 'package:web_components/src/template/world.dart';
 // TODO(jmesserly): we need tests for warnings from the analyzer.
 class MockWorld extends World {
   MockWorld() : super(null);
-  warning(message, [span, span1, span2]) {}
-  error(message, [span, span1, span2]) {}
+  warning(String message, {String filename, SourceSpan span}) {}
+  error(String message, {String filename, SourceSpan span}) {}
 }
 
 useMockWorld() {

@@ -56,7 +56,7 @@ class SourceFile implements Comparable {
     for (int i=0; i < starts.length; i++) {
       if (starts[i] > position) return i-1;
     }
-    world.internalError('bad position');
+    world.fatal('bad position', filename: filename);
   }
 
   int getColumn(int line, int position) {
@@ -67,45 +67,44 @@ class SourceFile implements Comparable {
    * Create a pretty string representation from a character position
    * in the file.
    */
-  String getLocationMessage(String message, int start,
-      [int end, bool includeText = false]) {
+  String getMessageFromLocation(int start, {String message, int end}) {
     var line = getLine(start);
     var column = getColumn(line, start);
 
     var buf = new StringBuffer(
-        '${filename}:${line + 1}:${column + 1}: $message');
-    if (includeText) {
-      buf.add('\n');
-      var textLine;
-      // +1 for 0-indexing, +1 again to avoid the last line of the file
-      if ((line + 2) < _lineStarts.length) {
-        textLine = text.substring(_lineStarts[line], _lineStarts[line+1]);
-      } else {
-        textLine = '${text.substring(_lineStarts[line])}\n';
-      }
+        '${filename}:${line + 1}:${column + 1}');
+    buf.add(message != null ? ': $message' : '');
 
-      int toColumn = min(column + (end-start), textLine.length);
-      if (options.useColors) {
-        buf.add(textLine.substring(0, column));
-        buf.add(RED_COLOR);
-        buf.add(textLine.substring(column, toColumn));
-        buf.add(NO_COLOR);
-        buf.add(textLine.substring(toColumn));
-      } else {
-        buf.add(textLine);
-      }
-
-      int i = 0;
-      for (; i < column; i++) {
-        buf.add(' ');
-      }
-
-      if (options.useColors) buf.add(RED_COLOR);
-      for (; i < toColumn; i++) {
-        buf.add('^');
-      }
-      if (options.useColors) buf.add(NO_COLOR);
+    buf.add('\n');
+    var textLine;
+    // +1 for 0-indexing, +1 again to avoid the last line of the file
+    if ((line + 2) < _lineStarts.length) {
+      textLine = text.substring(_lineStarts[line], _lineStarts[line+1]);
+    } else {
+      textLine = '${text.substring(_lineStarts[line])}\n';
     }
+
+    int toColumn = min(column + (end-start), textLine.length);
+    if (options.useColors) {
+      buf.add(textLine.substring(0, column));
+      buf.add(RED_COLOR);
+      buf.add(textLine.substring(column, toColumn));
+      buf.add(NO_COLOR);
+      buf.add(textLine.substring(toColumn));
+    } else {
+      buf.add(textLine);
+    }
+
+    int i = 0;
+    for (; i < column; i++) {
+      buf.add(' ');
+    }
+
+    if (options.useColors) buf.add(RED_COLOR);
+    for (; i < toColumn; i++) {
+      buf.add('^');
+    }
+    if (options.useColors) buf.add(NO_COLOR);
 
     return buf.toString();
   }
@@ -139,8 +138,8 @@ class SourceSpan implements Comparable {
     return file.text.substring(start, end);
   }
 
-  toMessageString(String message) {
-    return file.getLocationMessage(message, start, end: end, includeText: true);
+  toMessageString([String message]) {
+    return file.getMessageFromLocation(start, message: message, end: end);
   }
 
   int get line {

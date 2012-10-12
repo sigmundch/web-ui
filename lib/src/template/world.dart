@@ -13,7 +13,6 @@ World world;
 /** General options used by the tool (CSS or template). */
 var options;
 
-typedef void MessageHandler(String prefix, String message, SourceSpan span);
 typedef void PrintHandler(String message);
 
 /**
@@ -26,12 +25,17 @@ void initializeWorld(var files, var opts) {
   world.init();
 }
 
+/** Default [PrintHandler]. */
+void _defaultPrintHandler(String message) {
+  print(message);
+}
+
 /** Can be thrown on any compiler error and includes source location. */
 class CompilerException implements Exception {
   final String _message;
   final SourceSpan _location;
 
-  CompilerException(this._message, this._location);
+  CompilerException(this._message, [this._location]);
 
   String toString() {
     if (_location != null) {
@@ -50,8 +54,7 @@ class World {
 
   int errors = 0, warnings = 0;
   bool seenFatal = false;
-  MessageHandler messageHandler;
-  PrintHandler printHandler;
+  PrintHandler printHandler = _defaultPrintHandler;
 
   World(this.files);
 
@@ -64,46 +67,19 @@ class World {
   init() {
   }
 
-
-  // ********************** Message support ***********************
-
   void _message(String color, String prefix, String message,
-      SourceSpan span, SourceSpan span1, SourceSpan span2, bool throwing) {
-    if (messageHandler != null) {
-      // TODO(jimhug): Multiple spans cleaner...
-      messageHandler(prefix, message, span);
-      if (span1 != null) {
-        messageHandler(prefix, message, span1);
-      }
-      if (span2 != null) {
-        messageHandler(prefix, message, span2);
-      }
-    } else {
-      final messageWithPrefix = options.useColors
-          ? '${color}${prefix}${NO_COLOR}${message}' : '${prefix}${message}';
+      {SourceSpan span, String filename, bool throwing: false}) {
+    var output = new StringBuffer();
 
-      var text = messageWithPrefix;
-      if (span != null) {
-        text = span.toMessageString(messageWithPrefix);
-      }
+    output.add(options.useColors ?
+      '${color}${prefix}${NO_COLOR}' : '${prefix}');
 
-      String span1Text = span1 != null ?
-          span1.toMessageString(messageWithPrefix) : "";
-      String span2Text = span2 != null ?
-          span2.toMessageString(messageWithPrefix) : "";
+    output.add(filename != null ? '${filename}: ' : '');
+    output.add(message);
 
-      if (printHandler == null) {
-        print(text);
-        if (span1 != null) {
-          print(span1Text);
-        }
-        if (span2 != null) {
-          print(span2Text);
-        }
-      } else {
-        printHandler("${text}\r${span1Text}\r${span2Text}");
-      }
-    }
+    output.add(span != null ? '\n${span.toMessageString}' : '');
+
+    printHandler('${output.toString()}');
 
     if (throwing) {
       throw new CompilerException('${prefix}${message}', span);
@@ -111,51 +87,42 @@ class World {
   }
 
   /** [message] is considered a static compile-time error by the Dart lang. */
-  void error(String message,
-      [SourceSpan span, SourceSpan span1, SourceSpan span2]) {
+  void error(String message, {String filename, SourceSpan span}) {
     errors++;
-    _message(RED_COLOR, 'error: ', message,
-        span, span1, span2, options.throwOnErrors);
+    _message(RED_COLOR, 'error: ', message, filename: filename, span:
+        span, throwing: options.throwOnErrors);
   }
 
   /** [message] is considered a type warning by the Dart lang. */
-  void warning(String message,
-      [SourceSpan span, SourceSpan span1, SourceSpan span2]) {
+  void warning(String message, {String filename, SourceSpan span}) {
     if (options.warningsAsErrors) {
-      error(message, span, span1, span2);
+      error(message, filename: filename, span: span);
       return;
     }
+
     warnings++;
     if (options.showWarnings) {
-      _message(MAGENTA_COLOR, 'warning: ', message,
-          span, span1, span2, options.throwOnWarnings);
+      _message(MAGENTA_COLOR, 'warning: ', message, filename: filename, span:
+          span, throwing: options.throwOnWarnings);
     }
   }
 
-  /** [message] at [location] is so bad we can't generate runnable code. */
-  void fatal(String message,
-      [SourceSpan span, SourceSpan span1, SourceSpan span2]) {
+  /** [message] at [filename] is so bad we can't generate runnable code. */
+  void fatal(String message, {String filename, SourceSpan span}) {
     errors++;
     seenFatal = true;
-    _message(RED_COLOR, 'fatal: ', message,
-        span, span1, span2, options.throwOnFatal || options.throwOnErrors);
-  }
-
-  /** [message] at [location] is about a bug in the compiler. */
-  void internalError(String message,
-      [SourceSpan span, SourceSpan span1, SourceSpan span2]) {
-    _message(NO_COLOR,
-        'We are sorry, but...', message, span, span1, span2, true);
+    _message(RED_COLOR, 'fatal: ', message, filename: filename, span:
+        span, throwing: options.throwOnFatal || options.throwOnErrors);
   }
 
   /**
-   * [message] at [location] will tell the user about what the compiler
+   * [message] at [filename] will tell the user about what the compiler
    * is doing.
    */
-  void info(String message,
-      [SourceSpan span, SourceSpan span1, SourceSpan span2]) {
+  void info(String message, {String filename, SourceSpan span}) {
     if (options.showInfo) {
-      _message(GREEN_COLOR, 'info: ', message, span, span1, span2, false);
+      _message(GREEN_COLOR, 'info: ', message, filename: filename,
+          span: span, throwing: false);
     }
   }
 

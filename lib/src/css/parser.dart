@@ -142,7 +142,8 @@ class Parser {
     }
 
     if (_erroMsgRedirector == null) {
-       world.fatal(message, location);    // syntax errors are fatal for now
+      // syntax errors are fatal for now
+      world.fatal(message, span: location);
     } else {
       String text = "";
       if (location != null) {
@@ -157,7 +158,7 @@ class Parser {
       location = _peekToken.span;
     }
 
-    world.warning(message, location);
+    world.warning(message, span: location);
   }
 
   SourceSpan _makeSpan(int start) {

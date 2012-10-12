@@ -103,8 +103,8 @@ class _Analyzer extends TreeVisitor {
       if (isAttr != null) {
         component = result.components[isAttr];
         if (component == null) {
-          world.warning('${result.filename}: custom element with tag name'
-              ' $isAttr not found.');
+          world.warning('custom element with tag name $isAttr not found.',
+              filename: result.filename);
         }
       }
     }
@@ -127,7 +127,7 @@ class _Analyzer extends TreeVisitor {
     if (instantiate != null && iterate != null) {
       // TODO(jmesserly): get the node's span here
       world.warning('<template> element cannot have iterate and instantiate '
-          'attributes');
+          'attributes', filename: result.filename);
       return null;
     }
 
@@ -143,7 +143,7 @@ class _Analyzer extends TreeVisitor {
         world.warning('<template instantiate> either have  '
           ' form <template instantiate="if condition" where "condition" is a'
           ' binding that determines if the contents of the template will be'
-          ' inserted and displayed.');
+          ' inserted and displayed.', filename: result.filename);
       }
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
@@ -152,7 +152,7 @@ class _Analyzer extends TreeVisitor {
       }
       world.warning('<template> iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name'
-          ' and "list" is the list of items.');
+          ' and "list" is the list of items.', filename: result.filename);
     }
     return null;
   }
@@ -189,7 +189,7 @@ class _Analyzer extends TreeVisitor {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       world.error('data-value attribute should be of the form '
-          'data-value="name:value"');
+          'data-value="name:value"', filename: result.filename);
       return;
     }
     var name = value.substring(0, colonIdx);
@@ -211,7 +211,8 @@ class _Analyzer extends TreeVisitor {
     if (colonIdx <= 0) {
       world.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
-          '"eventName1:action1,eventName2:action2,..." for multiple events.');
+          '"eventName1:action1,eventName2:action2,..." for multiple events.',
+          filename: result.filename);
       return false;
     }
 
@@ -232,7 +233,7 @@ class _Analyzer extends TreeVisitor {
     if (colonIdx <= 0) {
       // TODO(jmesserly): get the node's span here
       world.error('data-bind attribute should be of the form '
-          'data-bind="name:value"');
+          'data-bind="name:value"', filename: result.filename);
       return null;
     }
 
@@ -252,7 +253,8 @@ class _Analyzer extends TreeVisitor {
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {
-      world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}');
+      world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}',
+          filename: result.filename);
       return null;
     }
     elemInfo.attributes[name] = attrInfo;
@@ -327,15 +329,15 @@ class _ElementLoader extends TreeVisitor {
     if (node.attributes['rel'] != 'components') return;
 
     if (!_inHead) {
-      world.warning('${result.filename}: link rel="components" only valid in '
-          'head:\n  ${node.outerHTML}');
+      world.warning('link rel="components" only valid in '
+          'head:\n  ${node.outerHTML}', filename: result.filename);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
-      world.warning('${result.filename}: link rel="components" missing href:'
-          '\n  ${node.outerHTML}');
+      world.warning('link rel="components" missing href:'
+          '\n  ${node.outerHTML}', filename: result.filename);
       return;
     }
 
@@ -347,32 +349,33 @@ class _ElementLoader extends TreeVisitor {
     // inside a Shadow DOM should be scoped to that <template> tag, and not
     // visible from the outside.
     if (_component != null) {
-      world.error('${result.filename}: Nested component definitions are not yet'
-          ' supported:\n  ${node.outerHTML}');
+      world.error('Nested component definitions are not yet supported:\n '
+          ' ${node.outerHTML}', filename: result.filename);
       return;
     }
 
     var ctor = node.attributes["constructor"];
     if (ctor == null) {
-      world.error('${result.filename}: Missing the class name associated with '
-          'this component. Please add an attribute of the form '
-          '\'constructor="ClassName"\':\n  ${node.outerHTML}');
+      world.error('Missing the class name associated with this component. '
+          'Please add an attribute of the form  \'constructor="ClassName"\':\n'
+          ' ${node.outerHTML}', filename: result.filename);
       return;
     }
 
     var tagName = node.attributes["name"];
     if (tagName == null) {
-      world.error('${result.filename}: Missing tag name of the Web Component. '
-          'Please include an attribute like \'name="x-your-tag-name"\':'
-          '\n  ${node.outerHTML}');
+      world.error('Missing tag name of the Web Component. Please include an '
+          'attribute like \'name="x-your-tag-name"\':\n  ${node.outerHTML}',
+          filename: result.filename);
       return;
     }
 
     Element template = null;
     List templates = node.nodes.filter((n) => n.tagName == 'template');
     if (templates.length != 1) {
-      world.warning('${result.filename}: an <element> should have exactly one '
-          '<template> child:\n  ${node.outerHTML}');
+      world.warning('an <element> should have exactly one '
+          '<template> child:\n  ${node.outerHTML}', filename:
+          result.filename);
     } else {
       template = templates[0];
     }
@@ -393,9 +396,9 @@ class _ElementLoader extends TreeVisitor {
       // text/javascript. Because this might be a common error, we warn about it
       // and force explicit type="text/javascript".
       // TODO(jmesserly): is this a good warning?
-      world.warning('${result.filename}: ignored script tag, possibly missing '
+      world.warning('ignored script tag, possibly missing '
           'type="application/dart" or type="text/javascript":'
-          '\n  ${node.outerHTML}');
+          '\n  ${node.outerHTML}', filename: result.filename);
     }
 
     if (scriptType != 'application/dart') return;
@@ -403,13 +406,14 @@ class _ElementLoader extends TreeVisitor {
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
-        world.warning('${result.filename}: "application/dart" scripts should'
-            'use the .dart file extension:\n ${node.outerHTML}');
+        world.warning('"application/dart" scripts should'
+            'use the .dart file extension:\n ${node.outerHTML}', filename:
+            result.filename);
       }
 
       if (node.innerHTML.trim() != '') {
-        world.error('${result.filename}: script tag has "src" attribute and '
-            'also has script text:\n  ${node.outerHTML}');
+        world.error('script tag has "src" attribute and also has script text:\n'
+            ' ${node.outerHTML}', filename: result.filename);
       }
 
       if (_component == null) {
@@ -442,9 +446,9 @@ class _ElementLoader extends TreeVisitor {
     } else if (!result.imports.isEmpty() || result.userCode != '') {
       _tooManyScriptsError(node, 'the top-level HTML page');
     } else if (!result.isEntryPoint) {
-      world.warning('${result.filename}: top-level dart code is ignored on '
+      world.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
-          '\n ${node.outerHTML}');
+          '\n ${node.outerHTML}', filename: result.filename);
     } else {
       result.userCode = text.value;
       result.hasTopLevelScript = true;
@@ -452,8 +456,8 @@ class _ElementLoader extends TreeVisitor {
   }
 
   void _tooManyScriptsError(Node node, String location) {
-    world.error('${result.filename}: there should be only one dart script'
-        ' tag in $location:\n ${node.outerHTML}');
+    world.error('there should be only one dart script tag in $location:\n '
+        ' ${node.outerHTML}', filename: result.filename);
   }
 }
 
@@ -471,15 +475,15 @@ class _ElementLoader extends TreeVisitor {
 void _normalize(FileInfo info, Map<String, FileInfo> files) {
   for (var component in info.declaredComponents) {
     _addComponent(info, component);
-    var filename = component.externalFile;
-    if (filename != null) {
-      var file = files[filename];
+    var externalFile = component.externalFile;
+    if (externalFile != null) {
+      var file = files[externalFile];
       if (component.externalCode == null) {
         component.externalCode = file;
         info.imports[file.dartFilename] = true;
       } else if (!identical(component.externalCode, file)) {
-        world.error('${info.filename}: unexpected error - '
-            'two definitions for $filename.');
+        world.error('unexpected error - two definitions for $externalFile.',
+            filename: info.filename);
       }
     }
   }
@@ -496,7 +500,8 @@ void _normalize(FileInfo info, Map<String, FileInfo> files) {
 void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
   var existing = fileInfo.components[componentInfo.tagName];
   if (existing != null) {
-    if (identical(existing.file, fileInfo) && !identical(componentInfo.file, fileInfo)) {
+    if (identical(existing.file, fileInfo) &&
+        !identical(componentInfo.file, fileInfo)) {
       // Components declared in [fileInfo] are allowed to shadow component
       // names declared in imported files.
       return;
@@ -510,16 +515,17 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
     existing.hasConflict = true;
 
     if (identical(componentInfo.file, fileInfo)) {
-      world.error('${fileInfo.filename}: duplicate custom element definition '
+      world.error('duplicate custom element definition '
           'for "${componentInfo.tagName}":\n  ${existing.element.outerHTML}\n'
-          'and:\n  ${componentInfo.element.outerHTML}');
+          'and:\n  ${componentInfo.element.outerHTML}', filename:
+          fileInfo.filename);
     } else {
       world.error(
-          '${fileInfo.filename}: imported duplicate custom element definitions '
+          'imported duplicate custom element definitions '
           'for "${componentInfo.tagName}"'
           'from "${existing.file.filename}":\n  ${existing.element.outerHTML}\n'
           'and from "${componentInfo.file.filename}":\n'
-          '  ${componentInfo.element.outerHTML}');
+          '  ${componentInfo.element.outerHTML}', filename: fileInfo.filename);
     }
   } else {
     fileInfo.components[componentInfo.tagName] = componentInfo;

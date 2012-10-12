@@ -420,7 +420,8 @@ class CSSTokenizerBase implements TokenSource {
     if (hexValue < 0xD800 || hexValue > 0xDFFF && hexValue <= 0xFFFF) {
       return hexValue;
     } else if (hexValue <= 0x10FFFF){
-      world.fatal('unicode values greater than 2 bytes not implemented yet');
+      world.fatal('unicode values greater than 2 bytes not implemented yet',
+          filename: _source.filename);
       return -1;
     } else {
       return -1;
