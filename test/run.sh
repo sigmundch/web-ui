@@ -70,4 +70,7 @@ for input in $DIR/data/input/*_test.html; do
   fi
 done
 
+# Run Dart analyzer to check that we're generating warning clean code.
+dart_analyzer --fatal-warnings --fatal-type-errors $DIR/data/output/*
+
 echo All tests pass.
