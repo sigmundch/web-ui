@@ -8,10 +8,13 @@ cd $( dirname "${BASH_SOURCE[0]}" )
 # Bail on non-zero error code
 set -e
 
-# Remove old output, if
-rm -r output  || true
+# Remove old output, if any
+if [ -d "output" ]; then
+  rm -r output
+fi
 mkdir output
-cp -r ../packages output/
 cp -r ../bin output/
+rm output/bin/packages
+cp -L -r ../packages output/bin/
 cp -r ../lib output/
 cp *.html *.js *.json output/

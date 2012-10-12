@@ -130,11 +130,15 @@
     var table = this;
 
     this.port.receive(function (message) {
-      var id = message[0];
-      var args = message[1].map(deserialize);
-      var f = table.get(id);
-      // TODO(vsm): Should we capture _this_ automatically?
-      return serialize(f.apply(null, args));
+      try {
+        var id = message[0];
+        var args = message[1].map(deserialize);
+        var f = table.get(id);
+        // TODO(vsm): Should we capture _this_ automatically?
+        return [ 'return', serialize(f.apply(null, args)) ];
+      } catch (e) {
+        return [ 'throws', e.toString() ];
+      }
     });
   }
 
@@ -153,36 +157,36 @@
 
     this.port.receive(function (message) {
       // TODO(vsm): Support a mechanism to register a handler here.
-      var receiver = table.get(message[0]);
-      var method = message[1];
-      var args = message[2].map(deserialize);
-      if (method.indexOf("get:") == 0) {
-        // Getter.
-        var field = method.substring(4);
-        if (field in receiver && args.length == 0) {
-          return [ 'return', serialize(receiver[field]) ];
-        }
-      } else if (method.indexOf("set:") == 0) {
-        // Setter.
-        var field = method.substring(4);
-        if (args.length == 1) {
-          return [ 'return', serialize(receiver[field] = args[0]) ];
-        }
-      } else if (method == '[]' && args.length == 1) {
-        // Index getter.
-        return [ 'return', serialize(receiver[args[0]]) ];
-      } else {
-        var f = receiver[method];
-        if (f) {
-          try {
+      try {
+        var receiver = table.get(message[0]);
+        var method = message[1];
+        var args = message[2].map(deserialize);
+        if (method.indexOf("get:") == 0) {
+          // Getter.
+          var field = method.substring(4);
+          if (field in receiver && args.length == 0) {
+            return [ 'return', serialize(receiver[field]) ];
+          }
+        } else if (method.indexOf("set:") == 0) {
+          // Setter.
+          var field = method.substring(4);
+          if (args.length == 1) {
+            return [ 'return', serialize(receiver[field] = args[0]) ];
+          }
+        } else if (method == '[]' && args.length == 1) {
+          // Index getter.
+          return [ 'return', serialize(receiver[args[0]]) ];
+        } else {
+          var f = receiver[method];
+          if (f) {
             var result = f.apply(receiver, args);
             return [ 'return', serialize(result) ];
-          } catch (e) {
-            return [ 'exception', serialize(e) ];
           }
         }
+        return [ 'none' ];
+      } catch (e) {
+        return [ 'throws', e.toString() ];
       }
-      return [ 'none' ];
     });
   }
 
@@ -349,13 +353,14 @@
     } else {
       // Remote function.  Forward to its port.
       var f = function () {
-        enterScope();
+        var depth = enterScope();
         try {
           var args = Array.prototype.slice.apply(arguments).map(serialize);
           var result = port.callSync([id, args]);
-          return deserialize(result);
+          if (result[0] == 'throws') throw deserialize(result[1]);
+          return deserialize(result[1]);
         } finally {
-          exitScope();
+          exitScope(depth);
         }
       };
       // Cache the remote id and port.
@@ -413,6 +418,12 @@
            ' (out of ' + total + ' ever allocated).';
   }
 
+  // Return true iff two JavaScript proxies are equal (==).
+  function proxyEquals(args) {
+    return deserialize(args[0]) ==
+      deserialize(args[1]);
+  }
+
   function makeGlobalPort(name, f) {
     var port = new ReceivePortSync();
     port.receive(f);
@@ -420,23 +431,44 @@
   }
 
   // Enters a new scope in the JavaScript context.
-  function enterScope() {
+  function enterJavaScriptScope() {
     proxiedObjectTable.enterScope();
     proxiedFunctionTable.enterScope();
   }
 
+  // Enters a new scope in both the JavaScript and Dart context.
+  var _dartEnterScopePort = null;
+  function enterScope() {
+    enterJavaScriptScope();
+    if (!_dartEnterScopePort) {
+      _dartEnterScopePort = window.lookupPort('js-dart-enter-scope');
+    }
+    return _dartEnterScopePort.callSync([]);
+  }
+
   // Exits the current scope (and invalidate local IDs) in the JavaScript
   // context.
-  function exitScope() {
+  function exitJavaScriptScope() {
     proxiedFunctionTable.exitScope();
     proxiedObjectTable.exitScope();
+  }
+
+  // Exits the current scope in both the JavaScript and Dart context.
+  var _dartExitScopePort = null;
+  function exitScope(depth) {
+    exitJavaScriptScope();
+    if (!_dartExitScopePort) {
+      _dartExitScopePort = window.lookupPort('js-dart-exit-scope');
+    }
+    return _dartExitScopePort.callSync([ depth ]);
   }
 
   makeGlobalPort('dart-js-evaluate', evaluate);
   makeGlobalPort('dart-js-create', construct);
   makeGlobalPort('dart-js-debug', debug);
-  makeGlobalPort('dart-js-enter-scope', enterScope);
-  makeGlobalPort('dart-js-exit-scope', exitScope);
+  makeGlobalPort('dart-js-equals', proxyEquals);
+  makeGlobalPort('dart-js-enter-scope', enterJavaScriptScope);
+  makeGlobalPort('dart-js-exit-scope', exitJavaScriptScope);
   makeGlobalPort('dart-js-globalize', function(data) {
     if (data[0] == "objref") return proxiedObjectTable.globalize(data[1]);
     // TODO(vsm): Do we ever need to globalize functions?
