@@ -16,13 +16,14 @@ We believe that:
 - Working in open source is the way to go.
 - Developers from all backgrounds should be building awesome modern web apps.
 
-This library is under construction. More coming soon!
 
-Running Examples
-----------------
+Try It Now
+-----------
 
-To run our implementation of [TodoMVC][] that uses web components and data
-binding, look at the [README.md][todo_readme] in `example/todomvc`.
+Learn more at <http://www.dartlang.org/articles/dart-web-components/>.
+
+To run our [TodoMVC][] example, look at the [README.md][todo_readme] in
+`example/todomvc`.
 
 
 Running Tests
