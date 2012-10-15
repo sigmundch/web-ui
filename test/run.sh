@@ -48,7 +48,9 @@ function compare {
 
 # First clear the output folder. Otherwise we can miss bugs when we fail to
 # generate a file.
-rm $DIR/data/output/*
+if [[ -d $DIR/data/output ]]; then
+  rm $DIR/data/output/*
+fi
 
 pushd $DIR
 dart $DART_FLAGS run_all.dart $TEST_PATTERN
