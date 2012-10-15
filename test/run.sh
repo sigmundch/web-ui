@@ -49,7 +49,7 @@ function compare {
 # First clear the output folder. Otherwise we can miss bugs when we fail to
 # generate a file.
 if [[ -d $DIR/data/output ]]; then
-  rm $DIR/data/output/*
+  rm -f $DIR/data/output/*
 fi
 
 pushd $DIR
