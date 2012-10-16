@@ -38,36 +38,32 @@ class FileInfo {
    * will always be `true`.
    */
   // TODO(jmesserly): ideally this would be SplayTreeSet (dartbug.com/5603).
-  final SplayTreeMap<String, bool> imports;
+  final SplayTreeMap<String, bool> imports = new SplayTreeMap<String, bool>();
 
   /** User code inlined within the page. */
   String userCode = '';
 
   /** Generated analysis info for all elements in the file. */
-  final Map<Node, ElementInfo> elements;
+  final Map<Node, ElementInfo> elements = new Map<Node, ElementInfo>();
 
   /**
    * All custom element definitions in this file. This may contain duplicates.
    * Normally you should use [components] for lookup.
    */
-  final List<ComponentInfo> declaredComponents;
+  final List<ComponentInfo> declaredComponents = new List<ComponentInfo>();
 
   /**
    * All custom element definitions defined in this file or imported via
    *`<link rel='components'>` tag. Maps from the tag name to the component
    * information. This map is sorted by the tag name.
    */
-  final Map<String, ComponentInfo> components;
+  final Map<String, ComponentInfo> components =
+      new SplayTreeMap<String, ComponentInfo>();
 
   /** Files imported with `<link rel="component">` */
-  final List<String> componentLinks;
+  final List<String> componentLinks = <String>[];
 
-  FileInfo([this.filename, this.isEntryPoint = false])
-      : elements = new Map<Node, ElementInfo>(),
-        declaredComponents = new List<ComponentInfo>(),
-        components = new SplayTreeMap<String, ComponentInfo>(),
-        componentLinks = <String>[],
-        imports = new SplayTreeMap<String, bool>();
+  FileInfo([this.filename, this.isEntryPoint = false]);
 }
 
 /** Information about a web component definition. */
@@ -178,31 +174,28 @@ class ElementInfo {
   // TODO(sigmund): move somewhere else?
   String stopperName;
 
+  // Note: we're using sorted maps so items are enumerated in a consistent order
+  // between runs, resulting in less "diff" in the generated code.
+  // TODO(jmesserly): An alternative approach would be to use LinkedHashMap to
+  // preserve the order of the input, but we'd need to be careful about our tree
+  // traversal order.
+
   /** Collected information for attributes, if any. */
-  final Map<String, AttributeInfo> attributes;
+  final Map<String, AttributeInfo> attributes =
+      new SplayTreeMap<String, AttributeInfo>();
 
   /** Collected information for UI events on the corresponding element. */
-  final Map<String, List<EventInfo>> events;
+  final Map<String, List<EventInfo>> events =
+      new SplayTreeMap<String, List<EventInfo>>();
 
   /** Collected information about `data-value="name:value"` expressions. */
-  final Map<String, String> values;
+  final Map<String, String> values = new SplayTreeMap<String, String>();
 
   /**
    * Format [elementId] in camel case, suitable for using as a Dart identifier.
    */
   String get idAsIdentifier =>
       elementId == null ? null : '_${toCamelCase(elementId)}';
-
-  // Note: we're using sorted maps so items are enumerated in a consistent order
-  // between runs, resulting in less "diff" in the generated code.
-  // TODO(jmesserly): An alternative approach would be to use LinkedHashMap to
-  // preserve the order of the input, but we'd need to be careful about our tree
-  // traversal order.
-  ElementInfo()
-      : attributes = new SplayTreeMap<String, AttributeInfo>(),
-        events = new SplayTreeMap<String, List<EventInfo>>(),
-        values = new SplayTreeMap<String, String>();
-
 
   /** Whether the template element has `iterate="... in ...". */
   bool get hasIterate => false;

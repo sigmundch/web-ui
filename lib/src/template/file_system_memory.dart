@@ -12,9 +12,9 @@ import 'file_system.dart';
  * [FileSystem] implementation a memory buffer.
  */
 class MemoryFileSystem implements FileSystem {
-  StringBuffer buffer;
+  StringBuffer buffer = new StringBuffer();
 
-  MemoryFileSystem() : this.buffer = new StringBuffer();
+  MemoryFileSystem();
 
   Future flush() {
     return new Future.immediate(null);

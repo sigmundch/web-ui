@@ -45,19 +45,16 @@
 
 <script type="application/dart">
   class Address {
-    String name;
-    String address;
+    String name = '';
+    String address = '';
 
     bool get isComplete => !name.isEmpty() && !address.isEmpty();
-    Address() : name = "", address = "";
   }
 
   class Billing extends Address {
-    bool useShipping;
+    bool useShipping = false;
 
     bool get isComplete => useShipping || (!useShipping && super.isComplete);
-
-    Billing () : useShipping = false, super();
   }
 
   Address shipping = new Address();

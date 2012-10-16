@@ -123,8 +123,7 @@ class ElementFieldEmitter extends Emitter<ElementInfo> {
  */
 class EventListenerEmitter extends Emitter<ElementInfo> {
 
-  EventListenerEmitter(Element elem, ElementInfo info)
-      : super(elem, info);
+  EventListenerEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   /** Generate a field for each listener, so it can be detached on `removed`. */
   void emitDeclarations(Context context) {
@@ -172,8 +171,7 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
 
 /** Generates watchers that listen on data changes and update a DOM element. */
 class DataBindingEmitter extends Emitter<ElementInfo> {
-  DataBindingEmitter(Element elem, ElementInfo info)
-      : super(elem, info);
+  DataBindingEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   /** Emit a field for each disposer function. */
   void emitDeclarations(Context context) {
@@ -311,15 +309,11 @@ class ComponentInstanceEmitter extends Emitter<ElementInfo> {
 
 /** Emitter of template conditionals like `<template instantiate='if test'>`. */
 class ConditionalEmitter extends Emitter<TemplateInfo> {
-  final CodePrinter childrenCreated;
-  final CodePrinter childrenRemoved;
-  final CodePrinter childrenInserted;
+  final CodePrinter childrenCreated = new CodePrinter();
+  final CodePrinter childrenRemoved = new CodePrinter();
+  final CodePrinter childrenInserted = new CodePrinter();
 
-  ConditionalEmitter(Element elem, ElementInfo info)
-      : childrenCreated = new CodePrinter(),
-        childrenRemoved = new CodePrinter(),
-        childrenInserted = new CodePrinter(),
-        super(elem, info);
+  ConditionalEmitter(Element elem, ElementInfo info) : super(elem, info);
 
   void emitDeclarations(Context context) {
     var id = elemInfo.idAsIdentifier;
@@ -402,18 +396,12 @@ class ConditionalEmitter extends Emitter<TemplateInfo> {
  * Emitter of template lists like `<template iterate='item in items'>`.
  */
 class ListEmitter extends Emitter<TemplateInfo> {
-  // TODO(jmesserly): can these be final?
-  final CodePrinter childrenDeclarations;
-  final CodePrinter childrenCreated;
-  final CodePrinter childrenRemoved;
-  final CodePrinter childrenInserted;
+  final CodePrinter childrenDeclarations = new CodePrinter();
+  final CodePrinter childrenCreated = new CodePrinter();
+  final CodePrinter childrenRemoved = new CodePrinter();
+  final CodePrinter childrenInserted = new CodePrinter();
 
-  ListEmitter(Element elem, TemplateInfo info)
-      : childrenDeclarations = new CodePrinter(),
-        childrenCreated = new CodePrinter(),
-        childrenRemoved = new CodePrinter(),
-        childrenInserted = new CodePrinter(),
-        super(elem, info);
+  ListEmitter(Element elem, TemplateInfo info) : super(elem, info);
 
   String get childElementName => 'child${elemInfo.idAsIdentifier}';
 
@@ -486,9 +474,9 @@ class ListEmitter extends Emitter<TemplateInfo> {
  */
 class RecursiveEmitter extends TreeVisitor {
   final FileInfo _info;
-  Context _context;
+  Context _context = new Context();
 
-  RecursiveEmitter(this._info) : _context = new Context();
+  RecursiveEmitter(this._info);
 
   void visitElement(Element elem) {
     var elemInfo = _info.elements[elem];

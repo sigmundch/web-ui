@@ -247,7 +247,7 @@ class Handle<T> {
   final Setter<T> _setter;
 
   /** Create a handle, possibly read-only (if no setter is specified). */
-  Handle(this._getter, [Setter<T> setter]) : _setter = setter;
+  Handle(this._getter, [this._setter]);
 
   Handle.of(T value) : this(() => value);
 
@@ -266,7 +266,7 @@ class Handle<T> {
 class _ListWatcher<T> {
 
   /** Shallow copy of the list as it was when this watcher was created. */
-  List<T> _last;
+  List<T> _last = <T>[];
 
   /**
    * The list reference (the current value of the list). If not null, then
@@ -281,11 +281,11 @@ class _ListWatcher<T> {
   final Getter<List<T>> _getter;
 
 
-  _ListWatcher(this._value) : _last = <T>[], _getter = null {
+  _ListWatcher(this._value) : _getter = null {
     _last.addAll(_value);
   }
 
-  _ListWatcher.getter(this._getter) : _last = <T>[], _value = null {
+  _ListWatcher.getter(this._getter) : _value = null {
     _last.addAll(_getter());
   }
 

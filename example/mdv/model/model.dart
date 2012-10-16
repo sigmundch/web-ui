@@ -5,11 +5,9 @@
 library model;
 
 class Model {
-  String email;
-  String repeatEmail;
-  bool agree;
+  String email = '';
+  String repeatEmail = '';
+  bool agree = false;
 
   bool get invalid => !agree || email.isEmpty() || email != repeatEmail;
-
-  Model() : email = "", repeatEmail = "", agree = false;
 }

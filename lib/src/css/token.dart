@@ -15,7 +15,7 @@ class Token {
   /** The start and end indexes into the [SourceFile] of this [Token]. */
   final int start, end;
 
-  Token(this.kind, this.source, this.start, this.end) {}
+  Token(this.kind, this.source, this.start, this.end);
 
   Token.fake(this.kind, span)
     : this.source = span.file, this.start = span.start, this.end = span.end;

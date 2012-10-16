@@ -1383,9 +1383,9 @@ class Parser {
 
 class ExpressionsProcessor {
   final Expressions _exprs;
-  int _index;
+  int _index = 0;
 
-  ExpressionsProcessor(this._exprs) : _index = 0;
+  ExpressionsProcessor(this._exprs);
 
   // TODO(terry): Only handles ##px unit.
   processFontSize() {

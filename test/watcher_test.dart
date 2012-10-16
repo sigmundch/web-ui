@@ -153,8 +153,7 @@ main() {
 }
 
 class A {
-  B b;
-  A() : b = new B(3);
+  B b = new B(3);
 }
 
 class B {

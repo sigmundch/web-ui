@@ -12,9 +12,9 @@ class InterpStack {
   InterpStack next, previous;
   final int quote;
   final bool isMultiline;
-  int depth;
+  int depth = -1;
 
-  InterpStack(this.previous, this.quote, this.isMultiline): depth = -1;
+  InterpStack(this.previous, this.quote, this.isMultiline);
 
   InterpStack pop() {
     return this.previous;

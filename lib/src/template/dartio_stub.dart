@@ -184,7 +184,7 @@ abstract class Path {
 class _Path implements Path {
   final String _path;
 
-  _Path(String source) : _path = source;
+  _Path(this._path);
   _Path.fromNative(String source) : _path = _clean(source);
 
   int hashCode() => _path.hashCode();

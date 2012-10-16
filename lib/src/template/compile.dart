@@ -44,17 +44,14 @@ Document parseHtml(String template, String sourcePath) {
  */
 class Compile {
   final FileSystem filesystem;
-  final List<SourceFile> files;
-  final List<OutputFile> output;
+  final List<SourceFile> files = <SourceFile>[];
+  final List<OutputFile> output = <OutputFile>[];
 
   /** Information about source [files] given their href. */
-  final Map<String, FileInfo> info;
+  final Map<String, FileInfo> info = new SplayTreeMap<String, FileInfo>();
 
   /** Used by template tool to open a file. */
-  Compile(this.filesystem)
-      : files = <SourceFile>[],
-        output = <OutputFile>[],
-        info = new SplayTreeMap<String, FileInfo>();
+  Compile(this.filesystem);
 
   /** Compile the application starting from the given [mainFile]. */
   Future run(String mainFile, [String baseDir = ""]) {

@@ -10,10 +10,7 @@ library list_map;
  */
 class ListMap<K, V> {
 
-  List<_Pair<K, V>> _list;
-
-  ListMap()
-    : _list = new List<_Pair<K, V>>() { }
+  List<_Pair<K, V>> _list = new List<_Pair<K, V>>();
 
   void operator []=(K key, V value) {
     _list.add(new _Pair<K,V>(key, value));

@@ -12,9 +12,9 @@ class CssData {
   /** Style priority based on source order. */
   int priority;
   /** Styles associated with this class selector. */
-  List dartStyles;
+  List dartStyles = [];
 
-  CssData([this.priority]) : dartStyles = [];
+  CssData([this.priority]);
 }
 
 class Generate {

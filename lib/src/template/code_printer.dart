@@ -6,8 +6,7 @@ library code_printer;
 
 /** Helper class that auto-formats generated code. */
 class CodePrinter {
-  List _items;
-  CodePrinter() : _items = [];
+  List _items = [];
 
   /**
    * Adds [object] to this printer and appends a new-line after it. Returns this
