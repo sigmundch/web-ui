@@ -189,24 +189,7 @@ class _Path implements Path {
 
   int hashCode() => _path.hashCode();
 
-  static String _clean(String source) {
-    switch (Platform.operatingSystem) {
-      case 'windows':
-        return _cleanWindows(source);
-      default:
-        return source;
-    }
-  }
-
-  static String _cleanWindows(source) {
-    // Change \ to /.
-    var clean = source.replaceAll('\\', '/');
-    // Add / before intial [Drive letter]:
-    if (clean.length >= 2 && clean[1] == ':') {
-      clean = '/$clean';
-    }
-    return clean;
-  }
+  static String _clean(String source) => source;
 
   bool get isEmpty => _path.isEmpty();
   bool get isAbsolute => _path.startsWith('/');
@@ -214,7 +197,9 @@ class _Path implements Path {
 
   String toString() => _path;
 
-  Path relativeTo(Path base) {
+  // TODO(jmesserly): this should take any Path implementation.
+  // See http://dartbug.com/5913
+  Path relativeTo(_Path base) {
     // Throws exception if an unimplemented or impossible case is reached.
     // Returns a path "relative" such that
     //    base.join(relative) == this.canonicalize.
@@ -235,7 +220,7 @@ class _Path implements Path {
       "  Arguments: $_path.relativeTo($base)");
   }
 
-  Path join(Path further) {
+  Path join(_Path further) {
     if (further.isAbsolute) {
       throw new ArgumentError(
           "Path.join called with absolute Path as argument.");

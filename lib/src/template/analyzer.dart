@@ -244,12 +244,10 @@ class _Analyzer extends TreeVisitor {
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
       attrInfo = new AttributeInfo(value);
-      elemInfo.fieldType = 'InputElement';
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'click', (elem, args) => '$value = $elem.checked');
     } else if (isInput && name == 'value') {
       attrInfo = new AttributeInfo(value);
-      elemInfo.fieldType = 'InputElement';
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {

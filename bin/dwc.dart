@@ -6,4 +6,6 @@
 import 'dart:io';
 import 'package:web_components/dwc.dart';
 
-void main() => run(new Options().arguments);
+void main() {
+  run(new Options().arguments);
+}

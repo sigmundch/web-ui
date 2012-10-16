@@ -11,10 +11,10 @@
     <h5>Shipping Address</h5>
 
     <div>
-      <label>Name: 
+      <label>Name:
         <input type="text" autofocus data-bind="value:shipping.name">
       </label>
-      <label>Address: 
+      <label>Address:
         <input type="text" data-bind="value:shipping.address">
       </label>
     </div>
@@ -29,16 +29,16 @@
     </div>
 
     <div hidden="{{billing.useShipping}}">
-      <label>Name: 
+      <label>Name:
         <input type="text" data-bind="value:billing.name">
       </label>
-      <label>Address: 
+      <label>Address:
         <input type="text" data-bind="value:billing.address">
       </label>
     </div>
   </fieldset>
   <br>
-  <button disabled="{{needAddresses}}" data-action="click:printAddresses()">
+  <button disabled="{{needAddresses}}" data-action="click:printAddresses">
     OK
   </button>
 </template>
@@ -67,7 +67,7 @@
   bool get needAddresses => !shipping.isComplete || !billing.isComplete;
 
   /** Output the addresses to the console. */
-  void printAddresses() {
+  void printAddresses(e) {
     print("${billing.useShipping ? 'Shipping/Billing' : 'Shipping'} "
           "Address: ${shipping.name}, ${shipping.address}");
     if (!billing.useShipping) {

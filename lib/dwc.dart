@@ -28,7 +28,7 @@ Future run(List<String> args) {
     print("   sourcefile - template file filename.html");
     print("   outputPath - if specified directory to generate files; if not");
     print("                same directory as sourcefile");
-    return;
+    return new Future.immediate(null);
   }
 
   fileSystem = new VMFileSystem();
@@ -47,18 +47,18 @@ Future run(List<String> args) {
       ? new Directory.current() : new Directory.fromPath(srcDirPath);
   if (!srcDir.existsSync()) {
     world.fatal("Input directory doesn't exist - ${srcDir.path}");
-    return;
+    return new Future.immediate(null);
   }
 
   File fileSrc = new File.fromPath(srcPath);
   if (!fileSrc.existsSync()) {
     world.fatal("Source file doesn't exist.", filename: fileSrc.name);
-    return;
+    return new Future.immediate(null);
   }
 
   if (!fileSrc.name.endsWith('.html')) {
     world.fatal("Source file is not an html file.", filename: fileSrc.name);
-    return;
+    return new Future.immediate(null);
   }
 
   String sourceFilename = fileSrc.name;
