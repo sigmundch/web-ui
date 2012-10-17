@@ -11,12 +11,12 @@ Then you can launch in [Dartium][] with these flags:
 
     --allow-file-access-from-files --enable-experimental-webkit-features --enable-devtools-experiments
 
-And open `main.html.html`.
+And open `_main.html.html`.
 
 You can also compile with [dart2js][] and run it in any of the
 [modern browsers][browsers] supported by Dart:
 
-    dart2js -omain.html_bootstrap.dart.js main.html_bootstrap.dart
+    dart2js _main.html_bootstrap.dart -o_main.html_bootstrap.dart.js
 
 Note that [TodoMVC][] use CSS features that are not supported yet in all of our
 target browsers. If you try running the examples on that site you'll see similar problems with other frameworks. This causes some things to render incorrectly in Firefox, IE9 and Opera, such as checkboxes. We'd like to fix the stylesheet so
