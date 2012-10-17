@@ -50,6 +50,7 @@ function compare {
 # generate a file.
 if [[ -d $DIR/data/output ]]; then
   rm -f $DIR/data/output/*
+  ln -s $DIR/packages $DIR/data/output/packages
 fi
 
 pushd $DIR

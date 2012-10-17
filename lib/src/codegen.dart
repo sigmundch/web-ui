@@ -125,6 +125,5 @@ String importList(List<String> imports) =>
   Strings.join(imports.map((url) => "import '$url';"), '\n');
 
 /** Generate text for a list of export. */
-// TODO(sigmund): uncomment exports below (issue #58)
 String exportList(List<String> exports) =>
-  Strings.join(exports.map((url) => "// export '$url';"), '\n');
+  Strings.join(exports.map((url) => "export '$url';"), '\n');

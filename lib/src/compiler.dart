@@ -178,7 +178,6 @@ class Compiler {
       time('Codegen ${file.filename}', () {
         if (!file.isDart) {
           _removeScriptTags(file.document);
-          _fixImports(file);
           _emitComponents(file);
 
           var fileInfo = info[file.filename];
@@ -196,16 +195,6 @@ class Compiler {
 
   static const String DARTJS_LOADER =
     "http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js";
-
-  /** Adds imports to [file] for each used component. */
-  // TODO(sigmund): delete - this inlining of imports is added here just
-  // because we currently have no way to re-export libraries (issue #58).
-  void _fixImports(SourceFile file) {
-    var fileInfo = info[file.filename];
-    for (var component in fileInfo.components.getValues()) {
-      fileInfo.imports[component.outputFilename] = true;
-    }
-  }
 
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
@@ -251,13 +240,15 @@ class Compiler {
   /** Emit the wrapper .dart file for a component page. */
   void _emitComponentDart(SourceFile file) {
     var fileInfo = info[file.filename];
+    // Reexport all components declared in the input file.
+    var exports = fileInfo.declaredComponents.map((c) => c.outputFilename);
     output.add(new OutputFile(fileInfo.outputFilename, new CodePrinter().add('''
         // Auto-generated from ${file.filename}.
         // DO NOT EDIT.
 
         library ${fileInfo.libraryName};
 
-        ${codegen.exportList(fileInfo.imports.getKeys())}
+        ${codegen.exportList(exports)}
         ''').formatString()));
   }
 

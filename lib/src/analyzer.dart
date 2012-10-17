@@ -111,9 +111,7 @@ class _Analyzer extends TreeVisitor {
 
     if (component != null && !component.hasConflict) {
       info.component = component;
-      // TODO(jmesserly): this needs to normalize relative paths, if the
-      // current file is not in the same directory as the component file.
-      _fileInfo.imports[component.file.outputFilename] = true;
+      _fileInfo.usedComponents[component] = true;
     }
   }
 
@@ -498,8 +496,8 @@ void _attachExtenalScript(UserCodeInfo info, Map<String, FileInfo> files) {
 void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
   var existing = fileInfo.components[componentInfo.tagName];
   if (existing != null) {
-    if (identical(existing.file, fileInfo) &&
-        !identical(componentInfo.file, fileInfo)) {
+    if (identical(existing.declaringFile, fileInfo) &&
+        !identical(componentInfo.declaringFile, fileInfo)) {
       // Components declared in [fileInfo] are allowed to shadow component
       // names declared in imported files.
       return;
@@ -512,7 +510,7 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
 
     existing.hasConflict = true;
 
-    if (identical(componentInfo.file, fileInfo)) {
+    if (identical(componentInfo.declaringFile, fileInfo)) {
       world.error('duplicate custom element definition '
           'for "${componentInfo.tagName}":\n  ${existing.element.outerHTML}\n'
           'and:\n  ${componentInfo.element.outerHTML}', filename:
@@ -521,8 +519,9 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
       world.error(
           'imported duplicate custom element definitions '
           'for "${componentInfo.tagName}"'
-          'from "${existing.file.filename}":\n  ${existing.element.outerHTML}\n'
-          'and from "${componentInfo.file.filename}":\n'
+          'from "${existing.declaringFile.filename}":\n'
+          '  ${existing.element.outerHTML}\n'
+          'and from "${componentInfo.declaringFile.filename}":\n'
           '  ${componentInfo.element.outerHTML}', filename: fileInfo.filename);
     }
   } else {

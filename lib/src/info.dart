@@ -67,15 +67,6 @@ class FileInfo extends UserCodeInfo {
   String get outputFilename =>
     '_${(externalCode != null) ? externalCode.filename : filename}.dart';
 
-  /**
-   * Target dart scripts loaded via `script` tags, or generated imports.
-   * Note that this is used like a set. If the item is in the set, the value
-   * will always be `true`.
-   */
-  // TODO(jmesserly): ideally this would be SplayTreeSet (dartbug.com/5603).
-  final SplayTreeMap<String, bool> imports = new SplayTreeMap<String, bool>();
-
-
   /** Generated analysis info for all elements in the file. */
   final Map<Node, ElementInfo> elements = new Map<Node, ElementInfo>();
 
@@ -93,6 +84,10 @@ class FileInfo extends UserCodeInfo {
   final Map<String, ComponentInfo> components =
       new SplayTreeMap<String, ComponentInfo>();
 
+  /** For entry point HTML files, components actually used in the page. */
+  final Map<ComponentInfo, bool> usedComponents =
+      new LinkedHashMap<ComponentInfo, bool>();
+
   /** Files imported with `<link rel="component">` */
   final List<String> componentLinks = <String>[];
 
@@ -101,8 +96,8 @@ class FileInfo extends UserCodeInfo {
 
 /** Information about a web component definition. */
 class ComponentInfo extends UserCodeInfo {
-  /** The file that declares this component. Used for error messages. */
-  final FileInfo file;
+  /** The file that declares this component. */
+  final FileInfo declaringFile;
 
   /** The component tag name, defined with the `name` attribute on `element`. */
   final String tagName;
@@ -117,7 +112,8 @@ class ComponentInfo extends UserCodeInfo {
   final Node template;
 
   /** File where this component was defined. */
-  String get inputFile => externalFile != null ? externalFile : file.filename;
+  String get inputFile =>
+      externalFile != null ? externalFile : declaringFile.filename;
 
   /**
    * Name of the file that will be generated for this component. We want to
@@ -127,8 +123,8 @@ class ComponentInfo extends UserCodeInfo {
    * unique file name for each component.
    */
   String get outputFilename {
-    if (externalCode != null) return externalCode.outputFilename;
-    var prefix = file.filename;
+    if (externalFile != null) return '_$externalFile.dart';
+    var prefix = declaringFile.filename;
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
     return '_$prefix.$componentSegment.dart';
   }
@@ -140,7 +136,7 @@ class ComponentInfo extends UserCodeInfo {
   bool hasConflict = false;
 
   ComponentInfo(this.element, this.template, this.tagName, this.constructor,
-      [this.file]);
+      [this.declaringFile]);
 }
 
 /** Information extracted for each node in a template. */

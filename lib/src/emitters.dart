@@ -570,7 +570,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       int startPos = 0;
       if (libMatch == null) {
         var libraryName = info.tagName.replaceAll(const RegExp('[-./]'), '_');
-        printer.add(codegen.header(info.file.filename, libraryName));
+        printer.add(codegen.header(info.declaringFile.filename, libraryName));
       } else {
         printer.add('// Generated from ${info.inputFile}\n// DO NOT EDIT.');
         printer.add(code.substring(0, libMatch.end()));
@@ -622,7 +622,11 @@ class MainPageEmitter extends RecursiveEmitter {
       startPos = match.end();
     }
 
-    printer.add(codegen.importList(_info.imports.getKeys()))
+    // Import only those components used by the page.
+    // TODO(jmesserly): this needs to normalize relative paths, if the
+    // current file is not in the same directory as the component file.
+    var imports = _info.usedComponents.getKeys().map((c) => c.outputFilename);
+    printer.add(codegen.importList(imports))
         .add(codegen.mainDartCode(code.substring(startPos),
             _context.declarations.formatString(0),
             _context.createdMethod.formatString(1),
