@@ -13,7 +13,7 @@ import 'src/file_system/memory.dart';
 import 'src/compiler.dart';
 import 'src/utils.dart';
 import 'src/world.dart';
-import 'dwc_shared.dart';
+import 'src/dwc_shared.dart';
 import 'dart:io';
 
 FileSystem fileSystem;

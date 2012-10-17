@@ -2,8 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// TODO(jmesserly): Remove this file when our version >= 0.2, and merge
+// this with "web_components.dart". Leaving for now to keep 0.1.x compat.
 /** Declares the [WebComponent] base class (eventually: mixin). */
 library web_component;
+
 import 'dart:html';
 
 /**
