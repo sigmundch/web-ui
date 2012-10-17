@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- This file was auto-generated from template footer.html. -->
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+--><html lang="en"><head></head><body>
+<element name="x-todo-footer" extends="footer" constructor="FooterComponent" apply-author-styles="">
+  <template>
+    <span id="todo-count"><strong id="__e-0">{{remaining}}</strong></span>
+    <ul id="filters">
+      <li> <a class="{{allClass}}" href="#/" id="__e-1">All</a> </li>
+      <li> <a class="{{activeClass}}" href="#/active" id="__e-2">Active</a> </li>
+      <li> <a class="{{completedClass}}" href="#/completed" id="__e-3">Completed</a> </li>
+    </ul>
+    <template instantiate="if anyDone" id="__e-4">
+      <button id="clear-completed" data-action="click:clearDone">
+        Clear completed ({{doneCount}})
+      </button>
+    </template>
+  </template>
+  
+</element>
+
+
+</body></html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- This file was auto-generated from template item.html. -->
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+--><html lang="en"><head></head><body>
+<element name="x-todo-row" extends="li" constructor="TodoItemComponent" apply-author-styles="">
+  <template>
+    <div id="todo-item" class="{{_editingClass}} {{_completedClass}}">
+      <div class="view" data-action="doubleClick:edit" id="__e-3">
+        <input class="toggle" type="checkbox" data-bind="checked:todo.done" id="__e-0">
+        <label id="__e-1">{{todo.task}}</label>
+        <button class="destroy" data-action="click:delete" id="__e-2"></button>
+      </div>
+      <form data-action="submit:update" id="__e-4">
+        <input id="edit" class="edit" data-action="blur:update,keyUp:maybeCancel">
+      </form>
+    </div>
+  </template>
+  
+</element>
+
+
+</body></html>
