@@ -67,7 +67,7 @@ bool _isInputFile(String path) {
 /** Delete all generated files. */
 void _handleCleanCommand() {
   for (var dir in _trackDirs) {
-    dir.list(false).onFile = (path) {
+    dir.list(recursive: false).onFile = (path) {
       if (_isGeneratedFile(path)) {
         // TODO(jmesserly): we need a cleaner way to do this with dart:io.
         // The bug is that DirectoryLister returns native paths, so you need to
