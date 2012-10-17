@@ -48,10 +48,10 @@ void analyzeFile(SourceFile file, Map<String, FileInfo> info) {
 
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {
-  final FileInfo result;
+  final FileInfo _fileInfo;
   int _uniqueId = 0;
 
-  _Analyzer(this.result);
+  _Analyzer(this._fileInfo);
 
   void visitElement(Element node) {
     ElementInfo info = null;
@@ -70,7 +70,7 @@ class _Analyzer extends TreeVisitor {
       info = new ElementInfo();
     }
     if (node.id != '') info.elementId = node.id;
-    result.elements[node] = info;
+    _fileInfo.elements[node] = info;
 
     node.attributes.forEach((name, value) {
       visitAttribute(node, info, name, value);
@@ -94,17 +94,17 @@ class _Analyzer extends TreeVisitor {
 
   void _bindCustomElement(Element node, ElementInfo info) {
     // <x-fancy-button>
-    var component = result.components[node.tagName];
+    var component = _fileInfo.components[node.tagName];
     if (component == null) {
       // TODO(jmesserly): warn for unknown element tags?
 
       // <button is="x-fancy-button">
       var isAttr = node.attributes['is'];
       if (isAttr != null) {
-        component = result.components[isAttr];
+        component = _fileInfo.components[isAttr];
         if (component == null) {
           world.warning('custom element with tag name $isAttr not found.',
-              filename: result.filename);
+              filename: _fileInfo.filename);
         }
       }
     }
@@ -113,7 +113,7 @@ class _Analyzer extends TreeVisitor {
       info.component = component;
       // TODO(jmesserly): this needs to normalize relative paths, if the
       // current file is not in the same directory as the component file.
-      result.imports[component.file.dartFilename] = true;
+      _fileInfo.imports[component.file.outputFilename] = true;
     }
   }
 
@@ -127,7 +127,7 @@ class _Analyzer extends TreeVisitor {
     if (instantiate != null && iterate != null) {
       // TODO(jmesserly): get the node's span here
       world.warning('<template> element cannot have iterate and instantiate '
-          'attributes', filename: result.filename);
+          'attributes', filename: _fileInfo.filename);
       return null;
     }
 
@@ -143,7 +143,7 @@ class _Analyzer extends TreeVisitor {
         world.warning('<template instantiate> either have  '
           ' form <template instantiate="if condition" where "condition" is a'
           ' binding that determines if the contents of the template will be'
-          ' inserted and displayed.', filename: result.filename);
+          ' inserted and displayed.', filename: _fileInfo.filename);
       }
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
@@ -152,7 +152,7 @@ class _Analyzer extends TreeVisitor {
       }
       world.warning('<template> iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name'
-          ' and "list" is the list of items.', filename: result.filename);
+          ' and "list" is the list of items.', filename: _fileInfo.filename);
     }
     return null;
   }
@@ -189,7 +189,7 @@ class _Analyzer extends TreeVisitor {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       world.error('data-value attribute should be of the form '
-          'data-value="name:value"', filename: result.filename);
+          'data-value="name:value"', filename: _fileInfo.filename);
       return;
     }
     var name = value.substring(0, colonIdx);
@@ -212,7 +212,7 @@ class _Analyzer extends TreeVisitor {
       world.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
           '"eventName1:action1,eventName2:action2,..." for multiple events.',
-          filename: result.filename);
+          filename: _fileInfo.filename);
       return false;
     }
 
@@ -233,7 +233,7 @@ class _Analyzer extends TreeVisitor {
     if (colonIdx <= 0) {
       // TODO(jmesserly): get the node's span here
       world.error('data-bind attribute should be of the form '
-          'data-bind="name:value"', filename: result.filename);
+          'data-bind="name:value"', filename: _fileInfo.filename);
       return null;
     }
 
@@ -252,7 +252,7 @@ class _Analyzer extends TreeVisitor {
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {
       world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}',
-          filename: result.filename);
+          filename: _fileInfo.filename);
       return null;
     }
     elemInfo.attributes[name] = attrInfo;
@@ -275,7 +275,7 @@ class _Analyzer extends TreeVisitor {
     if (!bindingRegex.hasMatch(text.value)) return;
 
     var parentElem = text.parent;
-    ElementInfo info = result.elements[parentElem];
+    ElementInfo info = _fileInfo.elements[parentElem];
     info.hasDataBinding = true;
     assert(info.contentBinding == null);
 
@@ -302,11 +302,11 @@ class _Analyzer extends TreeVisitor {
 
 /** A visitor that finds `<link rel="components">` and `<element>` tags.  */
 class _ElementLoader extends TreeVisitor {
-  final FileInfo result;
+  final FileInfo _fileInfo;
   ComponentInfo _component;
   bool _inHead = false;
 
-  _ElementLoader(this.result);
+  _ElementLoader(this._fileInfo);
 
   void visitElement(Element node) {
     switch (node.tagName) {
@@ -328,18 +328,18 @@ class _ElementLoader extends TreeVisitor {
 
     if (!_inHead) {
       world.warning('link rel="components" only valid in '
-          'head:\n  ${node.outerHTML}', filename: result.filename);
+          'head:\n  ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
       world.warning('link rel="components" missing href:'
-          '\n  ${node.outerHTML}', filename: result.filename);
+          '\n  ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
 
-    result.componentLinks.add(href);
+    _fileInfo.componentLinks.add(href);
   }
 
   void visitElementElement(Element node) {
@@ -348,7 +348,7 @@ class _ElementLoader extends TreeVisitor {
     // visible from the outside.
     if (_component != null) {
       world.error('Nested component definitions are not yet supported:\n '
-          ' ${node.outerHTML}', filename: result.filename);
+          ' ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
 
@@ -356,7 +356,7 @@ class _ElementLoader extends TreeVisitor {
     if (ctor == null) {
       world.error('Missing the class name associated with this component. '
           'Please add an attribute of the form  \'constructor="ClassName"\':\n'
-          ' ${node.outerHTML}', filename: result.filename);
+          ' ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
 
@@ -364,7 +364,7 @@ class _ElementLoader extends TreeVisitor {
     if (tagName == null) {
       world.error('Missing tag name of the Web Component. Please include an '
           'attribute like \'name="x-your-tag-name"\':\n  ${node.outerHTML}',
-          filename: result.filename);
+          filename: _fileInfo.filename);
       return;
     }
 
@@ -373,14 +373,14 @@ class _ElementLoader extends TreeVisitor {
     if (templates.length != 1) {
       world.warning('an <element> should have exactly one '
           '<template> child:\n  ${node.outerHTML}', filename:
-          result.filename);
+          _fileInfo.filename);
     } else {
       template = templates[0];
     }
 
     var savedComponent = _component;
-    _component = new ComponentInfo(node, template, tagName, ctor, result);
-    result.declaredComponents.add(_component);
+    _component = new ComponentInfo(node, template, tagName, ctor, _fileInfo);
+    _fileInfo.declaredComponents.add(_component);
 
     super.visitElement(node);
     _component = savedComponent;
@@ -396,35 +396,30 @@ class _ElementLoader extends TreeVisitor {
       // TODO(jmesserly): is this a good warning?
       world.warning('ignored script tag, possibly missing '
           'type="application/dart" or type="text/javascript":'
-          '\n  ${node.outerHTML}', filename: result.filename);
+          '\n  ${node.outerHTML}', filename: _fileInfo.filename);
     }
 
     if (scriptType != 'application/dart') return;
+
+    var currentInfo = _component == null ? _fileInfo : _component;
 
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
         world.warning('"application/dart" scripts should'
             'use the .dart file extension:\n ${node.outerHTML}', filename:
-            result.filename);
+            _fileInfo.filename);
       }
 
       if (node.innerHTML.trim() != '') {
         world.error('script tag has "src" attribute and also has script text:\n'
-            ' ${node.outerHTML}', filename: result.filename);
+            ' ${node.outerHTML}', filename: _fileInfo.filename);
       }
 
-      if (_component == null) {
-        if (!result.imports.isEmpty() || result.userCode != '') {
-          _tooManyScriptsError(node, 'the top-level HTML page');
-        } else {
-          result.imports[src] = true;
-        }
-      } else if (_component.externalFile != null
-          || _component.inlinedCode != null) {
-        _tooManyScriptsError(node, 'a custom element declaration');
+      if (currentInfo.codeAttached) {
+        _tooManyScriptsError(node);
       } else {
-        _component.externalFile = src;
+        currentInfo.externalFile = src;
       }
       return;
     }
@@ -435,27 +430,23 @@ class _ElementLoader extends TreeVisitor {
     // one child of <script>
     assert(node.nodes.length == 1);
     Text text = node.nodes[0];
-    if (_component != null) {
-      if (_component.externalFile != null || _component.inlinedCode != null) {
-        _tooManyScriptsError(node, 'a custom element declaration');
-      } else {
-        _component.inlinedCode = text.value;
-      }
-    } else if (!result.imports.isEmpty() || result.userCode != '') {
-      _tooManyScriptsError(node, 'the top-level HTML page');
-    } else if (!result.isEntryPoint) {
+
+    if (currentInfo.codeAttached) {
+      _tooManyScriptsError(node);
+    } else if (_component == null && !_fileInfo.isEntryPoint) {
       world.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
-          '\n ${node.outerHTML}', filename: result.filename);
+          '\n ${node.outerHTML}', filename: _fileInfo.filename);
     } else {
-      result.userCode = text.value;
-      result.hasTopLevelScript = true;
+      currentInfo.inlinedCode = text.value;
     }
   }
 
-  void _tooManyScriptsError(Node node, String location) {
+  void _tooManyScriptsError(Node node) {
+    var location = _component == null ? 'the top-level HTML page'
+        : 'a custom element declaration';
     world.error('there should be only one dart script tag in $location:\n '
-        ' ${node.outerHTML}', filename: result.filename);
+        ' ${node.outerHTML}', filename: _fileInfo.filename);
   }
 }
 
@@ -471,19 +462,11 @@ class _ElementLoader extends TreeVisitor {
  *   * we fill [externalCode] on each component declared in [info].
  */
 void _normalize(FileInfo info, Map<String, FileInfo> files) {
+  _attachExtenalScript(info, files);
+
   for (var component in info.declaredComponents) {
     _addComponent(info, component);
-    var externalFile = component.externalFile;
-    if (externalFile != null) {
-      var file = files[externalFile];
-      if (component.externalCode == null) {
-        component.externalCode = file;
-        info.imports[file.dartFilename] = true;
-      } else if (!identical(component.externalCode, file)) {
-        world.error('unexpected error - two definitions for $externalFile.',
-            filename: info.filename);
-      }
-    }
+    _attachExtenalScript(component, files);
   }
 
   for (var link in info.componentLinks) {
@@ -491,6 +474,23 @@ void _normalize(FileInfo info, Map<String, FileInfo> files) {
     // We already issued an error for missing files.
     if (file == null) continue;
     file.declaredComponents.forEach((c) => _addComponent(info, c));
+  }
+}
+
+/**
+ * Stores a direct reference in [info] to a dart source file that was loaded in
+ * a `<script src="">` tag.
+ */
+void _attachExtenalScript(UserCodeInfo info, Map<String, FileInfo> files) {
+  var filename = info.externalFile;
+  if (filename != null) {
+    var file = files[filename];
+    if (info.externalCode == null) {
+      info.externalCode = file;
+    } else if (!identical(component.externalCode, file)) {
+      world.error('unexpected error - two definitions for $filename.',
+          filename: info.filename);
+    }
   }
 }
 

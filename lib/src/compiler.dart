@@ -103,16 +103,22 @@ class Compiler {
           for (var href in fileInfo.componentLinks) {
             pending.addLast(href);
           }
-          // Load .dart files being referenced in components.
+          // Load .dart files being referenced in the page and components.
+          if (fileInfo.externalFile != null) {
+            inProgress++;
+            _parseDartFile(fileInfo.externalFile, baseDir).then((dartFile) {
+              _addDartFile(dartFile);
+              inProgress--;
+              notifyIfDone();
+            });
+          }
+
           for (var component in fileInfo.declaredComponents) {
             var src = component.externalFile;
             if (src != null) {
               inProgress++;
               _parseDartFile(src, baseDir).then((dartFile) {
-                var fileInfo = new FileInfo(dartFile.filename);
-                info[dartFile.filename] = fileInfo;
-                fileInfo.userCode = dartFile.code;
-                files.add(dartFile);
+                _addDartFile(dartFile);
                 inProgress--;
                 notifyIfDone();
               });
@@ -151,6 +157,13 @@ class Compiler {
         ..code = source);
   }
 
+  Future _addDartFile(SourceFile dartFile) {
+    var fileInfo = new FileInfo(dartFile.filename);
+    info[dartFile.filename] = fileInfo;
+    fileInfo.inlinedCode = dartFile.code;
+    files.add(dartFile);
+  }
+
   /** Run the analyzer on every input html file. */
   void _analyze() {
     for (var file in files) {
@@ -169,7 +182,7 @@ class Compiler {
           _emitComponents(file);
 
           var fileInfo = info[file.filename];
-          if (fileInfo.hasTopLevelScript && fileInfo.isEntryPoint) {
+          if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
             _emitMainDart(file);
             _emitMainHtml(file);
           } else {
@@ -190,14 +203,14 @@ class Compiler {
   void _fixImports(SourceFile file) {
     var fileInfo = info[file.filename];
     for (var component in fileInfo.components.getValues()) {
-      fileInfo.imports[component.outputFile] = true;
+      fileInfo.imports[component.outputFilename] = true;
     }
   }
 
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.filename];
-    output.add(new OutputFile(fileInfo.dartFilename,
+    output.add(new OutputFile(fileInfo.outputFilename,
         new MainPageEmitter(fileInfo).run(file.document)));
   }
 
@@ -209,7 +222,7 @@ class Compiler {
     var document = file.document;
     document.body.nodes.clear();
     output.add(new OutputFile('_${file.filename}_bootstrap.dart',
-          codegen.bootstrapCode(fileInfo.dartFilename)));
+          codegen.bootstrapCode(fileInfo.outputFilename)));
     document.body.nodes.add(parseFragment(
       '<script type="text/javascript" src="$DARTJS_LOADER"></script>'
       '<script type="application/dart" src="_${file.filename}_bootstrap.dart">'
@@ -231,14 +244,14 @@ class Compiler {
     var fileInfo = info[file.filename];
     for (var component in fileInfo.declaredComponents) {
       var code = new WebComponentEmitter(fileInfo).run(component);
-      output.add(new OutputFile(component.outputFile, code));
+      output.add(new OutputFile(component.outputFilename, code));
     }
   }
 
   /** Emit the wrapper .dart file for a component page. */
   void _emitComponentDart(SourceFile file) {
     var fileInfo = info[file.filename];
-    output.add(new OutputFile(fileInfo.dartFilename, new CodePrinter().add('''
+    output.add(new OutputFile(fileInfo.outputFilename, new CodePrinter().add('''
         // Auto-generated from ${file.filename}.
         // DO NOT EDIT.
 

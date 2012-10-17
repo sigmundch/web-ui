@@ -605,12 +605,29 @@ class MainPageEmitter extends RecursiveEmitter {
     document.queryAll('element').forEach((tag) => tag.remove());
     visit(document);
 
-    return new CodePrinter().add(
-        codegen.mainDartCode(
-          _info,
-          _context.declarations.formatString(0),
-          _context.createdMethod.formatString(1),
-          _context.insertedMethod.formatString(1),
-          document.body.innerHTML.trim())).formatString();
+    var printer = new CodePrinter();
+    var startPos = 0;
+
+    // Inject library name if not pressent.
+    // TODO(sigmund): consider parsing the top-level syntax of a dart file
+    // instead of this ad-hoc regex (issue #95).
+    var code = _info.userCode;
+    var match = const RegExp('^library .*;').firstMatch(code);
+    if (match == null) {
+      printer.add(codegen.header(_info.filename, _info.libraryName));
+    } else {
+      printer.add('// Generated from ${_info.inputFile}\n// DO NOT EDIT.')
+          .add(code.substring(0, match.end()))
+          .add(codegen.imports);
+      startPos = match.end();
+    }
+
+    printer.add(codegen.importList(_info.imports.getKeys()))
+        .add(codegen.mainDartCode(code.substring(startPos),
+            _context.declarations.formatString(0),
+            _context.createdMethod.formatString(1),
+            _context.insertedMethod.formatString(1),
+            document.body.innerHTML.trim()));
+    return printer.formatString();
   }
 }

@@ -66,20 +66,24 @@ $removedBody
 """;
 
 // TODO(jmesserly): is raw triple quote enough to escape the HTML?
-/** The code in the main.html.dart generated file. */
+/**
+ * Top-level initialization code. This is the bulk of the code in the
+ * main.html.dart generated file if the user inlined his code in the page, or
+ * code appended to the main entry point .dart file, if the user specified an
+ * enternal file in the top-level script tag.
+ */
 String mainDartCode(
-    FileInfo info,
+    String originalCode,
     String topLevelFields,
     String fieldInitializers,
     String modelBinding,
     String initialPage) => """
-${header(info.filename, info.libraryName)}
 
-${importList(info.imports.getKeys())}
+// Original code
+$originalCode
 
-${info.userCode}
+// Additional generated code
 
-/** Generated code. */
 $topLevelFields
 
 /** Create the views and bind them to models. */

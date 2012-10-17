@@ -72,7 +72,12 @@ for input in $DIR/data/input/*_test.html; do
   fi
 done
 
-# Run Dart analyzer to check that we're generating warning clean code.
-dart_analyzer --fatal-warnings --fatal-type-errors $DIR/data/output/*
+if [[ ($TEST_PATTERN == "") ]]; then
+  # Run Dart analyzer to check that we're generating warning clean code.
+  # TODO(sigmund): allow running the analyzer on the code associated with the
+  # pattern
+  echo Running analyzer ...
+  dart_analyzer --fatal-warnings --fatal-type-errors $DIR/data/output/*
+fi
 
 echo All tests pass.

@@ -14,8 +14,40 @@ import 'files.dart';
 import 'utils.dart';
 import 'world.dart';
 
+/**
+ * Information associated with .dart code provided by the user, either inlined
+ * in the HTML file or included in a `<script src='url'>` tag. This is common
+ * funcitonality for both html files (which can define top-level user scripts)
+ * and components (which can define component-level scripts), hence we use this
+ * as a base class for both [FileInfo] and [ComponentInfo].
+ */
+class UserCodeInfo {
+
+  /** Whether there is any code associated with the page/component. */
+  bool get codeAttached => inlinedCode != null || externalFile != null;
+
+  /**
+   * The actual code, either inlined or from an external file, or `null` if none
+   * was defined.
+   */
+  String get userCode {
+    if (inlinedCode != null) return inlinedCode;
+    if (externalCode != null) return externalCode.userCode;
+    return null;
+  }
+
+  /** The inlined code, if any. */
+  String inlinedCode;
+
+  /** The name of the file sourced in a script tag, if any. */
+  String externalFile;
+
+  /** Info asscociated with [externalFile], if any. */
+  FileInfo externalCode;
+}
+
 /** Information extracted at the file-level. */
-class FileInfo {
+class FileInfo extends UserCodeInfo {
   final String filename;
 
   /**
@@ -24,13 +56,16 @@ class FileInfo {
    */
   final bool isEntryPoint;
 
-  /** Whether this file contains a top level script tag. */
-  bool hasTopLevelScript = false;
-
   // TODO(terry): Ensure that that the libraryName is a valid identifier:
   //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
   String get libraryName => filename.replaceAll('.', '_');
-  String get dartFilename => '_$filename.dart';
+
+  /** File where the top-level code was defined. */
+  String get inputFile => externalFile != null ? externalFile : file.filename;
+
+  /** Name of the file that will hold any generated Dart code. */
+  String get outputFilename =>
+    '_${(externalCode != null) ? externalCode.filename : filename}.dart';
 
   /**
    * Target dart scripts loaded via `script` tags, or generated imports.
@@ -40,8 +75,6 @@ class FileInfo {
   // TODO(jmesserly): ideally this would be SplayTreeSet (dartbug.com/5603).
   final SplayTreeMap<String, bool> imports = new SplayTreeMap<String, bool>();
 
-  /** User code inlined within the page. */
-  String userCode = '';
 
   /** Generated analysis info for all elements in the file. */
   final Map<Node, ElementInfo> elements = new Map<Node, ElementInfo>();
@@ -67,7 +100,7 @@ class FileInfo {
 }
 
 /** Information about a web component definition. */
-class ComponentInfo {
+class ComponentInfo extends UserCodeInfo {
   /** The file that declares this component. Used for error messages. */
   final FileInfo file;
 
@@ -83,29 +116,6 @@ class ComponentInfo {
   /** The component's `<template>` tag, if any. */
   final Node template;
 
-  /**
-   * User code associated with this component. Components might have a class
-   * definition. If it exits, it can be inlined in the .html file (in which case
-   * the code will be stored in [inlinedCode]) or it can be included from a
-   * separate .dart file (in which case a reference to it is stored in
-   * [externalFile]). This property returns the code regardless of where it was
-   * defined.
-   */
-  String get userCode {
-    if (inlinedCode != null) return inlinedCode;
-    if (externalCode != null) return externalCode.userCode;
-    return null;
-  }
-
-  /** Inlined code for this component, if any. */
-  String inlinedCode;
-
-  /** Name of the dart file containing code for this component, if any. */
-  String externalFile;
-
-  /** Info asscociated with [externalFile], if any. */
-  FileInfo externalCode;
-
   /** File where this component was defined. */
   String get inputFile => externalFile != null ? externalFile : file.filename;
 
@@ -116,8 +126,8 @@ class ComponentInfo {
    * components could be defined inline within the HTML file, so we return a
    * unique file name for each component.
    */
-  String get outputFile {
-    if (externalCode != null) return externalCode.dartFilename;
+  String get outputFilename {
+    if (externalCode != null) return externalCode.outputFilename;
     var prefix = file.filename;
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
     return '_$prefix.$componentSegment.dart';
