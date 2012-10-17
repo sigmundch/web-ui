@@ -11,8 +11,8 @@ library emitter_test;
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/template/analyzer.dart';
-import 'package:web_components/src/template/emitters.dart';
+import 'package:web_components/src/analyzer.dart';
+import 'package:web_components/src/emitters.dart';
 import 'testing.dart';
 
 

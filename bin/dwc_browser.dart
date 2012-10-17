@@ -11,14 +11,14 @@ library dwc_browser;
 
 import 'dart:html';
 import 'package:args/args.dart';
-import 'package:web_components/src/template/cmd_options.dart';
-import 'package:web_components/src/template/file_system.dart';
-import 'package:web_components/src/template/file_system_browser.dart';
-import 'package:web_components/src/template/dartio_stub.dart';
-import 'package:web_components/src/template/world.dart';
-import 'package:web_components/src/template/compile.dart';
-import 'package:web_components/src/template/utils.dart';
 import 'package:web_components/dwc_shared.dart';
+import 'package:web_components/src/cmd_options.dart';
+import 'package:web_components/src/compiler.dart';
+import 'package:web_components/src/file_system.dart';
+import 'package:web_components/src/file_system/browser.dart';
+import 'package:web_components/src/file_system/path.dart';
+import 'package:web_components/src/utils.dart';
+import 'package:web_components/src/world.dart';
 import 'package:js/js.dart' as js;
 
 FileSystem fileSystem;
@@ -56,7 +56,7 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
   String sourceFilename = srcPath.filename;
 
   asyncTime('Compiled $sourceFullFn', () {
-    var compiler = new Compile(fileSystem);
+    var compiler = new Compiler(fileSystem);
     return compiler.run(srcPath.filename, srcDir.toString()).chain((_) {
       // Write out the code associated with each source file.
       print("Writing files:");

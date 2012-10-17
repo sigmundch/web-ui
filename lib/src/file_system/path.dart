@@ -8,7 +8,7 @@
  */
 // TODO(jacobr): remove when there is a subset of dart:io that runs client and
 // server. dartbug.com/5818
-library dartio_stub;
+library path;
 
 /**
  * A Path, which is a String interpreted as a sequence of path segments,

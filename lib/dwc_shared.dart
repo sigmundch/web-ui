@@ -11,10 +11,10 @@
 library dwc_shared;
 
 import 'package:args/args.dart';
-import 'src/template/cmd_options.dart';
-import 'src/template/file_system.dart';
-import 'src/template/file_system_memory.dart';
-import 'src/template/world.dart';
+import 'src/cmd_options.dart';
+import 'src/file_system.dart';
+import 'src/file_system/memory.dart';
+import 'src/world.dart';
 
 ArgParser commandOptions() {
   return new ArgParser()

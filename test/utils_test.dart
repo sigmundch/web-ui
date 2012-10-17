@@ -7,7 +7,7 @@ library utils_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/template/utils.dart';
+import 'package:web_components/src/utils.dart';
 
 main() {
   useVmConfiguration();

@@ -2,10 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library file_system_browser;
+library browser;
 
 import 'dart:html';
-import 'file_system.dart';
+import 'package:web_components/src/file_system.dart';
 import 'package:js/js.dart' as js;
 
 

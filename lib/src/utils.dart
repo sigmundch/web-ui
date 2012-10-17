@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 library utils;
-import 'package:web_components/src/template/world.dart';
+import 'package:web_components/src/world.dart';
 
 /**
  * Converts a string name with hyphens into an identifier, by removing hyphens

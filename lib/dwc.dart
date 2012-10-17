@@ -6,13 +6,13 @@
 library dwc;
 
 import 'package:args/args.dart';
-import 'src/template/cmd_options.dart';
-import 'src/template/file_system.dart';
-import 'src/template/file_system_vm.dart';
-import 'src/template/file_system_memory.dart';
-import 'src/template/compile.dart';
-import 'src/template/utils.dart';
-import 'src/template/world.dart';
+import 'src/cmd_options.dart';
+import 'src/file_system.dart';
+import 'src/file_system/vm.dart';
+import 'src/file_system/memory.dart';
+import 'src/compiler.dart';
+import 'src/utils.dart';
+import 'src/world.dart';
 import 'dwc_shared.dart';
 import 'dart:io';
 
@@ -75,7 +75,7 @@ Future run(List<String> args) {
 
   return fileSystem.readAll(sourceFullFn).chain((source) {
     return asyncTime('Compiled $sourceFullFn', () {
-      var compiler = new Compile(fileSystem);
+      var compiler = new Compiler(fileSystem);
       return compiler.run(srcPath.filename, srcDir.path).chain((_) {
         // Write out the code associated with each source file.
         print("Write files to ${outDirectory.path}:");

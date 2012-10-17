@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library compile;
+library compiler;
 
 import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
@@ -42,7 +42,7 @@ Document parseHtml(String template, String sourcePath) {
  * Walk the tree produced by the parser looking for templates, expressions, etc.
  * as a prelude to emitting the code for the template.
  */
-class Compile {
+class Compiler {
   final FileSystem filesystem;
   final List<SourceFile> files = <SourceFile>[];
   final List<OutputFile> output = <OutputFile>[];
@@ -51,7 +51,7 @@ class Compile {
   final Map<String, FileInfo> info = new SplayTreeMap<String, FileInfo>();
 
   /** Used by template tool to open a file. */
-  Compile(this.filesystem);
+  Compiler(this.filesystem);
 
   /** Compile the application starting from the given [mainFile]. */
   Future run(String mainFile, [String baseDir = ""]) {

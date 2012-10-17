@@ -4,7 +4,7 @@
 
 library world;
 
-import 'source.dart';
+import 'package:html5lib/dom_parsing.dart';
 import 'utils.dart';
 
 /** The one true [World]. */
@@ -33,13 +33,15 @@ void _defaultPrintHandler(String message) {
 /** Can be thrown on any compiler error and includes source location. */
 class CompilerException implements Exception {
   final String _message;
+  final String _filename;
   final SourceSpan _location;
 
-  CompilerException(this._message, [this._location]);
+  CompilerException(this._message, [this._filename, this._location]);
 
   String toString() {
-    if (_location != null) {
-      return 'CompilerException: ${_location.toMessageString(_message)}';
+    if (_location != null && _filename != null) {
+      return 'CompilerException: '
+        '${_location.toMessageString(filename, _message)}';
     } else {
       return 'CompilerException: $_message';
     }
@@ -82,7 +84,7 @@ class World {
     printHandler('${output.toString()}');
 
     if (throwing) {
-      throw new CompilerException('${prefix}${message}', span);
+      throw new CompilerException('${prefix}${message}', filename, span);
     }
   }
 

@@ -8,9 +8,9 @@ import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/template/analyzer.dart';
-import 'package:web_components/src/template/info.dart';
-import 'package:web_components/src/template/files.dart';
+import 'package:web_components/src/analyzer.dart';
+import 'package:web_components/src/info.dart';
+import 'package:web_components/src/files.dart';
 import 'testing.dart';
 
 main() {

@@ -4,9 +4,9 @@
 
 // TODO(terry): Investigate common library for file I/O shared between frog and tools.
 
-library file_system_memory;
+library memory;
 
-import 'file_system.dart';
+import 'package:web_components/src/file_system.dart';
 
 /**
  * [FileSystem] implementation a memory buffer.
