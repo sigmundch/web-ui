@@ -30,14 +30,14 @@ Running Tests
 -------------
 
 Dependencies are installed using the [Pub Package Manager][pub].
+```bash
+pub install
 
-    pub install
-
-    # Run command line tests and automated end-to-end tests. It needs two
-    # executables on your path: `dart` and `DumpRenderTree` (see below
-    # for links to download `DumpRenderTree`)
-    test/run.sh
-
+# Run command line tests and automated end-to-end tests. It needs two
+# executables on your path: `dart` and `DumpRenderTree` (see below
+# for links to download `DumpRenderTree`)
+test/run.sh
+```
 Note: to run browser tests you will need to have [DumpRenderTree][drt],
 which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build it from the
