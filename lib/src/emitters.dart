@@ -579,12 +579,15 @@ class WebComponentEmitter extends RecursiveEmitter {
         var libraryName = info.tagName.replaceAll(const RegExp('[-./]'), '_');
         printer.add(codegen.header(info.declaringFile.filename, libraryName));
       } else {
-        printer.add('// Generated from ${info.inputFile}\n// DO NOT EDIT.');
+        printer.add('// Generated from ${info.inputFilename}\n// DO NOT EDIT.');
         printer.add(code.substring(0, libMatch.end()));
         printer.add(codegen.imports);
         startPos = libMatch.end();
       }
-      printer.add(code.substring(startPos, match.end()))
+      // Import only those components used by this component.
+      var imports = info.usedComponents.getKeys().map((c) => c.outputFilename);
+      printer.add(codegen.importList(imports))
+          .add(code.substring(startPos, match.end()))
           .add('\n')
           .add(codegen.componentCode(info.constructor,
               _context.declarations.formatString(1),
@@ -595,7 +598,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       return printer.formatString();
     } else {
       world.error('please provide a class definition '
-          'for ${info.constructor}:\n $code', filename: info.inputFile);
+          'for ${info.constructor}:\n $code', filename: info.inputFilename);
       return code;
     }
   }
@@ -623,15 +626,13 @@ class MainPageEmitter extends RecursiveEmitter {
     if (match == null) {
       printer.add(codegen.header(_info.filename, _info.libraryName));
     } else {
-      printer.add('// Generated from ${_info.inputFile}\n// DO NOT EDIT.')
+      printer.add('// Generated from ${_info.inputFilename}\n// DO NOT EDIT.')
           .add(code.substring(0, match.end()))
           .add(codegen.imports);
       startPos = match.end();
     }
 
     // Import only those components used by the page.
-    // TODO(jmesserly): this needs to normalize relative paths, if the
-    // current file is not in the same directory as the component file.
     var imports = _info.usedComponents.getKeys().map((c) => c.outputFilename);
     printer.add(codegen.importList(imports))
         .add(codegen.mainDartCode(code.substring(startPos),

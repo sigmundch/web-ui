@@ -49,9 +49,12 @@ void analyzeFile(SourceFile file, Map<String, FileInfo> info) {
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {
   final FileInfo _fileInfo;
+  LibraryInfo _currentInfo;
   int _uniqueId = 0;
 
-  _Analyzer(this._fileInfo);
+  _Analyzer(this._fileInfo) {
+    _currentInfo = _fileInfo;
+  }
 
   void visitElement(Element node) {
     ElementInfo info = null;
@@ -78,7 +81,19 @@ class _Analyzer extends TreeVisitor {
 
     _bindCustomElement(node, info);
 
+
+    var lastInfo = _currentInfo;
+    if (node.tagName == 'element') {
+      // If element is invalid _ElementLoader already reported an error, but 
+      // we skip the body of the element here.
+      var name = node.attributes['name'];
+      if (name == null) return;
+      var component = _fileInfo.components[name];
+      if (component == null) return;
+      _currentInfo = component;
+    }
     super.visitElement(node);
+    _currentInfo = lastInfo;
 
     // Need to get to this element at codegen time; for template, data binding,
     // or event hookup.  We need an HTML id attribute for this node.
@@ -111,7 +126,7 @@ class _Analyzer extends TreeVisitor {
 
     if (component != null && !component.hasConflict) {
       info.component = component;
-      _fileInfo.usedComponents[component] = true;
+      _currentInfo.usedComponents[component] = true;
     }
   }
 
@@ -150,7 +165,8 @@ class _Analyzer extends TreeVisitor {
       }
       world.warning('<template> iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name'
-          ' and "list" is the list of items.', filename: _fileInfo.filename);
+          ' and "list" is the list of items.',
+          filename: _fileInfo.filename);
     }
     return null;
   }
@@ -301,10 +317,12 @@ class _Analyzer extends TreeVisitor {
 /** A visitor that finds `<link rel="components">` and `<element>` tags.  */
 class _ElementLoader extends TreeVisitor {
   final FileInfo _fileInfo;
-  ComponentInfo _component;
+  LibraryInfo _currentInfo;
   bool _inHead = false;
 
-  _ElementLoader(this._fileInfo);
+  _ElementLoader(this._fileInfo) {
+    _currentInfo = _fileInfo;
+  }
 
   void visitElement(Element node) {
     switch (node.tagName) {
@@ -344,7 +362,7 @@ class _ElementLoader extends TreeVisitor {
     // TODO(jmesserly): what do we do in this case? It seems like an <element>
     // inside a Shadow DOM should be scoped to that <template> tag, and not
     // visible from the outside.
-    if (_component != null) {
+    if (_currentInfo is ComponentInfo) {
       world.error('Nested component definitions are not yet supported:\n '
           ' ${node.outerHTML}', filename: _fileInfo.filename);
       return;
@@ -376,12 +394,13 @@ class _ElementLoader extends TreeVisitor {
       template = templates[0];
     }
 
-    var savedComponent = _component;
-    _component = new ComponentInfo(node, template, tagName, ctor, _fileInfo);
-    _fileInfo.declaredComponents.add(_component);
+    var component = new ComponentInfo(node, template, tagName, ctor, _fileInfo); 
+    _fileInfo.declaredComponents.add(component);
 
+    var lastInfo = _currentInfo;
+    _currentInfo = component;
     super.visitElement(node);
-    _component = savedComponent;
+    _currentInfo = lastInfo;
   }
 
 
@@ -399,8 +418,6 @@ class _ElementLoader extends TreeVisitor {
 
     if (scriptType != 'application/dart') return;
 
-    var currentInfo = _component == null ? _fileInfo : _component;
-
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
@@ -414,10 +431,10 @@ class _ElementLoader extends TreeVisitor {
             ' ${node.outerHTML}', filename: _fileInfo.filename);
       }
 
-      if (currentInfo.codeAttached) {
+      if (_currentInfo.codeAttached) {
         _tooManyScriptsError(node);
       } else {
-        currentInfo.externalFile = src;
+        _currentInfo.externalFile = src;
       }
       return;
     }
@@ -429,14 +446,14 @@ class _ElementLoader extends TreeVisitor {
     assert(node.nodes.length == 1);
     Text text = node.nodes[0];
 
-    if (currentInfo.codeAttached) {
+    if (_currentInfo.codeAttached) {
       _tooManyScriptsError(node);
-    } else if (_component == null && !_fileInfo.isEntryPoint) {
+    } else if (_currentInfo == _fileInfo && !_fileInfo.isEntryPoint) {
       world.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
           '\n ${node.outerHTML}', filename: _fileInfo.filename);
     } else {
-      currentInfo.inlinedCode = text.value;
+      _currentInfo.inlinedCode = text.value;
     }
   }
 
@@ -479,7 +496,7 @@ void _normalize(FileInfo info, Map<String, FileInfo> files) {
  * Stores a direct reference in [info] to a dart source file that was loaded in
  * a `<script src="">` tag.
  */
-void _attachExtenalScript(UserCodeInfo info, Map<String, FileInfo> files) {
+void _attachExtenalScript(LibraryInfo info, Map<String, FileInfo> files) {
   var filename = info.externalFile;
   if (filename != null) {
     var file = files[filename];

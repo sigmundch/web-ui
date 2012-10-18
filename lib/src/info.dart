@@ -15,13 +15,14 @@ import 'utils.dart';
 import 'world.dart';
 
 /**
- * Information associated with .dart code provided by the user, either inlined
- * in the HTML file or included in a `<script src='url'>` tag. This is common
- * funcitonality for both html files (which can define top-level user scripts)
- * and components (which can define component-level scripts), hence we use this
- * as a base class for both [FileInfo] and [ComponentInfo].
+ * Information for any library-like input. We consider each HTML file a library,
+ * and each component declaration a library as well. Hence we use this as a base
+ * class for both [FileInfo] and [ComponentInfo]. Both HTML files and components
+ * can have .dart code provided by the user for top-level user scripts and
+ * component-level behavior code. This code can either be inlined in the HTML
+ * file or included in a `<script src='url'>` tag.
  */
-class UserCodeInfo {
+class LibraryInfo {
 
   /** Whether there is any code associated with the page/component. */
   bool get codeAttached => inlinedCode != null || externalFile != null;
@@ -44,10 +45,25 @@ class UserCodeInfo {
 
   /** Info asscociated with [externalFile], if any. */
   FileInfo externalCode;
+
+  /** File where the top-level code was defined. */
+  abstract String get inputFilename;
+
+  /** File that will hold any generated Dart code for this library unit. */
+  abstract String get outputFilename;
+
+  /**
+   * Components used within this library unit. For [FileInfo] these are
+   * components used directly in the page. For [ComponentInfo] these are
+   * components used within their shadowed template.
+   */
+  final Map<ComponentInfo, bool> usedComponents =
+      new LinkedHashMap<ComponentInfo, bool>();
 }
 
 /** Information extracted at the file-level. */
-class FileInfo extends UserCodeInfo {
+class FileInfo extends LibraryInfo {
+
   final String filename;
 
   /**
@@ -61,7 +77,8 @@ class FileInfo extends UserCodeInfo {
   String get libraryName => filename.replaceAll('.', '_');
 
   /** File where the top-level code was defined. */
-  String get inputFile => externalFile != null ? externalFile : file.filename;
+  String get inputFilename =>
+      externalFile != null ? externalFile : file.filename;
 
   /** Name of the file that will hold any generated Dart code. */
   String get outputFilename =>
@@ -84,10 +101,6 @@ class FileInfo extends UserCodeInfo {
   final Map<String, ComponentInfo> components =
       new SplayTreeMap<String, ComponentInfo>();
 
-  /** For entry point HTML files, components actually used in the page. */
-  final Map<ComponentInfo, bool> usedComponents =
-      new LinkedHashMap<ComponentInfo, bool>();
-
   /** Files imported with `<link rel="component">` */
   final List<String> componentLinks = <String>[];
 
@@ -95,7 +108,8 @@ class FileInfo extends UserCodeInfo {
 }
 
 /** Information about a web component definition. */
-class ComponentInfo extends UserCodeInfo {
+class ComponentInfo extends LibraryInfo {
+
   /** The file that declares this component. */
   final FileInfo declaringFile;
 
@@ -112,7 +126,7 @@ class ComponentInfo extends UserCodeInfo {
   final Node template;
 
   /** File where this component was defined. */
-  String get inputFile =>
+  String get inputFilename =>
       externalFile != null ? externalFile : declaringFile.filename;
 
   /**

@@ -467,6 +467,24 @@ main() {
       expect(fileInfo['foo.html'].declaredComponents.length, isZero);
       expect(elemInfo.component, isNull);
     });
+
+    test('invalid elements - no name, with body', () {
+      var doc = parse(
+        '<body>'
+          '<element name="x-1" constructor="M1"><template></template></element>'
+          '<element constructor="M2">'
+            '<template><x-1></x-1></template>'
+          '</element>'
+          '<element name="x-3">' // missing constructor
+            '<template><x-1></x-1></template>'
+          '</element>'
+        '</body>'
+      );
+
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile);
+      analyzeFile(srcFile, { 'main.html': info });
+    });
   });
 }
 

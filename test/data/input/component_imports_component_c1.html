@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<body>
+<element name="x-component-b" extends="span" constructor="ComponentB">
+  <template>
+    <span>hello</span>
+  </template>
+</element>
+<element name="x-component-a" extends="span" constructor="ComponentA">
+  <template>
+    <x-component-b></x-component-b>
+  </template>
+</element>
+</body>
+</html>
