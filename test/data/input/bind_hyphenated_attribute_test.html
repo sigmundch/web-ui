@@ -1,0 +1,29 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>bind_hyphenated_attribute_test</title>
+  <!-- use ../input/ so that the url also works from the output directory -->
+  <script type="application/javascript" src="../input/testing.js"></script>
+</head>
+<body>
+  <div data-hi="{{topLevelVar}}"></div>
+  <script type="application/dart">
+    import 'dart:html';
+    String topLevelVar = "hi";
+    main() {
+      window.on.load.add((e) {
+        document.body.addText('expected data-hi to be "hi", got '
+                              '"${query('div').dataAttributes['hi']}"');
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      });
+    }
+  </script>
+</body>
+</html>
