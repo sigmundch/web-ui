@@ -1,27 +1,33 @@
-TodoMVC sample application written with web-components and templates bound to
-models. You can run it out of the box on Dartium using dart:mirrors.
-That means you can edit it and refresh and see it automatically update.
+TodoMVC sample application written with Dart web components.
 
-To run this code, first run our compiler:
+You can run this application as follows:
 
-    ../../bin/dwc.dart ./main.html
+```bash
+# from the top of the dart-web-components package
+pub install
+./build.dart
+dartium --allow-file-access-from-files \
+  --enable-experimental-webkit-features \
+  --enable-devtools-experiments
+  example/todomvc/_main.html.html
+```
 
-This will generate a number of files with the *.html.dart and *.html.html.
-Then you can launch in [Dartium][] with these flags:
+You can also compile the generated code with [dart2js][] and run it in any
+of the [modern browsers][browsers] supported by Dart:
 
-    --allow-file-access-from-files --enable-experimental-webkit-features --enable-devtools-experiments
-
-And open `_main.html.html`.
-
-You can also compile with [dart2js][] and run it in any of the
-[modern browsers][browsers] supported by Dart:
-
-    dart2js _main.html_bootstrap.dart -o_main.html_bootstrap.dart.js
-
-Note that [TodoMVC][] use CSS features that are not supported yet in all of our
-target browsers. If you try running the examples on that site you'll see similar problems with other frameworks. This causes some things to render incorrectly in Firefox, IE9 and Opera, such as checkboxes. We'd like to fix the stylesheet so
+    dart2js example/todomvc/_main.html_bootstrap.dart -oexample/todomvc/_main.html_bootstrap.dart.js
+  
+Note that [TodoMVC][] uses CSS features that are not supported yet in all of our
+target browsers. If you try running the examples on that site you'll see similar
+problems with other frameworks. This causes some things to render incorrectly in
+Firefox, IE9 and Opera, such as checkboxes. We'd like to fix the stylesheet so
 it renders the same everywhere, but we haven't done it yet.
 
+There are many other ways to run and play with this example. For instance, using
+the Dart Editor or using a special extension in [Dartium][]. Check out the Dart
+web components [instructions on tools][tools] for more details.
+
+[tools]: http://www.dartlang.org/articles/dart-web-components/tools.html
 [Dartium]: http://www.dartlang.org/dartium/
 [dart2js]: http://www.dartlang.org/docs/dart2js/
 [browsers]: http://www.dartlang.org/support/faq.html#what-browsers-supported
