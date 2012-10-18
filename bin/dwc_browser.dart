@@ -11,7 +11,7 @@ library dwc_browser;
 
 import 'dart:html';
 import 'package:args/args.dart';
-import 'package:web_components/dwc_shared.dart';
+import 'package:web_components/src/dwc_shared.dart';
 import 'package:web_components/src/cmd_options.dart';
 import 'package:web_components/src/compiler.dart';
 import 'package:web_components/src/file_system.dart';
