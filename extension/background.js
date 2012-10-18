@@ -9,6 +9,13 @@
 var existingRuleIds = {};
 var onParse = null;
 
+// TODO(jacobr): determine whether it is a bug or feature that we need to call
+// this.  Without the next line, stale declarativeWebRequest rules from the
+// previous time the extension was run conflict with rules from the current
+// running version causing the extension to sometimes crash due to conflicting
+// redirect requests.
+chrome.declarativeWebRequest.onRequest.removeRules();
+
 // TODO(jacobr): set the onParse property directly from Dart.
 function setOnParseCallback(cb) {
   onParse = cb;

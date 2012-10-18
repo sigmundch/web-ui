@@ -4,10 +4,10 @@
 
 library browser;
 
+import 'dart:math';
 import 'dart:html';
 import 'package:web_components/src/file_system.dart';
 import 'package:js/js.dart' as js;
-
 
 /**
  * File system implementation indirectly using the Chrome Extension Api's to
@@ -23,8 +23,9 @@ class BrowserFileSystem implements FileSystem {
   js.Proxy sourcePagePort;
 
   final _filesToProxy = <String>{};
+  final _random;
 
-  BrowserFileSystem(this.sourcePagePort);
+  BrowserFileSystem(this.sourcePagePort) : _random = new Random();
 
   Future flush() {
     // TODO(jacobr): this should really only return the future when the
@@ -47,7 +48,11 @@ class BrowserFileSystem implements FileSystem {
 
   Future<String> readAll(String filename) {
     var completer = new Completer<String>();
-    new HttpRequest.get(filename, onSuccess(HttpRequest request) {
+    assert(filename.indexOf("?") == -1);
+    // We must add a random id or a timestamp to defeat proxy servers and Chrome
+    // caching when accessing file urls.
+    var uniqueFileName = '$filename?random_id=${_random.nextDouble()}';
+    new HttpRequest.get(uniqueFileName, onSuccess(HttpRequest request) {
       completer.complete(request.responseText);
     });
     return completer.future;

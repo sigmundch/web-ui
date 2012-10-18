@@ -14,7 +14,16 @@ if [ -d "output" ]; then
 fi
 mkdir output
 cp -r ../bin output/
-rm output/bin/packages
-cp -L -r ../packages output/bin/
+case `uname -s` in
+  "Linux")
+     rm output/bin/packages
+     cp -L -r ../packages output/bin/
+  ;;
+  "Darwin")
+     rm -r output/bin/packages
+     cp -r ../packages output/bin/
+  ;;
+esac
+
 cp -r ../lib output/
 cp *.html *.js *.json output/
