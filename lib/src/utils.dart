@@ -3,6 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 library utils;
+
+import 'dart:coreimpl';
 import 'package:web_components/src/world.dart';
 
 /**
@@ -69,4 +71,33 @@ find(List list, bool matcher(elem)) {
     if (matcher(elem)) return elem;
   }
   return null;
+}
+
+
+/** A completer that waits until all added [Future]s complete. */
+// TODO(sigmund): this should be part of the futures/core libraries.
+class FutureGroup extends CompleterImpl<List> {
+  const _FINISHED = -1;
+  int _pending = 0;
+  final List<Future> futures = <Future>[];
+
+  /**
+   * Wait for [task] to complete (assuming this barrier has not already been
+   * marked as completed, otherwise you'll get an exception indicating that a
+   * future has already been completed).
+   */
+  void add(Future task) {
+    if (_pending == _FINISHED) {
+      throw new FutureAlreadyCompleteException();
+    }
+    _pending++;
+    futures.add(task);
+    task.then((_) {
+      _pending--;
+      if (_pending == 0) {
+        _pending = _FINISHED;
+        complete(futures);
+      }
+    });
+  }
 }

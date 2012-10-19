@@ -68,71 +68,39 @@ class Compiler {
    * processed.
    */
   Future _parseAndDiscover(String inputFile, String baseDir) {
-    var pending = new Queue<String>(); // files to process
+    var tasks = new FutureGroup();
+    bool isEntry = true;
 
-    Completer done = new Completer();
-    // We are not done until the number of in progress requests goes back to 0.
-    int inProgress = 0;
+    processHtmlFile(SourceFile file) {
+      files.add(file);
 
-    notifyIfDone() {
-      assert(inProgress >= 0);
-      if (inProgress == 0) {
-        done.complete(null);
+      var fileInfo = time('Analyzed definitions ${file.filename}',
+          () => analyzeDefinitions(file, isEntryPoint: isEntry));
+      isEntry = false;
+      info[file.filename] = fileInfo;
+
+      // Load component files referenced by [file].
+      for (var href in fileInfo.componentLinks) {
+        tasks.add(_parseHtmlFile(href, baseDir).transform(processHtmlFile));
+      }
+
+      // Load .dart files being referenced in the page.
+      if (fileInfo.externalFile != null) {
+        tasks.add(_parseDartFile(fileInfo.externalFile, baseDir)
+          .transform(_addDartFile));
+      }
+
+      // Load .dart files being referenced in components.
+      for (var component in fileInfo.declaredComponents) {
+        var src = component.externalFile;
+        if (src != null) {
+          tasks.add(_parseDartFile(src, baseDir).transform(_addDartFile));
+        }
       }
     }
 
-    pending.addLast(inputFile);
-
-    parsePending() {
-      while (!pending.isEmpty()) {
-        var filename = pending.removeFirst();
-
-        // Parse the file.
-        if (info.containsKey(filename)) continue;
-
-        inProgress++;
-
-        _parseHtmlFile(filename, baseDir).then((file) {
-          files.add(file);
-
-          // Find additional components being loaded.
-          var fileInfo = time('Analyzed definitions ${file.filename}',
-              () => analyzeDefinitions(
-                  file, isEntryPoint: filename == inputFile));
-          info[file.filename] = fileInfo;
-          for (var href in fileInfo.componentLinks) {
-            pending.addLast(href);
-          }
-          // Load .dart files being referenced in the page and components.
-          if (fileInfo.externalFile != null) {
-            inProgress++;
-            _parseDartFile(fileInfo.externalFile, baseDir).then((dartFile) {
-              _addDartFile(dartFile);
-              inProgress--;
-              notifyIfDone();
-            });
-          }
-
-          for (var component in fileInfo.declaredComponents) {
-            var src = component.externalFile;
-            if (src != null) {
-              inProgress++;
-              _parseDartFile(src, baseDir).then((dartFile) {
-                _addDartFile(dartFile);
-                inProgress--;
-                notifyIfDone();
-              });
-            }
-          }
-          inProgress--;
-          parsePending();
-        });
-      }
-      notifyIfDone();
-    }
-
-    parsePending();
-    return done.future;
+    tasks.add(_parseHtmlFile(inputFile, baseDir).transform(processHtmlFile));
+    return tasks.future;
   }
 
   /** Asynchronously parse [filename]. */
@@ -157,7 +125,7 @@ class Compiler {
         ..code = source);
   }
 
-  Future _addDartFile(SourceFile dartFile) {
+  void _addDartFile(SourceFile dartFile) {
     var fileInfo = new FileInfo(dartFile.filename);
     info[dartFile.filename] = fileInfo;
     fileInfo.inlinedCode = dartFile.code;
