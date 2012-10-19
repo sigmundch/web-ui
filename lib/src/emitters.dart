@@ -13,9 +13,9 @@ import 'package:html5lib/dom_parsing.dart';
 
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;
-import 'info.dart';
+import 'messages.dart';
 import 'files.dart';
-import 'world.dart';
+import 'info.dart';
 
 /**
  * An emitter for a web component feature.  It collects all the logic for
@@ -612,7 +612,7 @@ class WebComponentEmitter extends RecursiveEmitter {
           .add(code.substring(match.end()));
       return printer.formatString();
     } else {
-      world.error('please provide a class definition '
+      messages.error('please provide a class definition '
           'for ${info.constructor}:\n $code', filename: info.inputFilename);
       return code;
     }

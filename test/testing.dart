@@ -8,18 +8,11 @@ library testing;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 import 'package:html5lib/parser.dart';
-import 'package:web_components/src/world.dart';
+import 'package:web_components/src/messages.dart';
+import 'package:web_components/src/options.dart';
 
-// TODO(jmesserly): we need tests for warnings from the analyzer.
-class MockWorld extends World {
-  MockWorld() : super(null);
-  warning(String message, {String filename, SourceSpan span}) {}
-  error(String message, {String filename, SourceSpan span}) {}
-}
-
-useMockWorld() {
-  // TODO(jmesserly): fix the warning system to not need this.
-  world = new MockWorld();
+useMockMessages() {
+  messages = new Messages(printHandler: (message) {});
 }
 
 Element parseSubtree(String html) => parseFragment(html).nodes[0];

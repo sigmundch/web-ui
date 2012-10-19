@@ -15,7 +15,7 @@ import 'testing.dart';
 
 main() {
   useVmConfiguration();
-  useMockWorld();
+  useMockMessages();
 
   test('parse single element', () {
     var input = '<div></div>';

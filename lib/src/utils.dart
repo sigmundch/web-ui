@@ -5,7 +5,7 @@
 library utils;
 
 import 'dart:coreimpl';
-import 'package:web_components/src/world.dart';
+import 'package:web_components/src/messages.dart';
 
 /**
  * Converts a string name with hyphens into an identifier, by removing hyphens
@@ -25,8 +25,8 @@ String toCamelCase(String hyphenedName) {
 
 /**
  * Invokes [callback], logs how long it took to execute in ms, and returns
- * whatever [callback] returns. The log message will be printed if either
- * [:options.showInfo:] or [printTime] are true.
+ * whatever [callback] returns. The log message will be printed if [printTime]
+ * is true.
  */
 time(String logMessage, callback(), {bool printTime: false}) {
   final watch = new Stopwatch();
@@ -34,17 +34,17 @@ time(String logMessage, callback(), {bool printTime: false}) {
   var result = callback();
   watch.stop();
   final duration = watch.elapsedInMs();
-  if (options.showInfo || printTime) {
+  if (printTime) {
     print('$logMessage in $GREEN_COLOR$duration ms$NO_COLOR');
   }
   return result;
 }
 
 /**
- *  Invokes [callback], logs how long it takes from the moment [callback] is
- *  executed until the future it returns is completed. Returns the future
- *  returned by [callback]. The log message will be printed if either
- *  [:options.showInfo:] or [printTime] are true.
+ * Invokes [callback], logs how long it takes from the moment [callback] is
+ * executed until the future it returns is completed. Returns the future
+ * returned by [callback]. The log message will be printed if [printTime]
+ * is true.
  */
 Future asyncTime(String logMessage, Future callback(),
                  {bool printTime: false}) {
@@ -53,7 +53,7 @@ Future asyncTime(String logMessage, Future callback(),
   return callback()..then((_) {
     watch.stop();
     final duration = watch.elapsedInMs();
-    if (options.showInfo || printTime) {
+    if (printTime) {
       print('$logMessage in $GREEN_COLOR$duration ms$NO_COLOR');
     }
   });

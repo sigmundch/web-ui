@@ -5,39 +5,29 @@
 /** The entry point to the compiler. Used to implement `bin/dwc.dart`. */
 library dwc;
 
-import 'package:args/args.dart';
-import 'src/cmd_options.dart';
 import 'src/file_system.dart';
 import 'src/file_system/console.dart';
 import 'src/compiler.dart';
+import 'src/messages.dart';
+import 'src/options.dart';
 import 'src/utils.dart';
-import 'src/world.dart';
-import 'src/dwc_shared.dart';
 import 'dart:io';
 
 FileSystem fileSystem;
 
+// TODO(jmesserly): fix this to return a proper exit code
 /** bin/dwc.dart [options...] <sourcefile fullpath> <outputfile fullpath> */
 Future run(List<String> args) {
-  var argParser = commandOptions();
-  ArgResults results = argParser.parse(args);
-  if (results['help'] || results.rest.length == 0) {
-    print('Usage: [options...] sourcefile [outputPath]\n');
-    print(argParser.getUsage());
-    print("   sourcefile - template file filename.html");
-    print("   outputPath - if specified directory to generate files; if not");
-    print("                same directory as sourcefile");
-    return new Future.immediate(null);
-  }
+  var options = CompilerOptions.parse(args);
+  if (options == null) return new Future.immediate(null);
 
   fileSystem = new ConsoleFileSystem();
-
-  initHtmlWorld(parseOptions(results, fileSystem));
+  messages = new Messages(options: options);
 
   // argument 0 - sourcefile full path
   // argument 1 - output path
-  String sourceFullFn = results.rest[0];
-  String outputFullDir = results.rest.length > 1 ? results.rest[1] : null;
+  String sourceFullFn = options.rest[0];
+  String outputFullDir = options.rest.length > 1 ? options.rest[1] : null;
 
   Path srcPath = new Path(sourceFullFn);
 
@@ -45,18 +35,18 @@ Future run(List<String> args) {
   Directory srcDir = srcDirPath.isEmpty
       ? new Directory.current() : new Directory.fromPath(srcDirPath);
   if (!srcDir.existsSync()) {
-    world.fatal("Input directory doesn't exist - ${srcDir.path}");
+    messages.error("Input directory doesn't exist - ${srcDir.path}");
     return new Future.immediate(null);
   }
 
   File fileSrc = new File.fromPath(srcPath);
   if (!fileSrc.existsSync()) {
-    world.fatal("Source file doesn't exist.", filename: fileSrc.name);
+    messages.error("Source file doesn't exist.", filename: fileSrc.name);
     return new Future.immediate(null);
   }
 
   if (!fileSrc.name.endsWith('.html')) {
-    world.fatal("Source file is not an html file.", filename: fileSrc.name);
+    messages.error("Source file is not an html file.", filename: fileSrc.name);
     return new Future.immediate(null);
   }
 
@@ -73,21 +63,21 @@ Future run(List<String> args) {
   }
 
   return asyncTime('Compiled $sourceFullFn', () {
-    var compiler = new Compiler(fileSystem);
+    var compiler = new Compiler(fileSystem, options);
     return compiler.run(srcPath.filename, srcDir.path).chain((_) {
       // Write out the code associated with each source file.
       print("Write files to ${outDirectory.path}:");
       for (var file in compiler.output) {
-        writeFile(file.filename, outDirectory, file.contents);
+        writeFile(file.filename, outDirectory, file.contents, options.clean);
       }
       return fileSystem.flush();
     });
   }, printTime: true);
 }
 
-void writeFile(String filename, Directory outdir, String contents) {
+void writeFile(String filename, Directory outdir, String contents, bool clean) {
   String path = "${outdir.path}/$filename";
-  if (options.clean) {
+  if (clean) {
     File fileOut = new File.fromPath(new Path(path));
     if (fileOut.existsSync()) {
       fileOut.deleteSync();

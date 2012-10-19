@@ -37,9 +37,7 @@ interface FileSystem {
  * Replaces all back slashes (\) with forward slashes (/) in [path] and
  * return the result.
  */
-String canonicalizePath(String path) {
-  return path.replaceAll('\\', '/');
-}
+String canonicalizePath(String path) => path.replaceAll('\\', '/');
 
 /** Join [path1] to [path2]. */
 String joinPaths(String path1, String path2) {

@@ -18,7 +18,7 @@ import 'testing.dart';
 
 main() {
   useVmConfiguration();
-  useMockWorld();
+  useMockMessages();
   group('emit element field', () {
     group('declaration', () {
       test('id only, no data binding', () {

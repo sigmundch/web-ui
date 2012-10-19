@@ -10,19 +10,16 @@
 library dwc_browser;
 
 import 'dart:html';
-import 'package:args/args.dart';
-import 'package:web_components/src/dwc_shared.dart';
-import 'package:web_components/src/cmd_options.dart';
 import 'package:web_components/src/compiler.dart';
 import 'package:web_components/src/file_system.dart';
 import 'package:web_components/src/file_system/browser.dart';
 import 'package:web_components/src/file_system/path.dart';
+import 'package:web_components/src/messages.dart';
+import 'package:web_components/src/options.dart';
 import 'package:web_components/src/utils.dart';
-import 'package:web_components/src/world.dart';
 import 'package:js/js.dart' as js;
 
 FileSystem fileSystem;
-
 
 void main() {
   js.scoped(() {
@@ -41,12 +38,9 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
   js.retain(sourcePagePort);
   print("Processing: $sourceFullFn");
   // TODO(jacobr): provide a way to pass in options.
-  var argParser = commandOptions();
-  ArgResults results = argParser.parse([]);
-
   fileSystem = new BrowserFileSystem(sourcePagePort);
-
-  initHtmlWorld(parseOptions(results, fileSystem));
+  var options = new CompilerOptions();
+  messages = new Messages(options: options);
 
   Path srcPath = new Path(sourceFullFn);
   Path outputFullDir = srcPath.directoryPath;
@@ -56,12 +50,13 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
   String sourceFilename = srcPath.filename;
 
   asyncTime('Compiled $sourceFullFn', () {
-    var compiler = new Compiler(fileSystem);
+    var compiler = new Compiler(fileSystem, options);
     return compiler.run(srcPath.filename, srcDir.toString()).chain((_) {
       // Write out the code associated with each source file.
       print("Writing files:");
       for (var file in compiler.output) {
-        fileSystem.writeString("$outputFullDir/$file.filename", file.contents);
+        fileSystem.writeString(
+            "$outputFullDir/${file.filename}", file.contents);
       }
       var ret = fileSystem.flush();
       js.release(sourcePagePort);

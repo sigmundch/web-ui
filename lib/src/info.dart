@@ -10,9 +10,9 @@ library info;
 
 import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
+import 'messages.dart';
 import 'files.dart';
 import 'utils.dart';
-import 'world.dart';
 
 /**
  * Information for any library-like input. We consider each HTML file a library,

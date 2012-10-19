@@ -12,10 +12,10 @@ import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 
-import 'info.dart';
+import 'messages.dart';
 import 'files.dart';
+import 'info.dart';
 import 'utils.dart';
-import 'world.dart';
 
 
 /**
@@ -114,8 +114,8 @@ class _Analyzer extends TreeVisitor {
     if (component.extendsTag == null) {
       // TODO(jmesserly): is web components spec going to have a default
       // extends?
-      world.error('Missing the "extends" tag of the component. Please include '
-          'an attribute like \'extends="div"\'.',
+      messages.error('Missing the "extends" tag of the component. Please '
+          'include an attribute like \'extends="div"\'.',
           filename: _fileInfo.filename, span: component.element.span);
       return;
     }
@@ -124,7 +124,7 @@ class _Analyzer extends TreeVisitor {
     if (component.extendsComponent == null &&
         component.extendsTag.startsWith('x-')) {
 
-      world.warning(
+      messages.warning(
           'custom element with tag name ${component.extendsTag} not found.',
           filename: _fileInfo.filename, span: component.element.span);
     }
@@ -141,7 +141,7 @@ class _Analyzer extends TreeVisitor {
       if (isAttr != null) {
         component = _fileInfo.components[isAttr];
         if (component == null) {
-          world.warning('custom element with tag name $isAttr not found.',
+          messages.warning('custom element with tag name $isAttr not found.',
               filename: _fileInfo.filename, span: node.span);
         }
       }
@@ -162,7 +162,7 @@ class _Analyzer extends TreeVisitor {
     // Dart is to be forgiving.
     if (instantiate != null && iterate != null) {
       // TODO(jmesserly): get the node's span here
-      world.warning('<template> element cannot have iterate and instantiate '
+      messages.warning('<template> element cannot have iterate and instantiate '
           'attributes', filename: _fileInfo.filename);
       return null;
     }
@@ -176,7 +176,7 @@ class _Analyzer extends TreeVisitor {
       // as it exists in MDV. Right now we ignore it, but we provide support for
       // data binding everywhere.
       if (instantiate != '') {
-        world.warning('<template instantiate> either have  '
+        messages.warning('<template instantiate> either have  '
           ' form <template instantiate="if condition" where "condition" is a'
           ' binding that determines if the contents of the template will be'
           ' inserted and displayed.', filename: _fileInfo.filename);
@@ -186,7 +186,7 @@ class _Analyzer extends TreeVisitor {
       if (match != null) {
         return new TemplateInfo(loopVariable: match[1], loopItems: match[2]);
       }
-      world.warning('<template> iterate must be of the form: '
+      messages.warning('<template> iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name'
           ' and "list" is the list of items.',
           filename: _fileInfo.filename);
@@ -225,7 +225,7 @@ class _Analyzer extends TreeVisitor {
       Element elem, ElementInfo elemInfo, String value) {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
-      world.error('data-value attribute should be of the form '
+      messages.error('data-value attribute should be of the form '
           'data-value="name:value"', filename: _fileInfo.filename);
       return;
     }
@@ -246,7 +246,7 @@ class _Analyzer extends TreeVisitor {
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
-      world.error('data-action attribute should be of the form '
+      messages.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
           '"eventName1:action1,eventName2:action2,..." for multiple events.',
           filename: _fileInfo.filename);
@@ -269,7 +269,7 @@ class _Analyzer extends TreeVisitor {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       // TODO(jmesserly): get the node's span here
-      world.error('data-bind attribute should be of the form '
+      messages.error('data-bind attribute should be of the form '
           'data-bind="name:value"', filename: _fileInfo.filename);
       return null;
     }
@@ -288,7 +288,7 @@ class _Analyzer extends TreeVisitor {
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
     } else {
-      world.error('Unknown data-bind attribute: ${elem.tagName} - ${name}',
+      messages.error('Unknown data-bind attribute: ${elem.tagName} - ${name}',
           filename: _fileInfo.filename);
       return null;
     }
@@ -366,14 +366,14 @@ class _ElementLoader extends TreeVisitor {
     if (node.attributes['rel'] != 'components') return;
 
     if (!_inHead) {
-      world.warning('link rel="components" only valid in '
+      messages.warning('link rel="components" only valid in '
           'head:\n  ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
-      world.warning('link rel="components" missing href:'
+      messages.warning('link rel="components" missing href:'
           '\n  ${node.outerHTML}', filename: _fileInfo.filename);
       return;
     }
@@ -386,28 +386,28 @@ class _ElementLoader extends TreeVisitor {
     // inside a Shadow DOM should be scoped to that <template> tag, and not
     // visible from the outside.
     if (_currentInfo is ComponentInfo) {
-      world.error('Nested component definitions are not yet supported.',
+      messages.error('Nested component definitions are not yet supported.',
           filename: _fileInfo.filename, span: node.span);
       return;
     }
 
     var component = new ComponentInfo(node, _fileInfo);
     if (component.constructor == null) {
-      world.error('Missing the class name associated with this component. '
+      messages.error('Missing the class name associated with this component. '
           'Please add an attribute of the form  \'constructor="ClassName"\'.',
           filename: _fileInfo.filename, span: node.span);
       return;
     }
 
     if (component.tagName == null) {
-      world.error('Missing tag name of the component. Please include an '
+      messages.error('Missing tag name of the component. Please include an '
           'attribute like \'name="x-your-tag-name"\'.',
           filename: _fileInfo.filename, span: node.span);
       return;
     }
 
     if (component.template == null) {
-      world.warning('an <element> should have exactly one '
+      messages.warning('an <element> should have exactly one '
           '<template> child:\n  ${node.outerHTML}', filename:
           _fileInfo.filename);
     }
@@ -428,7 +428,7 @@ class _ElementLoader extends TreeVisitor {
       // text/javascript. Because this might be a common error, we warn about it
       // and force explicit type="text/javascript".
       // TODO(jmesserly): is this a good warning?
-      world.warning('ignored script tag, possibly missing '
+      messages.warning('ignored script tag, possibly missing '
           'type="application/dart" or type="text/javascript":'
           '\n  ${node.outerHTML}', filename: _fileInfo.filename);
     }
@@ -438,14 +438,14 @@ class _ElementLoader extends TreeVisitor {
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
-        world.warning('"application/dart" scripts should'
+        messages.warning('"application/dart" scripts should'
             'use the .dart file extension:\n ${node.outerHTML}', filename:
             _fileInfo.filename);
       }
 
       if (node.innerHTML.trim() != '') {
-        world.error('script tag has "src" attribute and also has script text:\n'
-            ' ${node.outerHTML}', filename: _fileInfo.filename);
+        messages.error('script tag has "src" attribute and also has script '
+            ' text.', filename: _fileInfo.filename, span: node.span);
       }
 
       if (_currentInfo.codeAttached) {
@@ -466,7 +466,7 @@ class _ElementLoader extends TreeVisitor {
     if (_currentInfo.codeAttached) {
       _tooManyScriptsError(node);
     } else if (_currentInfo == _fileInfo && !_fileInfo.isEntryPoint) {
-      world.warning('top-level dart code is ignored on '
+      messages.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML file:'
           '\n ${node.outerHTML}', filename: _fileInfo.filename);
     } else {
@@ -477,7 +477,7 @@ class _ElementLoader extends TreeVisitor {
   void _tooManyScriptsError(Node node) {
     var location = _component == null ? 'the top-level HTML page'
         : 'a custom element declaration';
-    world.error('there should be only one dart script tag in $location:\n '
+    messages.error('there should be only one dart script tag in $location:\n '
         ' ${node.outerHTML}', filename: _fileInfo.filename);
   }
 }
@@ -520,7 +520,7 @@ void _attachExtenalScript(LibraryInfo info, Map<String, FileInfo> files) {
     if (info.externalCode == null) {
       info.externalCode = file;
     } else if (!identical(component.externalCode, file)) {
-      world.error('unexpected error - two definitions for $filename.',
+      messages.error('unexpected error - two definitions for $filename.',
           filename: info.filename);
     }
   }
@@ -545,12 +545,12 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
     existing.hasConflict = true;
 
     if (identical(componentInfo.declaringFile, fileInfo)) {
-      world.error('duplicate custom element definition '
+      messages.error('duplicate custom element definition '
           'for "${componentInfo.tagName}":\n  ${existing.element.outerHTML}\n'
           'and:\n  ${componentInfo.element.outerHTML}', filename:
           fileInfo.filename);
     } else {
-      world.error(
+      messages.error(
           'imported duplicate custom element definitions '
           'for "${componentInfo.tagName}"'
           'from "${existing.declaringFile.filename}":\n'
