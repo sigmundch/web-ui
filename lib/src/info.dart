@@ -116,7 +116,20 @@ class ComponentInfo extends LibraryInfo {
   /** The component tag name, defined with the `name` attribute on `element`. */
   final String tagName;
 
-  /** The dart class containing the component's behavior. */
+  /**
+   * The tag name that this component extends, defined with the `extends`
+   * attribute on `element`.
+   */
+  final String extendsTag;
+
+  /**
+   * The component info associated with the [extendsTag] name, if any.
+   * This will be `null` if the component extends a built-in HTML tag, or
+   * if the analyzer has not run yet.
+   */
+  ComponentInfo extendsComponent;
+
+  /** The Dart class containing the component's behavior. */
   final String constructor;
 
   /** The declaring `<element>` tag. */
@@ -149,8 +162,17 @@ class ComponentInfo extends LibraryInfo {
    */
   bool hasConflict = false;
 
-  ComponentInfo(this.element, this.template, this.tagName, this.constructor,
-      [this.declaringFile]);
+  ComponentInfo(Element element, [this.declaringFile])
+    : element = element,
+      tagName = element.attributes['name'],
+      extendsTag = element.attributes['extends'],
+      constructor = element.attributes['constructor'],
+      template = _getTemplate(element);
+
+  static _getTemplate(element) {
+    List template = element.nodes.filter((n) => n.tagName == 'template');
+    return template.length == 1 ? template[0] : null;
+  }
 }
 
 /** Information extracted for each node in a template. */

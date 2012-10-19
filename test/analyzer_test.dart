@@ -274,7 +274,6 @@ main() {
     expect(info[elem].values, equals({'todo': 'x'}));
   });
 
-
   group('analyzeDefinitions', () {
     test('links', () {
       var info = analyzeDefinitionsInTree(parse(
@@ -484,6 +483,22 @@ main() {
       var srcFile = new SourceFile('main.html')..document = doc;
       var info = analyzeDefinitions(srcFile);
       analyzeFile(srcFile, { 'main.html': info });
+    });
+
+    test('components extends another component', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><element name="x-bar" extends="x-foo" '
+                                     'constructor="Bar">',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+
+      var info = fileInfo['index.html'];
+      expect(info.components.getKeys(), equals(['x-bar', 'x-foo']));
+      expect(info.components['x-bar'].extendsComponent,
+          equals(info.components['x-foo']));
     });
   });
 }

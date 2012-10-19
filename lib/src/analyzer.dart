@@ -84,12 +84,15 @@ class _Analyzer extends TreeVisitor {
 
     var lastInfo = _currentInfo;
     if (node.tagName == 'element') {
-      // If element is invalid _ElementLoader already reported an error, but 
+      // If element is invalid _ElementLoader already reported an error, but
       // we skip the body of the element here.
       var name = node.attributes['name'];
       if (name == null) return;
       var component = _fileInfo.components[name];
       if (component == null) return;
+
+      _bindExtends(component);
+
       _currentInfo = component;
     }
     super.visitElement(node);
@@ -107,6 +110,26 @@ class _Analyzer extends TreeVisitor {
     }
   }
 
+  void _bindExtends(ComponentInfo component) {
+    if (component.extendsTag == null) {
+      // TODO(jmesserly): is web components spec going to have a default
+      // extends?
+      world.error('Missing the "extends" tag of the component. Please include '
+          'an attribute like \'extends="div"\'.',
+          filename: _fileInfo.filename, span: component.element.span);
+      return;
+    }
+
+    component.extendsComponent = _fileInfo.components[component.extendsTag];
+    if (component.extendsComponent == null &&
+        component.extendsTag.startsWith('x-')) {
+
+      world.warning(
+          'custom element with tag name ${component.extendsTag} not found.',
+          filename: _fileInfo.filename, span: component.element.span);
+    }
+  }
+
   void _bindCustomElement(Element node, ElementInfo info) {
     // <x-fancy-button>
     var component = _fileInfo.components[node.tagName];
@@ -119,7 +142,7 @@ class _Analyzer extends TreeVisitor {
         component = _fileInfo.components[isAttr];
         if (component == null) {
           world.warning('custom element with tag name $isAttr not found.',
-              filename: _fileInfo.filename);
+              filename: _fileInfo.filename, span: node.span);
         }
       }
     }
@@ -363,38 +386,32 @@ class _ElementLoader extends TreeVisitor {
     // inside a Shadow DOM should be scoped to that <template> tag, and not
     // visible from the outside.
     if (_currentInfo is ComponentInfo) {
-      world.error('Nested component definitions are not yet supported:\n '
-          ' ${node.outerHTML}', filename: _fileInfo.filename);
+      world.error('Nested component definitions are not yet supported.',
+          filename: _fileInfo.filename, span: node.span);
       return;
     }
 
-    var ctor = node.attributes["constructor"];
-    if (ctor == null) {
+    var component = new ComponentInfo(node, _fileInfo);
+    if (component.constructor == null) {
       world.error('Missing the class name associated with this component. '
-          'Please add an attribute of the form  \'constructor="ClassName"\':\n'
-          ' ${node.outerHTML}', filename: _fileInfo.filename);
+          'Please add an attribute of the form  \'constructor="ClassName"\'.',
+          filename: _fileInfo.filename, span: node.span);
       return;
     }
 
-    var tagName = node.attributes["name"];
-    if (tagName == null) {
-      world.error('Missing tag name of the Web Component. Please include an '
-          'attribute like \'name="x-your-tag-name"\':\n  ${node.outerHTML}',
-          filename: _fileInfo.filename);
+    if (component.tagName == null) {
+      world.error('Missing tag name of the component. Please include an '
+          'attribute like \'name="x-your-tag-name"\'.',
+          filename: _fileInfo.filename, span: node.span);
       return;
     }
 
-    Element template = null;
-    List templates = node.nodes.filter((n) => n.tagName == 'template');
-    if (templates.length != 1) {
+    if (component.template == null) {
       world.warning('an <element> should have exactly one '
           '<template> child:\n  ${node.outerHTML}', filename:
           _fileInfo.filename);
-    } else {
-      template = templates[0];
     }
 
-    var component = new ComponentInfo(node, template, tagName, ctor, _fileInfo); 
     _fileInfo.declaredComponents.add(component);
 
     var lastInfo = _currentInfo;

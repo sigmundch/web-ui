@@ -1,0 +1,28 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x224
+  RenderBlock {HTML} at (0,0) size 800x224
+    RenderBody {BODY} at (8,16) size 784x192
+      RenderBlock {DIV} at (0,0) size 784x192
+        RenderBlock {P} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 315x19
+            text run at (0,0) width 315: "Here are the lifecycle methods that have been called:"
+        RenderBlock {PRE} at (0,36) size 784x48
+          RenderText {#text} at (0,0) size 104x48
+            text run at (0,0) width 0: " "
+            text run at (0,16) width 96: "Base.created"
+            text run at (96,16) width 0: " "
+            text run at (0,32) width 104: "Base.inserted"
+        RenderBlock {P} at (0,100) size 784x20
+          RenderText {#text} at (0,0) size 269x19
+            text run at (0,0) width 269: "You should see Base created, Base inserted."
+        RenderBlock {P} at (0,136) size 784x20
+          RenderText {#text} at (0,0) size 228x19
+            text run at (0,0) width 228: "Also, here is a message from Derived:"
+        RenderBlock {P} at (0,172) size 784x20
+          RenderText {#text} at (0,0) size 292x19
+            text run at (0,0) width 292: "Hello, I am a Derived element with no script tag!"
+#EOF

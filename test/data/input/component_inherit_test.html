@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <!-- use ../input/ so that the url also works from the output directory -->
+  <script type="application/javascript" src="../input/testing.js"></script>
+</head>
+<body>
+  <element name="x-base" extends="div" constructor="Base">
+    <template>
+      <div>Here are the lifecycle methods that have been called:</div>
+      <pre>{{status}}</pre>
+      <div>You should see Base created, Derived created,
+           Base inserted, Derived inserted</div>
+    </template>
+    <script type="application/dart">
+      import 'package:web_components/web_component.dart';
+      class Base extends WebComponent {
+        String status = '';
+        created() {
+          status = '${status}\nBase.created';
+        }
+        inserted() {
+          status = '${status}\nBase.inserted';
+        }
+      }
+    </script>
+  </element>
+  <element name="x-derived" extends="x-base" constructor="Derived">
+    <template><shadow></shadow></template>
+    <script type="application/dart">
+      import 'package:web_components/web_components.dart';
+
+      // TODO(jmesserly): this is very weird
+      import '_component_inherit_test.html.x_base.dart';
+
+      class Derived extends Base {
+        created() {
+          super.created();
+          status = '${status}\nDerived.created';
+        }
+        inserted() {
+          super.inserted();
+          status = '${status}\nDerived.inserted';
+        }
+      }
+    </script>
+  </element>
+  <div is="x-derived"></div>
+  <script type="application/dart">
+    import '../input/common.dart';
+    import 'dart:html';
+    main() {
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    }
+  </script>
+</body>
+</html>
