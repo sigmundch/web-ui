@@ -61,15 +61,11 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
       // Write out the code associated with each source file.
       print("Writing files:");
       for (var file in compiler.output) {
-        writeFile(file.filename, outputFullDir, file.contents);
+        fileSystem.writeString("$outputFullDir/$file.filename", file.contents);
       }
       var ret = fileSystem.flush();
       js.release(sourcePagePort);
       return ret;
     });
   }, printTime: true);
-}
-
-void writeFile(String filename, Path outdir, String contents) {
-  fileSystem.writeString("${outdir}/$filename", contents);
 }

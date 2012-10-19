@@ -25,8 +25,13 @@ import 'package:html5lib/src/constants.dart' as html5_constants;
 import 'package:html5lib/src/utils.dart' as html5_utils;
 
 
-Document parseHtml(String template, String sourcePath) {
-  var parser = new HtmlParser(template, generateSpans: true);
+/**
+ * Parses an HTML file [contents] and returns a DOM-like tree.
+ * Note that [contents] will be a [String] if coming from a browser-based
+ * [FileSystem], or it will be a [List<int>] if running on the command line.
+ */
+Document parseHtml(contents, String sourcePath) {
+  var parser = new HtmlParser(contents, generateSpans: true);
   var document = parser.parse();
 
   // Note: errors aren't fatal in HTML (unless strict mode is on).
@@ -105,7 +110,7 @@ class Compiler {
 
   /** Asynchronously parse [filename]. */
   Future<SourceFile> _parseHtmlFile(String filename, String baseDir) {
-    return filesystem.readAll("$baseDir/$filename").transform((source) {
+    return filesystem.readTextOrBytes("$baseDir/$filename").transform((source) {
       var file = new SourceFile(filename);
       file.document = time("Parsed $filename",
           () => parseHtml(source, filename));
@@ -120,9 +125,8 @@ class Compiler {
 
   /** Parse [filename] and treat it as a .dart file. */
   Future<SourceFile> _parseDartFile(String filename, String baseDir) {
-    return filesystem.readAll("$baseDir/$filename").transform((source) =>
-      new SourceFile(filename, isDart: true)
-        ..code = source);
+    return filesystem.readText("$baseDir/$filename").transform(
+        (source) => new SourceFile(filename, isDart: true)..code = source);
   }
 
   void _addDartFile(SourceFile dartFile) {

@@ -46,7 +46,11 @@ class BrowserFileSystem implements FileSystem {
     _filesToProxy[path] = text;
   }
 
-  Future<String> readAll(String filename) {
+  // TODO(jmesserly): read bytes on browsers that support XHR v2
+  // Or restructure the code to use the browser's builtin HTML parser :)
+  Future readTextOrBytes(String filename) => readText(filename);
+
+  Future<String> readText(String filename) {
     var completer = new Completer<String>();
     assert(filename.indexOf("?") == -1);
     // We must add a random id or a timestamp to defeat proxy servers and Chrome
@@ -56,13 +60,5 @@ class BrowserFileSystem implements FileSystem {
       completer.complete(request.responseText);
     });
     return completer.future;
-  }
-
-  void createDirectory(String path, [bool recursive = false]) {
-    // No need to actually create directories on the web.
-  }
-
-  void removeDirectory(String path, [bool recursive = false]) {
-    throw 'removeDirectory() is not implemented by BrowserFileSystem yet.';
   }
 }

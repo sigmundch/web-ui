@@ -8,8 +8,7 @@ library dwc;
 import 'package:args/args.dart';
 import 'src/cmd_options.dart';
 import 'src/file_system.dart';
-import 'src/file_system/vm.dart';
-import 'src/file_system/memory.dart';
+import 'src/file_system/console.dart';
 import 'src/compiler.dart';
 import 'src/utils.dart';
 import 'src/world.dart';
@@ -31,7 +30,7 @@ Future run(List<String> args) {
     return new Future.immediate(null);
   }
 
-  fileSystem = new VMFileSystem();
+  fileSystem = new ConsoleFileSystem();
 
   initHtmlWorld(parseOptions(results, fileSystem));
 
@@ -73,19 +72,17 @@ Future run(List<String> args) {
     outDirectory.createSync();
   }
 
-  return fileSystem.readAll(sourceFullFn).chain((source) {
-    return asyncTime('Compiled $sourceFullFn', () {
-      var compiler = new Compiler(fileSystem);
-      return compiler.run(srcPath.filename, srcDir.path).chain((_) {
-        // Write out the code associated with each source file.
-        print("Write files to ${outDirectory.path}:");
-        for (var file in compiler.output) {
-          writeFile(file.filename, outDirectory, file.contents);
-        }
-        return fileSystem.flush();
-      });
-    }, printTime: true);
-  });
+  return asyncTime('Compiled $sourceFullFn', () {
+    var compiler = new Compiler(fileSystem);
+    return compiler.run(srcPath.filename, srcDir.path).chain((_) {
+      // Write out the code associated with each source file.
+      print("Write files to ${outDirectory.path}:");
+      for (var file in compiler.output) {
+        writeFile(file.filename, outDirectory, file.contents);
+      }
+      return fileSystem.flush();
+    });
+  }, printTime: true);
 }
 
 void writeFile(String filename, Directory outdir, String contents) {
