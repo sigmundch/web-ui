@@ -35,18 +35,20 @@ Future run(List<String> args) {
   Directory srcDir = srcDirPath.isEmpty
       ? new Directory.current() : new Directory.fromPath(srcDirPath);
   if (!srcDir.existsSync()) {
-    messages.error("Input directory doesn't exist - ${srcDir.path}");
+    messages.error("Input directory doesn't exist", null,
+        filename: srcDir.path);
     return new Future.immediate(null);
   }
 
   File fileSrc = new File.fromPath(srcPath);
   if (!fileSrc.existsSync()) {
-    messages.error("Source file doesn't exist.", filename: fileSrc.name);
+    messages.error("Source file doesn't exist.", null, filename: fileSrc.name);
     return new Future.immediate(null);
   }
 
   if (!fileSrc.name.endsWith('.html')) {
-    messages.error("Source file is not an html file.", filename: fileSrc.name);
+    messages.error("Source file is not an html file.", null,
+        filename: fileSrc.name);
     return new Future.immediate(null);
   }
 

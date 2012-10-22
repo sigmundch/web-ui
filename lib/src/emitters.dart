@@ -607,7 +607,8 @@ class WebComponentEmitter extends RecursiveEmitter {
       return printer.formatString();
     } else {
       messages.error('please provide a class definition '
-          'for ${info.constructor}:\n $code', filename: info.inputFilename);
+          'for ${info.constructor}:\n $code', info.element.span,
+          filename: info.inputFilename);
       return code;
     }
   }

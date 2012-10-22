@@ -72,7 +72,7 @@ class Messages {
       : options = options != null ? options : new CompilerOptions();
 
   /** [message] is considered a static compile-time error by the Dart lang. */
-  void error(String message, {String filename, SourceSpan span}) {
+  void error(String message, SourceSpan span, {String filename}) {
     var msg = new Message(Level.SEVERE, message, filename: filename, span: span,
         useColors: options.useColors);
 
@@ -82,9 +82,9 @@ class Messages {
   }
 
   /** [message] is considered a type warning by the Dart lang. */
-  void warning(String message, {String filename, SourceSpan span}) {
+  void warning(String message, SourceSpan span, {String filename}) {
     if (options.warningsAsErrors) {
-      error(message, filename: filename, span: span);
+      error(message, span, filename: filename);
     } else {
       var msg = new Message(Level.WARNING, message, filename: filename,
         span: span, useColors: options.useColors);
@@ -97,7 +97,7 @@ class Messages {
    * [message] at [filename] will tell the user about what the compiler
    * is doing.
    */
-  void info(String message, {String filename, SourceSpan span}) {
+  void info(String message, {SourceSpan span, String filename}) {
     var msg = new Message(Level.INFO, message, filename: filename, span: span,
         useColors: options.useColors);
 
