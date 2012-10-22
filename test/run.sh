@@ -46,6 +46,15 @@ function compare {
   diff -q -s $1 $2 || show_diff $1 $2 || update $1 $2
 }
 
+if [[ ($TEST_PATTERN == "") ]]; then
+  # Note: dart_analyzer needs to be run from the root directory for proper path
+  # canonicalization.
+  pushd $DIR/..
+  echo Analyzing compiler for warnings or type errors
+  dart_analyzer --fatal-warnings --fatal-type-errors bin/dwc.dart
+  popd
+fi
+
 # First clear the output folder. Otherwise we can miss bugs when we fail to
 # generate a file.
 if [[ -d $DIR/data/output ]]; then
@@ -77,7 +86,7 @@ if [[ ($TEST_PATTERN == "") ]]; then
   # Run Dart analyzer to check that we're generating warning clean code.
   # TODO(sigmund): allow running the analyzer on the code associated with the
   # pattern
-  echo Running analyzer ...
+  echo Analyzing generated code for warnings or type errors
   dart_analyzer --fatal-warnings --fatal-type-errors $DIR/data/output/*
 fi
 

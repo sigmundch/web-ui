@@ -475,8 +475,9 @@ class _ElementLoader extends TreeVisitor {
   }
 
   void _tooManyScriptsError(Node node) {
-    var location = _component == null ? 'the top-level HTML page'
-        : 'a custom element declaration';
+    var location = _currentInfo is ComponentInfo ?
+        'a custom element declaration' : 'the top-level HTML page';
+
     messages.error('there should be only one dart script tag in $location:\n '
         ' ${node.outerHTML}', filename: _fileInfo.filename);
   }
@@ -519,9 +520,9 @@ void _attachExtenalScript(LibraryInfo info, Map<String, FileInfo> files) {
     var file = files[filename];
     if (info.externalCode == null) {
       info.externalCode = file;
-    } else if (!identical(component.externalCode, file)) {
+    } else if (info.externalCode != file) {
       messages.error('unexpected error - two definitions for $filename.',
-          filename: info.filename);
+          filename: info.inputFilename);
     }
   }
 }
@@ -530,8 +531,8 @@ void _attachExtenalScript(LibraryInfo info, Map<String, FileInfo> files) {
 void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
   var existing = fileInfo.components[componentInfo.tagName];
   if (existing != null) {
-    if (identical(existing.declaringFile, fileInfo) &&
-        !identical(componentInfo.declaringFile, fileInfo)) {
+    if (existing.declaringFile == fileInfo &&
+        componentInfo.declaringFile != fileInfo) {
       // Components declared in [fileInfo] are allowed to shadow component
       // names declared in imported files.
       return;

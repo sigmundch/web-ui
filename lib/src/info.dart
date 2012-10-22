@@ -22,7 +22,7 @@ import 'utils.dart';
  * component-level behavior code. This code can either be inlined in the HTML
  * file or included in a `<script src='url'>` tag.
  */
-class LibraryInfo {
+abstract class LibraryInfo {
 
   /** Whether there is any code associated with the page/component. */
   bool get codeAttached => inlinedCode != null || externalFile != null;
@@ -78,7 +78,7 @@ class FileInfo extends LibraryInfo {
 
   /** File where the top-level code was defined. */
   String get inputFilename =>
-      externalFile != null ? externalFile : file.filename;
+      externalFile != null ? externalFile : filename;
 
   /** Name of the file that will hold any generated Dart code. */
   String get outputFilename =>

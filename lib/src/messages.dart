@@ -19,7 +19,7 @@ Messages messages;
 final Map<Level, String> _ERROR_COLORS = (() {
   // TODO(jmesserly): the SourceSpan printer does not use our colors.
   var colorsMap = new Map<Level, String>();
-  colorsMap[Level.ERROR] = RED_COLOR;
+  colorsMap[Level.SEVERE] = RED_COLOR;
   colorsMap[Level.WARNING] = MAGENTA_COLOR;
   colorsMap[Level.INFO] = GREEN_COLOR;
   return colorsMap;
