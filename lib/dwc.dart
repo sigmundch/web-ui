@@ -15,6 +15,10 @@ import 'dart:io';
 
 FileSystem fileSystem;
 
+void main() {
+  run(new Options().arguments);
+}
+
 // TODO(jmesserly): fix this to return a proper exit code
 /** bin/dwc.dart [options...] <sourcefile fullpath> <outputfile fullpath> */
 Future run(List<String> args) {
