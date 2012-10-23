@@ -24,32 +24,32 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:web_components/dwc.dart' as dwc;
 
-bool _cleanBuild;
-bool _fullBuild;
-List<String> _changedFiles;
-List<String> _removedFiles;
-List<String> _entryPoints = [];
-List<Directory> _trackDirs = [];
-
 /**
  * Set up 'build.dart' to compile with the dart web components compiler every
  * [entryPoints] listed. On clean commands, the directory where [entryPoints]
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-void build(List<String> args, List<String> entryPoints) {
-  _processArgs(args);
-  _entryPoints.addAll(entryPoints);
+void build(List<String> arguments, List<String> entryPoints) {
+  var args = _processArgs(arguments);
+
+  var trackDirs = <Directory>[];
+  var changedFiles = args["changed"];
+  var removedFiles = args["removed"];
+  var cleanBuild = args["clean"];
+  var fullBuild = changedFiles.isEmpty() && removedFiles.isEmpty()
+      && !cleanBuild;
+
   for (var file in entryPoints) {
     var dir = new Path(file).directoryPath.toString();
-    _trackDirs.add((dir != '') ? new Directory(dir) : new Directory.current());
+    trackDirs.add((dir != '') ? new Directory(dir) : new Directory.current());
   }
 
-  if (_cleanBuild) {
-    _handleCleanCommand();
-  } else if (_fullBuild || _changedFiles.some(_isInputFile)
-      || _removedFiles.some(_isInputFile)) {
-    for (var file in _entryPoints) {
+  if (cleanBuild) {
+    _handleCleanCommand(trackDirs);
+  } else if (fullBuild || changedFiles.some(_isInputFile)
+      || removedFiles.some(_isInputFile)) {
+    for (var file in entryPoints) {
       dwc.run([file]);
     }
   }
@@ -65,8 +65,8 @@ bool _isInputFile(String path) {
 }
 
 /** Delete all generated files. */
-void _handleCleanCommand() {
-  for (var dir in _trackDirs) {
+void _handleCleanCommand(List<Directory> trackDirs) {
+  for (var dir in trackDirs) {
     dir.list(recursive: false).onFile = (path) {
       if (_isGeneratedFile(path)) {
         // TODO(jmesserly): we need a cleaner way to do this with dart:io.
@@ -80,7 +80,7 @@ void _handleCleanCommand() {
 }
 
 /** Handle --changed, --removed, --clean and --help command-line args. */
-void _processArgs(List<String> arguments) {
+ArgResults _processArgs(List<String> arguments) {
   var parser = new ArgParser()
     ..addOption("changed", help: "the file has changed since the last build",
         allowMultiple: true)
@@ -93,10 +93,5 @@ void _processArgs(List<String> arguments) {
     print(parser.getUsage());
     exit(0);
   }
-
-  _changedFiles = args["changed"];
-  _removedFiles = args["removed"];
-  _cleanBuild = args["clean"];
-  _fullBuild = _changedFiles.isEmpty() && _removedFiles.isEmpty()
-      && !_cleanBuild;
+  return args;
 }
