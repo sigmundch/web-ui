@@ -8,7 +8,11 @@
  */
 // TODO(jacobr): remove when there is a subset of dart:io that runs client and
 // server. dartbug.com/5818
+// TODO(sigmund): make sure the improvements here are in dart:io before we
+// get rid of this file.
 library path;
+
+import 'dart:math' as math;
 
 /**
  * A Path, which is a String interpreted as a sequence of path segments,
@@ -17,7 +21,7 @@ library path;
  * useful path manipulations and queries.  Joining of paths and normalization
  * interpret '.' and '..' in the usual way.
  */
-abstract class Path {
+abstract class Path extends Comparable {
   /**
    * Creates a Path from the String [source].  [source] is used as-is, so if
    * the string does not consist of segments separated by forward slashes, the
@@ -205,7 +209,10 @@ class _Path implements Path {
     //    base.join(relative) == this.canonicalize.
     // Throws an exception if no such path exists, or the case is not
     // implemented yet.
-    if (base.isAbsolute && _path.startsWith(base._path)) {
+    if (_path.startsWith(base._path)) {
+      // For instance:
+      // 'a/b/c/d' relative to 'a/b/' returns 'c/d/'
+      if (base._path == '') return this;
       if (_path == base._path) return new Path('.');
       if (base.hasTrailingSeparator) {
         return new Path(_path.substring(base._path.length));
@@ -213,10 +220,28 @@ class _Path implements Path {
       if (_path[base._path.length] == '/') {
         return new Path(_path.substring(base._path.length + 1));
       }
+    } else if ((!isAbsolute && !base.isAbsolute)
+        || (isAbsolute && base.isAbsolute)) {
+      // For instance:
+      // 'a/b/c/d' relative to 'a/b/e/f' returns '../../e/f'
+      var baseSegments = base.segments();
+      var pathSegments = segments();
+      var min = math.min(baseSegments.length, pathSegments.length);
+      int common = 0;
+      for (; common < min; common++) {
+        if (baseSegments[common] != pathSegments[common]) break;
+      }
+      var result = new Path('');
+      for (int i = common; i < baseSegments.length; i++) {
+        result = result.append('..');
+      }
+      for (int i = common; i < pathSegments.length; i++) {
+        result = result.append(pathSegments[i]);
+      }
+      return result;
     }
     throw new NotImplementedException(
       "Unimplemented case of Path.relativeTo(base):\n"
-      "  Only absolute paths with strict containment are handled at present.\n"
       "  Arguments: $_path.relativeTo($base)");
   }
 
@@ -369,6 +394,9 @@ class _Path implements Path {
     int pos = _path.lastIndexOf('/');
     return _path.substring(pos + 1);
   }
+
+  int compareTo(Path other) => toString().compareTo(other.toString());
+  operator ==(Path other) => compareTo(other) == 0;
 }
 
 

@@ -7,6 +7,7 @@ library console;
 import 'dart:io';
 import 'dart:utf';
 import 'package:web_components/src/file_system.dart';
+import 'path.dart' as internal;
 
 /** File system implementation for console VM (i.e. no browser). */
 class ConsoleFileSystem implements FileSystem {
@@ -23,8 +24,8 @@ class ConsoleFileSystem implements FileSystem {
     });
   }
 
-  void writeString(String path, String text) {
-    var future = new File(path).open(FileMode.WRITE).chain(
+  void writeString(internal.Path path, String text) {
+    var future = new File(path.toString()).open(FileMode.WRITE).chain(
         (file) => file.writeString(text).chain((_) => file.close()));
 
     _pending.add(future);
@@ -33,8 +34,8 @@ class ConsoleFileSystem implements FileSystem {
   // TODO(jmesserly): even better would be to pass the RandomAccessFile directly
   // to html5lib. This will require a further restructuring of FileSystem.
   // Probably it just needs "readHtml" and "readText" methods.
-  Future<List<int>> readTextOrBytes(String filename) {
-    return new File(filename).open().chain(
+  Future<List<int>> readTextOrBytes(internal.Path path) {
+    return new File(path.toString()).open().chain(
         (file) => file.length().chain((length) {
       // TODO(jmesserly): is this guaranteed to read all of the bytes?
       var buffer = new List<int>(length);
@@ -45,7 +46,7 @@ class ConsoleFileSystem implements FileSystem {
   }
 
   // TODO(jmesserly): do we support any encoding other than UTF-8 for Dart?
-  Future<String> readText(String filename) {
-    return readTextOrBytes(filename).transform(decodeUtf8);
+  Future<String> readText(internal.Path path) {
+    return readTextOrBytes(path).transform(decodeUtf8);
   }
 }

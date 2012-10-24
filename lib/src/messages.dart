@@ -6,6 +6,8 @@ library messages;
 
 import 'package:html5lib/dom_parsing.dart';
 import 'package:logging/logging.dart';
+
+import 'file_system/path.dart';
 import 'options.dart';
 import 'utils.dart';
 
@@ -29,11 +31,11 @@ final Map<Level, String> _ERROR_COLORS = (() {
 class Message {
   final Level level;
   final String message;
-  final String filename;
+  final Path file;
   final SourceSpan span;
   final bool useColors;
 
-  Message(this.level, this.message, {this.filename, this.span,
+  Message(this.level, this.message, {this.file, this.span,
       this.useColors: false});
 
   String toString() {
@@ -44,10 +46,11 @@ class Message {
     if (colors) output.add(NO_COLOR);
 
     if (span == null) {
-      if (filename != null) output.add('$filename: ');
+      if (file != null) output.add('$file: ');
       output.add(message);
     } else {
-      output.add(span.toMessageString(filename, message, useColors: colors));
+      output.add(span.toMessageString(
+          file.toString(), message, useColors: colors));
     }
 
     return output.toString();
@@ -72,8 +75,8 @@ class Messages {
       : options = options != null ? options : new CompilerOptions();
 
   /** [message] is considered a static compile-time error by the Dart lang. */
-  void error(String message, SourceSpan span, {String filename}) {
-    var msg = new Message(Level.SEVERE, message, filename: filename, span: span,
+  void error(String message, SourceSpan span, {Path file}) {
+    var msg = new Message(Level.SEVERE, message, file: file, span: span,
         useColors: options.useColors);
 
     messages.add(msg);
@@ -82,11 +85,11 @@ class Messages {
   }
 
   /** [message] is considered a type warning by the Dart lang. */
-  void warning(String message, SourceSpan span, {String filename}) {
+  void warning(String message, SourceSpan span, {Path file}) {
     if (options.warningsAsErrors) {
-      error(message, span, filename: filename);
+      error(message, span, file: file);
     } else {
-      var msg = new Message(Level.WARNING, message, filename: filename,
+      var msg = new Message(Level.WARNING, message, file: file,
         span: span, useColors: options.useColors);
 
       messages.add(msg);
@@ -94,11 +97,11 @@ class Messages {
   }
 
   /**
-   * [message] at [filename] will tell the user about what the compiler
+   * [message] at [file] will tell the user about what the compiler
    * is doing.
    */
-  void info(String message, {SourceSpan span, String filename}) {
-    var msg = new Message(Level.INFO, message, filename: filename, span: span,
+  void info(String message, SourceSpan span, {Path file}) {
+    var msg = new Message(Level.INFO, message, file: file, span: span,
         useColors: options.useColors);
 
     messages.add(msg);

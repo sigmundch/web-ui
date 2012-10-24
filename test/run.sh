@@ -51,14 +51,16 @@ if [[ ($TEST_PATTERN == "") ]]; then
   # canonicalization.
   pushd $DIR/..
   echo Analyzing compiler for warnings or type errors
-  dart_analyzer --fatal-warnings --fatal-type-errors bin/dwc.dart
+  dart_analyzer --fatal-warnings --fatal-type-errors bin/dwc.dart \
+    --work analyzer_out
+  rm -r analyzer_out
   popd
 fi
 
 # First clear the output folder. Otherwise we can miss bugs when we fail to
 # generate a file.
 if [[ -d $DIR/data/output ]]; then
-  rm -f $DIR/data/output/*
+  rm -rf $DIR/data/output/*
   ln -s $DIR/packages $DIR/data/output/packages
 fi
 
@@ -82,12 +84,12 @@ for input in $DIR/data/input/*_test.html; do
   fi
 done
 
-if [[ ($TEST_PATTERN == "") ]]; then
-  # Run Dart analyzer to check that we're generating warning clean code.
-  # TODO(sigmund): allow running the analyzer on the code associated with the
-  # pattern
-  echo Analyzing generated code for warnings or type errors
-  dart_analyzer --fatal-warnings --fatal-type-errors $DIR/data/output/*
+# Run Dart analyzer to check that we're generating warning clean code.
+OUT_PATTERN="$DIR/data/output/*$TEST_PATTERN*.dart"
+if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
+  echo Analyzing generated code for warnings or type errors.
+  dart_analyzer --fatal-warnings --fatal-type-errors $OUT_PATTERN \
+    --work $DIR/data/output/analyzer/
 fi
 
 echo All tests pass.

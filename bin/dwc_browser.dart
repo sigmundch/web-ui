@@ -10,6 +10,7 @@
 library dwc_browser;
 
 import 'dart:html';
+import 'dart:uri';
 import 'package:web_components/src/compiler.dart';
 import 'package:web_components/src/file_system.dart';
 import 'package:web_components/src/file_system/browser.dart';
@@ -37,26 +38,24 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
   // TODO(jacobr): we need to send error messages back to sourcePagePort.
   js.retain(sourcePagePort);
   print("Processing: $sourceFullFn");
+
+  Uri uri = new Uri.fromString(sourceFullFn);
+  fileSystem = new BrowserFileSystem(uri.scheme, sourcePagePort);
   // TODO(jacobr): provide a way to pass in options.
-  fileSystem = new BrowserFileSystem(sourcePagePort);
-  var options = new CompilerOptions();
+  var options = CompilerOptions.parse(['--no-colors', '']);
   messages = new Messages(options: options);
 
-  Path srcPath = new Path(sourceFullFn);
-  Path outputFullDir = srcPath.directoryPath;
-
+  Path srcPath = new Path(uri.path);
   Path srcDir = srcPath.directoryPath;
-
   String sourceFilename = srcPath.filename;
 
   asyncTime('Compiled $sourceFullFn', () {
     var compiler = new Compiler(fileSystem, options);
-    return compiler.run(srcPath.filename, srcDir.toString()).chain((_) {
+    return compiler.run(srcPath.toString(), srcDir.toString()).chain((_) {
       // Write out the code associated with each source file.
       print("Writing files:");
       for (var file in compiler.output) {
-        fileSystem.writeString(
-            "$outputFullDir/${file.filename}", file.contents);
+        fileSystem.writeString(file.path, file.contents);
       }
       var ret = fileSystem.flush();
       js.release(sourcePagePort);

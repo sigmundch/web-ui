@@ -567,8 +567,9 @@ class WebComponentEmitter extends RecursiveEmitter {
         var superclass = info.extendsComponent.constructor;
         // TODO(jmesserly): should we add this import even if you have your own
         // script tag?
+        var relativePath = PathInfo.relativePath(info, info.extendsComponent);
         code = '''
-          ${codegen.importList([info.extendsComponent.outputFilename])}
+          ${codegen.importList([relativePath])}
           class ${info.constructor} extends $superclass {\n}
         ''';
       } else {
@@ -586,15 +587,17 @@ class WebComponentEmitter extends RecursiveEmitter {
       int startPos = 0;
       if (libMatch == null) {
         var libraryName = info.tagName.replaceAll(const RegExp('[-./]'), '_');
-        printer.add(codegen.header(info.declaringFile.filename, libraryName));
+        printer.add(codegen.header(info.declaringFile.path, libraryName));
       } else {
-        printer.add('// Generated from ${info.inputFilename}\n// DO NOT EDIT.');
+        printer.add('// Generated from ${info.inputPath.filename}\n'
+            '// DO NOT EDIT.');
         printer.add(code.substring(0, libMatch.end()));
         printer.add(codegen.imports);
         startPos = libMatch.end();
       }
       // Import only those components used by this component.
-      var imports = info.usedComponents.getKeys().map((c) => c.outputFilename);
+      var imports = info.usedComponents.getKeys().map(
+          (c) => PathInfo.relativePath(info, c));
       printer.add(codegen.importList(imports))
           .add(code.substring(startPos, match.end()))
           .add('\n')
@@ -608,7 +611,7 @@ class WebComponentEmitter extends RecursiveEmitter {
     } else {
       messages.error('please provide a class definition '
           'for ${info.constructor}:\n $code', info.element.span,
-          filename: info.inputFilename);
+          file: info.inputPath);
       return code;
     }
   }
@@ -634,16 +637,17 @@ class MainPageEmitter extends RecursiveEmitter {
     var code = _info.userCode;
     var match = const RegExp('^library .*;').firstMatch(code);
     if (match == null) {
-      printer.add(codegen.header(_info.filename, _info.libraryName));
+      printer.add(codegen.header(_info.path, _info.libraryName));
     } else {
-      printer.add('// Generated from ${_info.inputFilename}\n// DO NOT EDIT.')
+      printer.add('// Generated from ${_info.inputPath}\n// DO NOT EDIT.')
           .add(code.substring(0, match.end()))
           .add(codegen.imports);
       startPos = match.end();
     }
 
     // Import only those components used by the page.
-    var imports = _info.usedComponents.getKeys().map((c) => c.outputFilename);
+    var imports = _info.usedComponents.getKeys().map(
+          (c) => PathInfo.relativePath(_info, c));
     printer.add(codegen.importList(imports))
         .add(codegen.mainDartCode(code.substring(startPos),
             _context.declarations.formatString(0),

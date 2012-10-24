@@ -6,6 +6,7 @@ library browser;
 
 import 'dart:math';
 import 'dart:html';
+import 'path.dart';
 import 'package:web_components/src/file_system.dart';
 import 'package:js/js.dart' as js;
 
@@ -23,9 +24,10 @@ class BrowserFileSystem implements FileSystem {
   js.Proxy sourcePagePort;
 
   final _filesToProxy = <String>{};
-  final _random;
+  final _random = new Random();
+  final _uriScheme;
 
-  BrowserFileSystem(this.sourcePagePort) : _random = new Random();
+  BrowserFileSystem(this._uriScheme, this.sourcePagePort);
 
   Future flush() {
     // TODO(jacobr): this should really only return the future when the
@@ -42,21 +44,20 @@ class BrowserFileSystem implements FileSystem {
     return new Future.immediate(null);
   }
 
-  void writeString(String path, String text) {
-    _filesToProxy[path] = text;
+  void writeString(Path path, String text) {
+    _filesToProxy['$_uriScheme://$path'] = text;
   }
 
   // TODO(jmesserly): read bytes on browsers that support XHR v2
   // Or restructure the code to use the browser's builtin HTML parser :)
-  Future readTextOrBytes(String filename) => readText(filename);
+  Future readTextOrBytes(Path path) => readText(path);
 
-  Future<String> readText(String filename) {
+  Future<String> readText(Path path) {
     var completer = new Completer<String>();
-    assert(filename.indexOf("?") == -1);
     // We must add a random id or a timestamp to defeat proxy servers and Chrome
     // caching when accessing file urls.
-    var uniqueFileName = '$filename?random_id=${_random.nextDouble()}';
-    new HttpRequest.get(uniqueFileName, onSuccess(HttpRequest request) {
+    var uniqueUrl = '$_uriScheme://$path?random_id=${_random.nextDouble()}';
+    new HttpRequest.get(uniqueUrl, onSuccess(HttpRequest request) {
       completer.complete(request.responseText);
     });
     return completer.future;

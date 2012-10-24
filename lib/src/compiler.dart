@@ -14,6 +14,7 @@ import 'codegen.dart' as codegen;
 import 'emitters.dart';
 import 'messages.dart';
 import 'file_system.dart';
+import 'file_system/path.dart';
 import 'files.dart';
 import 'info.dart';
 import 'options.dart';
@@ -25,37 +26,40 @@ import 'utils.dart';
  * Note that [contents] will be a [String] if coming from a browser-based
  * [FileSystem], or it will be a [List<int>] if running on the command line.
  */
-Document parseHtml(contents, String sourcePath) {
+Document parseHtml(contents, Path sourcePath) {
   var parser = new HtmlParser(contents, generateSpans: true);
   var document = parser.parse();
 
   // Note: errors aren't fatal in HTML (unless strict mode is on).
   // So just print them as warnings.
   for (var e in parser.errors) {
-    messages.warning(e.message, e.span, filename: sourcePath);
+    messages.warning(e.message, e.span, file: sourcePath);
   }
   return document;
 }
 
-/**
- * Walk the tree produced by the parser looking for templates, expressions, etc.
- * as a prelude to emitting the code for the template.
- */
+/** Compiles an application written with Dart web components. */
 class Compiler {
   final FileSystem filesystem;
   final CompilerOptions options;
   final List<SourceFile> files = <SourceFile>[];
   final List<OutputFile> output = <OutputFile>[];
 
+  PathInfo _pathInfo;
+
   /** Information about source [files] given their href. */
-  final Map<String, FileInfo> info = new SplayTreeMap<String, FileInfo>();
+  final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
 
   /** Used by template tool to open a file. */
   Compiler(this.filesystem, this.options);
 
   /** Compile the application starting from the given [mainFile]. */
-  Future run(String mainFile, [String baseDir = ""]) {
-    return _parseAndDiscover(mainFile, baseDir).transform((_) {
+  Future run(String mainFile, String outputDir, [String baseDir]) {
+    var mainPath = new Path(mainFile);
+    var basePath = baseDir != null ? new Path(baseDir) : mainPath.directoryPath;
+    var outDir = new Path(outputDir);
+    _pathInfo = new PathInfo(basePath, outDir);
+    return _parseAndDiscover(mainPath).transform((_) {
       _analyze();
       _emit();
       return null;
@@ -63,65 +67,60 @@ class Compiler {
   }
 
   /**
-   * Asynchronously parse [inputFile] and recursively discover web components to
-   * load and parse.  Returns a future that completes when all files are
+   * Asynchronously parse [inputFile] and transitively discover web components
+   * to load and parse. Returns a future that completes when all files are
    * processed.
    */
-  Future _parseAndDiscover(String inputFile, String baseDir) {
+  Future _parseAndDiscover(Path inputFile) {
     var tasks = new FutureGroup();
     bool isEntry = true;
 
     processHtmlFile(SourceFile file) {
       files.add(file);
 
-      var fileInfo = _time('Analyzed definitions ${file.filename}',
+      var fileInfo = _time('Analyzed definitions', file.path,
           () => analyzeDefinitions(file, isEntryPoint: isEntry));
       isEntry = false;
-      info[file.filename] = fileInfo;
+      info[file.path] = fileInfo;
 
       // Load component files referenced by [file].
       for (var href in fileInfo.componentLinks) {
-        tasks.add(_parseHtmlFile(href, baseDir).transform(processHtmlFile));
+        tasks.add(_parseHtmlFile(href).transform(processHtmlFile));
       }
 
       // Load .dart files being referenced in the page.
-      if (fileInfo.externalFile != null) {
-        tasks.add(_parseDartFile(fileInfo.externalFile, baseDir)
-          .transform(_addDartFile));
-      }
+      var src = fileInfo.externalFile;
+      if (src != null) tasks.add(_parseDartFile(src).transform(_addDartFile));
 
       // Load .dart files being referenced in components.
       for (var component in fileInfo.declaredComponents) {
         var src = component.externalFile;
-        if (src != null) {
-          tasks.add(_parseDartFile(src, baseDir).transform(_addDartFile));
-        }
+        if (src != null) tasks.add(_parseDartFile(src).transform(_addDartFile));
       }
     }
 
-    tasks.add(_parseHtmlFile(inputFile, baseDir).transform(processHtmlFile));
+    tasks.add(_parseHtmlFile(inputFile).transform(processHtmlFile));
     return tasks.future;
   }
 
-  /** Asynchronously parse [filename]. */
-  Future<SourceFile> _parseHtmlFile(String filename, String baseDir) {
-    return filesystem.readTextOrBytes("$baseDir/$filename").transform((source) {
-      var file = new SourceFile(filename);
-      file.document = _time("Parsed $filename",
-          () => parseHtml(source, filename));
+  /** Asynchronously parse [path] as an .html file. */
+  Future<SourceFile> _parseHtmlFile(Path path) {
+    return filesystem.readTextOrBytes(path).transform((source) {
+      var file = new SourceFile(path);
+      file.document = _time('Parsed', path, () => parseHtml(source, path));
       return file;
     });
   }
 
   /** Parse [filename] and treat it as a .dart file. */
-  Future<SourceFile> _parseDartFile(String filename, String baseDir) {
-    return filesystem.readText("$baseDir/$filename").transform(
-        (source) => new SourceFile(filename, isDart: true)..code = source);
+  Future<SourceFile> _parseDartFile(Path path) {
+    return filesystem.readText(path).transform(
+        (source) => new SourceFile(path, isDart: true)..code = source);
   }
 
   void _addDartFile(SourceFile dartFile) {
-    var fileInfo = new FileInfo(dartFile.filename);
-    info[dartFile.filename] = fileInfo;
+    var fileInfo = new FileInfo(dartFile.path);
+    info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode = dartFile.code;
     files.add(dartFile);
   }
@@ -130,20 +129,19 @@ class Compiler {
   void _analyze() {
     for (var file in files) {
       if (file.isDart) continue;
-      _time('Analyzed contents ${file.filename}',
-          () => analyzeFile(file, info));
+      _time('Analyzed contents', file.path, () => analyzeFile(file, info));
     }
   }
 
   /** Emit the generated code corresponding to each input file. */
   void _emit() {
     for (var file in files) {
-      _time('Codegen ${file.filename}', () {
+      _time('Codegen', file.path, () {
         if (!file.isDart) {
           _removeScriptTags(file.document);
           _emitComponents(file);
 
-          var fileInfo = info[file.filename];
+          var fileInfo = info[file.path];
           if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
             _emitMainDart(file);
             _emitMainHtml(file);
@@ -161,23 +159,27 @@ class Compiler {
 
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
-    var fileInfo = info[file.filename];
-    output.add(new OutputFile(fileInfo.outputFilename,
-        new MainPageEmitter(fileInfo).run(file.document)));
+    var fileInfo = info[file.path];
+    var contents = new MainPageEmitter(fileInfo).run(file.document);
+    output.add(new OutputFile(_pathInfo.outputLibraryPath(fileInfo), contents));
   }
 
   /** Generate an html file with the (trimmed down) main html page. */
   void _emitMainHtml(SourceFile file) {
-    var fileInfo = info[file.filename];
+    var fileInfo = info[file.path];
 
     // Clear the body, we moved all of it
     var document = file.document;
     document.body.nodes.clear();
-    output.add(new OutputFile('_${file.filename}_bootstrap.dart',
-          codegen.bootstrapCode(fileInfo.outputFilename)));
+
+    output.add(new OutputFile(
+        _pathInfo.fileInOutputDir('_${file.path.filename}_bootstrap.dart'),
+        codegen.bootstrapCode(_pathInfo.relativePathFromOutputDir(fileInfo))));
+
     document.body.nodes.add(parseFragment(
-      '<script type="text/javascript" src="$DARTJS_LOADER"></script>'
-      '<script type="application/dart" src="_${file.filename}_bootstrap.dart">'
+      '<script type="text/javascript" src="$DARTJS_LOADER"></script>\n'
+      '<script type="application/dart"'
+      ' src="_${file.path.filename}_bootstrap.dart">'
       '</script>'
     ));
 
@@ -188,38 +190,35 @@ class Compiler {
     }
 
     _addAutoGeneratedComment(file);
-    output.add(new OutputFile('_${file.filename}.html', document.outerHTML));
+    output.add(new OutputFile(
+        _pathInfo.fileInOutputDir('_${file.path.filename}.html'),
+        document.outerHTML));
   }
 
   /** Emits the Dart code for all components in the [file]. */
   void _emitComponents(SourceFile file) {
-    var fileInfo = info[file.filename];
+    var fileInfo = info[file.path];
     for (var component in fileInfo.declaredComponents) {
       var code = new WebComponentEmitter(fileInfo).run(component);
-      output.add(new OutputFile(component.outputFilename, code));
+      output.add(new OutputFile(_pathInfo.outputLibraryPath(component), code));
     }
   }
 
   /** Emit the wrapper .dart file for a component page. */
   void _emitComponentDart(SourceFile file) {
-    var fileInfo = info[file.filename];
+    var fileInfo = info[file.path];
     // Reexport all components declared in the input file.
-    var exports = fileInfo.declaredComponents.map((c) => c.outputFilename);
-    output.add(new OutputFile(fileInfo.outputFilename, new CodePrinter().add('''
-        // Auto-generated from ${file.filename}.
-        // DO NOT EDIT.
-
-        library ${fileInfo.libraryName};
-
-        ${codegen.exportList(exports)}
-        ''').formatString()));
+    var exports = fileInfo.declaredComponents.map(
+        (c) => PathInfo.relativePath(fileInfo, c));
+    output.add(new OutputFile(_pathInfo.outputLibraryPath(fileInfo),
+        codegen.wrapComponentsLibrary(fileInfo, exports)));
   }
 
   /** Generate an html file declaring a web component. */
   void _emitComponentHtml(SourceFile file) {
     _addAutoGeneratedComment(file);
-    output.add(new OutputFile(
-        '_${file.filename}.html', file.document.outerHTML));
+    output.add(new OutputFile(_pathInfo.outputPath(file.path, '.html'),
+          file.document.outerHTML));
   }
 
 
@@ -231,8 +230,16 @@ class Compiler {
     }
   }
 
-  _time(String logMessage, callback(), {bool printTime: false}) =>
-      time(logMessage, callback, printTime: options.verbose || printTime);
+  _time(String logMessage, Path path, callback(), {bool printTime: false}) {
+    var message = new StringBuffer();
+    message.add(logMessage);
+    for (int i = (60 - logMessage.length - path.filename.length); i > 0 ; i--) {
+      message.add(' ');
+    }
+    message.add(path.filename);
+    return time(message.toString(), callback,
+        printTime: options.verbose || printTime);
+  }
 }
 
 void _addAutoGeneratedComment(SourceFile file) {
@@ -254,10 +261,9 @@ void _addAutoGeneratedComment(SourceFile file) {
       messages.warning('file should start with <!DOCTYPE html> '
           'to avoid the possibility of it being parsed in quirks mode in IE. '
           'See http://www.w3.org/TR/html5-diff/#doctype',
-          doctype.span, filename: file.filename);
+          doctype.span, file: file.path);
     }
   }
   document.nodes.insertAt(commentIndex, parseFragment(
-      '\n<!-- This file was auto-generated from template '
-              '${file.filename}. -->\n'));
+      '\n<!-- This file was auto-generated from template ${file.path}. -->\n'));
 }

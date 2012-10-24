@@ -7,6 +7,8 @@
 /** Abstraction for file systems and utility functions to manipulate paths. */
 library file_system;
 
+import 'file_system/path.dart';
+
 /**
  * Abstraction around file system access to work in a variety of different
  * environments.
@@ -22,63 +24,13 @@ interface FileSystem {
    * Reads bytes if possible, but falls back to text if running in a browser.
    * Return type is either [Future<List<int>>] or [Future<String>].
    */
-  Future readTextOrBytes(String filename);
+  Future readTextOrBytes(Path filename);
 
   /* Like [readTextOrBytes], but decodes bytes as UTF-8. Used for Dart code. */
-  Future<String> readText(String filename);
+  Future<String> readText(Path filename);
 
   /**
    * Writes [text] to [outfile]. Call flush to insure that changes are visible.
    */
-  void writeString(String outfile, String text);
-}
-
-/**
- * Replaces all back slashes (\) with forward slashes (/) in [path] and
- * return the result.
- */
-String canonicalizePath(String path) => path.replaceAll('\\', '/');
-
-/** Join [path1] to [path2]. */
-String joinPaths(String path1, String path2) {
-  path1 = canonicalizePath(path1);
-  path2 = canonicalizePath(path2);
-
-  var pieces = path1.split('/');
-  for (var piece in path2.split('/')) {
-    if (piece == '..' && pieces.length > 0 && pieces.last() != '.'
-      && pieces.last() != '..') {
-      pieces.removeLast();
-    } else if (piece != '') {
-      if (pieces.length > 0 && pieces.last() == '.') {
-        pieces.removeLast();
-      }
-      pieces.add(piece);
-    }
-  }
-  return Strings.join(pieces, '/');
-}
-
-/** Returns the directory name for the [path]. */
-String dirname(String path) {
-  path = canonicalizePath(path);
-
-  int lastSlash = path.lastIndexOf('/', path.length);
-  if (lastSlash == -1) {
-    return '.';
-  } else {
-    return path.substring(0, lastSlash);
-  }
-}
-
-/** Returns the file name without directory for the [path]. */
-String basename(String path) {
-  path = canonicalizePath(path);
-
-  int lastSlash = path.lastIndexOf('/', path.length);
-  if (lastSlash == -1) {
-    return path;
-  } else {
-    return path.substring(lastSlash + 1);
-  }
+  void writeString(Path outfile, String text);
 }

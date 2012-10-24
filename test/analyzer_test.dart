@@ -11,6 +11,7 @@ import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/analyzer.dart';
 import 'package:web_components/src/info.dart';
 import 'package:web_components/src/files.dart';
+import 'package:web_components/src/file_system/path.dart';
 import 'testing.dart';
 
 main() {
@@ -288,7 +289,8 @@ main() {
         '</head>'
         '<body><link rel="components" href="quuux.html">'
       ));
-      expect(info.componentLinks, equals(['foo.html', 'quux.html']));
+      expect(info.componentLinks, equals([
+          new Path('foo.html'), new Path('quux.html')]));
     });
 
     test('elements', () {
@@ -338,7 +340,7 @@ main() {
           '<element name="x-quux" constructor="Quux2"></element>'
         '</body>'
       );
-      var srcFile = new SourceFile('main.html')..document = doc;
+      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
       var info = analyzeDefinitions(srcFile);
       expect(info.declaredComponents.length, equals(2));
 
@@ -346,7 +348,7 @@ main() {
       expect(info.declaredComponents[0].hasConflict, isFalse);
       expect(info.declaredComponents[1].hasConflict, isFalse);
 
-      analyzeFile(srcFile, { 'main.html': info });
+      analyzeFile(srcFile, _toPathMap({'main.html': info }));
 
       expect(info.components.length, equals(1));
       var compInfo = info.components['x-quux'];
@@ -387,11 +389,11 @@ main() {
   group('analyzeFile', () {
     test('binds components in same file', () {
       var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
-      var srcFile = new SourceFile('main.html')..document = doc;
+      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
       var info = analyzeDefinitions(srcFile);
       expect(info.declaredComponents.length, equals(1));
 
-      analyzeFile(srcFile, { 'main.html': info });
+      analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
       expect(info.components.getKeys(), equals(['x-foo']));
 
       var elemInfo = info.elements[doc.query('x-foo')];
@@ -483,9 +485,9 @@ main() {
         '</body>'
       );
 
-      var srcFile = new SourceFile('main.html')..document = doc;
+      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
       var info = analyzeDefinitions(srcFile);
-      analyzeFile(srcFile, { 'main.html': info });
+      analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
     });
 
     test('components extends another component', () {
@@ -507,7 +509,7 @@ main() {
 }
 
 FileInfo analyzeDefinitionsInTree(Document doc) =>
-    analyzeDefinitions(new SourceFile('')..document = doc);
+    analyzeDefinitions(new SourceFile(new Path(''))..document = doc);
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
 List<SourceFile> parseFiles(Map<String, String> fileContents,
@@ -515,7 +517,7 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
   var result = <SourceFile>[];
   fileContents.forEach((filename, contents) {
-    var src = new SourceFile(filename);
+    var src = new SourceFile(new Path(filename));
     src.document = parse(contents);
     result.add(src);
   });
@@ -525,16 +527,31 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
 /** Analyze all files. */
 Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
-  var result = new Map<String, FileInfo>();
+  var result = new Map<Path, FileInfo>();
   // analyze definitions
   for (var file in files) {
-    result[file.filename] = analyzeDefinitions(file);
+    result[file.path] = analyzeDefinitions(file);
   }
 
   // analyze file contents
   for (var file in files) {
     analyzeFile(file, result);
   }
+  return _toStringMap(result);
+}
 
-  return result;
+Map<Path, FileInfo> _toPathMap(Map<String, FileInfo> map) {
+  var res = new Map<Path, FileInfo>();
+  for (var k in map.getKeys()) {
+    res[new Path(k)] = map[k];
+  }
+  return res;
+}
+
+Map<String, FileInfo> _toStringMap(Map<Path, FileInfo> map) {
+  var res = new Map<String, FileInfo>();
+  for (var k in map.getKeys()) {
+    res[k.toString()] = map[k];
+  }
+  return res;
 }

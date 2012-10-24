@@ -5,11 +5,12 @@
 /** Collects common snippets of generated code. */
 library codegen;
 
+import 'file_system/path.dart';
 import 'info.dart';
 
 /** Header with common imports, used in every generated .dart file. */
-String header(String filename, String libraryName) => """
-// Auto-generated from $filename.
+String header(Path path, String libraryName) => """
+// Auto-generated from ${path.filename}.
 // DO NOT EDIT.
 
 library $libraryName;
@@ -102,7 +103,7 @@ final String _INITIAL_PAGE = r'''
  * The code that will be used to bootstrap the application, this is inlined in
  * the main.html.html output file.
  */
-String bootstrapCode(String userMainImport) => """
+String bootstrapCode(Path userMainImport) => """
 library bootstrap;
 
 import '$userMainImport' as userMain;
@@ -113,10 +114,23 @@ main() {
 }
 """;
 
+/** 
+ * Code generated to wrap all components defined in a single HTML into a single
+ * library.
+ */
+String wrapComponentsLibrary(FileInfo info, List<Path> exports) => """
+// Auto-generated from ${info.path}.
+// DO NOT EDIT.
+
+library ${info.libraryName};
+
+${exportList(exports)}
+""";
+
 /** Generate text for a list of imports. */
-String importList(List<String> imports) =>
+String importList(List<Path> imports) =>
   Strings.join(imports.map((url) => "import '$url';"), '\n');
 
 /** Generate text for a list of export. */
-String exportList(List<String> exports) =>
+String exportList(List<Path> exports) =>
   Strings.join(exports.map((url) => "export '$url';"), '\n');
