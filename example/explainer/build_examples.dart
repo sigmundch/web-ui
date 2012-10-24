@@ -21,7 +21,7 @@ main() {
   var args = argParser.parse(new Options().arguments);
 
   var output = args['out'];
-  if (args.rest.isEmpty()) {
+  if (args.rest.isEmpty) {
     var dir = new Directory.current();
     listFiles(dir,
         (filename) => filename.endsWith('.html') && !filename.startsWith('_'))

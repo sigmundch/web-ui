@@ -63,7 +63,7 @@ Future run(List<String> args) {
   }
 
   // If outputFullDirectory not specified use the directory of the source file.
-  if (outputDir == null || outputDir.isEmpty()) {
+  if (outputDir == null || outputDir.isEmpty) {
     outputDir = srcDir.path;
   }
 

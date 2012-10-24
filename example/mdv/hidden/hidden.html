@@ -48,7 +48,7 @@
     String name = '';
     String address = '';
 
-    bool get isComplete => !name.isEmpty() && !address.isEmpty();
+    bool get isComplete => !name.isEmpty && !address.isEmpty;
   }
 
   class Billing extends Address {

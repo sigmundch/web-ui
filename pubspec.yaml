@@ -7,7 +7,7 @@ dependencies:
   unittest: { sdk: unittest }
   args: { sdk: args }
   logging: { sdk: logging }
-  html5lib: ">=0.0.15 <0.0.16"
+  html5lib: ">=0.0.16 <0.0.17"
   # JS interop is used by the Dartium extension. No version constraint
   # because otherwise it makes it hard to use web_components with JS.
   # If you're rebuilding the extension, be sure to update it for the new JS

@@ -9,5 +9,5 @@ class Model {
   String repeatEmail = '';
   bool agree = false;
 
-  bool get invalid => !agree || email.isEmpty() || email != repeatEmail;
+  bool get invalid => !agree || email.isEmpty || email != repeatEmail;
 }

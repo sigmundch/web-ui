@@ -37,8 +37,7 @@ void build(List<String> arguments, List<String> entryPoints) {
   var changedFiles = args["changed"];
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
-  var fullBuild = changedFiles.isEmpty() && removedFiles.isEmpty()
-      && !cleanBuild;
+  var fullBuild = changedFiles.isEmpty && removedFiles.isEmpty && !cleanBuild;
 
   for (var file in entryPoints) {
     var dir = new Path(file).directoryPath.toString();
