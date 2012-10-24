@@ -76,9 +76,10 @@ find(List list, bool matcher(elem)) {
 
 /** A completer that waits until all added [Future]s complete. */
 // TODO(sigmund): this should be part of the futures/core libraries.
-class FutureGroup extends CompleterImpl<List> {
+class FutureGroup {
   const _FINISHED = -1;
   int _pending = 0;
+  Completer<List> _completer = new Completer<List>();
   final List<Future> futures = <Future>[];
 
   /**
@@ -92,12 +93,16 @@ class FutureGroup extends CompleterImpl<List> {
     }
     _pending++;
     futures.add(task);
+    task.handleException(
+        (e) => _completer.completeException(e, task.stackTrace));
     task.then((_) {
       _pending--;
       if (_pending == 0) {
         _pending = _FINISHED;
-        complete(futures);
+        _completer.complete(futures);
       }
     });
   }
+
+  Future<List> get future => _completer.future;
 }

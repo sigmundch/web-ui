@@ -162,7 +162,7 @@ class ComponentInfo extends LibraryInfo {
    */
   bool hasConflict = false;
 
-  ComponentInfo(Element element, [this.declaringFile])
+  ComponentInfo(Element element, this.declaringFile)
     : element = element,
       tagName = element.attributes['name'],
       extendsTag = element.attributes['extends'],
@@ -330,7 +330,7 @@ class TemplateInfo extends ElementInfo {
    */
   final String loopItems;
 
-  TemplateInfo([this.ifCondition, this.loopVariable, this.loopItems]);
+  TemplateInfo({this.ifCondition, this.loopVariable, this.loopItems});
 
   bool get hasIterate => loopVariable != null;
 

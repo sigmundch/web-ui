@@ -280,9 +280,7 @@ class _CustomDeclaration {
     template = element.query('template');
   }
 
-  int hashCode() {
-    return name.hashCode();
-  }
+  int get hashCode => name.hashCode;
 
   operator ==(other) {
     if (other is! _CustomDeclaration) {

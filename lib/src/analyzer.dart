@@ -22,8 +22,8 @@ import 'utils.dart';
  * Finds custom elements in this file and the list of referenced files with
  * component declarations. This is the first pass of analysis on a file.
  */
-FileInfo analyzeDefinitions(SourceFile file, [bool isEntryPoint = false]) {
-  var result = new FileInfo(file.filename, isEntryPoint: isEntryPoint);
+FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
+  var result = new FileInfo(file.filename, isEntryPoint);
   new _ElementLoader(result).visit(file.document);
   return result;
 }

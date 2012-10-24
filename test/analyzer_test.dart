@@ -226,7 +226,8 @@ main() {
   test('template element', () {
     var elem = parseSubtree('<template></template>');
     var info = analyzeNode(elem).elements[elem];
-    expect(info is! TemplateInfo, reason: 'example does not need TemplateInfo');
+    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+      'example does not need TemplateInfo');
   });
 
   // TODO(jmesserly): I'm not sure we are implementing correct behavior for
@@ -235,7 +236,8 @@ main() {
     var elem = parseSubtree('<template instantiate="foo"></template>');
     var info = analyzeNode(elem).elements[elem];
     expect(elem.attributes, equals({'instantiate': 'foo'}));
-    expect(info is! TemplateInfo, reason: 'example is not a valid template');
+    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+      'example is not a valid template');
   });
 
   test('template instantiate if', () {
@@ -253,7 +255,8 @@ main() {
     var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
     var info = analyzeNode(elem).elements[elem];
     expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
-    expect(info is! TemplateInfo, reason: 'example is not a valid template');
+    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+      'example is not a valid template');
   });
 
   test('template iterate', () {

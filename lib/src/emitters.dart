@@ -468,7 +468,7 @@ class ListEmitter extends Emitter<TemplateInfo> {
 
   Context contextForChildren(Context c) => new Context(
       childrenDeclarations, childrenCreated, childrenInserted, childrenRemoved,
-      queryFromElement: childElementName);
+      childElementName);
 }
 
 

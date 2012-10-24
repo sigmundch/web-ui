@@ -187,7 +187,7 @@ class _Path implements Path {
   _Path(this._path);
   _Path.fromNative(String source) : _path = _clean(source);
 
-  int hashCode() => _path.hashCode();
+  int get hashCode => _path.hashCode;
 
   static String _clean(String source) => source;
 
