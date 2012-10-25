@@ -13,6 +13,8 @@ import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/analyzer.dart';
 import 'package:web_components/src/emitters.dart';
+import 'package:web_components/src/info.dart';
+import 'package:web_components/src/file_system/path.dart' show Path;
 import 'testing.dart';
 
 
@@ -219,6 +221,27 @@ main() {
       var emitter = new DataBindingEmitter(elem, _elemInfo(elem));
       expect(_removed(emitter), equalsIgnoringWhitespace(
           '_stopWatcher___e0_1();'));
+    });
+  });
+
+  group('emit main page class', () {
+    test('external resource URLs', () {
+      var fileInfo = new FileInfo(new Path('main.html'));
+      fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+      var pathInfo = new PathInfo(new Path('a'), new Path('b'));
+      var html =
+          '<html><head>'
+          '<script src="http://example.com/a.js" type="text/javascript"></script>'
+          '<script src="//example.com/a.js" type="text/javascript"></script>'
+          '<script src="/a.js" type="text/javascript"></script>'
+          '<link href="http://example.com/a.css" rel="stylesheet">'
+          '<link href="//example.com/a.css" rel="stylesheet">'
+          '<link href="/a.css" rel="stylesheet">'
+          '</head><body></body></html>';
+      var doc = parseDocument(html);
+      var emitter = new MainPageEmitter(fileInfo);
+      emitter.run(doc, pathInfo);
+      expect(doc.outerHTML, equals(html));
     });
   });
 }

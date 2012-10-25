@@ -15,4 +15,5 @@ useMockMessages() {
   messages = new Messages(printHandler: (message) {});
 }
 
+Document parseDocument(String html) => parse(html);
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
