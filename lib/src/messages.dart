@@ -4,8 +4,8 @@
 
 library messages;
 
-import 'package:html5lib/dom_parsing.dart';
-import 'package:logging/logging.dart';
+import 'package:html5lib/dom_parsing.dart' show SourceSpan;
+import 'package:logging/logging.dart' show Level;
 
 import 'file_system/path.dart';
 import 'options.dart';
@@ -42,7 +42,7 @@ class Message {
     var output = new StringBuffer();
     bool colors = useColors && _ERROR_COLORS.containsKey(level);
     if (colors) output.add(_ERROR_COLORS[level]);
-    output.add(level.name);
+    output.add(level.name).add(' ');
     if (colors) output.add(NO_COLOR);
 
     if (span == null) {

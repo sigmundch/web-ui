@@ -26,7 +26,7 @@ class CompilerOptions {
     : warningsAsErrors = args['warnings_as_errors'],
       verbose = args['verbose'],
       clean = args['clean'],
-      useColors = !args['colors'],
+      useColors = args['colors'],
       rest = args.rest;
 
   static CompilerOptions parse(List<String> arguments) {

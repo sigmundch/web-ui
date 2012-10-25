@@ -16,6 +16,7 @@ import 'analyzer_test.dart' as analyzer_test;
 import 'emitter_test.dart' as emitter_test;
 import 'utils_test.dart' as utils_test;
 import 'watcher_test.dart' as watcher_test;
+import 'directive_parser_test.dart' as directive_test;
 
 // TODO(jmesserly): command line args to filter tests
 main() {
@@ -28,6 +29,7 @@ main() {
   if (pattern.hasMatch('emitter_test.dart')) emitter_test.main();
   if (pattern.hasMatch('utils_test.dart')) utils_test.main();
   if (pattern.hasMatch('watcher_test.dart')) watcher_test.main();
+  if (pattern.hasMatch('directive_parser_test.dart')) directive_test.main();
 
   // TODO(jmesserly): should have listSync for scripting...
   var lister = new Directory.fromPath(new Path('data/input')).list();

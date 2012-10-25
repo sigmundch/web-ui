@@ -29,7 +29,7 @@ abstract class WebComponent implements Element {
    * Use [WebComponent.forElement] instead.
    */
   WebComponent() : _element = null {
-    throw new UnsupportedOperationException(
+    throw new UnsupportedError(
         'Directly constructing web components is not currently supported. '
         'You need to use the WebComponent.forElement constructor to associate '
         'a component with its DOM element. If you run "bin/dwc.dart" on your '

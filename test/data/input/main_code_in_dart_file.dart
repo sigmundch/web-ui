@@ -2,7 +2,7 @@ library main;
 
 import 'dart:html';
 import 'package:web_components/watcher.dart';
-import '../input/common.dart';
+import 'common.dart';
 
 main() {
   topLevelVar = "hello";

@@ -1,6 +1,6 @@
 library component;
 
-import '../input/common.dart';
+import 'common.dart';
 import 'package:web_components/web_component.dart';
 import 'package:web_components/watcher.dart';
 

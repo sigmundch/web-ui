@@ -82,13 +82,18 @@ class PathInfo {
   }
 
   /**
-   * Returns a relative path to import [target] from the output library of
-   * [src]. Unlike [relativePath], this returns a relative path from the output
-   * directory back to the input directory. An exception will be thrown if
-   * [target] is not under [_baseDir].
+   * Transforms an import, part, or export [url] seen in `src.inputPath` into a
+   * corresponding url from the output library of [src]. This will keep
+   * 'package:' and 'dart:' urls intact, but it will fix relative paths to walk
+   * from the output directory back to the input directory. An exception will be
+   * thrown if [target] is not under [_baseDir].
    */
-  Path relativePathToInput(LibraryInfo src, Path target) {
-    return target.relativeTo(outputLibraryPath(src)).canonicalize();
+  String transferDirectiveUrl(LibraryInfo src, String url) {
+    if (url.startsWith('package:') || url.startsWith('dart:')) return url;
+    var pathFromBaseDir = src.inputPath.directoryPath.join(new Path(url));
+    var outputLibraryDir = _outputDirPath(src.inputPath);
+    return pathFromBaseDir.relativeTo(outputLibraryDir)
+        .canonicalize().toString();
   }
 }
 
@@ -109,11 +114,7 @@ abstract class LibraryInfo {
    * The actual code, either inlined or from an external file, or `null` if none
    * was defined.
    */
-  String get userCode {
-    if (inlinedCode != null) return inlinedCode;
-    if (externalCode != null) return externalCode.userCode;
-    return null;
-  }
+  DartCodeInfo userCode;
 
   /** The inlined code, if any. */
   String inlinedCode;
@@ -431,3 +432,40 @@ class TemplateInfo extends ElementInfo {
  * passed here as arguments.
  */
 typedef String ActionDefinition(String elemVarName, String eventArgName);
+
+/** Information extracted from a source Dart file. */
+class DartCodeInfo {
+  /** Library qualified identifier, if any. */
+  final String libraryName;
+
+  /** Library which the code is part-of, if any. */
+  final String partOf;
+
+  /** Declared imports, exports, and parts. */
+  final List<DartDirectiveInfo> directives;
+
+  /** The rest of the code. */
+  final String code;
+
+  DartCodeInfo(this.libraryName, this.partOf, this.directives, this.code);
+}
+
+/** Information about a single import/export/part directive. */
+class DartDirectiveInfo {
+  /** Directive's label: import, export, or part. */
+  String label;
+
+  /** Referenced uri being imported, exported, or included by a part. */
+  String uri;
+
+  /** Prefix used for imports, if any. */
+  String prefix;
+
+  /** Hidden identifiers. */
+  List<String> hide;
+
+  /** Shown identifiers. */
+  List<String> show;
+
+  DartDirectiveInfo(this.label, this.uri, [this.prefix, this.hide, this.show]);
+}

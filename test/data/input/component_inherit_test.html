@@ -8,8 +8,7 @@ BSD-style license that can be found in the LICENSE file.
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <!-- use ../input/ so that the url also works from the output directory -->
-  <script type="application/javascript" src="../input/testing.js"></script>
+  <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
   <element name="x-base" extends="div" constructor="Base">
@@ -37,9 +36,6 @@ BSD-style license that can be found in the LICENSE file.
     <script type="application/dart">
       import 'package:web_components/web_components.dart';
 
-      // TODO(jmesserly): this is very weird
-      import '_component_inherit_test.html.x_base.dart';
-
       class Derived extends Base {
         created() {
           super.created();
@@ -54,7 +50,7 @@ BSD-style license that can be found in the LICENSE file.
   </element>
   <div is="x-derived"></div>
   <script type="application/dart">
-    import '../input/common.dart';
+    import 'common.dart';
     import 'dart:html';
     main() {
       window.setTimeout(() => window.postMessage('done', '*'), 0);

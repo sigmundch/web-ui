@@ -134,3 +134,31 @@ String importList(List<Path> imports) =>
 /** Generate text for a list of export. */
 String exportList(List<Path> exports) =>
   Strings.join(exports.map((url) => "export '$url';"), '\n');
+
+/**
+ * Text corresponding to a directive, fixed in case the code is in a different
+ * output location.
+ */
+String directiveText(
+    DartDirectiveInfo directive, LibraryInfo src, PathInfo pathInfo) {
+  var buff = new StringBuffer();
+  var uri = pathInfo.transferDirectiveUrl(src, directive.uri);
+  buff.add(directive.label)
+      .add(" '")
+      .add(uri.replaceAll("'", "\\'"))
+      .add("'");
+  if (directive.prefix != null) {
+    buff.add(' as ')
+        .add(directive.prefix);
+  }
+  if (directive.show != null) {
+    buff.add(' show ')
+        .add(Strings.join(directive.show, ','));
+  }
+  if (directive.hide != null) {
+    buff.add(' hide ')
+        .add(Strings.join(directive.hide, ','));
+  }
+  buff.add(';');
+  return buff.toString();
+}

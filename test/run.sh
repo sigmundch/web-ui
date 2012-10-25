@@ -39,11 +39,15 @@ function update {
   return 1
 }
 
+function pass {
+  echo -e "[32mPASS[0m"
+}
+
 function compare {
   # use a standard diff, if they are not identical, format the diff nicely to
   # see what's the error and prompt to see if they wish to update it. If they
   # do, continue running more tests.
-  diff -q -s $1 $2 || show_diff $1 $2 || update $1 $2
+  diff -q $1 $2 && pass || show_diff $1 $2 || update $1 $2
 }
 
 if [[ ($TEST_PATTERN == "") ]]; then
@@ -73,8 +77,8 @@ popd
 # wrapper that sets `--enable-type-checks --enable-asserts`
 for input in $DIR/data/input/*_test.html; do
   if [[ ($TEST_PATTERN == "") || ($input =~ $TEST_PATTERN) ]]; then
-    echo -e "\nTesting $input:"
     FILENAME=`basename $input.html`
+    echo -e -n "Testing $FILENAME "
     DUMP="$DIR/data/output/$FILENAME.txt"
     EXPECTATION="$DIR/data/expected/$FILENAME.txt"
     DART_PACKAGE_ROOT="file://$DIR/packages/" \
@@ -85,11 +89,11 @@ for input in $DIR/data/input/*_test.html; do
 done
 
 # Run Dart analyzer to check that we're generating warning clean code.
-OUT_PATTERN="$DIR/data/output/*$TEST_PATTERN*.dart"
+OUT_PATTERN="$DIR/data/output/*$TEST_PATTERN*_bootstrap.dart"
 if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
-  echo Analyzing generated code for warnings or type errors.
-  dart_analyzer --fatal-warnings --fatal-type-errors $OUT_PATTERN \
-    --work $DIR/data/output/analyzer/
+  echo -e "\n Analyzing generated code for warnings or type errors."
+  ls $OUT_PATTERN | dart_analyzer --fatal-warnings --fatal-type-errors \
+    --work $DIR/data/output/analyzer/ -batch
 fi
 
 echo All tests pass.

@@ -11,12 +11,13 @@ import 'package:html5lib/parser.dart';
 import 'analyzer.dart';
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;
+import 'directive_parser.dart' show parseDartCode;
 import 'emitters.dart';
-import 'messages.dart';
 import 'file_system.dart';
 import 'file_system/path.dart';
 import 'files.dart';
 import 'info.dart';
+import 'messages.dart';
 import 'options.dart';
 import 'utils.dart';
 
@@ -122,6 +123,13 @@ class Compiler {
     var fileInfo = new FileInfo(dartFile.path);
     info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode = dartFile.code;
+    fileInfo.userCode = parseDartCode(fileInfo.inlinedCode,
+        fileInfo.path, messages);
+    if (fileInfo.userCode.partOf != null) {
+      messages.error('expected a library, not a part.', null,
+          file: dartFile.path);
+    }
+
     files.add(dartFile);
   }
 
@@ -160,7 +168,7 @@ class Compiler {
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
-    var contents = new MainPageEmitter(fileInfo).run(file.document);
+    var contents = new MainPageEmitter(fileInfo).run(file.document, _pathInfo);
     output.add(new OutputFile(_pathInfo.outputLibraryPath(fileInfo), contents));
   }
 
@@ -199,7 +207,7 @@ class Compiler {
   void _emitComponents(SourceFile file) {
     var fileInfo = info[file.path];
     for (var component in fileInfo.declaredComponents) {
-      var code = new WebComponentEmitter(fileInfo).run(component);
+      var code = new WebComponentEmitter(fileInfo).run(component, _pathInfo);
       output.add(new OutputFile(_pathInfo.outputLibraryPath(component), code));
     }
   }

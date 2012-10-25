@@ -12,6 +12,7 @@ import 'dart:coreimpl';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 
+import 'directive_parser.dart' show parseDartCode;
 import 'file_system/path.dart';
 import 'files.dart';
 import 'info.dart';
@@ -473,6 +474,12 @@ class _ElementLoader extends TreeVisitor {
           'file.', node.span, file: _fileInfo.path);
     } else {
       _currentInfo.inlinedCode = text.value;
+      _currentInfo.userCode = parseDartCode(text.value,
+          _currentInfo.inputPath, messages);
+      if (_currentInfo.userCode.partOf != null) {
+        messages.error('expected a library, not a part.',
+            node.span, file: _fileInfo.path);
+      }
     }
   }
 
@@ -520,6 +527,7 @@ void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
   var path = info.externalFile;
   if (path != null) {
     info.externalCode = files[path];
+    info.userCode = info.externalCode.userCode;
   }
 }
 
