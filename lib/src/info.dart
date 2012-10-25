@@ -84,12 +84,16 @@ class PathInfo {
   /**
    * Transforms an import, part, or export [url] seen in `src.inputPath` into a
    * corresponding url from the output library of [src]. This will keep
-   * 'package:' and 'dart:' urls intact, but it will fix relative paths to walk
-   * from the output directory back to the input directory. An exception will be
-   * thrown if [target] is not under [_baseDir].
+   * 'package:', 'dart:', path-absolute, and absolute urls intact, but it will
+   * fix relative paths to walk from the output directory back to the input
+   * directory. An exception will be thrown if [target] is not under [_baseDir].
    */
   String transferDirectiveUrl(LibraryInfo src, String url) {
-    if (url.startsWith('package:') || url.startsWith('dart:')) return url;
+    if (url.startsWith('package:') || url.startsWith('dart:')
+        || url.startsWith('/') || url.startsWith('http://')
+        || url.startsWith('https://')) {
+        return url;
+    }
     var pathFromBaseDir = src.inputPath.directoryPath.join(new Path(url));
     var outputLibraryDir = _outputDirPath(src.inputPath);
     return pathFromBaseDir.relativeTo(outputLibraryDir)
