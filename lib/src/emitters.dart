@@ -219,8 +219,8 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
         var stopperName = attrInfo.stopperNames[0];
         var setter;
         // TODO(sigmund): use setters when they are available (issue #112)
-        if (elem.tagName == 'input' && name == 'value') {
-            setter = 'value';
+        if (elem.tagName == 'input' && (name == 'value' || name == 'checked')) {
+            setter = name;
         } else {
             setter = 'attributes["$name"]';
         }

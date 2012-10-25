@@ -1,0 +1,16 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x37
+  RenderBlock {HTML} at (0,0) size 800x37
+    RenderBody {BODY} at (8,8) size 784x21
+      RenderBlock {INPUT} at (4,3) size 13x13
+      RenderText {#text} at (20,1) size 4x19
+        text run at (20,1) width 4: " "
+      RenderText {#text} at (24,1) size 267x19
+        text run at (24,1) width 267: "expected input.checked to be false, got false"
+      RenderText {#text} at (291,1) size 259x19
+        text run at (291,1) width 259: "expected input.checked to be true, got true"
+#EOF
