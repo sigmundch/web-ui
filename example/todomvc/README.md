@@ -1,6 +1,7 @@
 TodoMVC sample application written with Dart web components.
 
-You can run this application as follows:
+You can see this application [running live](http://dart-lang.github.com/dart-web-components/example/todomvc/index.html),
+or build it and run it yourself as follows:
 
 ```bash
 # from the top of the dart-web-components package
