@@ -327,9 +327,9 @@ class _Analyzer extends TreeVisitor {
         info.contentBinding = binding;
       }
 
-      buf.add(text.value.substring(offset, match.start()));
+      buf.add(text.value.substring(offset, match.start));
       buf.add("\${$binding}");
-      offset = match.end();
+      offset = match.end;
     }
     buf.add(text.value.substring(offset));
 

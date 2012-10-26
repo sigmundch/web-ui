@@ -283,7 +283,7 @@ class _Path implements Path {
         segs[pos] = null;
       }
     }
-    if (segs.last() == '') segs.removeLast();  // Path ends with /.
+    if (segs.last == '') segs.removeLast();  // Path ends with /.
     // No remaining segments can be ., .., or empty.
     return !segs.some((s) => s == '' || s == '.' || s == '..');
   }
@@ -310,7 +310,7 @@ class _Path implements Path {
             } else {
               newSegs.add('..');
             }
-          } else if (newSegs.last() == '..') {
+          } else if (newSegs.last == '..') {
             newSegs.add('..');
           } else {
             newSegs.removeLast();

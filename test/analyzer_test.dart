@@ -150,7 +150,7 @@ main() {
     expect(info[elem].attributes['value'], isNotNull);
     expect(!info[elem].attributes['value'].isClass);
     expect(info[elem].attributes['value'].boundValue, equals('x'));
-    expect(info[elem].events.getKeys(), equals(['input']));
+    expect(info[elem].events.keys, equals(['input']));
     expect(info[elem].events['input'].length, equals(1));
     expect(info[elem].events['input'][0].action('foo', 'e'),
         equals('x = foo.value'));
@@ -175,7 +175,7 @@ main() {
     expect(info[elem].attributes['checked'], isNotNull);
     expect(!info[elem].attributes['checked'].isClass);
     expect(info[elem].attributes['checked'].boundValue, equals('x'));
-    expect(info[elem].events.getKeys(), equals(['click']));
+    expect(info[elem].events.keys, equals(['click']));
     expect(info[elem].events['click'].length, equals(1));
     expect(info[elem].events['click'][0].action('foo', 'e'),
         equals('x = foo.checked'));
@@ -217,7 +217,7 @@ main() {
     var elem = parseSubtree(input);
     var info = analyzeNode(elem).elements;
     expect(info[elem].attributes, isEmpty);
-    expect(info[elem].events.getKeys(), equals(['change']));
+    expect(info[elem].events.keys, equals(['change']));
     var changeEvents = info[elem].events['change'];
     expect(changeEvents.length, equals(1));
     expect(changeEvents[0].eventName, 'change');
@@ -394,7 +394,7 @@ main() {
       expect(info.declaredComponents.length, equals(1));
 
       analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
-      expect(info.components.getKeys(), equals(['x-foo']));
+      expect(info.components.keys, equals(['x-foo']));
 
       var elemInfo = info.elements[doc.query('x-foo')];
       expect(elemInfo.component, equals(info.declaredComponents[0]));
@@ -411,7 +411,7 @@ main() {
 
       var info = fileInfo['index.html'];
       expect(info.declaredComponents.length, isZero);
-      expect(info.components.getKeys(), equals(['x-foo']));
+      expect(info.components.keys, equals(['x-foo']));
       var elemInfo = info.elements[files[0].document.query('x-foo')];
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
       expect(elemInfo.component, equals(compInfo));
@@ -430,7 +430,7 @@ main() {
       var fileInfo = analyzeFiles(files);
 
       var info = fileInfo['index.html'];
-      expect(info.components.getKeys(), equals(['x-foo']));
+      expect(info.components.keys, equals(['x-foo']));
       var elemInfo = info.elements[files[0].document.query('x-foo')];
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
       expect(compInfo.hasConflict);
@@ -449,7 +449,7 @@ main() {
       var fileInfo = analyzeFiles(files);
 
       var info = fileInfo['index.html'];
-      expect(info.components.getKeys(), equals(['x-foo']));
+      expect(info.components.keys, equals(['x-foo']));
       var elemInfo = info.elements[files[0].document.query('x-foo')];
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
       expect(elemInfo.component, equals(compInfo));
@@ -466,7 +466,7 @@ main() {
       var fileInfo = analyzeFiles(files);
 
       var info = fileInfo['index.html'];
-      expect(info.components.getKeys(), equals([]));
+      expect(info.components.keys, equals([]));
       var elemInfo = info.elements[files[0].document.query('x-foo')];
       expect(fileInfo['foo.html'].declaredComponents.length, isZero);
       expect(elemInfo.component, isNull);
@@ -501,7 +501,7 @@ main() {
       var fileInfo = analyzeFiles(files);
 
       var info = fileInfo['index.html'];
-      expect(info.components.getKeys(), equals(['x-bar', 'x-foo']));
+      expect(info.components.keys, equals(['x-bar', 'x-foo']));
       expect(info.components['x-bar'].extendsComponent,
           equals(info.components['x-foo']));
     });
@@ -542,7 +542,7 @@ Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
 
 Map<Path, FileInfo> _toPathMap(Map<String, FileInfo> map) {
   var res = new Map<Path, FileInfo>();
-  for (var k in map.getKeys()) {
+  for (var k in map.keys) {
     res[new Path(k)] = map[k];
   }
   return res;
@@ -550,7 +550,7 @@ Map<Path, FileInfo> _toPathMap(Map<String, FileInfo> map) {
 
 Map<String, FileInfo> _toStringMap(Map<Path, FileInfo> map) {
   var res = new Map<String, FileInfo>();
-  for (var k in map.getKeys()) {
+  for (var k in map.keys) {
     res[k.toString()] = map[k];
   }
   return res;

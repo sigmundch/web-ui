@@ -594,7 +594,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       }
 
       // Add imports only for those components used by this component.
-      var imports = info.usedComponents.getKeys().map(
+      var imports = info.usedComponents.keys.map(
           (c) => PathInfo.relativePath(info, c));
 
       if (hasExtends) {
@@ -604,14 +604,14 @@ class WebComponentEmitter extends RecursiveEmitter {
       }
 
       printer.add(codegen.importList(imports))
-          .add(code.substring(0, match.end()))
+          .add(code.substring(0, match.end))
           .add('\n')
           .add(codegen.componentCode(info.constructor,
               _context.declarations.formatString(1),
               _context.createdMethod.formatString(2),
               _context.insertedMethod.formatString(2),
               _context.removedMethod.formatString(2)))
-          .add(code.substring(match.end()));
+          .add(code.substring(match.end));
       return printer.formatString();
     } else {
       messages.error('please provide a class definition '
@@ -662,7 +662,7 @@ class MainPageEmitter extends RecursiveEmitter {
     }
 
     // Import only those components used by the page.
-    var imports = _info.usedComponents.getKeys().map(
+    var imports = _info.usedComponents.keys.map(
           (c) => PathInfo.relativePath(_info, c));
     printer.add(codegen.importList(imports))
         .add(codegen.mainDartCode(codeInfo.code,
