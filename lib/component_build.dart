@@ -68,15 +68,18 @@ bool _isInputFile(String path) {
 /** Delete all generated files. */
 void _handleCleanCommand(List<Directory> trackDirs) {
   for (var dir in trackDirs) {
-    dir.list(recursive: false).onFile = (path) {
-      if (_isGeneratedFile(path)) {
-        // TODO(jmesserly): we need a cleaner way to do this with dart:io.
-        // The bug is that DirectoryLister returns native paths, so you need to
-        // use Path.fromNative to work around this. Ideally we could just write:
-        //    new File(path).delete();
-        new File.fromPath(new Path.fromNative(path)).delete();
-      }
-    };
+    dir.exists().then((exists) {
+      if (!exists) return;
+      dir.list(recursive: false).onFile = (path) {
+        if (_isGeneratedFile(path)) {
+          // TODO(jmesserly): we need a cleaner way to do this with dart:io.
+          // The bug is that DirectoryLister returns native paths, so you need
+          // to use Path.fromNative to work around this. Ideally we could just
+          // write: new File(path).delete();
+          new File.fromPath(new Path.fromNative(path)).delete();
+        }
+      };
+    });
   }
 }
 
