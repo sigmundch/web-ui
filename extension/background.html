@@ -3,10 +3,10 @@
     <script type="application/dart" src="bin/dwc_browser.dart"></script>
     <script type="text/javascript" src="dart.js"></script>
     <!--
-    TODO(jacobr): this is a hack to make Dart-JS interop work given chrome
-    extension security restrictions for inline JS
+    We must load 'dart_interop.js' explicitly. It cannot be injected dynamically
+    because of security restrictions for inline JS on chrome extensions.
     -->
-    <script src="dart_proxy.js"></script>
+    <script src="bin/packages/js/dart_interop.js"></script>
     <script src="background.js"></script>
   </head>
   <body>

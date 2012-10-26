@@ -29,22 +29,21 @@ void main() {
 }
 
 /**
- * Parse all templates in [sourceFullFn].
+ * Process the input file at [sourceUri] with the 'dwc' compiler.
  * [sourcePagePort] is a Chrome extension port used to communicate back to the
  * source page that will consume these proxied urls.
  * See extension/background.js.
  */
-void parse(js.Proxy sourcePagePort, String sourceFullFn) {
+void parse(js.Proxy sourcePagePort, String sourceUri) {
   // TODO(jacobr): we need to send error messages back to sourcePagePort.
   js.retain(sourcePagePort);
-  print("Processing: $sourceFullFn");
-
-  Uri uri = new Uri.fromString(sourceFullFn);
+  print("Processing: $sourceUri");
+  Uri uri = new Uri.fromString(sourceUri);
   fileSystem = new BrowserFileSystem(uri.scheme, sourcePagePort);
   // TODO(jacobr): provide a way to pass in options.
   var options = CompilerOptions.parse(['--no-colors', uri.path]);
   messages = new Messages(options: options);
-  asyncTime('Compiled $sourceFullFn', () {
+  asyncTime('Compiled $sourceUri', () {
     var compiler = new Compiler(fileSystem, options);
     return compiler.run().chain((_) {
       for (var file in compiler.output) {

@@ -61,9 +61,13 @@ class Compiler {
         options.outputDir != null ? new Path(options.outputDir) : mainDir;
 
     // Normalize paths - all should be relative or absolute paths.
-    if (_mainPath.isAbsolute || basePath.isAbsolute || outputPath.isAbsolute) {
+    bool anyAbsolute = _mainPath.isAbsolute || basePath.isAbsolute ||
+        outputPath.isAbsolute;
+    bool allAbsolute = _mainPath.isAbsolute && basePath.isAbsolute &&
+        outputPath.isAbsolute;
+    if (anyAbsolute && !allAbsolute) {
       if (currentDir == null)  {
-        messages.error('internal error: could not normalize paths. Please make'
+        messages.error('internal error: could not normalize paths. Please make '
             'the input, base, and output paths all absolute or relative, or '
             'specify "currentDir" to the Compiler constructor', null);
         return;

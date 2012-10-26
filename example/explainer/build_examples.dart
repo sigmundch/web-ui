@@ -84,7 +84,7 @@ Stopwatch startTime() => new Stopwatch()..start();
 
 void stopTime(Stopwatch watch, String message) {
   watch.stop();
-  var duration = watch.elapsedInMs();
+  var duration = watch.elapsedMilliseconds;
   print('$message: $GREEN_COLOR$duration ms$NO_COLOR');
   totalTime.add('$message: $GREEN_COLOR$duration ms$NO_COLOR');
 }

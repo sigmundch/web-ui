@@ -33,7 +33,7 @@ time(String logMessage, callback(), {bool printTime: false}) {
   watch.start();
   var result = callback();
   watch.stop();
-  final duration = watch.elapsedInMs();
+  final duration = watch.elapsedMilliseconds;
   if (printTime) {
     _printMessage(logMessage, duration);
   }
@@ -52,7 +52,7 @@ Future asyncTime(String logMessage, Future callback(),
   watch.start();
   return callback()..then((_) {
     watch.stop();
-    final duration = watch.elapsedInMs();
+    final duration = watch.elapsedMilliseconds;
     if (printTime) {
       _printMessage(logMessage, duration);
     }
