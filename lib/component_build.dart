@@ -40,8 +40,7 @@ void build(List<String> arguments, List<String> entryPoints) {
   var fullBuild = changedFiles.isEmpty && removedFiles.isEmpty && !cleanBuild;
 
   for (var file in entryPoints) {
-    var dir = new Path(file).directoryPath.toString();
-    trackDirs.add((dir != '') ? new Directory(dir) : new Directory.current());
+    trackDirs.add(new Directory(_outDir(file)));
   }
 
   if (cleanBuild) {
@@ -49,10 +48,13 @@ void build(List<String> arguments, List<String> entryPoints) {
   } else if (fullBuild || changedFiles.some(_isInputFile)
       || removedFiles.some(_isInputFile)) {
     for (var file in entryPoints) {
-      dwc.run([file]);
+      dwc.run(['-o', _outDir(file), file]);
     }
   }
 }
+
+String _outDir(String file) =>
+  new Path(file).directoryPath.append('out').toString();
 
 bool _isGeneratedFile(String filePath) {
   return new Path.fromNative(filePath).filename.startsWith('_');

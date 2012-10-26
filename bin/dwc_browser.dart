@@ -42,18 +42,11 @@ void parse(js.Proxy sourcePagePort, String sourceFullFn) {
   Uri uri = new Uri.fromString(sourceFullFn);
   fileSystem = new BrowserFileSystem(uri.scheme, sourcePagePort);
   // TODO(jacobr): provide a way to pass in options.
-  var options = CompilerOptions.parse(['--no-colors', '']);
+  var options = CompilerOptions.parse(['--no-colors', uri.path]);
   messages = new Messages(options: options);
-
-  Path srcPath = new Path(uri.path);
-  Path srcDir = srcPath.directoryPath;
-  String sourceFilename = srcPath.filename;
-
   asyncTime('Compiled $sourceFullFn', () {
     var compiler = new Compiler(fileSystem, options);
-    return compiler.run(srcPath.toString(), srcDir.toString()).chain((_) {
-      // Write out the code associated with each source file.
-      print("Writing files:");
+    return compiler.run().chain((_) {
       for (var file in compiler.output) {
         fileSystem.writeString(file.path, file.contents);
       }

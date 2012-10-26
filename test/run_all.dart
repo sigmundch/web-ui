@@ -37,7 +37,7 @@ main() {
     if (!path.endsWith('_test.html') || !pattern.hasMatch(path)) return;
 
     test(path, () {
-      expect(dwc.run(['--verbose', path, 'data/output/']).transform((_) {
+      expect(dwc.run(['-v', '-o', 'data/output/', path]).transform((_) {
         // add empty line for formatting
         print('');
       }), completes);

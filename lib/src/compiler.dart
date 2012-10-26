@@ -46,21 +46,44 @@ class Compiler {
   final List<SourceFile> files = <SourceFile>[];
   final List<OutputFile> output = <OutputFile>[];
 
+  Path _mainPath;
   PathInfo _pathInfo;
 
   /** Information about source [files] given their href. */
   final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
 
-  /** Used by template tool to open a file. */
-  Compiler(this.filesystem, this.options);
+  Compiler(this.filesystem, this.options, [String currentDir]) {
+    _mainPath = new Path(options.inputFile);
+    var mainDir = _mainPath.directoryPath;
+    var basePath =
+        options.baseDir != null ? new Path(options.baseDir) : mainDir;
+    var outputPath =
+        options.outputDir != null ? new Path(options.outputDir) : mainDir;
+
+    // Normalize paths - all should be relative or absolute paths.
+    if (_mainPath.isAbsolute || basePath.isAbsolute || outputPath.isAbsolute) {
+      if (currentDir == null)  {
+        messages.error('internal error: could not normalize paths. Please make'
+            'the input, base, and output paths all absolute or relative, or '
+            'specify "currentDir" to the Compiler constructor', null);
+        return;
+      }
+      var currentPath = new Path(currentDir);
+      if (!_mainPath.isAbsolute) _mainPath = currentPath.join(_mainPath);
+      if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
+      if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
+    }
+    _pathInfo = new PathInfo(basePath, outputPath);
+  }
 
   /** Compile the application starting from the given [mainFile]. */
-  Future run(String mainFile, String outputDir, [String baseDir]) {
-    var mainPath = new Path(mainFile);
-    var basePath = baseDir != null ? new Path(baseDir) : mainPath.directoryPath;
-    var outDir = new Path(outputDir);
-    _pathInfo = new PathInfo(basePath, outDir);
-    return _parseAndDiscover(mainPath).transform((_) {
+  Future run() {
+    if (_mainPath.filename.endsWith('.dart')) {
+      messages.error("Please provide an HTML file as your entry point.",
+          null, file: _mainPath);
+      return new Future.immediate(null);
+    }
+    return _parseAndDiscover(_mainPath).transform((_) {
       _analyze();
       _emit();
       return null;
@@ -106,17 +129,26 @@ class Compiler {
 
   /** Asynchronously parse [path] as an .html file. */
   Future<SourceFile> _parseHtmlFile(Path path) {
-    return filesystem.readTextOrBytes(path).transform((source) {
-      var file = new SourceFile(path);
-      file.document = _time('Parsed', path, () => parseHtml(source, path));
-      return file;
-    });
+    return (filesystem.readTextOrBytes(path)
+        ..handleException((e) => _readError(e, path)))
+        .transform((source) {
+          var file = new SourceFile(path);
+          file.document = _time('Parsed', path, () => parseHtml(source, path));
+          return file;
+        });
   }
 
   /** Parse [filename] and treat it as a .dart file. */
   Future<SourceFile> _parseDartFile(Path path) {
-    return filesystem.readText(path).transform(
-        (source) => new SourceFile(path, isDart: true)..code = source);
+    return (filesystem.readText(path)
+        ..handleException((e) => _readError(e, path)))
+        .transform((code) => new SourceFile(path, isDart: true)..code = code);
+  }
+
+  bool _readError(error, Path path) {
+    messages.error('exception while reading file, original message:\n $error',
+        null, file: path);
+    return true;
   }
 
   void _addDartFile(SourceFile dartFile) {

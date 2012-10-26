@@ -7,6 +7,7 @@ library options;
 import 'package:args/args.dart';
 
 class CompilerOptions {
+  /** Report warnings as errors. */
   final bool warningsAsErrors;
 
   /** True to show informational messages. The `--verbose` flag. */
@@ -15,9 +16,17 @@ class CompilerOptions {
   /** Remove any generated files. */
   final bool clean;
 
+  /** Whether to use colors to print messages on the terminal. */
   final bool useColors;
 
-  final List<String> rest;
+  /** File to process by the compiler. */
+  String inputFile;
+
+  /** Directory where all sources are found. */
+  final String baseDir;
+
+  /** Directory where all output will be generated. */
+  final String outputDir;
 
   // We could make this faster, if it ever matters.
   factory CompilerOptions() => parse(['']);
@@ -27,28 +36,42 @@ class CompilerOptions {
       verbose = args['verbose'],
       clean = args['clean'],
       useColors = args['colors'],
-      rest = args.rest;
+      baseDir = args['basedir'],
+      outputDir = args['out'],
+      inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
     var parser = new ArgParser()
-      ..addFlag('verbose', help: 'Display detail info', defaultsTo: false)
-      ..addFlag('clean', help: 'Remove all generated files', defaultsTo: false)
+      ..addFlag('verbose', abbr: 'v',
+          defaultsTo: false, negatable: false)
+      ..addFlag('clean', help: 'Remove all generated files',
+          defaultsTo: false, negatable: false)
       ..addFlag('warnings_as_errors', help: 'Warning handled as errors',
-          defaultsTo: false)
+          defaultsTo: false, negatable: false)
       ..addFlag('colors', help: 'Display errors/warnings in colored text',
           defaultsTo: true)
-      ..addFlag('help', help: 'Displays this help message', defaultsTo: false);
-
-    var results = parser.parse(arguments);
-    if (results['help'] || results.rest.length == 0) {
-      print('Usage: [options...] sourcefile [outputPath]\n');
-      print(parser.getUsage());
-      print("   sourcefile - template file filename.html");
-      print("   outputPath - if specified directory to generate files; if not");
-      print("                same directory as sourcefile");
+      ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
+          ' (defaults to the same directory as the source file)')
+      ..addOption('basedir', help: 'Base directory where to find all source '
+          'files (defaults to the source file\'s directory)')
+      ..addFlag('help', abbr: 'h', help: 'Displays this help message',
+          defaultsTo: false, negatable: false);
+    try {
+      var results = parser.parse(arguments);
+      if (results['help'] || results.rest.length == 0) {
+        showUsage(parser);
+        return null;
+      }
+      return new CompilerOptions.fromArgs(results);
+    } on FormatException catch (e) {
+      print(e.message);
+      showUsage(parser);
       return null;
     }
+  }
 
-    return new CompilerOptions.fromArgs(results);
+  static showUsage(parser) {
+    print('Usage: dwc [options...] input.html');
+    print(parser.getUsage());
   }
 }

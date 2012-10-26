@@ -95,10 +95,9 @@ class PathInfo {
     if (new Uri.fromString(target).isAbsolute()) return target;
     var path = new Path(target);
     if (path.isAbsolute) return target;
-    var pathFromBaseDir = src.inputPath.directoryPath.join(path);
+    var pathToTarget = src.inputPath.directoryPath.join(path);
     var outputLibraryDir = _outputDirPath(src.inputPath);
-    return pathFromBaseDir.relativeTo(outputLibraryDir)
-        .canonicalize().toString();
+    return pathToTarget.relativeTo(outputLibraryDir).canonicalize().toString();
   }
 }
 
