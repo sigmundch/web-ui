@@ -22,8 +22,9 @@ Try It Now
 
 Learn more at <http://www.dartlang.org/articles/dart-web-components/>.
 
-To run our [TodoMVC][] example, look at the [README.md][todo_readme] in
-`example/todomvc`.
+
+See our [TodoMVC][] example [running][todo_live]. Read the [README.md][todo_readme] in
+`example/todomvc` for more details.
 
 
 Running Tests
@@ -55,3 +56,4 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
 [TodoMVC]: http://addyosmani.github.com/todomvc/
 [todo_readme]: https://github.com/dart-lang/dart-web-components/blob/master/example/todomvc/README.md
+[todo_live]:http://dart-lang.github.com/dart-web-components/example/todomvc/index.html
