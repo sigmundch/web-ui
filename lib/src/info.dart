@@ -9,6 +9,8 @@
 library info;
 
 import 'dart:coreimpl';
+import 'dart:uri';
+
 import 'package:html5lib/dom.dart';
 
 import 'file_system/path.dart';
@@ -82,19 +84,18 @@ class PathInfo {
   }
 
   /**
-   * Transforms an import, part, or export [url] seen in `src.inputPath` into a
-   * corresponding url from the output library of [src]. This will keep
-   * 'package:', 'dart:', path-absolute, and absolute urls intact, but it will
-   * fix relative paths to walk from the output directory back to the input
-   * directory. An exception will be thrown if [target] is not under [_baseDir].
+   * Transforms a [target] url seen in `src.inputPath` (e.g. a Dart import, a
+   * .css href in an HTML file, etc) into a corresponding url from the output
+   * library of [src]. This will keep 'package:', 'dart:', path-absolute, and
+   * absolute urls intact, but it will fix relative paths to walk from the
+   * output directory back to the input directory. An exception will be thrown
+   * if [target] is not under [_baseDir].
    */
-  String transferDirectiveUrl(LibraryInfo src, String url) {
-    if (url.startsWith('package:') || url.startsWith('dart:')
-        || url.startsWith('/') || url.startsWith('http://')
-        || url.startsWith('https://')) {
-        return url;
-    }
-    var pathFromBaseDir = src.inputPath.directoryPath.join(new Path(url));
+  String transformUrl(LibraryInfo src, String target) {
+    if (new Uri.fromString(target).isAbsolute()) return target;
+    var path = new Path(target);
+    if (path.isAbsolute) return target;
+    var pathFromBaseDir = src.inputPath.directoryPath.join(path);
     var outputLibraryDir = _outputDirPath(src.inputPath);
     return pathFromBaseDir.relativeTo(outputLibraryDir)
         .canonicalize().toString();

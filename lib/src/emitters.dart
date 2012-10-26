@@ -636,13 +636,13 @@ class MainPageEmitter extends RecursiveEmitter {
     document.queryAll('script').forEach((tag) {
       var src = tag.attributes["src"];
       if (tag.attributes['type'] != 'application/dart' && src != null) {
-        tag.attributes["src"] = pathInfo.transferDirectiveUrl(_info, src);
+        tag.attributes["src"] = pathInfo.transformUrl(_info, src);
       }
     });
     document.queryAll('link').forEach((tag) {
       var href = tag.attributes['href'];
       if (tag.attributes['rel'] != 'components' && href != null) {
-        tag.attributes['href'] = pathInfo.transferDirectiveUrl(_info, href);
+        tag.attributes['href'] = pathInfo.transformUrl(_info, href);
       }
     });
 
