@@ -535,6 +535,11 @@ void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
 void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
   var existing = fileInfo.components[componentInfo.tagName];
   if (existing != null) {
+    if (existing == componentInfo) {
+      // This is the same exact component as the existing one.
+      return;
+    }
+
     if (existing.declaringFile == fileInfo &&
         componentInfo.declaringFile != fileInfo) {
       // Components declared in [fileInfo] are allowed to shadow component
