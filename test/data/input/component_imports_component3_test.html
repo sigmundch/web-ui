@@ -13,8 +13,8 @@
   <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
-  <!-- use component-a, which internally uses component-b defined in a separate
-  file -->
+  <!-- component-a and component-b both internally use component-c. That should
+  not be considered a conflict. -->
   expect 'hello': <x-component-a></x-component-a>
   expect 'hello': <x-component-b></x-component-b>
   <script type="application/dart">
