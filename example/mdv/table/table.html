@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html>
+  <head>
+    <title>Table Sample</title>
+    <style>
+tr {
+  height: 40px;
+}
+
+td {
+  width: 40px;
+  border: 2px solid black;
+  text-align: center;
+}
+
+li {
+  padding:4px 0px 4px;
+}
+
+li > .square:not(.taken) {
+  border: 2px solid white;
+}
+
+.square:not(.taken):hover {
+  border: 2px solid #00FF00;
+}
+
+.square.taken:hover {
+  border: 2px solid #FF0000;
+}
+    </style>
+  </head>
+  <body>
+    <template instantiate>
+      <span>It's {{ currentPlayer }}'s turn</span>
+        <table>
+          <tbody template iterate="row in gameBoard.board">
+            <tr template iterate="spot in row">
+              <td class="square {{spot.taken}}"
+                  data-action="click:spot.move">{{spot.value}}</td>
+            </tr>
+          </tbody>
+        </table>
+      <span hidden="{{!gameBoard.won}}" style="padding-right:4px;">
+          {{gameBoard.winner}} wins!
+      </span>
+      <a href="#" data-action="click:gameBoard.reset">Play Again</a>
+      <template instantiate>
+        <ul>
+          <template iterate="row in gameBoard.board">
+            <li>
+              <template iterate="spot in row">
+                <span style="padding:2px;" class="{{spot.taken}} square"
+                      data-action="click:spot.move">{{spot.value}} ,
+                </span>
+              </template>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </template>
+
+<script type="application/dart">
+String currentPlayer = "X";
+Board gameBoard = new Board();
+
+class Square {
+  String value = '';
+
+  String get taken => value != '' ? 'taken' : '';
+
+  /** Click event hookup. */
+  void move(e) {
+    gameBoard.makeMove(this);
+  }
+}
+
+class Board {
+  String _winner = '';
+  List<List<Square>> board = [
+      [new Square(), new Square(), new Square()],
+      [new Square(), new Square(), new Square()],
+      [new Square(), new Square(), new Square()],
+  ];
+
+  bool get won => winner != '';
+  String get winner => _winner;
+
+  void _checkWinner(int rowIdx, int columnIdx) {
+    _winner = _rowWinner(rowIdx);
+    if (_winner == '') {
+      _winner = _columnWinner(columnIdx);
+      if (_winner == '') {
+        _winner = _diagonalWinner();
+      }
+    }
+  }
+
+  String _rowWinner(int rowIdx) {
+    var row = board[rowIdx];
+    var left = row[0].value;
+    return (left != '' && (left == row[1].value && left == row[2].value)) ?
+        left : '';
+  }
+
+  String _columnWinner(int columnIdx) {
+    var top = board[0][columnIdx].value;
+    return (top != '' && (top == board[1][columnIdx].value &&
+        top == board[2][columnIdx].value)) ? top : '';
+  }
+
+  String _diagonalWinner() {
+    var topLeft = board[0][0].value;
+    if (topLeft != '' &&
+        (topLeft == board[1][1].value && topLeft == board[2][2].value)) {
+      return topLeft;
+    }
+    var topRight = board[0][2].value;
+    if (topRight != '' &&
+        (topRight == board[1][1].value && topRight == board[2][0].value)) {
+      return topRight;
+    }
+    return '';
+  }
+
+  void makeMove(square) {
+    if (!won && square.value == '') {
+      square.value = currentPlayer;
+      for (int r = 0; r < board.length; r++) {
+        var row = board[r];
+        for (int c = 0; c < row.length; c++) {
+          var sq = row[c];
+          if (square == sq) {
+            _checkWinner(r, c);
+          }
+        }
+      }
+      currentPlayer = currentPlayer == 'X' ? 'O' : 'X';
+    }
+  }
+
+  /** Click event for play again. */
+  void reset(e) {
+    for (var row in board) {
+      for (var square in row) {
+        square.value = '';
+      }
+    }
+    currentPlayer = 'X';
+    _winner = '';
+  }
+}
+
+main() {
+}
+</script>
+  </body>
+</html>

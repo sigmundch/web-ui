@@ -13,7 +13,7 @@ import 'file_system/path.dart';
  * Abstraction around file system access to work in a variety of different
  * environments.
  */
-interface FileSystem {
+abstract class FileSystem {
   /**
    * Apply all pending writes.  Until this method is called, writeString is not
    * guaranteed to have any observable impact.

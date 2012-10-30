@@ -29,9 +29,11 @@ main() {
     });
 
     const generatedFile = 'data/output/html5_utils_test_generated.dart';
+
     new File(generatedFile).openSync(FileMode.WRITE)
         ..writeStringSync(code.toString())
         ..close();
+
 
     // TODO(jmesserly): it would be good to run all of our
     // dart_analyzer tests in one batch.
@@ -40,8 +42,8 @@ main() {
         .then(expectAsync1((result) {
       expect(result.stdout, '', result.stdout);
       expect(result.stderr, '', result.stderr);
-      expect(result.exitCode, 0, 'expected success, but got exit code '
-          '${result.exitCode}');
+      expect(result.exitCode, 0,
+          'expected success, but got exit code ${result.exitCode}');
     }));
   });
 }

@@ -130,13 +130,13 @@ abstract class LibraryInfo {
   FileInfo externalCode;
 
   /** File where the top-level code was defined. */
-  abstract Path get inputPath;
+  Path get inputPath;
 
   /**
    * Name of the file that will hold any generated Dart code for this library
    * unit.
    */
-  abstract String get outputFilename;
+  String get outputFilename;
 
   /**
    * Components used within this library unit. For [FileInfo] these are
@@ -168,9 +168,6 @@ class FileInfo extends LibraryInfo {
   /** Name of the file that will hold any generated Dart code. */
   String get outputFilename => '_${inputPath.filename}.dart';
 
-  /** Generated analysis info for all elements in the file. */
-  final Map<Node, ElementInfo> elements = new Map<Node, ElementInfo>();
-
   /**
    * All custom element definitions in this file. This may contain duplicates.
    * Normally you should use [components] for lookup.
@@ -187,6 +184,9 @@ class FileInfo extends LibraryInfo {
 
   /** Files imported with `<link rel="component">` */
   final List<Path> componentLinks = <Path>[];
+
+  /** Root is associated with the body info. */
+  ElementInfo bodyInfo;
 
   FileInfo([this.path, this.isEntryPoint = false]);
 }
@@ -215,6 +215,9 @@ class ComponentInfo extends LibraryInfo {
 
   /** The Dart class containing the component's behavior. */
   final String constructor;
+
+  /** Component's ElementInfo at the element tag. */
+  ElementInfo elemInfo;
 
   /** The declaring `<element>` tag. */
   final Node element;
@@ -259,15 +262,49 @@ class ComponentInfo extends LibraryInfo {
   }
 }
 
+/** Base tree visitor for the Analyzer infos. */
+class InfoVisitor {
+  void visit(ElementInfo info) {
+    if (info is ElementInfo) {
+      visitElementInfo(info);
+    } else if (info is TemplateInfo) {
+      visitTemplateInfo(info);
+    } else {
+      throw new UnsupportedError("Unknown Info");
+    }
+  }
+
+  void visitChildren(ElementInfo info) {
+    for (var child in info.children) visit(child);
+  }
+
+  void visitTemplateInfo(TemplateInfo info) => visitChildren(info);
+
+  void visitElementInfo(ElementInfo info) => visitChildren(info);
+}
+
+// TODO(terry): ElementInfo should associated with elements, rather than
+// nodes. There are cases with the node is pointing to a text node, maybe
+// have a 'NodeInfo' rather than an 'ElementInfo'.
 /** Information extracted for each node in a template. */
 class ElementInfo {
-
   /** Id given to an element node, if any. */
   String elementId;
 
-  /** Generated field name, if any, associated with this element. */
-  // TODO(sigmund): move this to Emitter?
-  String fieldName;
+  // TODO(terry): Remove useDomId and replace with elemField as real field name.
+  /** Element id exposed in DOM as an attribute id. */
+  bool useDomId = false;
+
+  /** Info for the nearest enclosing element, iterator, or conditional. */
+  ElementInfo parent;
+
+  // TODO(terry): Make childen work like DOM children collection.  So, that
+  //              info.remove() updates the parent pointer correctly.  Instead,
+  //              of info.parent.children.removeLast() and info.parent = null;
+  final List<ElementInfo> children = [];
+
+  /** DOM node associated with this ElementInfo. */
+  Node node;
 
   /**
    * Whether code generators need to create a field to store a reference to this
@@ -329,12 +366,17 @@ class ElementInfo {
   /** Whether the template element has an `instantiate="if ..."` conditional. */
   bool get hasIfCondition => false;
 
+  bool get isIterateOrIf => hasIterate || hasIfCondition;
+
+  bool get isTemplateElement => false;
+
   String toString() => '#<ElementInfo '
       'elementId: $elementId, '
-      'fieldName: $fieldName, '
       'fieldType: fieldType, '
+      'useDomId: $useDomId, '
       'needsHtmlId: $needsHtmlId, '
       'component: $component, '
+      'isTemplateElement" $isTemplateElement, '
       'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
@@ -414,18 +456,41 @@ class TemplateInfo extends ElementInfo {
    */
   final String loopItems;
 
-  TemplateInfo({this.ifCondition, this.loopVariable, this.loopItems});
+  /**
+   * True when [node] is a '<template>' tag. False when [node] is any other
+   * element type and the template information is attached as an attribute.
+   */
+  final bool isTemplateElement;
 
-  bool get hasIterate => loopVariable != null;
+  TemplateInfo({this.ifCondition, this.loopVariable, this.loopItems,
+      bool isAttribute}) : isTemplateElement = !isAttribute;
 
   bool get hasIfCondition => ifCondition != null;
 
+  bool get hasIterate => loopVariable != null;
+
+  bool get isTemplateTagAndIterOrIf => isTemplateElement &&  isIterateOrIf;
+
+  /**
+   * Keep walking up the tree looking for an element (with an id) used to add
+   * newly created HTML generated from a template iterate or if.
+   */
+  String get parentId {
+    var info = this;
+    while (info.isTemplateElement && !info.useDomId) {
+      info = info.parent;
+    }
+
+    assert(info != null);
+    return info.idAsIdentifier;
+  }
+
   String toString() => '#<TemplateInfo '
+      'isTemplateElement: $isTemplateElement, '
       'ifCondition: $ifCondition, '
       'loopVariable: $ifCondition, '
       'loopItems: $ifCondition>';
 }
-
 
 /**
  * Specifies the action to take on a particular event. Some actions need to read

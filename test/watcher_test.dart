@@ -43,7 +43,7 @@ main() {
     valuesSeen = false;
     x = 1;
     dispatch();
-    expect(!valuesSeen);
+    expect(valuesSeen, isFalse);
   });
 
   test('unregister twice is ok', () {
@@ -57,7 +57,7 @@ main() {
     valuesSeen = false;
     x = 1;
     dispatch();
-    expect(!valuesSeen);
+    expect(valuesSeen, isFalse);
   });
 
   test('many changes seen', () {

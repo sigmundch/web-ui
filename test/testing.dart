@@ -6,7 +6,6 @@
 library testing;
 
 import 'package:html5lib/dom.dart';
-import 'package:html5lib/dom_parsing.dart';
 import 'package:html5lib/parser.dart';
 import 'package:web_components/src/messages.dart';
 import 'package:web_components/src/options.dart';

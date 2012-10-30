@@ -19,7 +19,6 @@ import 'info.dart';
 import 'messages.dart';
 import 'utils.dart';
 
-
 /**
  * Finds custom elements in this file and the list of referenced files with
  * component declarations. This is the first pass of analysis on a file.
@@ -35,9 +34,12 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  * Used for testing.
  */
 // TODO(jmesserly): move this into analyzer_test
-FileInfo analyzeNode(Node source) {
+FileInfo analyzeNode(Node source, [bool cleanup = false]) {
   var result = new FileInfo();
-  new _Analyzer(result).visit(source);
+  new _Analyzer(result).run(source);
+  if (cleanup) {
+    new _CleanupHtml(result).visit(source);
+  }
   return result;
 }
 
@@ -45,7 +47,55 @@ FileInfo analyzeNode(Node source) {
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info) {
   var fileInfo = info[file.path];
   _normalize(fileInfo, info);
-  new _Analyzer(fileInfo).visit(file.document);
+  new _Analyzer(fileInfo).run(file.document);
+  new _CleanupHtml(fileInfo).visit(file.document);
+}
+
+/** Remove all MDV attributes; post-analysis these attributes are not needed. */
+class _CleanupHtml extends TreeVisitor {
+  final FileInfo result;
+
+  _CleanupHtml(this.result);
+
+  void visitElement(Element node) {
+    node.attributes.forEach((name, value) {
+      visitAttribute(node, name, value);
+    });
+
+    super.visitElement(node);
+  }
+
+  // TODO(terry): Compute the text node data-bound expressions during analysis
+  //              time.  Either cleanup DOM then or marked as text node to be
+  //              remove.  Also, consider doing the same for class attribute and
+  //              other attributes with data-binding too.
+  /** Remove text nodes with MDV expr {{ }}, they're handled at runtime. */
+  visitText(Text node) {
+    var bindingRegex = const RegExp(r'{{(.*)}}');
+    if (bindingRegex.hasMatch(node.value)) {
+      node.remove();
+    }
+  }
+
+  void visitAttribute(Element node, String name, String value) {
+    switch (name) {
+      // Remove all MDV attributes.
+      case 'data-value':
+      case 'data-action':
+      case 'data-bind':
+      case 'template':
+      case 'iterate':
+      case 'instantiate':
+        node.attributes.remove(name);
+        break;
+      default:
+        // Remove any attribute computed as a MDV expression.
+        var bindingRegex = const RegExp(r'{{(.*)}}');
+        if (bindingRegex.hasMatch(value)) {
+          node.attributes.remove(name);
+        }
+    }
+  }
 }
 
 /** A visitor that walks the HTML to extract all the relevant information. */
@@ -53,36 +103,54 @@ class _Analyzer extends TreeVisitor {
   final FileInfo _fileInfo;
   LibraryInfo _currentInfo;
   int _uniqueId = 0;
+  final List<ElementInfo> _parents = [];
 
   _Analyzer(this._fileInfo) {
     _currentInfo = _fileInfo;
+    _parents.add(new ElementInfo());
+  }
+
+  void run(var node) {
+    visit(node);
+    assert(_parents.length == 1);
+    _fileInfo.bodyInfo = _parents.last;
   }
 
   void visitElement(Element node) {
-    ElementInfo info = null;
-
+    var info = null;
     if (node.tagName == 'script') {
       // We already extracted script tags in previous phase.
       return;
     }
 
-    if (node.tagName == 'template') {
+    // Bind to the parent element.
+    if (node.attributes.containsKey('template') || node.tagName == 'template') {
       // template tags are handled specially.
       info = _createTemplateInfo(node);
     }
 
     if (info == null) {
-      info = new ElementInfo();
+      info = _createElementInfo();
     }
     if (node.id != '') info.elementId = node.id;
-    _fileInfo.elements[node] = info;
+
+    info.node = node;
+
+    if (info is TemplateInfo &&
+        (info as TemplateInfo).isTemplateTagAndIterOrIf) {
+      var parentNode = info.parent.node;
+      if (parentNode != null && parentNode.tagName != 'body') {
+        _generateId(parentNode, info.parent, true);
+      }  else {
+        _generateId(node, info, true);
+      }
+    }
 
     node.attributes.forEach((name, value) {
       visitAttribute(node, info, name, value);
     });
 
     _bindCustomElement(node, info);
-
 
     var lastInfo = _currentInfo;
     if (node.tagName == 'element') {
@@ -93,24 +161,108 @@ class _Analyzer extends TreeVisitor {
       var component = _fileInfo.components[name];
       if (component == null) return;
 
+      // Associate ElementInfo of the <element> tag with its component.
+      component.elemInfo = info;
+
+      // The body of an element tag will not be part of the HTML page. Each
+      // element will be generated programatically as a Dart web component by
+      // [WebComponentEmitter]. So this component's ElementInfo isn't part of
+      // the HTML page's children and the ElementInfo is the top-level node.
+      info.parent.children.removeLast();
+      info.parent = null;
+
       _bindExtends(component);
 
       _currentInfo = component;
     }
+
+    _parents.add(info);
+
+    // Invoke super to visit children.
     super.visitElement(node);
     _currentInfo = lastInfo;
+    _parents.removeLast();
 
-    // Need to get to this element at codegen time; for template, data binding,
-    // or event hookup.  We need an HTML id attribute for this node.
-    if (info.needsHtmlId) {
-      if (info.elementId == null) {
-        info.elementId = "__e-${_uniqueId}";
-        node.attributes['id'] = info.elementId;
-        _uniqueId++;
+    bool force = false;
+    if (info.parent != null && info.parent.isIterateOrIf) {
+      // Conditional template at top level the template child will need an id
+      // for DOM element.
+      if (lastInfo is ComponentInfo) {
+        force = _componentParentsAreTemplates(info);
+      } else {
+        force = _isToplevelTemplateElement(node);
       }
-      info.fieldName = info.idAsIdentifier;
+    }
+    _generateId(node, info, force);
+  }
+
+  /** Conditional/iterate template at top-level of page sibling of <body>. */
+  bool _isToplevelTemplateElement(Node node) {
+    if (node != null && node.parent != null && node.parent.parent != null) {
+      // TODO(terry): Need to figure out way to know how to add to body not
+      //              just an arbitrary element; for this case a template will
+      //              be realized and we'll add our children to this template.
+      return node.parent.parent.tagName == 'body';
+    }
+    return false;
+  }
+
+  /**
+   * For components only, if child element [info] is in a template and it's
+   * parents (upto the element tag) are templates then the template will need
+   * to be realized in the document; so it will need an id.
+   * */
+  bool _componentParentsAreTemplates(info) {
+    if (info.parent != null) {
+      if (info.parent.node is Element &&
+          info.parent.node.tagName == 'template') {
+        return _componentParentsAreTemplates(info.parent);
+      } else if (info.parent.node is Element &&
+          info.parent.node.tagName == 'element') {
+        return true;
+      }
+    } else {
+      return false;
     }
   }
+
+  /**
+   * Need to get to this element at codegen time; for template, data binding,
+   * or event hookup.  We need an HTML id attribute for this node.
+   */
+  void _generateId(Element node, ElementInfo info, [bool forceId = false]) {
+    if (!info.needsHtmlId && !forceId) return;
+    if (info.elementId != null) return;
+
+    info.elementId = "__e-${_uniqueId}";
+
+    var parentNode = info.parent.node;
+
+    if (_needsIdentifier(info, parentNode, node) ||
+        _topLevelDataBindingComponent(info, parentNode)) {
+      node.attributes['id'] = info.elementId;
+      info.useDomId = true;
+    }
+
+    _uniqueId++;
+  }
+
+  /**
+   * Don't need an id attribute generated for the HTML element if the element
+   * is a template inside of another template.  If a template is not a lone
+   * child element then template is exposed. The id is used only as a variable
+   * name in the generated code no need to query to find the HTML element.
+   */
+  bool _needsIdentifier(ElementInfo info, Node parentNode, Node node) =>
+      (info.parent is! TemplateInfo && parentNode != null &&
+       parentNode.tagName != 'body') &&
+      (node.tagName != 'template' || _moreThanOneChildElement(info.parent));
+
+  // TODO(terry): Need better way for sibling templates too.
+  /** Assign an id to the element tag, it's at the top (parent is body). */
+  bool _topLevelDataBindingComponent(ElementInfo info, Node parent) =>
+    (info is TemplateInfo && parent != null && parent.tagName == 'body') ||
+      info.hasDataBinding || info.component != null;
 
   void _bindExtends(ComponentInfo component) {
     if (component.extendsTag == null) {
@@ -130,6 +282,22 @@ class _Analyzer extends TreeVisitor {
           'custom element with tag name ${component.extendsTag} not found.',
           component.element.span, file: _fileInfo.path);
     }
+  }
+
+  // TODO(terry): Can remove this function and replace with
+  //              node.parent.elements.length > 1 when this is resolved
+  //              https://github.com/dart-lang/html5lib/issues/33
+  /** More than one child element tag. */
+  bool _moreThanOneChildElement(ElementInfo elemInfo) {
+    if (elemInfo != null) {
+      int childElems = 0;
+      for (var node in elemInfo.node.nodes) {
+        if (node is Element) {
+          if (++childElems > 1)  return true;
+        }
+      }
+    }
+    return false;
   }
 
   void _bindCustomElement(Element node, ElementInfo info) {
@@ -155,10 +323,22 @@ class _Analyzer extends TreeVisitor {
     }
   }
 
+  void _setupParentChild(var info) {
+    info.parent = _parents.last;
+    info.parent.children.add(info);
+  }
+
+  ElementInfo _createElementInfo() {
+    var info = new ElementInfo();
+    _setupParentChild(info);
+    return info;
+  }
+
   TemplateInfo _createTemplateInfo(Element node) {
-    assert(node.tagName == 'template');
     var instantiate = node.attributes['instantiate'];
     var iterate = node.attributes['iterate'];
+    bool templateAttr = node.tagName != 'template' &&
+        node.attributes.containsKey('template');
 
     // Note: we issue warnings instead of errors because the spirit of HTML and
     // Dart is to be forgiving.
@@ -170,7 +350,10 @@ class _Analyzer extends TreeVisitor {
 
     if (instantiate != null) {
       if (instantiate.startsWith('if ')) {
-        return new TemplateInfo(ifCondition: instantiate.substring(3));
+        var info = new TemplateInfo(ifCondition: instantiate.substring(3),
+            isAttribute: templateAttr);
+        _setupParentChild(info);
+        return info;
       }
 
       // TODO(jmesserly): we need better support for <template instantiate>
@@ -185,7 +368,10 @@ class _Analyzer extends TreeVisitor {
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
-        return new TemplateInfo(loopVariable: match[1], loopItems: match[2]);
+        var info = new TemplateInfo(loopVariable: match[1], loopItems: match[2],
+            isAttribute: templateAttr);
+        _setupParentChild(info);
+        return info;
       }
       messages.warning('<template> iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name'
@@ -208,13 +394,14 @@ class _Analyzer extends TreeVisitor {
     if (name == 'data-bind') {
       _readDataBindAttribute(elem, elemInfo, value);
     } else {
-      var match = const RegExp(r'^\s*{{(.*)}}\s*$').firstMatch(value);
-      if (match == null) return;
-      // Strip off the outer {{ }}.
-      value = match[1];
       if (name == 'class') {
         elemInfo.attributes[name] = _readClassAttribute(elem, elemInfo, value);
       } else {
+        // Strip off the outer {{ }}.
+        var match = const RegExp(r'^\s*{{(.*)}}\s*').firstMatch(value);
+        if (match == null) return;
+        value = match[1];
+
         // Default to a 1-way binding for any other attribute.
         elemInfo.attributes[name] = new AttributeInfo(value);
       }
@@ -296,26 +483,52 @@ class _Analyzer extends TreeVisitor {
     elemInfo.attributes[name] = attrInfo;
   }
 
+  /**
+   * Special support to bind each css class separately.
+   *
+   *       class="{{class1}} class2 {{class3}} {{class4}}"
+   *
+   * Returns list of databound expressions (e.g, class1, class3 and class4).
+   */
   AttributeInfo _readClassAttribute(
       Element elem, ElementInfo elemInfo, String value) {
-    // Special support to bind each css class separately.
-    // class="{{class1}} {{class2}} {{class3}}"
+
     List<String> bindings = [];
-    var parts = value.split(const RegExp(r'}}\s*{{'));
-    for (var part in parts) {
-      bindings.add(part);
+    if (value != null) {
+      var matches = const RegExp(r'{{[^/}]+}}').allMatches(value);
+      for (var match in matches) {
+        var part = match[0];
+        value = value.replaceFirst(part, "");
+        assert(part.startsWith('{{'));
+        part = part.substring(2);
+        assert(part.endsWith('}}'));
+        part = part.substring(0, part.length - 2);
+        bindings.add(part);
+      }
+
+      // Update class attributes to only have non-databound class names for
+      // attributes for the HTML.
+      elem.attributes['class'] = value;
     }
+
     return new AttributeInfo.forClass(bindings);
   }
 
   void visitText(Text text) {
+    var info = _createElementInfo();
+
+    // TODO(terry): ElementInfo Should associated with elements, rather than
+    // nodes. In this case, we are creating a text node, so we should maybe
+    // have a 'NodeInfo' rather than an 'ElementInfo' in that case.
+    info.node = text;
+
     var bindingRegex = const RegExp(r'{{(.*)}}');
     if (!bindingRegex.hasMatch(text.value)) return;
 
     var parentElem = text.parent;
-    ElementInfo info = _fileInfo.elements[parentElem];
+    info.parent.hasDataBinding = true;
     info.hasDataBinding = true;
-    assert(info.contentBinding == null);
+    assert(info.parent.contentBinding == null);
 
     // Match all bindings.
     var buf = new StringBuffer();
@@ -335,6 +548,10 @@ class _Analyzer extends TreeVisitor {
 
     var content = buf.toString().replaceAll("'", "\\'").replaceAll('\n', " ");
     info.contentExpression = "'$content'";
+
+    // Parent Element needs an id; this text node has a template expression.
+    var parentNode = info.parent.node;
+    _generateId(parentNode, info.parent, true);
   }
 }
 
