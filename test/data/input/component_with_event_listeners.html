@@ -1,0 +1,25 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<body>
+<element name="x-component-with-event-listeners" extends="span" constructor="ComponentWithEventListeners">
+  <template>
+    <div data-action="click:listener">0</div>
+    <template instantiate="if notCond">
+      <div data-action="click:listener">1</div>
+    </template>
+  </template>
+  <script type='application/dart'>
+    import 'common.dart';
+    import 'package:web_components/web_component.dart';
+    class ComponentWithEventListeners extends WebComponent {
+      void listener(e) {}
+    }
+  </script>
+</element>
+</body>
+</html>
