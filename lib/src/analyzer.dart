@@ -493,22 +493,19 @@ class _Analyzer extends TreeVisitor {
   AttributeInfo _readClassAttribute(
       Element elem, ElementInfo elemInfo, String value) {
 
-    List<String> bindings = [];
+    var bindings = <String>[];
     if (value != null) {
-      var matches = const RegExp(r'{{[^/}]+}}').allMatches(value);
-      for (var match in matches) {
-        var part = match[0];
-        value = value.replaceFirst(part, "");
-        assert(part.startsWith('{{'));
-        part = part.substring(2);
-        assert(part.endsWith('}}'));
-        part = part.substring(0, part.length - 2);
-        bindings.add(part);
+      var parser = new BindingParser(value);
+      var content = new StringBuffer();
+      while (parser.moveNext()) {
+        content.add(parser.textContent);
+        bindings.add(parser.binding);
       }
+      content.add(parser.textContent);
 
       // Update class attributes to only have non-databound class names for
       // attributes for the HTML.
-      elem.attributes['class'] = value;
+      elem.attributes['class'] = content.toString();
     }
 
     return new AttributeInfo.forClass(bindings);
@@ -522,8 +519,8 @@ class _Analyzer extends TreeVisitor {
     // have a 'NodeInfo' rather than an 'ElementInfo' in that case.
     info.node = text;
 
-    var bindingRegex = const RegExp(r'{{(.*)}}');
-    if (!bindingRegex.hasMatch(text.value)) return;
+    var parser = new BindingParser(text.value);
+    if (!parser.moveNext()) return;
 
     var parentElem = text.parent;
     info.parent.hasDataBinding = true;
@@ -531,22 +528,26 @@ class _Analyzer extends TreeVisitor {
     assert(info.parent.contentBinding == null);
 
     // Match all bindings.
-    var buf = new StringBuffer();
-    int offset = 0;
-    for (var match in bindingRegex.allMatches(text.value)) {
-      var binding = match[1];
-      // TODO(sigmund,terry): support more than 1 template expression
-      if (info.contentBinding == null) {
-        info.contentBinding = binding;
-      }
+    var content = new StringBuffer();
+    var bindings = [];
+    do {
+      bindings.add(parser.binding);
+      content.add(escapeDartString(parser.textContent));
 
-      buf.add(text.value.substring(offset, match.start));
-      buf.add("\${$binding}");
-      offset = match.end;
+      // Note: bindings themselves are Dart expressions (currently--see #65).
+      // So we should not need to further escape them.
+      content.add("\${${parser.binding}}");
+    } while (parser.moveNext());
+
+    content.add(escapeDartString(parser.textContent));
+
+    if (bindings.length == 1) {
+      info.contentBinding = bindings[0];
+    } else {
+      // TODO(jmesserly): we could probably do something faster than a list
+      // for watching on multiple bindings. But it seems easy to get working.
+      info.contentBinding = '[${Strings.join(bindings, ", ")}]';
     }
-    buf.add(text.value.substring(offset));
-
-    var content = buf.toString().replaceAll("'", "\\'").replaceAll('\n', " ");
     info.contentExpression = "'$content'";
 
     // Parent Element needs an id; this text node has a template expression.
@@ -790,5 +791,58 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
     }
   } else {
     fileInfo.components[componentInfo.tagName] = componentInfo;
+  }
+}
+
+
+/**
+ * Parses double-curly data bindings within a string, such as
+ * `foo {{bar}} baz {{quux}}`.
+ *
+ * Note that a double curly always closes the binding expression, and nesting
+ * is not supported. This seems like a reasonable assumption, given that these
+ * will be specified for HTML, and they will require a Dart or JavaScript
+ * parser to parse the expressions.
+ */
+class BindingParser {
+  final String text;
+  int previousEnd;
+  int start;
+  int end = 0;
+
+  BindingParser(this.text);
+
+  int get length => text.length;
+
+  String get textContent {
+    if (start == null) throw new StateError('iteration not started');
+    return text.substring(previousEnd, start);
+  }
+
+  String get binding {
+    if (start == null) throw new StateError('iteration not started');
+    if (end < 0) throw new StateError('no more bindings');
+    return text.substring(start + 2, end - 2);
+  }
+
+  bool moveNext() {
+    if (end < 0) return false;
+
+    previousEnd = end;
+    start = text.indexOf('{{', end);
+    if (start < 0) {
+      end = -1;
+      start = length;
+      return false;
+    }
+
+    end = text.indexOf('}}', start);
+    if (end < 0) {
+      start = length;
+      return false;
+    }
+    // For consistency, start and end both include the curly braces.
+    end += 2;
+    return true;
   }
 }

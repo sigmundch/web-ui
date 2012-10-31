@@ -18,6 +18,12 @@ class CodePrinter {
     return this;
   }
 
+  /** Adds [object] without changing its indentation or appending a newline. */
+  CodePrinter addRaw(object) {
+    _items.add(new _Raw(object));
+    return this;
+  }
+
   /** Returns everything on this printer without any fixes on indentation. */
   String toString() => new StringBuffer().addAll(_items).toString();
 
@@ -29,6 +35,12 @@ class CodePrinter {
     bool lastEmpty = false;
     var buff = new StringBuffer();
     for (var item in _items) {
+      if (item is _Raw) {
+        item = (item as _Raw).item;
+        buff.add(item);
+        continue;
+      }
+
       for (var line in item.toString().split('\n')) {
         line = line.trim();
         if (line == '') {
@@ -48,4 +60,15 @@ class CodePrinter {
     }
     return buff.toString();
   }
+}
+
+
+// TODO(jmesserly): we could simplify by building formatted strings eagerly.
+/**
+ * This class is used as a marker for raw strings, so they do not have their
+ * indentation changed.
+ */
+class _Raw {
+  final item;
+  _Raw(this.item);
 }

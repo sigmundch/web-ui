@@ -1,0 +1,23 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x142
+  RenderBlock {HTML} at (0,0) size 800x142
+    RenderBody {BODY} at (8,16) size 784x113
+      RenderBlock {P} at (0,0) size 784x20
+        RenderText {#text} at (0,0) size 211x19
+          text run at (0,0) width 211: "These two sentences should match:"
+      RenderBlock {PRE} at (0,36) size 784x32
+        RenderText {#text} at (0,0) size 232x32
+          text run at (0,0) width 232: "The \"quick\" \\brown $fox jumps"
+          text run at (232,0) width 0: " "
+          text run at (0,16) width 176: "  over the 'lazy' dog."
+          text run at (176,16) width 0: " "
+      RenderBlock {PRE} at (0,81) size 784x32
+        RenderText {#text} at (0,0) size 232x32
+          text run at (0,0) width 232: "The \"quick\" \\brown $fox jumps"
+          text run at (232,0) width 0: " "
+          text run at (0,16) width 176: "  over the 'lazy' dog."
+#EOF

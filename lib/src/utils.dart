@@ -117,3 +117,41 @@ class FutureGroup {
 
   Future<List> get future => _completer.future;
 }
+
+
+/**
+ * Escapes [text] for use in a Dart string.
+ * [single] specifies single quote `'` vs double quote `"`.
+ * [triple] indicates that a triple-quoted string, such as `'''` or `"""`.
+ */
+String escapeDartString(String text, {bool single: true, bool triple: false}) {
+  // Note: don't allocate anything until we know we need it.
+  StringBuffer result = null;
+
+  for (int i = 0; i < text.length; i++) {
+    int code = text.charCodeAt(i);
+    var replace = null;
+    switch (code) {
+      case 92/*'\\'*/: replace = r'\\'; break;
+      case 36/*r'$'*/: replace = r'\$'; break;
+      case 34/*'"'*/:  if (!single) replace = r'\"'; break;
+      case 39/*"'"*/:  if (single) replace = r"\'"; break;
+      case 10/*'\n'*/: if (!triple) replace = r'\n'; break;
+      case 13/*'\r'*/: if (!triple) replace = r'\r'; break;
+
+      // Note: we don't escape unicode characters, under the assumption that
+      // writing the file in UTF-8 will take care of this.
+
+      // TODO(jmesserly): do we want to replace any other non-printable
+      // characters (such as \f) for readability?
+    }
+
+    if (replace != null && result == null) {
+      result = new StringBuffer(text.substring(0, i));
+    }
+
+    if (result != null) result.add(replace != null ? replace : text[i]);
+  }
+
+  return result == null ? text : result.toString();
+}
