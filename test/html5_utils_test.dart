@@ -40,10 +40,10 @@ main() {
     Process.run('dart_analyzer', '--fatal-warnings --fatal-type-errors '
         '--work data/output/analyzer/ $generatedFile'.split(' '))
         .then(expectAsync1((result) {
-      expect(result.stdout, '', result.stdout);
-      expect(result.stderr, '', result.stderr);
+      expect(result.stdout, '', reason: result.stdout);
+      expect(result.stderr, '', reason: result.stderr);
       expect(result.exitCode, 0,
-          'expected success, but got exit code ${result.exitCode}');
+          reason: 'expected success, but got exit code ${result.exitCode}');
     }));
   });
 }

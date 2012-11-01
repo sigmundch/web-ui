@@ -223,7 +223,7 @@ main() {
   test('template element', () {
     var info = analyzeElement(parseSubtree('<template></template>'));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
-      'example does not need TemplateInfo');
+        reason: 'example does not need TemplateInfo');
   });
 
   // TODO(jmesserly): I'm not sure we are implementing correct behavior for
@@ -234,7 +234,7 @@ main() {
 
     expect(elem.attributes, equals({'instantiate': 'foo'}));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
-      'example is not a valid template');
+        reason: 'example is not a valid template');
   });
 
   test('template instantiate if (empty)', () {
@@ -265,7 +265,7 @@ main() {
 
     expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
-      'example is not a valid template');
+      reason: 'example is not a valid template');
   });
 
   test('template iterate', () {
