@@ -246,6 +246,10 @@ class ComponentInfo extends LibraryInfo {
   String get outputFilename {
     if (externalFile != null) return '_${externalFile.filename}.dart';
     var prefix = declaringFile.path.filename;
+    if (declaringFile.declaredComponents.length == 1
+        && !declaringFile.codeAttached) {
+      return '_$prefix.dart';
+    }
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
     return '_$prefix.$componentSegment.dart';
   }
