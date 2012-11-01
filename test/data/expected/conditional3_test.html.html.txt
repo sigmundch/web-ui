@@ -6,13 +6,9 @@ layer at (0,0) size 800x600
 layer at (0,0) size 800x36
   RenderBlock {HTML} at (0,0) size 800x36
     RenderBody {BODY} at (8,8) size 784x20
-      RenderInline {TEMPLATE} at (0,0) size 0x0
-        RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
-      RenderInline {TEMPLATE} at (0,0) size 111x19
-        RenderText {#text} at (0,0) size 0x0
-        RenderInline {SPAN} at (0,0) size 111x19
-          RenderText {#text} at (0,0) size 111x19
-            text run at (0,0) width 111: "you should see: no"
+      RenderInline {SPAN} at (0,0) size 111x19
+        RenderText {#text} at (0,0) size 111x19
+          text run at (0,0) width 111: "you should see: no"
       RenderText {#text} at (0,0) size 0x0
 #EOF

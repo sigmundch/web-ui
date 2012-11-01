@@ -71,4 +71,5 @@ class CodePrinter {
 class _Raw {
   final item;
   _Raw(this.item);
+  String toString() => item.toString();
 }

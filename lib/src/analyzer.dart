@@ -34,12 +34,10 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  * Used for testing.
  */
 // TODO(jmesserly): move this into analyzer_test
-FileInfo analyzeNode(Node source, [bool cleanup = false]) {
+FileInfo analyzeNode(Node source, {bool cleanHtml: false}) {
   var result = new FileInfo();
-  new _Analyzer(result).run(source);
-  if (cleanup) {
-    new _CleanupHtml(result).visit(source);
-  }
+  new _Analyzer(result).visit(source);
+  if (cleanHtml) new _HtmlCleaner().visit(result);
   return result;
 }
 
@@ -47,51 +45,63 @@ FileInfo analyzeNode(Node source, [bool cleanup = false]) {
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info) {
   var fileInfo = info[file.path];
   _normalize(fileInfo, info);
-  new _Analyzer(fileInfo).run(file.document);
-  new _CleanupHtml(fileInfo).visit(file.document);
+  new _Analyzer(fileInfo).visit(file.document);
+  new _HtmlCleaner().visit(fileInfo);
 }
 
+// TODO(jmesserly): see if we can drive this entirely off info, so it doesn't
+// duplicate parsing elsewhere in analyzer.
 /** Remove all MDV attributes; post-analysis these attributes are not needed. */
-class _CleanupHtml extends TreeVisitor {
-  final FileInfo result;
+class _HtmlCleaner extends InfoVisitor {
 
-  _CleanupHtml(this.result);
+  void visitElementInfo(ElementInfo info) {
+    var node = info.node;
+    if (info.isIterateOrIf) {
+      // Remove children but not template node itself
+      node.nodes.clear();
 
-  void visitElement(Element node) {
+      // Hide all template elements. At the very least, we must do this for
+      // template attributes, such as `<td template instantiate="if cond">`.
+      // TODO(jmesserly): should probably inject a stylesheet into the page:
+      // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html#css-additions
+      node.attributes['style'] = 'display:none';
+    }
+
     node.attributes.forEach((name, value) {
       visitAttribute(node, name, value);
     });
 
-    super.visitElement(node);
+    if (info.contentBinding != null) {
+      // TODO(jmesserly): this is hacky, see issue #133.
+      for (var child in node.nodes) {
+        if (child is Text) visitText(child);
+      }
+    }
+
+    super.visitElementInfo(info);
   }
 
-  // TODO(terry): Compute the text node data-bound expressions during analysis
-  //              time.  Either cleanup DOM then or marked as text node to be
-  //              remove.  Also, consider doing the same for class attribute and
-  //              other attributes with data-binding too.
-  /** Remove text nodes with MDV expr {{ }}, they're handled at runtime. */
-  visitText(Text node) {
-    var bindingRegex = const RegExp(r'{{(.*)}}');
-    if (bindingRegex.hasMatch(node.value)) {
-      node.remove();
+  // Remove text nodes with bindings.
+  void visitText(Text text) {
+    if (new BindingParser(text.value).moveNext()) {
+      text.remove();
     }
   }
 
   void visitAttribute(Element node, String name, String value) {
     switch (name) {
-      // Remove all MDV attributes.
-      case 'data-value':
+      // Remove MDV attributes now that we've processed them.
       case 'data-action':
       case 'data-bind':
-      case 'template':
-      case 'iterate':
+      case 'data-value':
       case 'instantiate':
+      case 'iterate':
+      case 'template':
         node.attributes.remove(name);
         break;
       default:
         // Remove any attribute computed as a MDV expression.
-        var bindingRegex = const RegExp(r'{{(.*)}}');
-        if (bindingRegex.hasMatch(value)) {
+        if (new BindingParser(value).moveNext()) {
           node.attributes.remove(name);
         }
     }
@@ -102,18 +112,11 @@ class _CleanupHtml extends TreeVisitor {
 class _Analyzer extends TreeVisitor {
   final FileInfo _fileInfo;
   LibraryInfo _currentInfo;
+  ElementInfo _parent;
   int _uniqueId = 0;
-  final List<ElementInfo> _parents = [];
 
   _Analyzer(this._fileInfo) {
     _currentInfo = _fileInfo;
-    _parents.add(new ElementInfo());
-  }
-
-  void run(var node) {
-    visit(node);
-    assert(_parents.length == 1);
-    _fileInfo.bodyInfo = _parents.last;
   }
 
   void visitElement(Element node) {
@@ -124,26 +127,19 @@ class _Analyzer extends TreeVisitor {
     }
 
     // Bind to the parent element.
-    if (node.attributes.containsKey('template') || node.tagName == 'template') {
+    if (node.tagName == 'template' || node.attributes.containsKey('template')) {
       // template tags are handled specially.
       info = _createTemplateInfo(node);
     }
 
     if (info == null) {
-      info = _createElementInfo();
+      info = new ElementInfo(node, _parent);
     }
-    if (node.id != '') info.elementId = node.id;
 
-    info.node = node;
-
-    if (info is TemplateInfo &&
-        (info as TemplateInfo).isTemplateTagAndIterOrIf) {
-      var parentNode = info.parent.node;
-      if (parentNode != null && parentNode.tagName != 'body') {
-        _generateId(parentNode, info.parent, true);
-      }  else {
-        _generateId(node, info, true);
-      }
+    if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
+    if (node.tagName == 'body') {
+      // TODO(jmesserly): too much knowledge of codegen here.
+      info.identifier = '_root';
     }
 
     node.attributes.forEach((name, value) {
@@ -168,101 +164,36 @@ class _Analyzer extends TreeVisitor {
       // element will be generated programatically as a Dart web component by
       // [WebComponentEmitter]. So this component's ElementInfo isn't part of
       // the HTML page's children and the ElementInfo is the top-level node.
-      info.parent.children.removeLast();
-      info.parent = null;
+      // TODO(jmesserly): don't create the info with a parent, and don't remove
+      // the node until _HtmlCleaner.
+      info.remove();
+      info.node.remove();
 
       _bindExtends(component);
 
       _currentInfo = component;
     }
 
-    _parents.add(info);
+    var savedParent = _parent;
+    _parent = info;
 
     // Invoke super to visit children.
     super.visitElement(node);
     _currentInfo = lastInfo;
-    _parents.removeLast();
 
-    bool force = false;
-    if (info.parent != null && info.parent.isIterateOrIf) {
-      // Conditional template at top level the template child will need an id
-      // for DOM element.
-      if (lastInfo is ComponentInfo) {
-        force = _componentParentsAreTemplates(info);
-      } else {
-        force = _isToplevelTemplateElement(node);
-      }
-    }
-    _generateId(node, info, force);
-  }
+    _parent = savedParent;
 
-  /** Conditional/iterate template at top-level of page sibling of <body>. */
-  bool _isToplevelTemplateElement(Node node) {
-    if (node != null && node.parent != null && node.parent.parent != null) {
-      // TODO(terry): Need to figure out way to know how to add to body not
-      //              just an arbitrary element; for this case a template will
-      //              be realized and we'll add our children to this template.
-      return node.parent.parent.tagName == 'body';
-    }
-    return false;
-  }
-
-  /**
-   * For components only, if child element [info] is in a template and it's
-   * parents (upto the element tag) are templates then the template will need
-   * to be realized in the document; so it will need an id.
-   * */
-  bool _componentParentsAreTemplates(info) {
-    if (info.parent != null) {
-      if (info.parent.node is Element &&
-          info.parent.node.tagName == 'template') {
-        return _componentParentsAreTemplates(info.parent);
-      } else if (info.parent.node is Element &&
-          info.parent.node.tagName == 'element') {
-        return true;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Need to get to this element at codegen time; for template, data binding,
-   * or event hookup.  We need an HTML id attribute for this node.
-   */
-  void _generateId(Element node, ElementInfo info, [bool forceId = false]) {
-    if (!info.needsHtmlId && !forceId) return;
-    if (info.elementId != null) return;
-
-    info.elementId = "__e-${_uniqueId}";
-
-    var parentNode = info.parent.node;
-
-    if (_needsIdentifier(info, parentNode, node) ||
-        _topLevelDataBindingComponent(info, parentNode)) {
-      node.attributes['id'] = info.elementId;
-      info.useDomId = true;
+    if (_parent == null) {
+      _fileInfo.bodyInfo = info;
     }
 
-    _uniqueId++;
+    if (info.needsIdentifier && info.identifier == null) {
+      var id = '__e-$_uniqueId';
+      info.identifier = toCamelCase(id);
+      if (info.needsQuery) node.attributes['id'] = id;
+      _uniqueId++;
+    }
   }
-
-  /**
-   * Don't need an id attribute generated for the HTML element if the element
-   * is a template inside of another template.  If a template is not a lone
-   * child element then template is exposed. The id is used only as a variable
-   * name in the generated code no need to query to find the HTML element.
-   */
-  bool _needsIdentifier(ElementInfo info, Node parentNode, Node node) =>
-      (info.parent is! TemplateInfo && parentNode != null &&
-       parentNode.tagName != 'body') &&
-      (node.tagName != 'template' || _moreThanOneChildElement(info.parent));
-
-  // TODO(terry): Need better way for sibling templates too.
-  /** Assign an id to the element tag, it's at the top (parent is body). */
-  bool _topLevelDataBindingComponent(ElementInfo info, Node parent) =>
-    (info is TemplateInfo && parent != null && parent.tagName == 'body') ||
-      info.hasDataBinding || info.component != null;
 
   void _bindExtends(ComponentInfo component) {
     if (component.extendsTag == null) {
@@ -282,22 +213,6 @@ class _Analyzer extends TreeVisitor {
           'custom element with tag name ${component.extendsTag} not found.',
           component.element.span, file: _fileInfo.path);
     }
-  }
-
-  // TODO(terry): Can remove this function and replace with
-  //              node.parent.elements.length > 1 when this is resolved
-  //              https://github.com/dart-lang/html5lib/issues/33
-  /** More than one child element tag. */
-  bool _moreThanOneChildElement(ElementInfo elemInfo) {
-    if (elemInfo != null) {
-      int childElems = 0;
-      for (var node in elemInfo.node.nodes) {
-        if (node is Element) {
-          if (++childElems > 1)  return true;
-        }
-      }
-    }
-    return false;
   }
 
   void _bindCustomElement(Element node, ElementInfo info) {
@@ -323,22 +238,9 @@ class _Analyzer extends TreeVisitor {
     }
   }
 
-  void _setupParentChild(var info) {
-    info.parent = _parents.last;
-    info.parent.children.add(info);
-  }
-
-  ElementInfo _createElementInfo() {
-    var info = new ElementInfo();
-    _setupParentChild(info);
-    return info;
-  }
-
   TemplateInfo _createTemplateInfo(Element node) {
     var instantiate = node.attributes['instantiate'];
     var iterate = node.attributes['iterate'];
-    bool templateAttr = node.tagName != 'template' &&
-        node.attributes.containsKey('template');
 
     // Note: we issue warnings instead of errors because the spirit of HTML and
     // Dart is to be forgiving.
@@ -348,34 +250,35 @@ class _Analyzer extends TreeVisitor {
       return null;
     }
 
+    if (node.nodes.filter((n) => n is Element).length == 0) {
+      // Ignore templates with no children
+      // TODO(jmesserly): this is wrong when we want to support fragments
+      return null;
+    }
+
     if (instantiate != null) {
       if (instantiate.startsWith('if ')) {
-        var info = new TemplateInfo(ifCondition: instantiate.substring(3),
-            isAttribute: templateAttr);
-        _setupParentChild(info);
-        return info;
+        return new TemplateInfo(node, _parent,
+            ifCondition: instantiate.substring(3));
       }
 
       // TODO(jmesserly): we need better support for <template instantiate>
       // as it exists in MDV. Right now we ignore it, but we provide support for
       // data binding everywhere.
       if (instantiate != '') {
-        messages.warning('<template instantiate> either have  '
-          ' form <template instantiate="if condition" where "condition" is a'
-          ' binding that determines if the contents of the template will be'
-          ' inserted and displayed.', node.span, file: _fileInfo.path);
+        messages.warning('<template instantiate> must either have an empty '
+          'attribute or be of the form <template instantiate="if condition">.',
+          node.span, file: _fileInfo.path);
       }
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
-        var info = new TemplateInfo(loopVariable: match[1], loopItems: match[2],
-            isAttribute: templateAttr);
-        _setupParentChild(info);
-        return info;
+        return new TemplateInfo(node, _parent, loopVariable: match[1],
+            loopItems: match[2]);
       }
       messages.warning('<template> iterate must be of the form: '
-          'iterate="variable in list", where "variable" is your variable name'
-          ' and "list" is the list of items.',
+          'iterate="variable in list", where "variable" is your variable name '
+          'and "list" is the list of items.',
           node.span, file: _fileInfo.path);
     }
     return null;
@@ -512,20 +415,21 @@ class _Analyzer extends TreeVisitor {
   }
 
   void visitText(Text text) {
-    var info = _createElementInfo();
-
-    // TODO(terry): ElementInfo Should associated with elements, rather than
-    // nodes. In this case, we are creating a text node, so we should maybe
-    // have a 'NodeInfo' rather than an 'ElementInfo' in that case.
-    info.node = text;
+    var info = new ElementInfo(text, _parent);
 
     var parser = new BindingParser(text.value);
     if (!parser.moveNext()) return;
 
+    if (info.parent.contentBinding != null) {
+      // This is issue #133.
+      messages.error('multiple text bindings in a simple element are not yet '
+          'supported', text.span, file: _fileInfo.path);
+      return;
+    }
+
     var parentElem = text.parent;
     info.parent.hasDataBinding = true;
     info.hasDataBinding = true;
-    assert(info.parent.contentBinding == null);
 
     // Match all bindings.
     var content = new StringBuffer();
@@ -549,10 +453,6 @@ class _Analyzer extends TreeVisitor {
       info.contentBinding = '[${Strings.join(bindings, ", ")}]';
     }
     info.contentExpression = "'$content'";
-
-    // Parent Element needs an id; this text node has a template expression.
-    var parentNode = info.parent.node;
-    _generateId(parentNode, info.parent, true);
   }
 }
 
@@ -739,7 +639,7 @@ void _normalize(FileInfo info, Map<Path, FileInfo> files) {
 
 /**
  * Stores a direct reference in [info] to a dart source file that was loaded in
- * a `<script src="">` tag.
+ * a script tag with the 'src' attribute.
  */
 void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
   var path = info.externalFile;

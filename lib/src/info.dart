@@ -107,7 +107,7 @@ class PathInfo {
  * class for both [FileInfo] and [ComponentInfo]. Both HTML files and components
  * can have .dart code provided by the user for top-level user scripts and
  * component-level behavior code. This code can either be inlined in the HTML
- * file or included in a `<script src='url'>` tag.
+ * file or included in a script tag with the "src" attribute.
  */
 abstract class LibraryInfo {
 
@@ -189,6 +189,12 @@ class FileInfo extends LibraryInfo {
   ElementInfo bodyInfo;
 
   FileInfo([this.path, this.isEntryPoint = false]);
+
+  /**
+   * Query for an ElementInfo matching the provided [tag], starting from the
+   * [bodyInfo].
+   */
+  ElementInfo query(String tag) => new _QueryInfo(tag).visit(bodyInfo);
 }
 
 /** Information about a web component definition. */
@@ -264,23 +270,35 @@ class ComponentInfo extends LibraryInfo {
 
 /** Base tree visitor for the Analyzer infos. */
 class InfoVisitor {
-  void visit(ElementInfo info) {
-    if (info is ElementInfo) {
-      visitElementInfo(info);
-    } else if (info is TemplateInfo) {
-      visitTemplateInfo(info);
+  visit(info) {
+    if (info == null) return;
+    if (info is TemplateInfo) {
+      return visitTemplateInfo(info);
+    } else if (info is ElementInfo) {
+      return visitElementInfo(info);
+    } else if (info is ComponentInfo) {
+      return visitComponentInfo(info);
+    } else if (info is FileInfo) {
+      return visitFileInfo(info);
     } else {
-      throw new UnsupportedError("Unknown Info");
+      throw new UnsupportedError('Unknown info type: $info');
     }
   }
 
-  void visitChildren(ElementInfo info) {
+  visitChildren(ElementInfo info) {
     for (var child in info.children) visit(child);
   }
 
-  void visitTemplateInfo(TemplateInfo info) => visitChildren(info);
+  visitFileInfo(FileInfo info) {
+    visit(info.bodyInfo);
+    info.declaredComponents.forEach(visit);
+  }
 
-  void visitElementInfo(ElementInfo info) => visitChildren(info);
+  visitTemplateInfo(TemplateInfo info) => visitElementInfo(info);
+
+  visitElementInfo(ElementInfo info) => visitChildren(info);
+
+  visitComponentInfo(ComponentInfo info) => visit(info.elemInfo);
 }
 
 // TODO(terry): ElementInfo should associated with elements, rather than
@@ -288,31 +306,45 @@ class InfoVisitor {
 // have a 'NodeInfo' rather than an 'ElementInfo'.
 /** Information extracted for each node in a template. */
 class ElementInfo {
-  /** Id given to an element node, if any. */
-  String elementId;
+  // TODO(jmesserly): ideally we should only create Infos for things that need
+  // an identifier. So this would always be non-null. That is not the case yet.
+  /**
+   * The name used to refer to this element in Dart code.
+   * Depending on the context, this can be a variable or a field.
+   */
+  String identifier;
 
-  // TODO(terry): Remove useDomId and replace with elemField as real field name.
-  /** Element id exposed in DOM as an attribute id. */
-  bool useDomId = false;
+  ElementInfo _parent;
 
   /** Info for the nearest enclosing element, iterator, or conditional. */
-  ElementInfo parent;
+  ElementInfo get parent => _parent;
 
-  // TODO(terry): Make childen work like DOM children collection.  So, that
-  //              info.remove() updates the parent pointer correctly.  Instead,
-  //              of info.parent.children.removeLast() and info.parent = null;
+  // TODO(jmesserly): make childen work like DOM children collection, so that
+  // adding/removing a node updates the parent pointer.
   final List<ElementInfo> children = [];
 
+  // TODO(terry): ElementInfo Should associated with elements, rather than
+  // nodes. In this case, we are creating a text node, so we should maybe
+  // have a 'NodeInfo' rather than an 'ElementInfo' in that case.
   /** DOM node associated with this ElementInfo. */
-  Node node;
+  final Node node;
 
   /**
    * Whether code generators need to create a field to store a reference to this
    * element. This is typically true whenever we need to access the element
    * (e.g. to add event listeners, update values on data-bound watchers, etc).
    */
-  bool get needsHtmlId => hasDataBinding || hasIfCondition || hasIterate
-      || component != null || values.length > 0 || events.length > 0;
+  bool get needsIdentifier => hasDataBinding || hasIfCondition || hasIterate
+      || component != null || values.length > 0 || events.length > 0
+      || !needsQuery;
+
+  // TODO(jmesserly): it'd be nice if we didn't need to query.
+  /**
+   * True if we need to query to get this node. Otherwise, we'll create it
+   * from code. We always query except for "if" and "iterate" templates where
+   * the children are constructed directly.
+   */
+  bool get needsQuery => parent == null || !parent.isIterateOrIf;
 
   /**
    * If this element is a web component instantiation (e.g. `<x-foo>`), this
@@ -323,6 +355,7 @@ class ElementInfo {
   /** Whether the element contains data bindings. */
   bool hasDataBinding = false;
 
+  // TODO(jmesserly): this doesn't work with child elements (issue #133).
   /** Data-bound expression used in the contents of the node. */
   String contentBinding;
 
@@ -354,12 +387,6 @@ class ElementInfo {
   /** Collected information about `data-value="name:value"` expressions. */
   final Map<String, String> values = new SplayTreeMap<String, String>();
 
-  /**
-   * Format [elementId] in camel case, suitable for using as a Dart identifier.
-   */
-  String get idAsIdentifier =>
-      elementId == null ? null : '_${toCamelCase(elementId)}';
-
   /** Whether the template element has `iterate="... in ...". */
   bool get hasIterate => false;
 
@@ -368,22 +395,28 @@ class ElementInfo {
 
   bool get isIterateOrIf => hasIterate || hasIfCondition;
 
-  bool get isTemplateElement => false;
+  ElementInfo(this.node, this._parent) {
+    if (_parent != null) _parent.children.add(this);
+  }
+
+  void remove() {
+    if (_parent != null) {
+      _parent.children.removeAt(_parent.children.indexOf(this));
+      _parent = null;
+    }
+  }
 
   String toString() => '#<ElementInfo '
-      'elementId: $elementId, '
-      'fieldType: fieldType, '
-      'useDomId: $useDomId, '
-      'needsHtmlId: $needsHtmlId, '
+      'identifier: $identifier, '
+      'needsIdentifier: $needsIdentifier, '
+      'needsQuery: $needsQuery, '
       'component: $component, '
-      'isTemplateElement" $isTemplateElement, '
       'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
       'contentBinding: $contentBinding, '
       'contentExpression: $contentExpression, '
       'attributes: $attributes, '
-      'idAsIdentifier: $idAsIdentifier, '
       'events: $events>';
 }
 
@@ -456,37 +489,29 @@ class TemplateInfo extends ElementInfo {
    */
   final String loopItems;
 
+  TemplateInfo(Node node, ElementInfo parent,
+      {this.ifCondition, this.loopVariable, this.loopItems})
+      : super(node, parent);
+
   /**
    * True when [node] is a '<template>' tag. False when [node] is any other
    * element type and the template information is attached as an attribute.
    */
-  final bool isTemplateElement;
-
-  TemplateInfo({this.ifCondition, this.loopVariable, this.loopItems,
-      bool isAttribute}) : isTemplateElement = !isAttribute;
+  bool get isTemplateElement => node.tagName == 'template';
 
   bool get hasIfCondition => ifCondition != null;
 
   bool get hasIterate => loopVariable != null;
 
-  bool get isTemplateTagAndIterOrIf => isTemplateElement &&  isIterateOrIf;
-
-  /**
-   * Keep walking up the tree looking for an element (with an id) used to add
-   * newly created HTML generated from a template iterate or if.
-   */
-  String get parentId {
-    var info = this;
-    while (info.isTemplateElement && !info.useDomId) {
-      info = info.parent;
+  // TODO(jmesserly): this is wrong if we want to support document fragments.
+  ElementInfo get childInfo {
+    for (var info in children) {
+      if (info.node is Element) return info;
     }
-
-    assert(info != null);
-    return info.idAsIdentifier;
+    return null;
   }
 
-  String toString() => '#<TemplateInfo '
-      'isTemplateElement: $isTemplateElement, '
+  String toString() => '#<TemplateInfo ${super.toString()}'
       'ifCondition: $ifCondition, '
       'loopVariable: $ifCondition, '
       'loopItems: $ifCondition>';
@@ -537,4 +562,31 @@ class DartDirectiveInfo {
   List<String> show;
 
   DartDirectiveInfo(this.label, this.uri, [this.prefix, this.hide, this.show]);
+}
+
+
+/**
+ * Find ElementInfo that associated with a particular DOM node.
+ * Used by [ElementInfo.query].
+ */
+class _QueryInfo extends InfoVisitor {
+  final String _tagName;
+
+  _QueryInfo(this._tagName);
+
+  visitElementInfo(ElementInfo info) {
+    if (info.node.tagName == _tagName) {
+      return info;
+    }
+
+    return super.visitElementInfo(info);
+  }
+
+  visitChildren(ElementInfo info) {
+    for (var child in info.children) {
+      var result = visit(child);
+      if (result != null) return result;
+    }
+    return null;
+  }
 }

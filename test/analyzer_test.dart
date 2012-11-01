@@ -26,35 +26,36 @@ main() {
 
   test('id extracted - shallow element', () {
     var input = '<div id="foo"></div>';
-    var info = _elemInfo(parseSubtree(input));
-    expect(info.elementId, equals('foo'));
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.node.id, equals('foo'));
+    expect(info.identifier, equals('_foo'));
   });
 
   test('id extracted - deep element', () {
     var input = '<div><div><div id="foo"></div></div></div>';
-    var info = _elemInfo(parseSubtree(input));
-    expect(info.elementId, isNull);
-    expect(info.children[0].elementId, isNull);
-    expect(info.children[0].children[0].elementId, equals('foo'));
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.identifier, isNull);
+    expect(info.children[0].identifier, isNull);
+    expect(info.children[0].children[0].identifier, equals('_foo'));
   });
 
   test('ElementInfo.toString()', () {
     var input = '<div id="foo"></div>';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.toString().startsWith('#<ElementInfo '), true);
   });
 
   test('id as identifier - found in dom', () {
     var input = '<div id="foo-bar"></div>';
-    var info = _elemInfo(parseSubtree(input));
-    expect(info.idAsIdentifier, equals('_fooBar'));
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.identifier, equals('_fooBar'));
   });
 
   test('id as identifier - many id names', () {
     identifierOf(String id) {
       var input = '<div id="$id"></div>';
-      var info = _elemInfo(parseSubtree(input));
-      return info.idAsIdentifier;
+      var info = analyzeElement(parseSubtree(input));
+      return info.identifier;
     }
     expect(identifierOf('foo-bar'), equals('_fooBar'));
     expect(identifierOf('foo-b'), equals('_fooB'));
@@ -65,40 +66,37 @@ main() {
 
   test('id as identifier - deep element', () {
     var input = '<div><div><div id="foo-ba"></div></div></div>';
-    var info = _elemInfo(parseSubtree(input));
-    expect(info.elementId, isNull);
-    expect(info.children[0].elementId, isNull);
-    expect(info.children[0].children[0].idAsIdentifier, equals('_fooBa'));
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.children[0].children[0].identifier, equals('_fooBa'));
   });
 
   test('id as identifier - no id', () {
     var input = '<div></div>';
-    var info = _elemInfo(parseSubtree(input));
-    expect(info.elementId, isNull);
-    expect(info.idAsIdentifier, isNull);
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.identifier, isNull);
   });
 
   test('hasDataBinding - attribute w/o data', () {
     var input = '<input value="x">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.hasDataBinding, false);
   });
 
   test('hasDataBinding - attribute with data, 1 way binding', () {
     var input = '<input value="{{x}}">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.hasDataBinding, true);
   });
 
   test('hasDataBinding - attribute with data, 2 way binding', () {
     var input = '<input data-bind="value:x">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.hasDataBinding, true);
   });
 
   test('hasDataBinding - content with data', () {
     var input = '<div>{{x}}</div>';
-    var info = _elemInfo(parseSubtree(input)).children[0];
+    var info = analyzeElement(parseSubtree(input)).children[0];
     expect(info.hasDataBinding, true);
     expect(info.contentBinding, equals('x'));
     expect(info.contentExpression, equals(r"'${x}'"));
@@ -106,7 +104,7 @@ main() {
 
   test('hasDataBinding - content with text and data', () {
     var input = '<div> a b {{x}}c</div>';
-    var info = _elemInfo(parseSubtree(input)).children[0];
+    var info = analyzeElement(parseSubtree(input)).children[0];
     expect(info.hasDataBinding, true);
     expect(info.contentBinding, equals('x'));
     expect(info.contentExpression, equals(r"' a b ${x}c'"));
@@ -114,14 +112,14 @@ main() {
 
   test('attribute - no info', () {
     var input = '<input value="x">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes, isNotNull);
     expect(info.attributes, isEmpty);
   });
 
   test('attribute - 1 way binding input value', () {
     var input = '<input value="{{x}}">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
     expect(!info.attributes['value'].isClass, true);
@@ -131,7 +129,7 @@ main() {
 
   test('attribute - 2 way binding input value', () {
     var input = '<input data-bind="value:x">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
     expect(!info.attributes['value'].isClass, true);
@@ -144,7 +142,7 @@ main() {
 
   test('attribute - 1 way binding checkbox', () {
     var input = '<input checked="{{x}}">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
     expect(!info.attributes['checked'].isClass, true);
@@ -154,7 +152,7 @@ main() {
 
   test('attribute - 2 way binding checkbox', () {
     var input = '<input data-bind="checked:x">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
     expect(!info.attributes['checked'].isClass, true);
@@ -167,7 +165,7 @@ main() {
 
   test('attribute - 1 way binding, normal field', () {
     var input = '<div foo="{{x}}"></div>';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['foo'], isNotNull);
     expect(!info.attributes['foo'].isClass, true);
@@ -176,7 +174,7 @@ main() {
 
   test('attribute - single class', () {
     var input = '<div class="{{x}}"></div>';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
@@ -185,7 +183,7 @@ main() {
 
   test('attribute - many classes', () {
     var input = '<div class="{{x}} {{y}}{{z}}  {{w}}"></div>';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
@@ -197,7 +195,7 @@ main() {
     var input =
         '<div class="class1 {{x}} class2 {{y}}{{z}} {{w}} class3 class4">'
         '</div>';
-    var info = _elemInfo(parseSubtree(input), true);
+    var info = analyzeElement(parseSubtree(input), cleanHtml: true);
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
@@ -213,7 +211,7 @@ main() {
 
   test('attribute - ui-event hookup', () {
     var input = '<input data-action="change:foo">';
-    var info = _elemInfo(parseSubtree(input));
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes, isEmpty);
     expect(info.events.keys, equals(['change']));
     var changeEvents = info.events['change'];
@@ -223,7 +221,7 @@ main() {
   });
 
   test('template element', () {
-    var info = _elemInfo(parseSubtree('<template></template>'));
+    var info = analyzeElement(parseSubtree('<template></template>'));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
       'example does not need TemplateInfo');
   });
@@ -232,38 +230,54 @@ main() {
   // `<template instantiate>` in Model-Driven-Views.
   test('template instantiate (invalid)', () {
     var elem = parseSubtree('<template instantiate="foo"></template>');
-    var info = _elemInfo(elem);
+    var info = analyzeElement(elem);
+
     expect(elem.attributes, equals({'instantiate': 'foo'}));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
       'example is not a valid template');
   });
 
-  test('template instantiate if', () {
+  test('template instantiate if (empty)', () {
     var elem = parseSubtree(
         '<template instantiate="if foo" is="x-if"></template>');
-    TemplateInfo info = _elemInfo(elem);
+    var info = analyzeElement(elem);
+    expect(info.hasIfCondition, false);
+  });
+
+  test('template instantiate if', () {
+    var elem = parseSubtree('<template instantiate="if foo" is="x-if"><div>');
+    var div = elem.query('div');
+    TemplateInfo info = analyzeElement(elem);
     expect(info.hasIfCondition, true);
+    expect(info.needsQuery, true);
+    expect(info.childInfo.node, equals(div));
+    expect(info.childInfo.needsQuery, false);
+    expect(div.id, '');
     expect(elem.attributes, equals({
-      'instantiate': 'if foo', 'is': 'x-if'}));
-    expect(info.elementId, equals('__e-0'));
+        'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-1'}));
     expect(info.ifCondition, equals('foo'));
     expect(info.hasIterate, isFalse);
   });
 
   test('template iterate (invalid)', () {
     var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
-    var info = _elemInfo(elem);
+    var info = analyzeElement(elem);
+
     expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
     expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
       'example is not a valid template');
   });
 
   test('template iterate', () {
-    var elem = parseSubtree('<template iterate="foo in bar" is="x-list">');
-    TemplateInfo info = _elemInfo(elem);
+    var elem = parseSubtree('<template iterate="foo in bar" is="x-list"><div>');
+    TemplateInfo info = analyzeElement(elem);
+    var div = elem.query('div');
+    expect(info.needsQuery, true);
+    expect(info.childInfo.node, equals(div));
+    expect(info.childInfo.needsQuery, false);
+    expect(div.id, '');
     expect(elem.attributes, equals({
-      'iterate': 'foo in bar', 'is': 'x-list'}));
-    expect(info.elementId, equals('__e-0'));
+        'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-1'}));
     expect(info.ifCondition, isNull);
     expect(info.loopVariable, equals('foo'));
     expect(info.loopItems, equals('bar'));
@@ -271,7 +285,8 @@ main() {
 
   test('data-value', () {
     var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
-    var info = _elemInfo(elem);
+    var info = analyzeElement(elem);
+    elem = elem.query('li');
     expect(info.attributes, isEmpty);
     expect(info.events, isEmpty);
     expect(info.values, equals({'todo': 'x'}));
@@ -347,6 +362,8 @@ main() {
       expect(info.declaredComponents[0].hasConflict, isFalse);
       expect(info.declaredComponents[1].hasConflict, isFalse);
 
+      var quuxElement = doc.query('element');
+      expect(quuxElement, isNotNull);
       analyzeFile(srcFile, _toPathMap({'main.html': info }));
 
       expect(info.components.length, equals(1));
@@ -354,7 +371,7 @@ main() {
       expect(compInfo.hasConflict, true);
       expect(compInfo.tagName, equals('x-quux'));
       expect(compInfo.constructor, equals('Quux'));
-      expect(compInfo.element, equals(doc.query('element')));
+      expect(compInfo.element, equals(quuxElement));
     });
 
     test('duplicate constructor name - is valid', () {
@@ -394,10 +411,7 @@ main() {
 
       analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
       expect(info.components.keys, equals(['x-foo']));
-
-      var elemInfo = new _QueryElementInfo(info).query('x-foo');
-
-      expect(elemInfo.component, equals(info.declaredComponents[0]));
+      expect(info.query('x-foo').component, equals(info.declaredComponents[0]));
     });
 
     test('binds components from another file', () {
@@ -412,9 +426,8 @@ main() {
       var info = fileInfo['index.html'];
       expect(info.declaredComponents.length, isZero);
       expect(info.components.keys, equals(['x-foo']));
-      var elemInfo = new _QueryElementInfo(info).query('x-foo');
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(elemInfo.component, equals(compInfo));
+      expect(info.query('x-foo').component, equals(compInfo));
     });
 
     test('ignores elements with multiple definitions', () {
@@ -432,11 +445,9 @@ main() {
       var info = fileInfo['index.html'];
       expect(info.components.keys, equals(['x-foo']));
 
-      var elemInfo = new _QueryElementInfo(info).query('x-foo');
-
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
       expect(compInfo.hasConflict, true);
-      expect(elemInfo.component, isNull);
+      expect(info.query('x-foo').component, isNull);
     });
 
     test('shadowing of imported names is allowed', () {
@@ -452,10 +463,9 @@ main() {
 
       var info = fileInfo['index.html'];
       expect(info.components.keys, equals(['x-foo']));
-      var elemInfo = new _QueryElementInfo(info).query('x-foo');
 
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(elemInfo.component, equals(compInfo));
+      expect(info.query('x-foo').component, equals(compInfo));
     });
 
     test('element imports are not transitive', () {
@@ -471,9 +481,8 @@ main() {
       var info = fileInfo['index.html'];
       expect(info.components.keys, equals([]));
 
-      var elemInfo = new _QueryElementInfo(info).query('x-foo');
       expect(fileInfo['foo.html'].declaredComponents.length, isZero);
-      expect(elemInfo.component, isNull);
+      expect(info.query('x-foo').component, isNull);
     });
 
     test('invalid elements - no name, with body', () {
@@ -558,58 +567,4 @@ Map<String, FileInfo> _toStringMap(Map<Path, FileInfo> map) {
     res[k.toString()] = map[k];
   }
   return res;
-}
-
-/** Find ElementInfo that associated with a particular DOM node. */
-class _QueryElementInfo extends InfoVisitor {
-  final FileInfo _fileInfo;
-  String _tagNameMatch;
-  ElementInfo _foundElementInfo;
-
-  _QueryElementInfo(this._fileInfo);
-
-  ElementInfo query(String tagName) {
-    _foundElementInfo = null;
-
-    _tagNameMatch = tagName;
-    visit(_fileInfo.bodyInfo.children[0]);
-
-    return _foundElementInfo;
-  }
-
-  void visitTemplateInfo(TemplateInfo templateInfo) {
-    for (var child in templateInfo.children) {
-      if (_foundElementInfo != null) return;
-      visit(child);
-    }
-  }
-
-  void visitElementInfo(ElementInfo elementInfo) {
-    if (_foundElementInfo != null) return;
-
-    assert(elementInfo != null);
-    var node = elementInfo.node;
-    if (node == null) {
-      visitElementInfo(elementInfo);
-      return;
-    }
-
-    if (node is Text) {
-      return;
-    }
-
-    if (node.tagName == _tagNameMatch) {
-      _foundElementInfo = elementInfo;
-      return;
-    }
-
-    // Visit the children.
-    for (var child in elementInfo.children) {
-      visitElementInfo(child);
-    }
-  }
-}
-
-ElementInfo _elemInfo(Element elem, [bool cleanup = false]) {
-  return analyzeNode(elem, cleanup).bodyInfo.children[0];
 }

@@ -17,7 +17,6 @@ layer at (0,0) size 800x134
           text run at (0,48) width 352: "  But it hopes your compiler does not break!"
           text run at (352,48) width 0: " "
           text run at (0,64) width 16: "  "
-          text run at (16,64) width 0: " "
       RenderBlock (anonymous) at (0,93) size 784x20
         RenderText {#text} at (0,0) size 225x19
           text run at (0,0) width 225: "While we're at it, here's a cool entity: "

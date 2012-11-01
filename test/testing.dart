@@ -7,6 +7,8 @@ library testing;
 
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
+import 'package:web_components/src/analyzer.dart';
+import 'package:web_components/src/info.dart';
 import 'package:web_components/src/messages.dart';
 import 'package:web_components/src/options.dart';
 
@@ -15,4 +17,10 @@ useMockMessages() {
 }
 
 Document parseDocument(String html) => parse(html);
+
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
+
+// TODO(jmesserly): we should always be cleaning HTML...
+ElementInfo analyzeElement(Element elem, {bool cleanHtml: false}) {
+  return analyzeNode(elem, cleanHtml: cleanHtml).bodyInfo;
+}
