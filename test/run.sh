@@ -68,6 +68,13 @@ if [[ -d $DIR/data/output ]]; then
   ln -s $DIR/packages $DIR/data/output/packages
 fi
 
+# Create a reference to the example directory, so that the output is generated
+# relative to the input directory (reaching out with ../../../ works, but
+# generates the output in the source tree).
+if [[ ! -e $DIR/data/input/example ]]; then
+  ln -s `dirname $DIR`/example/ $DIR/data/input/example
+fi
+
 pushd $DIR
 dart $DART_FLAGS run_all.dart $TEST_PATTERN
 popd

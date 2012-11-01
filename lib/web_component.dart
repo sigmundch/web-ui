@@ -56,7 +56,7 @@ abstract class WebComponent implements Element {
    */
   createShadowRoot() {
     var shadowRoot;
-    if (ShadowRoot.supported) {
+    if (ShadowRoot.supported && !polyfillShadowDomForTesting) {
       shadowRoot = new ShadowRoot(_element);
       // TODO(jmesserly): what's up with this flag? Why are we setting it?
       shadowRoot.resetStyleInheritance = false;
@@ -88,7 +88,7 @@ abstract class WebComponent implements Element {
   // TODO(jmesserly): this forwarding is temporary until Dart supports
   // subclassing Elements.
 
-  NodeList get nodes => _element.nodes;
+  List<Node> get nodes => _element.nodes;
 
   set nodes(Collection<Node> value) { _element.nodes = value; }
 
@@ -345,3 +345,6 @@ abstract class WebComponent implements Element {
 
   void addHTML(String html) => _element.addHTML(html);
 }
+
+/** Option to force polyfilling the shadow DOM even when it is supported. */
+bool polyfillShadowDomForTesting = false;

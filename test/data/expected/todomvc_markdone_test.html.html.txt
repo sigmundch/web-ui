@@ -1,0 +1,210 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 785x634
+  RenderView at (0,0) size 785x600
+layer at (0,0) size 785x634
+  RenderBlock {HTML} at (0,0) size 785x634
+    RenderBody {BODY} at (117,130) size 551x492 [color=#4D4D4D] [bgcolor=#EAEAEA]
+      RenderBlock {FOOTER} at (0,380) size 550x112 [color=#A6A6A6]
+        RenderBlock {P} at (0,0) size 550x19
+          RenderText {#text} at (203,2) size 144x15
+            text run at (203,2) width 144: "Double-click to edit a todo."
+        RenderBlock {P} at (0,31) size 550x19
+          RenderText {#text} at (213,2) size 67x15
+            text run at (213,2) width 67: "Credits: the "
+          RenderInline {A} at (0,0) size 24x15
+            RenderText {#text} at (279,2) size 24x15
+              text run at (279,2) width 24: "Dart"
+          RenderText {#text} at (302,2) size 35x15
+            text run at (302,2) width 35: " team."
+        RenderBlock {P} at (0,62) size 550x19
+          RenderText {#text} at (104,2) size 101x15
+            text run at (104,2) width 101: "Learn more about "
+          RenderInline {A} at (0,0) size 136x15
+            RenderText {#text} at (205,2) size 136x15
+              text run at (205,2) width 136: "Dart + Web Components"
+          RenderText {#text} at (341,2) size 17x15
+            text run at (341,2) width 3: " "
+            text run at (344,2) width 14: "or "
+          RenderInline {A} at (0,0) size 85x15
+            RenderText {#text} at (358,2) size 85x15
+              text run at (358,2) width 85: "view the source"
+          RenderText {#text} at (443,2) size 3x15
+            text run at (443,2) width 3: "."
+        RenderBlock {P} at (0,93) size 550x19
+          RenderText {#text} at (228,2) size 38x15
+            text run at (228,2) width 38: "Part of "
+          RenderInline {A} at (0,0) size 53x15
+            RenderText {#text} at (266,2) size 53x15
+              text run at (266,2) width 53: "TodoMVC"
+          RenderText {#text} at (319,2) size 3x15
+            text run at (319,2) width 3: "."
+layer at (118,130) size 550x315
+  RenderBlock (relative positioned) {SECTION} at (0,0) size 550x315 [bgcolor=#FFFFFFE6] [border: (1px solid #CCCCCC)]
+    RenderBlock {HEADER} at (1,1) size 548x80
+      RenderBlock (anonymous) at (0,15) size 548x0
+        RenderInline {X-TODO-FORM} at (0,0) size 0x0
+          RenderText {#text} at (0,0) size 0x0
+          RenderText {#text} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,15) size 548x65
+        RenderBlock {FORM} at (0,0) size 548x65
+          RenderText {#text} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,80) size 548x0
+        RenderInline {X-TODO-FORM} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+layer at (159,131) size 4x313
+  RenderBlock (positioned) at (41,1) size 4x313 [border: none (1px solid #F5D6D6) none (1px solid #F5D6D6)]
+    RenderText at (0,0) size 0x0
+layer at (119,69) size 548x19
+  RenderBlock (positioned) {H1} at (1,-61) size 548x20 [color=#FFFFFF4C]
+    RenderText {#text} at (178,-31) size 192x81
+      text run at (178,-31) width 192: "todos"
+layer at (119,455) size 548x20 layerType: background only
+layer at (119,344) size 548x100
+  RenderBlock (positioned) zI: -1 at (0,-111) size 548x100
+    RenderText zI: -1 at (0,0) size 0x0
+layer at (119,455) size 548x20 layerType: foreground only
+  RenderBlock (positioned) zI: 1 {X-TODO-FOOTER} at (1,325) size 548x20 [color=#777777]
+    RenderBlock {DIV} at (15,0) size 518x0
+      RenderBlock (floating) {SPAN} at (0,0) size 8x19
+        RenderInline {STRONG} at (0,0) size 8x16
+          RenderText {#text} at (0,1) size 8x16
+            text run at (0,1) width 8: "2"
+layer at (119,455) size 548x19
+  RenderBlock (positioned) {UL} at (0,0) size 548x19
+    RenderInline {LI} at (0,0) size 26x16
+      RenderText {#text} at (0,0) size 0x0
+      RenderInline {A} at (0,0) size 18x16 [color=#83756F]
+        RenderText {#text} at (204,1) size 18x16
+          text run at (204,1) width 18: "All"
+      RenderText {#text} at (223,1) size 5x16
+        text run at (223,1) width 5: " "
+    RenderText {#text} at (0,0) size 0x0
+    RenderInline {LI} at (0,0) size 47x16
+      RenderText {#text} at (0,0) size 0x0
+      RenderInline {A} at (0,0) size 39x16 [color=#83756F]
+        RenderText {#text} at (229,1) size 39x16
+          text run at (229,1) width 39: "Active"
+      RenderText {#text} at (269,1) size 5x16
+        text run at (269,1) width 5: " "
+    RenderText {#text} at (0,0) size 0x0
+    RenderInline {LI} at (0,0) size 73x16
+      RenderText {#text} at (0,0) size 0x0
+      RenderInline {A} at (0,0) size 69x16 [color=#83756F]
+        RenderText {#text} at (275,1) size 69x16
+          text run at (275,1) width 69: "Completed"
+      RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
+layer at (538,455) size 114x20
+  RenderButton {BUTTON} at (404,0) size 114x20 [bgcolor=#00000019]
+    RenderBlock (anonymous) at (10,0) size 94x20
+      RenderText {#text} at (0,3) size 94x14
+        text run at (0,3) width 94: "Clear completed (2)"
+layer at (119,131) size 548x16
+  RenderBlock (positioned) zI: 2 at (1,1) size 548x16 [border: none (1px solid #6C615C) none]
+    RenderText zI: 2 at (0,0) size 0x0
+layer at (119,146) size 548x65
+  RenderTextControl zI: 2 {INPUT} at (0,0) size 548x65 [bgcolor=#00000005]
+layer at (179,162) size 472x33
+  RenderBlock {DIV} at (60,16) size 472x33 [color=#A9A9A9]
+    RenderText {#text} at (0,2) size 260x28
+      text run at (0,2) width 260: "What needs to be done?"
+layer at (179,162) size 472x33
+  RenderBlock {DIV} at (60,16) size 472x33
+layer at (119,211) size 548x233
+  RenderBlock (relative positioned) zI: 2 {SECTION} at (1,81) size 548x233 [border: (1px dotted #ADADAD) none]
+    RenderBlock (anonymous) at (0,1) size 548x0
+      RenderInline {X-TOGGLE-ALL} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+        RenderInline {LABEL} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+      RenderText zI: 2 {#text} at (0,0) size 0x0
+    RenderBlock {UL} at (0,1) size 548x232
+      RenderBlock (anonymous) at (0,0) size 548x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,0) size 548x58
+        RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock (anonymous) at (0,58) size 548x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,58) size 548x58
+        RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock (anonymous) at (0,116) size 548x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,116) size 548x58
+        RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock (anonymous) at (0,174) size 548x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+      RenderBlock (anonymous) at (0,174) size 548x58
+        RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock (anonymous) at (0,232) size 548x0
+        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+layer at (108,159) size 65x41
+  RenderBlock (positioned) {INPUT} at (-11,-52) size 65x41 [color=#000000]
+    RenderInline (generated) at (0,0) size 66x39 [color=#D9D9D9]
+      RenderText at (25,0) size 16x32
+        text run at (25,0) width 16: "\x{BB}"
+layer at (119,212) size 548x58
+  RenderBlock (relative positioned) {DIV} at (0,0) size 548x58
+    RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock {LABEL} at (60,15) size 181x28
+        RenderText {#text} at (0,0) size 181x27
+          text run at (0,0) width 181: "one (unchecked)"
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderBlock {FORM} at (0,58) size 548x0
+layer at (119,221) size 40x40
+  RenderBlock (positioned) {INPUT} at (0,9) size 40x40 [color=#000000]
+    RenderInline (generated) at (0,0) size 18x23 [color=#D9D9D9]
+      RenderText at (11,10) size 18x23
+        text run at (11,10) width 18: "\x{2714}"
+layer at (119,270) size 548x58
+  RenderBlock (relative positioned) {DIV} at (0,0) size 548x58
+    RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock {LABEL} at (60,15) size 178x28
+        RenderText {#text} at (0,0) size 178x27
+          text run at (0,0) width 178: "two (unchecked)"
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderBlock {FORM} at (0,58) size 548x0
+layer at (119,279) size 40x40
+  RenderBlock (positioned) {INPUT} at (0,9) size 40x40 [color=#000000]
+    RenderInline (generated) at (0,0) size 18x23 [color=#D9D9D9]
+      RenderText at (11,10) size 18x23
+        text run at (11,10) width 18: "\x{2714}"
+layer at (119,328) size 548x58
+  RenderBlock (relative positioned) {DIV} at (0,0) size 548x58
+    RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock {LABEL} at (60,15) size 168x28 [color=#A9A9A9]
+        RenderText {#text} at (0,0) size 168x27
+          text run at (0,0) width 168: "three (checked)"
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderBlock {FORM} at (0,58) size 548x0
+layer at (119,337) size 40x40
+  RenderBlock (positioned) {INPUT} at (0,9) size 40x40 [color=#000000]
+layer at (119,336) size 18x23
+  RenderInline (relative positioned) at (0,0) size 18x23 [color=#85ADA7]
+    RenderText at (11,10) size 18x23
+      text run at (11,10) width 18: "\x{2714}"
+layer at (119,386) size 548x58
+  RenderBlock (relative positioned) {DIV} at (0,0) size 548x58
+    RenderBlock {DIV} at (0,0) size 548x58
+      RenderBlock {LABEL} at (60,15) size 155x28
+        RenderText {#text} at (0,0) size 155x27
+          text run at (0,0) width 155: "four (checked)"
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderBlock {FORM} at (0,58) size 548x0
+layer at (119,395) size 40x40
+  RenderBlock (positioned) {INPUT} at (0,9) size 40x40 [color=#000000]
+layer at (119,394) size 18x23
+  RenderInline (relative positioned) at (0,0) size 18x23 [color=#85ADA7]
+    RenderText at (11,10) size 18x23
+      text run at (11,10) width 18: "\x{2714}"
+caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of {#shadow-root} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 4 {SECTION} of body
+#EOF

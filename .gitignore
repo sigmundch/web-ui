@@ -2,8 +2,8 @@ packages
 pubspec.lock
 .project
 tags
+test/data/input/example
 test/data/output/
-
 extension/output/
 out/
 

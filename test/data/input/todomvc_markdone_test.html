@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+<!--
+ This test runs the TodoMVC app, adds a few todos, marks some as done
+ programatically, and clicks on a checkbox to mark others via the UI.
+ -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="components" href="example/todomvc/footer.html">
+  <link rel="components" href="example/todomvc/newform.html">
+  <link rel="components" href="example/todomvc/toggleall.html">
+  <link rel="components" href="example/todomvc/item.html">
+  <link rel="stylesheet" href="example/todomvc/base.css">
+  <script type="application/javascript" src="testing.js"></script>
+  <title>dart - TodoMVC</title>
+</head>
+<body>
+  <section id="todoapp">
+    <header id="header">
+      <h1 class='title'>todos</h1>
+      <x-todo-form></x-todo-form>
+    </header>
+    <section id="main">
+      <x-toggle-all></x-toggle-all>
+      <ul id="todo-list">
+        <template iterate="x in app.todos">
+          <template instantiate="if viewModel.isVisible(x)">
+            <x-todo-row data-value="todo:x"></x-todo-row>
+          </template>
+        </template>
+      </ul>
+    </section>
+    <template instantiate="if viewModel.hasElements">
+      <x-todo-footer id="footer"></x-todo-footer>
+    </template>
+  </section>
+  <footer id="info">
+    <p>Double-click to edit a todo.</p>
+    <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team.</p>
+    <p>
+      Learn more about
+      <a href="https://www.dartlang.org/articles/dart-web-components/">Dart + Web Components</a>
+      or
+      <a href="https://github.com/dart-lang/dart-web-components/tree/master/example/todomvc">view the source</a>.
+    </p>
+    <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
+  </footer>
+  <script type="application/dart">
+import 'dart:html';
+import 'example/todomvc/model.dart';
+import 'package:unittest/unittest.dart';
+import 'package:web_components/web_components.dart';
+
+main() {
+  // listen on changes to #hash in the URL
+  // Note: listen on both popState and hashChange, because IE9 doens't support
+  // history API, and it doesn't work properly on Opera 12.
+  // See http://dartbug.com/5483
+  updateFilters(e) {
+    viewModel.showIncomplete = window.location.hash != '#/completed';
+    viewModel.showDone = window.location.hash != '#/active';
+    dispatch();
+  }
+  window.on.hashChange.add(updateFilters);
+  window.on.popState.add(updateFilters);
+
+  window.setTimeout(() {
+    polyfillShadowDomForTesting = true;
+    app.todos.add(new Todo('one (unchecked)'));
+    app.todos.add(new Todo('two (unchecked)'));
+    app.todos.add(new Todo('three (checked)')..done = true);
+    app.todos.add(new Todo('four (checked)'));
+    dispatch();
+
+    // To ensure we click in the correct place, we calculate x, y offset where
+    // we want to click based on the coordinates given by DumpRenderTree, and
+    // then adapt those offset in the current window. This makes is possible to
+    // debug the application in Dartium reliably.
+
+    document.body.rect.then((r) {
+      // The x, y location of body in the DumpRenderTree output was: (117, 130) 
+      // and location of the node we want to click was: (119, 395)
+      int x = r.bounding.left.toInt() + (119 - 117);
+      int y = r.bounding.top.toInt() + (395 - 130);
+      var node = document.elementFromPoint(x, y);
+      expect(node is InputElement, isTrue,
+          reason: '$x, $y points to a checkbox');
+      expect(node.checked, isFalse, reason: 'element is unchecked');
+      node.on.click.dispatch(new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
+      expect(node.checked, isTrue, reason: 'element is checked');
+
+      // Ideally the test above would work also with shadow DOM (pending that 
+      // 'elementFromPoint' is fixed to return also nodes under the shadow DOM).
+      // The next extra check is only valid when polyfilling the shadow DOM:
+      expect(node, same(document.queryAll('input[type=checkbox]')[3]));
+
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    });
+  }, 0);
+
+}
+  </script>
+</body>
+</html>
