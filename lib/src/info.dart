@@ -394,6 +394,8 @@ class ElementInfo {
 
   bool get isIterateOrIf => hasIterate || hasIfCondition;
 
+  bool get isTemplateElement => false;
+
   ElementInfo(this.node, this.parent) {
     if (parent != null) parent.children.add(this);
   }

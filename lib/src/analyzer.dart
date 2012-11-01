@@ -70,7 +70,9 @@ class _HtmlCleaner extends InfoVisitor {
       // template attributes, such as `<td template instantiate="if cond">`.
       // TODO(jmesserly): should probably inject a stylesheet into the page:
       // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html#css-additions
-      node.attributes['style'] = 'display:none';
+      if (info.isTemplateElement || info.hasIfCondition) {
+        node.attributes['style'] = 'display:none';
+      }
     }
 
     node.attributes.forEach((name, value) {
