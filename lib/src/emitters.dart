@@ -89,17 +89,7 @@ class Context {
 class ElementFieldEmitter extends Emitter<ElementInfo> {
   ElementFieldEmitter(ElementInfo info) : super(info);
 
-  // TODO(jmesserly): I don't like the special case for body. Can we fix how
-  // we initialize the main page?
-  // TODO(jmesserly): we should probably just check this in RecursiveEmitter,
-  // and not run emitters if the field isn't there, since all of the other ones
-  // require this property.
-  bool get needsField =>
-      elemInfo.identifier != null && elemInfo.node.tagName != 'body';
-
   void emitDeclarations(Context context) {
-    if (!needsField) return;
-
     var type = htmlElementNames[elem.tagName];
     // Note: this will eventually be the component's class name if it is a
     // known x-tag.
@@ -108,8 +98,6 @@ class ElementFieldEmitter extends Emitter<ElementInfo> {
   }
 
   void emitCreated(Context context) {
-    if (!needsField) return;
-
     // TODO(jmesserly): there's an asymmetry here. In one case, the child is
     // already in the document but not in the other case.
     if (elemInfo.needsQuery) {
@@ -129,8 +117,6 @@ class ElementFieldEmitter extends Emitter<ElementInfo> {
   }
 
   void emitRemoved(Context context) {
-    if (!needsField) return;
-
     context.removedMethod.add("${elemInfo.identifier} = null;");
   }
 }
@@ -535,7 +521,8 @@ class RecursiveEmitter extends InfoVisitor {
   final FileInfo _fileInfo;
   Context _context;
 
-  RecursiveEmitter(this._fileInfo) : _context = new Context();
+  RecursiveEmitter(this._fileInfo, [Context context])
+      : _context = context != null ? context : new Context();
 
   // TODO(jmesserly): currently visiting of components declared in a file is
   // handled separately. Consider refactoring so the base visitor works for us.
@@ -544,6 +531,15 @@ class RecursiveEmitter extends InfoVisitor {
   void visitElementInfo(ElementInfo info) {
     assert(info != null);
     if (info.node is Text) {
+      return;
+    }
+
+    // TODO(jmesserly): I don't like the special case for body. Can we fix how
+    // we initialize the main page?
+    bool shouldEmit = info.identifier != null && info.node.tagName != 'body';
+
+    if (!shouldEmit) {
+      super.visitElementInfo(info);
       return;
     }
 

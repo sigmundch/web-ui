@@ -26,8 +26,8 @@ main() {
     group('declaration', () {
       test('no data binding', () {
         var elem = parseSubtree('<div></div>');
-        var emitter = new ElementFieldEmitter(analyzeElement(elem));
-        expect(_declarations(emitter), equals(''));
+        var code = _declarationsRecursive(analyzeElement(elem));
+        expect(code, equals(''));
       });
 
       test('id only, no data binding', () {
@@ -84,8 +84,8 @@ main() {
     group('created', () {
       test('no data binding', () {
         var elem = parseSubtree('<div></div>');
-        var emitter = new ElementFieldEmitter(analyzeElement(elem));
-        expect(_created(emitter), equals(''));
+        var code = _createdRecursive(analyzeElement(elem));
+        expect(code, equals(''));
       });
 
       test('id only, no data binding', () {
@@ -304,4 +304,16 @@ _removed(Emitter emitter) {
   emitter.emitDeclarations(context);
   emitter.emitRemoved(context);
   return context.removedMethod.toString().trim();
+}
+
+_createdRecursive(ElementInfo info) {
+  var context = new Context();
+  new RecursiveEmitter(null, context).visit(info);
+  return context.createdMethod.toString().trim();
+}
+
+_declarationsRecursive(ElementInfo info) {
+  var context = new Context();
+  new RecursiveEmitter(null, context).visit(info);
+  return context.declarations.toString().trim();
 }

@@ -54,6 +54,12 @@ void analyzeFile(SourceFile file, Map<Path, FileInfo> info) {
 /** Remove all MDV attributes; post-analysis these attributes are not needed. */
 class _HtmlCleaner extends InfoVisitor {
 
+  void visitComponentInfo(ComponentInfo info) {
+    // Remove the <element> tag from the tree
+    if (info.elemInfo != null) info.elemInfo.node.remove();
+    super.visitComponentInfo(info);
+  }
+
   void visitElementInfo(ElementInfo info) {
     var node = info.node;
     if (info.isIterateOrIf) {
@@ -133,7 +139,10 @@ class _Analyzer extends TreeVisitor {
     }
 
     if (info == null) {
-      info = new ElementInfo(node, _parent);
+      // <element> tags are tracked in the file's declared components, so they
+      // don't need a parent.
+      var parent = node.tagName == 'element' ? null : _parent;
+      info = new ElementInfo(node, parent);
     }
 
     if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
@@ -159,15 +168,6 @@ class _Analyzer extends TreeVisitor {
 
       // Associate ElementInfo of the <element> tag with its component.
       component.elemInfo = info;
-
-      // The body of an element tag will not be part of the HTML page. Each
-      // element will be generated programatically as a Dart web component by
-      // [WebComponentEmitter]. So this component's ElementInfo isn't part of
-      // the HTML page's children and the ElementInfo is the top-level node.
-      // TODO(jmesserly): don't create the info with a parent, and don't remove
-      // the node until _HtmlCleaner.
-      info.remove();
-      info.node.remove();
 
       _bindExtends(component);
 

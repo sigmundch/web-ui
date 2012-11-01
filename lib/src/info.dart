@@ -314,10 +314,8 @@ class ElementInfo {
    */
   String identifier;
 
-  ElementInfo _parent;
-
   /** Info for the nearest enclosing element, iterator, or conditional. */
-  ElementInfo get parent => _parent;
+  final ElementInfo parent;
 
   // TODO(jmesserly): make childen work like DOM children collection, so that
   // adding/removing a node updates the parent pointer.
@@ -395,15 +393,8 @@ class ElementInfo {
 
   bool get isIterateOrIf => hasIterate || hasIfCondition;
 
-  ElementInfo(this.node, this._parent) {
-    if (_parent != null) _parent.children.add(this);
-  }
-
-  void remove() {
-    if (_parent != null) {
-      _parent.children.removeAt(_parent.children.indexOf(this));
-      _parent = null;
-    }
+  ElementInfo(this.node, this.parent) {
+    if (parent != null) parent.children.add(this);
   }
 
   String toString() => '#<ElementInfo '
