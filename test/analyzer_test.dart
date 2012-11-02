@@ -195,7 +195,7 @@ main() {
     var input =
         '<div class="class1 {{x}} class2 {{y}}{{z}} {{w}} class3 class4">'
         '</div>';
-    var info = analyzeElement(parseSubtree(input), cleanHtml: true);
+    var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
@@ -364,7 +364,7 @@ main() {
 
       var quuxElement = doc.query('element');
       expect(quuxElement, isNotNull);
-      analyzeFile(srcFile, _toPathMap({'main.html': info }));
+      analyzeFile(srcFile, toPathMap({'main.html': info }));
 
       expect(info.components.length, equals(1));
       var compInfo = info.components['x-quux'];
@@ -409,7 +409,7 @@ main() {
       var info = analyzeDefinitions(srcFile);
       expect(info.declaredComponents.length, equals(1));
 
-      analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }));
       expect(info.components.keys, equals(['x-foo']));
       expect(info.query('x-foo').component, equals(info.declaredComponents[0]));
     });
@@ -500,7 +500,7 @@ main() {
 
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
       var info = analyzeDefinitions(srcFile);
-      analyzeFile(srcFile, _toPathMap({ 'main.html': info }));
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }));
     });
 
     test('components extends another component', () {
@@ -519,52 +519,4 @@ main() {
           equals(info.components['x-foo']));
     });
   });
-}
-
-FileInfo analyzeDefinitionsInTree(Document doc) =>
-    analyzeDefinitions(new SourceFile(new Path(''))..document = doc);
-
-/** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
-List<SourceFile> parseFiles(Map<String, String> fileContents,
-    [String mainHtmlFile = 'index.html']) {
-
-  var result = <SourceFile>[];
-  fileContents.forEach((filename, contents) {
-    var src = new SourceFile(new Path(filename));
-    src.document = parse(contents);
-    result.add(src);
-  });
-
-  return result;
-}
-
-/** Analyze all files. */
-Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
-  var result = new Map<Path, FileInfo>();
-  // analyze definitions
-  for (var file in files) {
-    result[file.path] = analyzeDefinitions(file);
-  }
-
-  // analyze file contents
-  for (var file in files) {
-    analyzeFile(file, result);
-  }
-  return _toStringMap(result);
-}
-
-Map<Path, FileInfo> _toPathMap(Map<String, FileInfo> map) {
-  var res = new Map<Path, FileInfo>();
-  for (var k in map.keys) {
-    res[new Path(k)] = map[k];
-  }
-  return res;
-}
-
-Map<String, FileInfo> _toStringMap(Map<Path, FileInfo> map) {
-  var res = new Map<String, FileInfo>();
-  for (var k in map.keys) {
-    res[k.toString()] = map[k];
-  }
-  return res;
 }

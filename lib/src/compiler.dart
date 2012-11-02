@@ -17,6 +17,7 @@ import 'emitters.dart';
 import 'file_system.dart';
 import 'file_system/path.dart';
 import 'files.dart';
+import 'html_cleaner.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'options.dart';
@@ -183,9 +184,9 @@ class Compiler {
     for (var file in files) {
       _time('Codegen', file.path, () {
         if (!file.isDart) {
-          _emitComponents(file);
-
           var fileInfo = info[file.path];
+          cleanHtmlNodes(fileInfo);
+          _emitComponents(fileInfo);
           if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
             _emitMainDart(file);
             _emitMainHtml(file);
@@ -236,9 +237,8 @@ class Compiler {
         document.outerHTML));
   }
 
-  /** Emits the Dart code for all components in the [file]. */
-  void _emitComponents(SourceFile file) {
-    var fileInfo = info[file.path];
+  /** Emits the Dart code for all components in [fileInfo]. */
+  void _emitComponents(FileInfo fileInfo) {
     for (var component in fileInfo.declaredComponents) {
       var code = new WebComponentEmitter(fileInfo).run(component, _pathInfo);
       output.add(new OutputFile(_pathInfo.outputLibraryPath(component), code));

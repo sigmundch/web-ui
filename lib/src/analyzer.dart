@@ -33,11 +33,9 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  * Extract relevant information from [source] and it's children.
  * Used for testing.
  */
-// TODO(jmesserly): move this into analyzer_test
-FileInfo analyzeNode(Node source, {bool cleanHtml: false}) {
+FileInfo analyzeNodeForTesting(Node source) {
   var result = new FileInfo();
   new _Analyzer(result).visit(source);
-  if (cleanHtml) new _HtmlCleaner().visit(result);
   return result;
 }
 
@@ -46,75 +44,8 @@ void analyzeFile(SourceFile file, Map<Path, FileInfo> info) {
   var fileInfo = info[file.path];
   _normalize(fileInfo, info);
   new _Analyzer(fileInfo).visit(file.document);
-  new _HtmlCleaner().visit(fileInfo);
 }
 
-// TODO(jmesserly): see if we can drive this entirely off info, so it doesn't
-// duplicate parsing elsewhere in analyzer.
-/** Remove all MDV attributes; post-analysis these attributes are not needed. */
-class _HtmlCleaner extends InfoVisitor {
-
-  void visitComponentInfo(ComponentInfo info) {
-    // Remove the <element> tag from the tree
-    if (info.elemInfo != null) info.elemInfo.node.remove();
-    super.visitComponentInfo(info);
-  }
-
-  void visitElementInfo(ElementInfo info) {
-    var node = info.node;
-    if (info.isIterateOrIf) {
-      // Remove children but not template node itself
-      node.nodes.clear();
-
-      // Hide all template elements. At the very least, we must do this for
-      // template attributes, such as `<td template instantiate="if cond">`.
-      // TODO(jmesserly): should probably inject a stylesheet into the page:
-      // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html#css-additions
-      if (info.isTemplateElement || info.hasIfCondition) {
-        node.attributes['style'] = 'display:none';
-      }
-    }
-
-    node.attributes.forEach((name, value) {
-      visitAttribute(node, name, value);
-    });
-
-    if (info.contentBinding != null) {
-      // TODO(jmesserly): this is hacky, see issue #133.
-      for (var child in node.nodes) {
-        if (child is Text) visitText(child);
-      }
-    }
-
-    super.visitElementInfo(info);
-  }
-
-  // Remove text nodes with bindings.
-  void visitText(Text text) {
-    if (new BindingParser(text.value).moveNext()) {
-      text.remove();
-    }
-  }
-
-  void visitAttribute(Element node, String name, String value) {
-    switch (name) {
-      // Remove MDV attributes now that we've processed them.
-      case 'data-action':
-      case 'data-bind':
-      case 'data-value':
-      case 'instantiate':
-      case 'iterate':
-      case 'template':
-        node.attributes.remove(name);
-        break;
-      default:
-        // Remove any attribute computed as a MDV expression.
-        if (new BindingParser(value).moveNext()) {
-          node.attributes.remove(name);
-        }
-    }
-  }
-}
 
 /** A visitor that walks the HTML to extract all the relevant information. */
 class _Analyzer extends TreeVisitor {

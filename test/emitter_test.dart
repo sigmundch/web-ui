@@ -268,7 +268,7 @@ main() {
           '<link href="/a.css" rel="stylesheet">'
           '</head><body></body></html>';
       var doc = parseDocument(html);
-      var fileInfo = analyzeNode(doc);
+      var fileInfo = analyzeNodeForTesting(doc);
       fileInfo.userCode = new DartCodeInfo('main', null, [], '');
       var pathInfo = new PathInfo(new Path('a'), new Path('b'));
 
