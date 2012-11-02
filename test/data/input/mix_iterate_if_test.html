@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <!-- Tests the correct interaction of iteration and conditionals. -->
+  <table>
+    <tbody id='test' template iterate="row in table">
+    <tr template iterate="cell in row">
+      <td template instantiate="if cell != 0">{{cell}}</td>
+    </tr>
+  </tbody></table>
+  <script type="application/dart">
+  import 'dart:html';
+  import 'package:unittest/unittest.dart';
+  import 'package:web_components/watcher.dart';
+
+  List<List> table = [[1, 2, 3], [4, 0, 5], [0, 2, 4]];
+  main() {
+    window.setTimeout(() {
+      table[1][1] = 9;
+      dispatch();
+      window.setTimeout(() {
+        var test = document.query('#test');
+        expect(test.elements.length, table.length);
+        for (int row = 0; row < table.length; row++) {
+          var tr = test.elements[row];
+          expect(tr.tagName, 'TR');
+          int column = -1;
+          for (var td in tr.elements) {
+            expect(td.tagName, 'TD');
+            if (td.style.display == 'none') {
+              column++;
+              continue;
+            }
+
+            var value = table[row][column];
+            expect(value, greaterThan(0));
+            expect(td.innerHTML, value.toString());
+          }
+        }
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
+    }, 0);
+  }
+  </script>
+</body>
+</html>

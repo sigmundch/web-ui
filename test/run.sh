@@ -55,7 +55,7 @@ if [[ ($TEST_PATTERN == "") ]]; then
   # canonicalization.
   pushd $DIR/..
   echo Analyzing compiler for warnings or type errors
-  dart_analyzer bin/dwc.dart \
+  dart_analyzer --fatal-warnings --fatal-type-errors bin/dwc.dart \
     --work analyzer_out
   rm -r analyzer_out
   popd

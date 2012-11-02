@@ -78,6 +78,16 @@ class _Analyzer extends TreeVisitor {
       info = new ElementInfo(node, parent);
     }
 
+    visitElementInfo(info);
+
+    if (_parent == null) {
+      _fileInfo.bodyInfo = info;
+    }
+  }
+
+  void visitElementInfo(ElementInfo info) {
+    var node = info.node;
+
     if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
     if (node.tagName == 'body') {
       // TODO(jmesserly): too much knowledge of codegen here.
@@ -115,10 +125,6 @@ class _Analyzer extends TreeVisitor {
     _currentInfo = lastInfo;
 
     _parent = savedParent;
-
-    if (_parent == null) {
-      _fileInfo.bodyInfo = info;
-    }
 
     if (info.needsIdentifier && info.identifier == null) {
       var id = '__e-$_uniqueId';
@@ -178,38 +184,57 @@ class _Analyzer extends TreeVisitor {
     // Note: we issue warnings instead of errors because the spirit of HTML and
     // Dart is to be forgiving.
     if (instantiate != null && iterate != null) {
-      messages.warning('<template> element cannot have iterate and instantiate '
+      messages.warning('template cannot have iterate and instantiate '
           'attributes', node.span, file: _fileInfo.path);
       return null;
     }
 
-    if (node.nodes.filter((n) => n is Element).length == 0) {
-      // Ignore templates with no children
-      // TODO(jmesserly): this is wrong when we want to support fragments
-      return null;
-    }
+    // TODO(jmesserly): this is wrong when we want to support fragments
+    bool hasChildElement = node.nodes.filter((n) => n is Element).length > 0;
 
     if (instantiate != null) {
       if (instantiate.startsWith('if ')) {
-        return new TemplateInfo(node, _parent,
-            ifCondition: instantiate.substring(3));
+        var cond = instantiate.substring(3);
+
+        var result = new TemplateInfo(node, _parent, ifCondition: cond);
+        if (node.tagName == 'template') {
+          return hasChildElement ? result : null;
+        }
+
+
+        // TODO(jmesserly): if-conditions in attributes require injecting a
+        // placeholder node, and a real node which is a clone. We should
+        // consider a design where we show/hide the node instead (with care
+        // taken not to evaluate hidden bindings). That is more along the lines
+        // of AngularJS, and would have a cleaner DOM. See issue #142.
+        var contentNode = node.clone();
+        // Clear out the original attributes. This is nice to have, but
+        // necessary for ID because of issue #141.
+        node.attributes.clear();
+        contentNode.nodes.addAll(node.nodes);
+
+        // Create a new ElementInfo that is a child of "result" -- the
+        // placeholder node. This will become result.contentInfo.
+        visitElementInfo(new ElementInfo(contentNode, result));
+        return result;
       }
 
       // TODO(jmesserly): we need better support for <template instantiate>
       // as it exists in MDV. Right now we ignore it, but we provide support for
       // data binding everywhere.
       if (instantiate != '') {
-        messages.warning('<template instantiate> must either have an empty '
-          'attribute or be of the form <template instantiate="if condition">.',
+        messages.warning('template instantiate must either have an empty '
+          'attribute or be of the form instantiate="if condition".',
           node.span, file: _fileInfo.path);
       }
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
+        if (!hasChildElement) return null;
         return new TemplateInfo(node, _parent, loopVariable: match[1],
             loopItems: match[2]);
       }
-      messages.warning('<template> iterate must be of the form: '
+      messages.warning('template iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name '
           'and "list" is the list of items.',
           node.span, file: _fileInfo.path);
