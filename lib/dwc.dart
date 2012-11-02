@@ -32,12 +32,16 @@ Future run(List<String> args) {
     var currentDir = new Directory.current().path;
     var compiler = new Compiler(fileSystem, options, currentDir);
     return compiler.run().chain((_) {
+      var entryPoint = null;
       // Write out the code associated with each source file.
       for (var file in compiler.output) {
         writeFile(file.path, file.contents, options.clean);
+        if (file.path.filename.endsWith('_bootstrap.dart')) {
+          entryPoint = file.path;
+        }
       }
-      return fileSystem.flush();
-    });
+      return symlinkPubPackages(entryPoint, options);
+    }).chain((_) => fileSystem.flush());
   }, printTime: true);
 }
 
@@ -60,6 +64,62 @@ void _createIfNeeded(Path outdir) {
     _createIfNeeded(outdir.directoryPath);
     outDirectory.createSync();
   }
+}
+
+/**
+ * Creates a symlink to the pub packages directory in the output location. The
+ * returned future completes when the symlink was created (or immediately if it
+ * already exists).
+ */
+Future symlinkPubPackages(fs.Path outputFile, CompilerOptions options) {
+  if (outputFile == null || options.outputDir == null) {
+    // We don't need to copy the packages directory if the compiler was called
+    // without an entry-point file or if the output was generated in-place where
+    // the input lives.
+    return new Future.immediate(null);
+  }
+
+  var toPath = _convert(outputFile.directoryPath.append('packages'));
+  // A resolved symlink works like a directory
+  // TODO(sigmund): replace this with something smarter once we have good
+  // symlink support in dart:io
+  if (new Directory.fromPath(toPath).existsSync()) {
+    // Packages directory already exists.
+    return new Future.immediate(null);
+  }
+
+  // A broken symlink works like a file
+  var toFile = new File.fromPath(toPath);
+  if (toFile.existsSync()) {
+    toFile.deleteSync();
+  }
+
+  var fromPath = new Path(options.inputFile).directoryPath.append('packages');
+  // [fullPathSync] will canonicalize the path, resolving any symlinks.
+  // TODO(sigmund): once it's possible in dart:io, we just want to use a full
+  // path, but not necessarily resolve symlinks.
+  var from = new File.fromPath(fromPath).fullPathSync().toString();
+  var to = toPath.toString();
+
+  var command = 'ln';
+  var args = ['-s', from, to];
+
+  if (Platform.operatingSystem == 'windows') {
+    // This uses the same technique as 'pub' to create symlinks in windows,
+    // which only works on Vista or later. 
+    command = 'mklink';
+    args = ['/c', 'mklink', '/j', to, from];
+  }
+
+  return Process.run(command, args).transform((result) {
+    if (result.exitCode != 0) {
+      var details = 'subprocess stdout:\n${result.stdout}\n'
+                    'subprocess stderr:\n${result.stderr}';
+      messages.error(
+        'unable to create symlink\n from: $from\n to:$to\n$details', null);
+    } 
+    return null;
+  });
 }
 
 // TODO(sigmund): this conversion from dart:io paths to internal paths should
