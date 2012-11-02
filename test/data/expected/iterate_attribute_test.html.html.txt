@@ -1,0 +1,22 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x36
+  RenderBlock {HTML} at (0,0) size 800x36
+    RenderBody {BODY} at (8,8) size 784x20
+      RenderBlock {DIV} at (0,0) size 784x20
+        RenderInline {SPAN} at (0,0) size 7x19
+          RenderText {#text} at (0,0) size 7x19
+            text run at (0,0) width 7: "a"
+        RenderInline {SPAN} at (0,0) size 8x19
+          RenderText {#text} at (7,0) size 8x19
+            text run at (7,0) width 8: "b"
+        RenderInline {SPAN} at (0,0) size 7x19
+          RenderText {#text} at (15,0) size 7x19
+            text run at (15,0) width 7: "c"
+        RenderInline {SPAN} at (0,0) size 8x19
+          RenderText {#text} at (22,0) size 8x19
+            text run at (22,0) width 8: "d"
+#EOF

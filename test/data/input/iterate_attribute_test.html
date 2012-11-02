@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <!-- Tests the iterate attribute on a node. -->
+  <div id='test' template iterate="x in list">
+    <span>{{x}}</span>
+  </div>
+  <script type="application/dart">
+  import 'dart:html';
+  import 'package:unittest/unittest.dart';
+  import 'package:web_components/watcher.dart';
+
+  var list = <String>['a', 'b', 'c', 'e'];
+  main() {
+    window.setTimeout(() {
+      expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+          '<span>a</span><span>b</span><span>c</span><span>e</span>'));
+      list[3] = 'd';
+      dispatch();
+      window.setTimeout(() {
+        expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+            '<span>a</span><span>b</span><span>c</span><span>d</span>'));
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
+    }, 0);
+  }
+  </script>
+</body>
+</html>
