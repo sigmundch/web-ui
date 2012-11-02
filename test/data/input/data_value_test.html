@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+  <style>x-greeter { display: block; }</style>
+  <element name="x-greeter" extends="div" constructor="Greeter">
+    <!-- TODO(jmesserly): the div is here to workaround issue #143. -->
+    <template><div>{{greeting}}, {{name}}!</div></template>
+    <script type='application/dart'>
+      import 'common.dart';
+      import 'package:web_components/web_component.dart';
+      class Greeter extends WebComponent {
+        String greeting, name;
+      }
+    </script>
+  </element>
+</head>
+<body>
+  <p>
+  This test has two loops, each over two items, for a total of four different
+  greeting messages:
+  </p>
+  <template iterate="g in greetings">
+    <template iterate="n in names">
+      <x-greeter data-value="greeting:g, name:n"></x-greeter>
+    </template>
+  </template>
+  <script type="application/dart">
+    import 'common.dart';
+    import 'dart:html';
+
+    var greetings = ['hello', 'hi'];
+    var names = ['world', 'universe'];
+    main() {
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    }
+  </script>
+</body>
+</html>

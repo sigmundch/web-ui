@@ -245,10 +245,14 @@ class _Analyzer extends TreeVisitor {
   void visitAttribute(Element elem, ElementInfo elemInfo, String name,
                       String value) {
     if (name == 'data-value') {
-      _readDataValueAttribute(elem, elemInfo, value);
+      for (var item in value.split(',')) {
+        if (!_readDataValue(elem, elemInfo, item)) return;
+      }
       return;
     } else if (name == 'data-action') {
-      _readDataActionAttribute(elem, elemInfo, value);
+      for (var item in value.split(',')) {
+        if (!_readDataAction(elem, elemInfo, item)) return;
+      }
       return;
     }
 
@@ -270,26 +274,20 @@ class _Analyzer extends TreeVisitor {
     elemInfo.hasDataBinding = true;
   }
 
-  void _readDataValueAttribute(
-      Element elem, ElementInfo elemInfo, String value) {
+  bool _readDataValue(Element elem, ElementInfo elemInfo, String value) {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-value attribute should be of the form '
-          'data-value="name:value"', elem.span, file: _fileInfo.path);
-      return;
+          'data-value="name:value" or data-value='
+          '"name1:value1,name2:value2,..." for multiple assigments.',
+          elem.span, file: _fileInfo.path);
+      return false;
     }
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
 
     elemInfo.values[name] = value;
-  }
-
-  void _readDataActionAttribute(
-      Element elem, ElementInfo elemInfo, String value) {
-    // Bind each event, stopping if we hit an error.
-    for (var action in value.split(',')) {
-      if (!_readDataAction(elem, elemInfo, action)) return;
-    }
+    return true;
   }
 
   bool _readDataAction(Element elem, ElementInfo elemInfo, String value) {

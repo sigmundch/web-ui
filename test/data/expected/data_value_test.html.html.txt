@@ -1,0 +1,29 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x140
+  RenderBlock {HTML} at (0,0) size 800x140
+    RenderBody {BODY} at (8,16) size 784x116
+      RenderBlock {P} at (0,0) size 784x20
+        RenderText {#text} at (0,0) size 545x19
+          text run at (0,0) width 434: "This test has two loops, each over two items, for a total of four different "
+          text run at (434,0) width 111: "greeting messages:"
+      RenderBlock {X-GREETER} at (0,36) size 784x20
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 76x19
+            text run at (0,0) width 76: "hello, world!"
+      RenderBlock {X-GREETER} at (0,56) size 784x20
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 90x19
+            text run at (0,0) width 90: "hello, universe!"
+      RenderBlock {X-GREETER} at (0,76) size 784x20
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 58x19
+            text run at (0,0) width 58: "hi, world!"
+      RenderBlock {X-GREETER} at (0,96) size 784x20
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 72x19
+            text run at (0,0) width 72: "hi, universe!"
+#EOF
