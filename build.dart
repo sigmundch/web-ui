@@ -24,5 +24,6 @@ void main() {
     'example/mdv/hidden2/hidden2.html',
     'example/mdv/model/main.html',
     'example/mdv/table/table.html',
+    'example/mdv/style/style.html',
     'example/todomvc/main.html']);
 }

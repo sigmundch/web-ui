@@ -428,6 +428,11 @@ class AttributeInfo {
   bool isClass = false;
 
   /**
+   * Whether this is a 'ng-style' attribute.
+   */
+  bool isStyle = false;
+
+  /**
    * A value that will be monitored for changes. All attributes, except `class`,
    * have a single bound value.
    */
@@ -438,6 +443,7 @@ class AttributeInfo {
 
   AttributeInfo(String value) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
+  AttributeInfo.forStyle(String value) : bindings = [value], isStyle = true;
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${Strings.join(bindings, "")}>';

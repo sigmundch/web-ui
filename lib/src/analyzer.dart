@@ -268,7 +268,10 @@ class _Analyzer extends TreeVisitor {
         value = match[1];
 
         // Default to a 1-way binding for any other attribute.
-        elemInfo.attributes[name] = new AttributeInfo(value);
+        // TODO(tsander): Is ng-style the most appropriate name for this?
+        elemInfo.attributes[name] = (name == 'ng-style')
+            ? new AttributeInfo.forStyle(value)
+            : new AttributeInfo(value);
       }
     }
     elemInfo.hasDataBinding = true;
