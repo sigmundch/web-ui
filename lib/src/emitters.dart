@@ -229,7 +229,7 @@ class DataBindingEmitter extends Emitter<ElementInfo> {
               });
           ''');
         }
-      } else if (attrInfo.isStyle) {
+      } else if (attrInfo.isStyleMap) {
         var val = attrInfo.boundValue;
         var stopperName = attrInfo.stopperNames[0];
         context.insertedMethod.add('''

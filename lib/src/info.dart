@@ -428,9 +428,9 @@ class AttributeInfo {
   bool isClass = false;
 
   /**
-   * Whether this is a 'ng-style' attribute.
+   * Whether this is a 'style-map' attribute.
    */
-  bool isStyle = false;
+  bool isStyleMap = false;
 
   /**
    * A value that will be monitored for changes. All attributes, except `class`,
@@ -443,7 +443,7 @@ class AttributeInfo {
 
   AttributeInfo(String value) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
-  AttributeInfo.forStyle(String value) : bindings = [value], isStyle = true;
+  AttributeInfo.forStyleMap(String value) : bindings = [value], isStyleMap = true;
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
