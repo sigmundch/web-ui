@@ -267,11 +267,9 @@ class _Analyzer extends TreeVisitor {
         if (match == null) return;
         value = match[1];
 
-        // Default to a 1-way binding for any other attribute.
-        // TODO(tsander): Is style-map the most appropriate name for this?
         elemInfo.attributes[name] = (name == 'style-map')
-            ? new AttributeInfo.forStyleMap(value)
-            : new AttributeInfo(value);
+            ? new AttributeInfo.forStyleMap(value) // Style Map binding
+            : new AttributeInfo(value); // Default to a 1-way binding for any other attribute.
       }
     }
     elemInfo.hasDataBinding = true;
