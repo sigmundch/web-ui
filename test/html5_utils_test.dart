@@ -28,8 +28,12 @@ main() {
       code.add('html.$className _$tag;\n');
     });
 
-    const generatedFile = 'data/output/html5_utils_test_generated.dart';
+    const String generatedDir = 'data/output/';
+    String generatedFile = '${generatedDir}html5_utils_test_generated.dart';
 
+    // Create the directory if it doesn't exist.
+    new Directory(generatedDir).createSync();
+    
     new File(generatedFile).openSync(FileMode.WRITE)
         ..writeStringSync(code.toString())
         ..close();
