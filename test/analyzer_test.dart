@@ -250,8 +250,8 @@ main() {
     TemplateInfo info = analyzeElement(elem);
     expect(info.hasIfCondition, true);
     expect(info.needsQuery, true);
-    expect(info.contentsInfo.node, equals(div));
-    expect(info.contentsInfo.needsQuery, false);
+    expect(info.children[0].node, equals(div));
+    expect(info.children[0].needsQuery, false);
     expect(div.id, '');
     expect(elem.attributes, equals({
         'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-1'}));
@@ -273,8 +273,8 @@ main() {
     TemplateInfo info = analyzeElement(elem);
     var div = elem.query('div');
     expect(info.needsQuery, true);
-    expect(info.contentsInfo.node, equals(div));
-    expect(info.contentsInfo.needsQuery, false);
+    expect(info.children[0].node, equals(div));
+    expect(info.children[0].needsQuery, false);
     expect(div.id, '');
     expect(elem.attributes, equals({
         'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-1'}));

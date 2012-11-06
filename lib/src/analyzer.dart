@@ -371,11 +371,10 @@ class _Analyzer extends TreeVisitor {
   }
 
   void visitText(Text text) {
-    var info = new ElementInfo(text, _parent);
-
     var parser = new BindingParser(text.value);
     if (!parser.moveNext()) return;
 
+    var info = new ElementInfo(text, _parent);
     if (info.parent.contentBinding != null) {
       // This is issue #133.
       messages.error('multiple text bindings in a simple element are not yet '

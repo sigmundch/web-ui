@@ -501,14 +501,6 @@ class TemplateInfo extends ElementInfo {
 
   bool get hasIterate => loopVariable != null;
 
-  // TODO(jmesserly): this is wrong if we want to support document fragments.
-  ElementInfo get contentsInfo {
-    for (var info in children) {
-      if (info.node is Element) return info;
-    }
-    return null;
-  }
-
   String toString() => '#<TemplateInfo ${super.toString()}'
       'ifCondition: $ifCondition, '
       'loopVariable: $ifCondition, '
