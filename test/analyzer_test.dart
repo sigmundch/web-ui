@@ -216,14 +216,14 @@ main() {
     expect(info.node.attributes['class'].contains('class4'), true);
   });
 
-  test('attribute - style map', () {
-    var input = '<div style-map="{{x}}"></div>';
+  test('attribute - data style', () {
+    var input = '<div data-style="x"></div>';
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
-    expect(info.attributes['style-map'], isNotNull);
-    expect(!info.attributes['style-map'].isClass, true);
-    expect(info.attributes['style-map'].isStyle, true);
-    expect(info.attributes['style-map'].bindings, equals(['x']));
+    expect(info.attributes['data-style'], isNotNull);
+    expect(!info.attributes['data-style'].isClass, true);
+    expect(info.attributes['data-style'].isStyle, true);
+    expect(info.attributes['data-style'].bindings, equals(['x']));
   });
 
 

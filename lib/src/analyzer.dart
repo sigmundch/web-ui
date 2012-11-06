@@ -254,12 +254,12 @@ class _Analyzer extends TreeVisitor {
         if (!_readDataAction(elem, elemInfo, item)) return;
       }
       return;
-    } else if (name == 'data-style') {
-      elemInfo.attributes[name] = new AttributeInfo(value, isStyle: true);
     }
 
     if (name == 'data-bind') {
       _readDataBindAttribute(elem, elemInfo, value);
+    } else if (name == 'data-style') {
+      elemInfo.attributes[name] = new AttributeInfo(value, isStyle: true);
     } else {
       if (name == 'class') {
         elemInfo.attributes[name] = _readClassAttribute(elem, elemInfo, value);

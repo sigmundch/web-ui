@@ -441,7 +441,7 @@ class AttributeInfo {
   /** All bound values that would be monitored for changes. */
   List<String> bindings;
 
-  AttributeInfo(String value, {this.isStyle}) : bindings = [value];
+  AttributeInfo(String value, {this.isStyle : false}) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
 
   String toString() => '#<AttributeInfo '
