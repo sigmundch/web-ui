@@ -123,7 +123,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
     expect(!info.attributes['value'].isClass, true);
-    expect(!info.attributes['value'].isStyleMap, true);
+    expect(info.attributes['value'].isStyle, false);
     expect(info.attributes['value'].boundValue, equals('x'));
     expect(info.events, isEmpty);
   });
@@ -134,7 +134,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
     expect(!info.attributes['value'].isClass, true);
-    expect(!info.attributes['value'].isStyleMap, true);
+    expect(info.attributes['value'].isStyle, false);
     expect(info.attributes['value'].boundValue, equals('x'));
     expect(info.events.keys, equals(['input']));
     expect(info.events['input'].length, equals(1));
@@ -148,7 +148,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
     expect(!info.attributes['checked'].isClass, true);
-    expect(!info.attributes['checked'].isStyleMap, true);
+    expect(info.attributes['checked'].isStyle, false);
     expect(info.attributes['checked'].boundValue, equals('x'));
     expect(info.events, isEmpty);
   });
@@ -159,7 +159,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
     expect(!info.attributes['checked'].isClass, true);
-    expect(!info.attributes['checked'].isStyleMap, true);
+    expect(info.attributes['checked'].isStyle, false);
     expect(info.attributes['checked'].boundValue, equals('x'));
     expect(info.events.keys, equals(['click']));
     expect(info.events['click'].length, equals(1));
@@ -173,7 +173,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['foo'], isNotNull);
     expect(!info.attributes['foo'].isClass, true);
-    expect(!info.attributes['foo'].isStyleMap, true);
+    expect(info.attributes['foo'].isStyle, false);
     expect(info.attributes['foo'].boundValue, equals('x'));
   });
 
@@ -183,7 +183,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(!info.attributes['class'].isStyleMap, true);
+    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings, equals(['x']));
   });
 
@@ -193,7 +193,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(!info.attributes['class'].isStyleMap, true);
+    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings,
         equals(['x', 'y', 'z', 'w']));
   });
@@ -206,7 +206,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(!info.attributes['class'].isStyleMap, true);
+    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings,
         equals(['x', 'y', 'z', 'w']));
     expect(info.node.attributes['class'].length, 30);
@@ -222,7 +222,7 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['style-map'], isNotNull);
     expect(!info.attributes['style-map'].isClass, true);
-    expect(info.attributes['style-map'].isStyleMap, true);
+    expect(info.attributes['style-map'].isStyle, true);
     expect(info.attributes['style-map'].bindings, equals(['x']));
   });
 

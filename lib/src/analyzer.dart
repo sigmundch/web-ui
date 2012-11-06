@@ -254,6 +254,8 @@ class _Analyzer extends TreeVisitor {
         if (!_readDataAction(elem, elemInfo, item)) return;
       }
       return;
+    } else if (name == 'data-style') {
+      elemInfo.attributes[name] = new AttributeInfo(value, isStyle: true);
     }
 
     if (name == 'data-bind') {
@@ -267,9 +269,8 @@ class _Analyzer extends TreeVisitor {
         if (match == null) return;
         value = match[1];
 
-        elemInfo.attributes[name] = (name == 'style-map')
-            ? new AttributeInfo.forStyleMap(value) // Style Map binding
-            : new AttributeInfo(value); // Default to a 1-way binding for any other attribute.
+        // Default to a 1-way binding for any other attribute.
+        elemInfo.attributes[name] = new AttributeInfo(value);
       }
     }
     elemInfo.hasDataBinding = true;

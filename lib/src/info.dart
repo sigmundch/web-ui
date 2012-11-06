@@ -428,9 +428,9 @@ class AttributeInfo {
   bool isClass = false;
 
   /**
-   * Whether this is a 'style-map' attribute.
+   * Whether this is a 'data-style' attribute.
    */
-  bool isStyleMap = false;
+  bool isStyle = false;
 
   /**
    * A value that will be monitored for changes. All attributes, except `class`,
@@ -441,9 +441,8 @@ class AttributeInfo {
   /** All bound values that would be monitored for changes. */
   List<String> bindings;
 
-  AttributeInfo(String value) : bindings = [value];
+  AttributeInfo(String value, {this.isStyle}) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
-  AttributeInfo.forStyleMap(String value) : bindings = [value], isStyleMap = true;
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
