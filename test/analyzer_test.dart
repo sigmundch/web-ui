@@ -96,18 +96,26 @@ main() {
 
   test('hasDataBinding - content with data', () {
     var input = '<div>{{x}}</div>';
-    var info = analyzeElement(parseSubtree(input)).children[0];
+    var info = analyzeElement(parseSubtree(input));
     expect(info.hasDataBinding, true);
-    expect(info.contentBinding, equals('x'));
-    expect(info.contentExpression, equals(r"'${x}'"));
+    expect(info.node.nodes.length, 1);
+    var textInfo = info.children[0];
+    expect(textInfo.binding, 'x');
+    expect(textInfo.node, same(info.node.nodes[0]));
   });
 
   test('hasDataBinding - content with text and data', () {
     var input = '<div> a b {{x}}c</div>';
-    var info = analyzeElement(parseSubtree(input)).children[0];
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.node.nodes.length, 3);
+    expect(info.node.nodes[0].value, ' a b ');
+    expect(info.node.nodes[1].value, '');
+    expect(info.node.nodes[2].value, 'c');
     expect(info.hasDataBinding, true);
-    expect(info.contentBinding, equals('x'));
-    expect(info.contentExpression, equals(r"' a b ${x}c'"));
+
+    var textInfo = info.children[0];
+    expect(textInfo.node, same(info.node.nodes[1]));
+    expect(textInfo.binding, 'x');
   });
 
   test('attribute - no info', () {
@@ -262,9 +270,9 @@ main() {
     var div = elem.query('div');
     TemplateInfo info = analyzeElement(elem);
     expect(info.hasIfCondition, true);
-    expect(info.needsQuery, true);
+    expect(info.createdInCode, false);
     expect(info.children[0].node, equals(div));
-    expect(info.children[0].needsQuery, false);
+    expect(info.children[0].createdInCode, true);
     expect(div.id, '');
     expect(elem.attributes, equals({
         'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-1'}));
@@ -285,9 +293,9 @@ main() {
     var elem = parseSubtree('<template iterate="foo in bar" is="x-list"><div>');
     TemplateInfo info = analyzeElement(elem);
     var div = elem.query('div');
-    expect(info.needsQuery, true);
+    expect(info.createdInCode, false);
     expect(info.children[0].node, equals(div));
-    expect(info.children[0].needsQuery, false);
+    expect(info.children[0].createdInCode, true);
     expect(div.id, '');
     expect(elem.attributes, equals({
         'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-1'}));

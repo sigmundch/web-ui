@@ -281,6 +281,8 @@ class InfoVisitor {
       return visitTemplateInfo(info);
     } else if (info is ElementInfo) {
       return visitElementInfo(info);
+    } else if (info is TextInfo) {
+      return visitTextInfo(info);
     } else if (info is ComponentInfo) {
       return visitComponentInfo(info);
     } else if (info is FileInfo) {
@@ -303,34 +305,50 @@ class InfoVisitor {
 
   visitElementInfo(ElementInfo info) => visitChildren(info);
 
+  visitTextInfo(TextInfo info) {}
+
   visitComponentInfo(ComponentInfo info) => visit(info.elemInfo);
 }
 
-// TODO(terry): ElementInfo should associated with elements, rather than
-// nodes. There are cases with the node is pointing to a text node, maybe
-// have a 'NodeInfo' rather than an 'ElementInfo'.
-/** Information extracted for each node in a template. */
-class ElementInfo {
-  // TODO(jmesserly): ideally we should only create Infos for things that need
-  // an identifier. So this would always be non-null. That is not the case yet.
-  /**
-   * The name used to refer to this element in Dart code.
-   * Depending on the context, this can be a variable or a field.
-   */
-  String identifier;
+/** Common base class for [ElementInfo] and [TextInfo]. */
+abstract class NodeInfo<T extends Node> {
+
+  /** DOM node associated with this NodeInfo. */
+  final T node;
 
   /** Info for the nearest enclosing element, iterator, or conditional. */
   final ElementInfo parent;
 
+  // TODO(jmesserly): ideally we should only create Infos for things that need
+  // an identifier. So this would always be non-null. That is not the case yet.
+  /**
+   * The name used to refer to this node in Dart code.
+   * Depending on the context, this can be a variable or a field.
+   */
+  String identifier;
+
+  // TODO(jmesserly): it'd be nice if we didn't need to query.
+  /**
+   * Whether the node represented by this info will be constructed from code.
+   * If true, its identifier is initialized programatically, otherwise, its
+   * identifier is initialized using a query.
+   * The compiler currently creates in code text nodes with data-bindings,
+   * siblings of text nodes with data-bindings, and immediate children of loops
+   * and conditionals.
+   */
+  bool get createdInCode;
+
+  NodeInfo(this.node, this.parent, [this.identifier]) {
+    if (parent != null) parent.children.add(this);
+  }
+}
+
+/** Information extracted for each node in a template. */
+class ElementInfo extends NodeInfo<Element> {
+
   // TODO(jmesserly): make childen work like DOM children collection, so that
   // adding/removing a node updates the parent pointer.
-  final List<ElementInfo> children = [];
-
-  // TODO(terry): ElementInfo Should associated with elements, rather than
-  // nodes. In this case, we are creating a text node, so we should maybe
-  // have a 'NodeInfo' rather than an 'ElementInfo' in that case.
-  /** DOM node associated with this ElementInfo. */
-  final Node node;
+  final List<NodeInfo> children = [];
 
   /**
    * Whether code generators need to create a field to store a reference to this
@@ -339,15 +357,9 @@ class ElementInfo {
    */
   bool get needsIdentifier => hasDataBinding || hasIfCondition || hasIterate
       || component != null || values.length > 0 || events.length > 0
-      || !needsQuery;
+      || createdInCode;
 
-  // TODO(jmesserly): it'd be nice if we didn't need to query.
-  /**
-   * True if we need to query to get this node. Otherwise, we'll create it
-   * from code. We always query except for "if" and "iterate" templates where
-   * the children are constructed directly.
-   */
-  bool get needsQuery => parent == null || !parent.isIterateOrIf;
+  bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
   /**
    * If this element is a web component instantiation (e.g. `<x-foo>`), this
@@ -358,27 +370,14 @@ class ElementInfo {
   /** Whether the element contains data bindings. */
   bool hasDataBinding = false;
 
-  // TODO(jmesserly): this doesn't work with child elements (issue #133).
-  /** Data-bound expression used in the contents of the node. */
-  String contentBinding;
-
-  /**
-   * Expression that returns the contents of the node (given it has a
-   * data-bound expression in it).
-   */
-  // TODO(terry,sigmund): support more than 1 expression in the contents.
-  String contentExpression;
-
-  /** Generated watcher disposer that watchs for the content expression. */
-  // TODO(sigmund): move somewhere else?
-  String stopperName;
+  /** Whether any child of this node is created in code. */
+  bool childrenCreatedInCode = false;
 
   // Note: we're using sorted maps so items are enumerated in a consistent order
   // between runs, resulting in less "diff" in the generated code.
   // TODO(jmesserly): An alternative approach would be to use LinkedHashMap to
   // preserve the order of the input, but we'd need to be careful about our tree
   // traversal order.
-
   /** Collected information for attributes, if any. */
   final Map<String, AttributeInfo> attributes =
       new SplayTreeMap<String, AttributeInfo>();
@@ -396,26 +395,40 @@ class ElementInfo {
   /** Whether the template element has an `instantiate="if ..."` conditional. */
   bool get hasIfCondition => false;
 
-  bool get isIterateOrIf => hasIterate || hasIfCondition;
-
   bool get isTemplateElement => false;
 
-  ElementInfo(this.node, this.parent) {
-    if (parent != null) parent.children.add(this);
-  }
+  ElementInfo(Element node, ElementInfo parent) : super(node, parent);
 
   String toString() => '#<ElementInfo '
       'identifier: $identifier, '
       'needsIdentifier: $needsIdentifier, '
-      'needsQuery: $needsQuery, '
+      'createdInCode: $createdInCode, '
       'component: $component, '
       'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
-      'contentBinding: $contentBinding, '
-      'contentExpression: $contentExpression, '
       'attributes: $attributes, '
       'events: $events>';
+}
+
+/**
+ * Information for a single data binding in a text node. The analyzer splits
+ * HTML text nodes, so that each data-binding has its own node (and [TextInfo]).
+ */
+class TextInfo extends NodeInfo<Text> {
+  /** The data-bound Dart expression. */
+  final String binding;
+
+  /** Generated watcher disposer that watchs for the content expression. */
+  // TODO(sigmund): move somewhere else?
+  String stopperName;
+
+  bool get createdInCode => true;
+
+  TextInfo(Text node, ElementInfo parent, this.binding, String identifier)
+      : super(node, parent, identifier) {
+    parent.childrenCreatedInCode = true;
+  }
 }
 
 /** Information extracted for each attribute in an element. */
@@ -489,7 +502,9 @@ class TemplateInfo extends ElementInfo {
 
   TemplateInfo(Node node, ElementInfo parent,
       {this.ifCondition, this.loopVariable, this.loopItems})
-      : super(node, parent);
+      : super(node, parent) {
+    childrenCreatedInCode = hasIfCondition || hasIterate;
+  }
 
   /**
    * True when [node] is a '<template>' tag. False when [node] is any other

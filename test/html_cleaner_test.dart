@@ -44,12 +44,20 @@ main() {
     expect(elem.outerHTML, '<div foo="baz" id="a"></div>');
   });
 
-  test('remove content with data bindings', () {
-    var elem = parseSubtree('<div id="a">hi {{x}}</div>');
+  test("don't remove node for content with data bindings", () {
+    var elem = parseSubtree('<div id="a">hi {{x}} friend</div>');
     var info = analyzeElement(elem);
-    expect(elem.outerHTML, '<div id="a">hi {{x}}</div>');
+    expect(elem.outerHTML, '<div id="a">hi  friend</div>');
+    expect(elem.nodes.length, 3);
+    expect(elem.nodes[0].value, 'hi ');
+    expect(elem.nodes[1].value, '');
+    expect(elem.nodes[2].value, ' friend');
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div id="a"></div>');
+    expect(elem.outerHTML, '<div id="a">hi  friend</div>');
+    expect(elem.nodes.length, 3);
+    expect(elem.nodes[0].value, 'hi ');
+    expect(elem.nodes[1].value, '');
+    expect(elem.nodes[2].value, ' friend');
   });
 
   test('hide template nodes and remove their children', () {

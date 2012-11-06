@@ -98,8 +98,12 @@ layer at (126,400) size 548x19
 layer at (545,400) size 114x20
   RenderButton {BUTTON} at (419,0) size 114x20 [bgcolor=#00000019]
     RenderBlock (anonymous) at (10,0) size 94x20
-      RenderText {#text} at (0,3) size 94x14
-        text run at (0,3) width 94: "Clear completed (1)"
+      RenderText {#text} at (0,3) size 84x14
+        text run at (0,3) width 84: "Clear completed ("
+      RenderText {#text} at (84,3) size 6x14
+        text run at (84,3) width 6: "1"
+      RenderText {#text} at (90,3) size 4x14
+        text run at (90,3) width 4: ")"
 layer at (126,131) size 548x16
   RenderBlock (positioned) zI: 2 at (1,1) size 548x16 [border: none (1px solid #6C615C) none]
     RenderText zI: 2 at (0,0) size 0x0

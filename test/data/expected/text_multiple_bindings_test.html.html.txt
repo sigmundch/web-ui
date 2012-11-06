@@ -15,8 +15,19 @@ layer at (0,0) size 800x142
           text run at (232,0) width 0: " "
           text run at (0,16) width 176: "  over the 'lazy' dog."
       RenderBlock {PRE} at (0,81) size 784x32
-        RenderText {#text} at (0,0) size 232x32
-          text run at (0,0) width 232: "The \"quick\" \\brown $fox jumps"
+        RenderText {#text} at (0,0) size 192x16
+          text run at (0,0) width 192: "The \"quick\" \\brown $fox "
+        RenderText {#text} at (192,0) size 40x16
+          text run at (192,0) width 40: "jumps"
+        RenderText {#text} at (232,0) size 232x32
           text run at (232,0) width 0: " "
-          text run at (0,16) width 176: "  over the 'lazy' dog."
+          text run at (0,16) width 56: "  over "
+        RenderText {#text} at (56,16) size 24x16
+          text run at (56,16) width 24: "the"
+        RenderText {#text} at (80,16) size 64x16
+          text run at (80,16) width 64: " 'lazy' "
+        RenderText {#text} at (144,16) size 24x16
+          text run at (144,16) width 24: "dog"
+        RenderText {#text} at (168,16) size 8x16
+          text run at (168,16) width 8: "."
 #EOF

@@ -15,7 +15,7 @@
   You should see the list items "a" and "b" repeated 3 times each.
   <template iterate="item in loopItemList">
     <span>{{item}}</span>
-    <template instantiate="if notCond"><span>{{item}}<span></template>
+    <template instantiate="if notCond"><span>{{item}}</span></template>
     <span template instantiate="if cond">{{item}}</span>
     <span>{{item}}</span>
   </template>

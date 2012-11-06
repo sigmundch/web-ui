@@ -129,7 +129,8 @@ class _Analyzer extends TreeVisitor {
     if (info.needsIdentifier && info.identifier == null) {
       var id = '__e-$_uniqueId';
       info.identifier = toCamelCase(id);
-      if (info.needsQuery) node.attributes['id'] = id;
+      // If it's not created in code, we'll query the element by it's id.
+      if (!info.createdInCode) node.attributes['id'] = id;
       _uniqueId++;
     }
   }
@@ -373,42 +374,28 @@ class _Analyzer extends TreeVisitor {
 
   void visitText(Text text) {
     var parser = new BindingParser(text.value);
+    // nothing to do if there are no bindings.
     if (!parser.moveNext()) return;
 
-    var info = new ElementInfo(text, _parent);
-    if (info.parent.contentBinding != null) {
-      // This is issue #133.
-      messages.error('multiple text bindings in a simple element are not yet '
-          'supported', text.span, file: _fileInfo.path);
-      return;
-    }
+    _parent.hasDataBinding = true;
 
-    var parentElem = text.parent;
-    info.parent.hasDataBinding = true;
-    info.hasDataBinding = true;
-
-    // Match all bindings.
-    var content = new StringBuffer();
-    var bindings = [];
+    // We split [text] so that each binding has its own text node.
+    var node = text.parent;
     do {
-      bindings.add(parser.binding);
-      content.add(escapeDartString(parser.textContent));
+      if (parser.textContent != '') {
+        text.parent.insertBefore(new Text(parser.textContent), text);
+      }
+      var binding = new Text('');
 
-      // Note: bindings themselves are Dart expressions (currently--see #65).
-      // So we should not need to further escape them.
-      content.add("\${${parser.binding}}");
+      var id = '_text$_uniqueId';
+      var info = new TextInfo(binding, _parent, parser.binding, id);
+      _uniqueId++;
+      text.parent.insertBefore(binding, text);
     } while (parser.moveNext());
-
-    content.add(escapeDartString(parser.textContent));
-
-    if (bindings.length == 1) {
-      info.contentBinding = bindings[0];
-    } else {
-      // TODO(jmesserly): we could probably do something faster than a list
-      // for watching on multiple bindings. But it seems easy to get working.
-      info.contentBinding = '[${Strings.join(bindings, ", ")}]';
+    if (parser.textContent != '') {
+      text.parent.insertBefore(new Text(parser.textContent), text);
     }
-    info.contentExpression = "'$content'";
+    text.remove();
   }
 }
 
