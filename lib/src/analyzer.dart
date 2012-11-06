@@ -325,12 +325,13 @@ class _Analyzer extends TreeVisitor {
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
     var isInput = elem.tagName == 'input';
+    var isTextArea = elem.tagName == 'textarea';
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
       attrInfo = new AttributeInfo(value);
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'click', (elem, args) => '$value = $elem.checked');
-    } else if (isInput && name == 'value') {
+    } else if (name == 'value' && (isInput || isTextArea)) {
       attrInfo = new AttributeInfo(value);
       // Assume [value] is a field or property setter.
       _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');

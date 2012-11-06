@@ -140,6 +140,19 @@ main() {
         equals('x = foo.value'));
   });
 
+  test('attribute - 2 way binding textarea value', () {
+    var input = '<textarea data-bind="value:x">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes.length, equals(1));
+    expect(info.attributes['value'], isNotNull);
+    expect(!info.attributes['value'].isClass, true);
+    expect(info.attributes['value'].boundValue, equals('x'));
+    expect(info.events.keys, equals(['input']));
+    expect(info.events['input'].length, equals(1));
+    expect(info.events['input'][0].action('foo', 'e'),
+        equals('x = foo.value'));
+  });
+
   test('attribute - 1 way binding checkbox', () {
     var input = '<input checked="{{x}}">';
     var info = analyzeElement(parseSubtree(input));
