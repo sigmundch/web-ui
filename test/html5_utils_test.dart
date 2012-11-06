@@ -15,35 +15,47 @@ import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/src/html5_utils.dart';
+import 'package:web_components/src/html5_setters.g.dart';
 import 'testing.dart';
 
 main() {
   useVmConfiguration();
   useMockMessages();
 
-  test('types are in dart:html', () {
+  test('generate type test for tag -> element mapping', () {
     var code = new StringBuffer();
     code.add('import "dart:html" as html;\n');
     htmlElementNames.forEach((tag, className) {
       code.add('html.$className _$tag;\n');
     });
 
-    const generatedFile = 'data/output/html5_utils_test_generated.dart';
-
-    new File(generatedFile).openSync(FileMode.WRITE)
+    // Note: name is important for this to get picked up by run.sh
+    // We don't analyze here, but run.sh will analyze it.
+    new File('data/output/html5_utils_test_tag_bootstrap.dart')
+        .openSync(FileMode.WRITE)
         ..writeStringSync(code.toString())
         ..close();
+  });
 
+  test('generate type test for attribute -> field mapping', () {
+    var code = new StringBuffer();
+    code.add('import "dart:html" as html;\n');
+    code.add('main() {\n');
 
-    // TODO(jmesserly): it would be good to run all of our
-    // dart_analyzer tests in one batch.
-    Process.run('dart_analyzer', '--fatal-warnings --fatal-type-errors '
-        '--work data/output/analyzer/ $generatedFile'.split(' '))
-        .then(expectAsync1((result) {
-      expect(result.stdout, '', reason: result.stdout);
-      expect(result.stderr, '', reason: result.stderr);
-      expect(result.exitCode, 0,
-          reason: 'expected success, but got exit code ${result.exitCode}');
-    }));
+    var allTags = htmlElementNames.keys;
+    htmlElementFields.forEach((type, attrToField) {
+      code.add('  html.$type _$type = null;\n');
+      for (var field in attrToField.values) {
+        code.add('_$type.$field = null;\n');
+      }
+    });
+    code.add('}\n');
+
+    // Note: name is important for this to get picked up by run.sh
+    // We don't analyze here, but run.sh will analyze it.
+    new File('data/output/html5_utils_test_attr_bootstrap.dart')
+        .openSync(FileMode.WRITE)
+        ..writeStringSync(code.toString())
+        ..close();
   });
 }

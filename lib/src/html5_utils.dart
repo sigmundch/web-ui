@@ -7,6 +7,18 @@
 
 library html5_utils;
 
+
+/**
+ * Maps an HTML tag to a dart:html type. This uses [htmlElementNames] but it
+ * will return UnknownElement if the tag is unknown.
+ */
+String typeForHtmlTag(String tag) {
+  var type = htmlElementNames[tag];
+  // Note: this will eventually be the component's class name if it is a
+  // known x-tag.
+  return type == null ? 'UnknownElement' : type;
+}
+
 /**
  * HTML element to DOM type mapping. Source:
  * <http://dev.w3.org/html5/spec/section-index.html#element-interfaces>
