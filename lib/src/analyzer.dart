@@ -387,7 +387,7 @@ class _Analyzer extends TreeVisitor {
       }
       var binding = new Text('');
 
-      var id = '_text$_uniqueId';
+      var id = '_binding$_uniqueId';
       var info = new TextInfo(binding, _parent, parser.binding, id);
       _uniqueId++;
       text.parent.insertBefore(binding, text);

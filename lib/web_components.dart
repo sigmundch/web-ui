@@ -15,3 +15,4 @@ import 'web_component.dart';
 
 export 'watcher.dart';
 export 'web_component.dart';
+export 'safe_html.dart';
