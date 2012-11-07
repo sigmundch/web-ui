@@ -260,6 +260,8 @@ class _Analyzer extends TreeVisitor {
 
     if (name == 'data-bind') {
       _readDataBindAttribute(elem, elemInfo, value);
+    } else if (name == 'data-style') {
+      elemInfo.attributes[name] = new AttributeInfo(value, isStyle: true);
     } else {
       if (name == 'class') {
         elemInfo.attributes[name] = _readClassAttribute(elem, elemInfo, value);
