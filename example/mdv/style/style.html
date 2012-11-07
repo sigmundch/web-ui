@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Style Demo</title>
+  </head>
+  <body>
+    <template instantiate>
+      <div id="container" data-style="style" data-action="click:increment"></div>
+    </template>
+
+    <script type="application/dart">
+      num width = 100;
+      Map get style  {
+	      Map result = {
+	        "background-color": "red",
+	        "border": "black 3px solid",
+	        "width": '${width}px',
+	        "height": "100px",
+	      };
+	      
+	      if (width > 200) {
+	        result.remove("border");
+	      }
+	      return result;
+      }
+      
+      void increment(e) { width += 100; }
+      
+      main() {
+      }
+    </script>
+  </body>
+</html>

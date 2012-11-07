@@ -441,6 +441,11 @@ class AttributeInfo {
   bool isClass = false;
 
   /**
+   * Whether this is a 'data-style' attribute.
+   */
+  bool isStyle = false;
+
+  /**
    * A value that will be monitored for changes. All attributes, except `class`,
    * have a single bound value.
    */
@@ -449,7 +454,7 @@ class AttributeInfo {
   /** All bound values that would be monitored for changes. */
   List<String> bindings;
 
-  AttributeInfo(String value) : bindings = [value];
+  AttributeInfo(String value, {this.isStyle : false}) : bindings = [value];
   AttributeInfo.forClass(this.bindings) : isClass = true;
 
   String toString() => '#<AttributeInfo '
