@@ -9,10 +9,10 @@
 <element name="x-conditional" extends="div" constructor="ConditionalExample">
   <template>
     <template instantiate="if cond">
-      <span>you should see 'yes': yes</span>
+      <span>yay! test passes</span>
     </template>
     <template instantiate="if notCond">
-      <span>you should see 'yes': no</span>
+      <span>error: test failed</span>
     </template>
   </template>
   <script type='application/dart'>
