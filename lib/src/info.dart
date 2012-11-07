@@ -345,7 +345,6 @@ abstract class NodeInfo<T extends Node> {
 
 /** Information extracted for each node in a template. */
 class ElementInfo extends NodeInfo<Element> {
-
   // TODO(jmesserly): make childen work like DOM children collection, so that
   // adding/removing a node updates the parent pointer.
   final List<NodeInfo> children = [];
@@ -355,9 +354,10 @@ class ElementInfo extends NodeInfo<Element> {
    * element. This is typically true whenever we need to access the element
    * (e.g. to add event listeners, update values on data-bound watchers, etc).
    */
-  bool get needsIdentifier => hasDataBinding || hasIfCondition || hasIterate
-      || component != null || values.length > 0 || events.length > 0
-      || createdInCode;
+  bool get needsIdentifier => !isRoot &&
+      (hasDataBinding || hasIfCondition || hasIterate
+       || component != null || values.length > 0 || events.length > 0
+       || createdInCode);
 
   bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
@@ -372,6 +372,9 @@ class ElementInfo extends NodeInfo<Element> {
 
   /** Whether any child of this node is created in code. */
   bool childrenCreatedInCode = false;
+
+  /** Whether this node represents "body" or the shadow root of a component. */
+  bool isRoot = false;
 
   // Note: we're using sorted maps so items are enumerated in a consistent order
   // between runs, resulting in less "diff" in the generated code.

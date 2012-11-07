@@ -89,8 +89,9 @@ class _Analyzer extends TreeVisitor {
     var node = info.node;
 
     if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
-    if (node.tagName == 'body') {
-      // TODO(jmesserly): too much knowledge of codegen here.
+    if (node.tagName == 'body' || (_currentInfo is ComponentInfo
+          && (_currentInfo as ComponentInfo).template == node)) {
+      info.isRoot = true;
       info.identifier = '_root';
     }
 
