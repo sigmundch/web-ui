@@ -265,6 +265,12 @@ abstract class WebComponent implements Element {
 
   int get clientWidth => _element.clientWidth;
 
+  int get childElementCount => _element.childElementCount;
+
+  Element get firstElementChild => _element.firstElementChild;
+
+  Element get lastElementChild => _element.lastElementChild;
+
   Element get $dom_firstElementChild => _element.$dom_firstElementChild;
 
   Element get $dom_lastElementChild => _element.$dom_lastElementChild;

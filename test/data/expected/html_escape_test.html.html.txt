@@ -20,8 +20,8 @@ layer at (0,0) size 800x134
       RenderBlock (anonymous) at (0,93) size 784x20
         RenderText {#text} at (0,0) size 225x19
           text run at (0,0) width 225: "While we're at it, here's a cool entity: "
-        RenderInline {SPAN} at (0,0) size 18x19
-          RenderText {#text} at (225,0) size 18x19
-            text run at (225,0) width 18: "\x{C6}\x{2019}"
+        RenderInline {SPAN} at (0,0) size 8x19
+          RenderText {#text} at (225,0) size 8x19
+            text run at (225,0) width 8: "\x{192}"
         RenderText {#text} at (0,0) size 0x0
 #EOF
