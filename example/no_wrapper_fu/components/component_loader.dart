@@ -16,7 +16,7 @@
 library component_loader;
 
 import 'dart:html';
-import 'package:web_components/web_component.dart';
+import 'package:web_components/web_components.dart';
 import 'package:web_components/src/list_map.dart';
 
 /** Should we use prototype rewiring and the new WebComponent interface? */
