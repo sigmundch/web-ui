@@ -1,0 +1,33 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x56
+  RenderBlock {HTML} at (0,0) size 800x56
+    RenderBody {BODY} at (8,8) size 784x40
+      RenderBlock (anonymous) at (0,0) size 784x20
+        RenderText {#text} at (0,0) size 188x19
+          text run at (0,0) width 188: "expect: (-a-) (-?-) (-c-), actual:"
+      RenderBlock {DIV} at (0,20) size 784x20
+        RenderText {#text} at (0,0) size 11x19
+          text run at (0,0) width 11: "(-"
+        RenderText {#text} at (11,0) size 7x19
+          text run at (11,0) width 7: "a"
+        RenderText {#text} at (18,0) size 15x19
+          text run at (18,0) width 15: "-) "
+        RenderText {#text} at (33,0) size 11x19
+          text run at (33,0) width 11: "(-"
+        RenderText {#text} at (44,0) size 7x19
+          text run at (44,0) width 7: "?"
+        RenderText {#text} at (51,0) size 15x19
+          text run at (51,0) width 15: "-) "
+        RenderText {#text} at (66,0) size 11x19
+          text run at (66,0) width 11: "(-"
+        RenderText {#text} at (77,0) size 7x19
+          text run at (77,0) width 7: "c"
+        RenderText {#text} at (84,0) size 11x19
+          text run at (84,0) width 11: "-)"
+      RenderBlock (anonymous) at (0,40) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+#EOF

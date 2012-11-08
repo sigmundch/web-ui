@@ -6,9 +6,13 @@ layer at (0,0) size 800x600
 layer at (0,0) size 800x36
   RenderBlock {HTML} at (0,0) size 800x36
     RenderBody {BODY} at (8,8) size 784x20
-      RenderText {#text} at (0,0) size 120x19
-        text run at (0,0) width 120: "expect to see 'two': "
-      RenderText {#text} at (120,0) size 23x19
-        text run at (120,0) width 23: "two"
+      RenderText {#text} at (0,0) size 73x19
+        text run at (0,0) width 73: "expect t - t: "
+      RenderText {#text} at (73,0) size 8x19
+        text run at (73,0) width 8: "t "
+      RenderText {#text} at (81,0) size 6x19
+        text run at (81,0) width 6: "-"
+      RenderText {#text} at (87,0) size 8x19
+        text run at (87,0) width 8: " t"
       RenderText {#text} at (0,0) size 0x0
 #EOF

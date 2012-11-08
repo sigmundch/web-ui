@@ -113,7 +113,7 @@ main() {
     expect(info.node.nodes[2].value, 'c');
     expect(info.hasDataBinding, true);
 
-    var textInfo = info.children[0];
+    var textInfo = info.children[1];
     expect(textInfo.node, same(info.node.nodes[1]));
     expect(textInfo.binding, 'x');
   });
@@ -293,7 +293,7 @@ main() {
     expect(info.children[0].createdInCode, true);
     expect(div.id, '');
     expect(elem.attributes, equals({
-        'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-1'}));
+        'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-0'}));
     expect(info.ifCondition, equals('foo'));
     expect(info.hasIterate, isFalse);
   });
@@ -316,7 +316,7 @@ main() {
     expect(info.children[0].createdInCode, true);
     expect(div.id, '');
     expect(elem.attributes, equals({
-        'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-1'}));
+        'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-0'}));
     expect(info.ifCondition, isNull);
     expect(info.loopVariable, equals('foo'));
     expect(info.loopItems, equals('bar'));

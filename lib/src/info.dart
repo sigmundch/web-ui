@@ -356,8 +356,7 @@ class ElementInfo extends NodeInfo<Element> {
    */
   bool get needsIdentifier => !isRoot &&
       (hasDataBinding || hasIfCondition || hasIterate
-       || component != null || values.length > 0 || events.length > 0
-       || createdInCode);
+       || component != null || values.length > 0 || events.length > 0);
 
   bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
@@ -415,8 +414,11 @@ class ElementInfo extends NodeInfo<Element> {
 }
 
 /**
- * Information for a single data binding in a text node. The analyzer splits
- * HTML text nodes, so that each data-binding has its own node (and [TextInfo]).
+ * Information for a single text node created programatically. We create a
+ * [TextInfo] for data bindings that occur in content nodes, and for each
+ * text node that is created programatically in code. Note that the analyzer
+ * splits HTML text nodes, so that each data-binding has its own node (and
+ * [TextInfo]).
  */
 class TextInfo extends NodeInfo<Text> {
   /** The data-bound Dart expression. */
@@ -428,7 +430,7 @@ class TextInfo extends NodeInfo<Text> {
 
   bool get createdInCode => true;
 
-  TextInfo(Text node, ElementInfo parent, this.binding, String identifier)
+  TextInfo(Text node, ElementInfo parent, [this.binding, String identifier])
       : super(node, parent, identifier) {
     parent.childrenCreatedInCode = true;
   }

@@ -191,16 +191,13 @@ class _Analyzer extends TreeVisitor {
       return null;
     }
 
-    // TODO(jmesserly): this is wrong when we want to support fragments
-    bool hasChildElement = node.nodes.filter((n) => n is Element).length > 0;
-
     if (instantiate != null) {
       if (instantiate.startsWith('if ')) {
         var cond = instantiate.substring(3);
 
         var result = new TemplateInfo(node, _parent, ifCondition: cond);
         if (node.tagName == 'template') {
-          return hasChildElement ? result : null;
+          return node.nodes.length > 0 ? result : null;
         }
 
 
@@ -232,7 +229,7 @@ class _Analyzer extends TreeVisitor {
     } else if (iterate != null) {
       var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
-        if (!hasChildElement) return null;
+        if (node.nodes.length == 0) return null;
         return new TemplateInfo(node, _parent, loopVariable: match[1],
             loopItems: match[2]);
       }
@@ -385,20 +382,23 @@ class _Analyzer extends TreeVisitor {
     // We split [text] so that each binding has its own text node.
     var node = text.parent;
     do {
-      if (parser.textContent != '') {
-        text.parent.insertBefore(new Text(parser.textContent), text);
-      }
-      var binding = new Text('');
-
+      _addRawTextContent(parser.textContent, text);
+      var placeholder = new Text('');
       var id = '_binding$_uniqueId';
-      var info = new TextInfo(binding, _parent, parser.binding, id);
+      var info = new TextInfo(placeholder, _parent, parser.binding, id);
       _uniqueId++;
-      text.parent.insertBefore(binding, text);
+      text.parent.insertBefore(placeholder, text);
     } while (parser.moveNext());
-    if (parser.textContent != '') {
-      text.parent.insertBefore(new Text(parser.textContent), text);
-    }
+    _addRawTextContent(parser.textContent, text);
     text.remove();
+  }
+
+  _addRawTextContent(String content, Text location) {
+    if (content != '') {
+      var node = new Text(content);
+      new TextInfo(node, _parent);
+      location.parent.insertBefore(node, location);
+    }
   }
 }
 

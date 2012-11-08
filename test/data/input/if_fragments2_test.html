@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <!-- Tests that we can combine text and bindings inside an if, and that
+  rerendering after updating the condition works. -->
+  expect f - f:
+  <template instantiate="if cond">
+    t {{value}} t
+  </template>
+  <template instantiate="if !cond">
+    f {{value}} f
+  </template>
+  <script type="application/dart">
+  import 'dart:html';
+  import 'package:web_components/watcher.dart';
+  var value = '-';
+  bool cond = true;
+  main() {
+    window.setTimeout(() {
+      cond = false;
+      dispatch();
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    }, 0);
+  }
+  </script>
+</body>
+</html>
