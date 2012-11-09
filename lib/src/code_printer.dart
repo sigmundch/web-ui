@@ -14,7 +14,9 @@ class CodePrinter {
    */
   CodePrinter add(object) {
     _items.add(object);
-    _items.add('\n');
+    if (object is! CodePrinter) {
+      _items.add('\n');
+    }
     return this;
   }
 

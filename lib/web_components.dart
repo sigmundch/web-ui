@@ -3,20 +3,22 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /**
- * This library exposes the types in [watcher], [safe_html] and the
- * [WebComponent] base class. See this article for more information about this
- * library: <http://www.dartlang.org/articles/dart-web-components/>.
+ * This library exposes the types in [watcher], [safe_html], [templating] and
+ * the [WebComponent] base class. See this article for more information about
+ * this library: <http://www.dartlang.org/articles/dart-web-components/>.
  */
 library web_components;
 
 export 'watcher.dart';
 export 'safe_html.dart';
+export 'templating.dart';
 
 import 'dart:html';
 
 // Imported for the doc comment
 import 'watcher.dart' as watcher;
 import 'safe_html.dart' as safe_html;
+import 'templating.dart' as templating;
 
 /**
  * The base class for all Dart web components. In addition to the [Element]

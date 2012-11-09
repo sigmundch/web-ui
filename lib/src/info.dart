@@ -424,10 +424,6 @@ class TextInfo extends NodeInfo<Text> {
   /** The data-bound Dart expression. */
   final String binding;
 
-  /** Generated watcher disposer that watchs for the content expression. */
-  // TODO(sigmund): move somewhere else?
-  String stopperName;
-
   bool get createdInCode => true;
 
   TextInfo(Text node, ElementInfo parent, [this.binding, String identifier])
@@ -494,12 +490,6 @@ class AttributeInfo {
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
-
-  /**
-   * Generated fields for watcher disposers based on the bindings of this
-   * attribute.
-   */
-  List<String> stopperNames;
 }
 
 /** Information extracted for each declared event in an element. */
