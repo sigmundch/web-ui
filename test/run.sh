@@ -66,6 +66,8 @@ fi
 if [[ -d $DIR/data/output ]]; then
   rm -rf $DIR/data/output/*
   ln -s $DIR/packages $DIR/data/output/packages
+else
+  mkdir $DIR/data/output
 fi
 
 # Create a reference to the example directory, so that the output is generated
