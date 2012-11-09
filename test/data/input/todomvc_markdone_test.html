@@ -83,25 +83,24 @@ main() {
     // then adapt those offset in the current window. This makes is possible to
     // debug the application in Dartium reliably.
 
-    document.body.rect.then((r) {
-      // The x, y location of body in the DumpRenderTree output was: (117, 130) 
-      // and location of the node we want to click was: (119, 395)
-      int x = r.bounding.left.toInt() + (119 - 117);
-      int y = r.bounding.top.toInt() + (395 - 130);
-      var node = document.elementFromPoint(x, y);
-      expect(node is InputElement, isTrue,
-          reason: '$x, $y points to a checkbox');
-      expect(node.checked, isFalse, reason: 'element is unchecked');
-      node.on.click.dispatch(new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
-      expect(node.checked, isTrue, reason: 'element is checked');
+    // The x, y location of body in the DumpRenderTree output was: (117, 130)
+    // and location of the node we want to click was: (119, 395)
+    var bounding = document.body.getBoundingClientRect();
+    int x = bounding.left.toInt() + (119 - 117);
+    int y = bounding.top.toInt() + (395 - 130);
+    var node = document.elementFromPoint(x, y);
+    expect(node is InputElement, isTrue,
+        reason: '$x, $y points to a checkbox');
+    expect(node.checked, isFalse, reason: 'element is unchecked');
+    node.on.click.dispatch(new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
+    expect(node.checked, isTrue, reason: 'element is checked');
 
-      // Ideally the test above would work also with shadow DOM (pending that 
-      // 'elementFromPoint' is fixed to return also nodes under the shadow DOM).
-      // The next extra check is only valid when polyfilling the shadow DOM:
-      expect(node, same(document.queryAll('input[type=checkbox]')[3]));
+    // Ideally the test above would work also with shadow DOM (pending that
+    // 'elementFromPoint' is fixed to return also nodes under the shadow DOM).
+    // The next extra check is only valid when polyfilling the shadow DOM:
+    expect(node, same(document.queryAll('input[type=checkbox]')[3]));
 
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
-    });
+    window.setTimeout(() => window.postMessage('done', '*'), 0);
   }, 0);
 
 }
