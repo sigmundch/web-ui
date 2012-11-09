@@ -150,6 +150,8 @@ abstract class WebComponent implements Element {
     _element.dataAttributes = value;
   }
 
+  Future<ElementRect> get rect => _element.rect;
+
   Future<CSSStyleDeclaration> get computedStyle => _element.computedStyle;
 
   Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
