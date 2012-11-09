@@ -17,8 +17,6 @@ void cleanHtmlNodes(info) {
   new _HtmlCleaner().visit(info);
 }
 
-// TODO(jmesserly): see if we can drive this entirely off info, so it doesn't
-// duplicate parsing elsewhere in analyzer.
 /** Remove all MDV attributes; post-analysis these attributes are not needed. */
 class _HtmlCleaner extends InfoVisitor {
 
@@ -49,29 +47,15 @@ class _HtmlCleaner extends InfoVisitor {
       node.remove();
     }
 
-    node.attributes.forEach((name, value) {
-      visitAttribute(node, name, value);
-    });
+    for (var name in info.attributes.keys) {
+      if (name != 'class') node.attributes.remove(name);
+    }
+
+    const [
+      'data-action', 'data-bind', 'data-value',
+      'instantiate', 'iterate', 'template'
+    ].forEach(node.attributes.remove);
 
     super.visitElementInfo(info);
-  }
-
-  void visitAttribute(Element node, String name, String value) {
-    switch (name) {
-      // Remove MDV attributes now that we've processed them.
-      case 'data-action':
-      case 'data-bind':
-      case 'data-value':
-      case 'instantiate':
-      case 'iterate':
-      case 'template':
-        node.attributes.remove(name);
-        break;
-      default:
-        // Remove any attribute computed as a MDV expression.
-        if (value.contains("{{")) {
-          node.attributes.remove(name);
-        }
-    }
   }
 }

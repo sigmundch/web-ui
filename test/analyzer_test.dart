@@ -130,9 +130,42 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
-    expect(!info.attributes['value'].isClass, true);
-    expect(info.attributes['value'].isStyle, false);
-    expect(info.attributes['value'].boundValue, equals('x'));
+    expect(info.attributes['value'].isSimple, true);
+    expect(info.attributes['value'].bindings, equals(['x']));
+    expect(info.attributes['value'].textContent, isNull);
+    expect(info.events, isEmpty);
+  });
+
+  test('attribute - 1 way binding data-hi', () {
+    var input = '<div data-hi="{{x}}">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes.length, equals(1));
+    expect(info.attributes['data-hi'], isNotNull);
+    expect(info.attributes['data-hi'].isSimple, true);
+    expect(info.attributes['data-hi'].bindings, equals(['x']));
+    expect(info.attributes['data-hi'].textContent, isNull);
+    expect(info.events, isEmpty);
+  });
+
+  test('attribute - single binding with text', () {
+    var input = '<input value="foo {{x}} bar">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes.length, equals(1));
+    expect(info.attributes['value'], isNotNull);
+    expect(info.attributes['value'].isText, true);
+    expect(info.attributes['value'].bindings, equals(['x']));
+    expect(info.attributes['value'].textContent, equals(['foo ', ' bar']));
+    expect(info.events, isEmpty);
+  });
+
+  test('attribute - multiple bindings with text', () {
+    var input = '<input value="a{{x}}b{{y}}">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes.length, equals(1));
+    expect(info.attributes['value'], isNotNull);
+    expect(info.attributes['value'].isText, true);
+    expect(info.attributes['value'].bindings, equals(['x', 'y']));
+    expect(info.attributes['value'].textContent, equals(['a', 'b', '']));
     expect(info.events, isEmpty);
   });
 
@@ -141,9 +174,8 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
-    expect(!info.attributes['value'].isClass, true);
-    expect(info.attributes['value'].isStyle, false);
-    expect(info.attributes['value'].boundValue, equals('x'));
+    expect(info.attributes['value'].isSimple, true);
+    expect(info.attributes['value'].bindings, equals(['x']));
     expect(info.events.keys, equals(['input']));
     expect(info.events['input'].length, equals(1));
     expect(info.events['input'][0].action('foo', 'e'),
@@ -155,7 +187,7 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['value'], isNotNull);
-    expect(!info.attributes['value'].isClass, true);
+    expect(info.attributes['value'].isSimple, true);
     expect(info.attributes['value'].boundValue, equals('x'));
     expect(info.events.keys, equals(['input']));
     expect(info.events['input'].length, equals(1));
@@ -168,8 +200,7 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
-    expect(!info.attributes['checked'].isClass, true);
-    expect(info.attributes['checked'].isStyle, false);
+    expect(info.attributes['checked'].isSimple, true);
     expect(info.attributes['checked'].boundValue, equals('x'));
     expect(info.events, isEmpty);
   });
@@ -179,8 +210,7 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
-    expect(!info.attributes['checked'].isClass, true);
-    expect(info.attributes['checked'].isStyle, false);
+    expect(info.attributes['checked'].isSimple, true);
     expect(info.attributes['checked'].boundValue, equals('x'));
     expect(info.events.keys, equals(['click']));
     expect(info.events['click'].length, equals(1));
@@ -193,8 +223,7 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['foo'], isNotNull);
-    expect(!info.attributes['foo'].isClass, true);
-    expect(info.attributes['foo'].isStyle, false);
+    expect(info.attributes['foo'].isSimple, true);
     expect(info.attributes['foo'].boundValue, equals('x'));
   });
 
@@ -204,7 +233,6 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings, equals(['x']));
   });
 
@@ -214,7 +242,6 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings,
         equals(['x', 'y', 'z', 'w']));
   });
@@ -227,7 +254,6 @@ main() {
     expect(info.attributes.length, equals(1));
     expect(info.attributes['class'], isNotNull);
     expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].isStyle, false);
     expect(info.attributes['class'].bindings,
         equals(['x', 'y', 'z', 'w']));
     expect(info.node.attributes['class'].length, 30);
@@ -242,7 +268,6 @@ main() {
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['data-style'], isNotNull);
-    expect(!info.attributes['data-style'].isClass, true);
     expect(info.attributes['data-style'].isStyle, true);
     expect(info.attributes['data-style'].bindings, equals(['x']));
   });

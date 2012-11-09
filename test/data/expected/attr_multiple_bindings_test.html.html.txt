@@ -1,0 +1,38 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x182
+  RenderBlock {HTML} at (0,0) size 800x182
+    RenderBody {BODY} at (8,16) size 784x153
+      RenderBlock {P} at (0,0) size 784x20
+        RenderText {#text} at (0,0) size 218x19
+          text run at (0,0) width 218: "The href of these links should match:"
+      RenderBlock (anonymous) at (0,36) size 784x20
+        RenderInline {A} at (0,0) size 47x19 [color=#0000EE]
+          RenderText {#text} at (0,0) size 47x19
+            text run at (0,0) width 47: "first link"
+        RenderText {#text} at (47,0) size 4x19
+          text run at (47,0) width 4: " "
+        RenderInline {A} at (0,0) size 68x19 [color=#0000EE]
+          RenderText {#text} at (51,0) size 68x19
+            text run at (51,0) width 68: "second link"
+        RenderText {#text} at (0,0) size 0x0
+      RenderBlock {P} at (0,72) size 784x20
+        RenderText {#text} at (0,0) size 154x19
+          text run at (0,0) width 154: "Here are the hrefs as text:"
+      RenderBlock (anonymous) at (0,108) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+      RenderBlock {PRE} at (0,108) size 784x16
+        RenderText {#text} at (0,0) size 408x16
+          text run at (0,0) width 408: "#The \"quick\" \\brown $fox jumps over the 'lazy' dog."
+      RenderBlock (anonymous) at (0,137) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+      RenderBlock {PRE} at (0,137) size 784x16
+        RenderText {#text} at (0,0) size 408x16
+          text run at (0,0) width 408: "#The \"quick\" \\brown $fox jumps over the 'lazy' dog."
+      RenderBlock (anonymous) at (0,166) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+#EOF

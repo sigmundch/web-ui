@@ -33,13 +33,16 @@
     </template>
   </template>
   <script type="application/dart">
-    import 'common.dart';
     import 'dart:html';
+    import 'package:unittest/unittest.dart';
 
     var greetings = ['hello', 'hi'];
     var names = ['world', 'universe'];
     main() {
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      window.setTimeout(() {
+        expect(query('x-greeter').attributes, equals({}));
+        window.postMessage('done', '*');
+      }, 0);
     }
   </script>
 </body>

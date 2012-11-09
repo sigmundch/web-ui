@@ -245,103 +245,131 @@ class _Analyzer extends TreeVisitor {
                       String value) {
     if (name == 'data-value') {
       for (var item in value.split(',')) {
-        if (!_readDataValue(elem, elemInfo, item)) return;
+        if (!_readDataValue(elemInfo, item)) return;
       }
       return;
     } else if (name == 'data-action') {
       for (var item in value.split(',')) {
-        if (!_readDataAction(elem, elemInfo, item)) return;
+        if (!_readDataAction(elemInfo, item)) return;
       }
+      return;
+    } else if (name == 'data-bind') {
+      _readDataBindAttribute(elemInfo, value);
       return;
     }
 
-    if (name == 'data-bind') {
-      _readDataBindAttribute(elem, elemInfo, value);
-    } else if (name == 'data-style') {
-      elemInfo.attributes[name] = new AttributeInfo(value, isStyle: true);
+    AttributeInfo info;
+    if (name == 'data-style') {
+      info = new AttributeInfo([value], isStyle: true);
+    } else if (name == 'class') {
+      info = _readClassAttribute(elemInfo, value);
     } else {
-      if (name == 'class') {
-        elemInfo.attributes[name] = _readClassAttribute(elem, elemInfo, value);
-      } else {
-        // Strip off the outer {{ }}.
-        var match = const RegExp(r'^\s*{{(.*)}}\s*').firstMatch(value);
-        if (match == null) return;
-        value = match[1];
-
-        // Default to a 1-way binding for any other attribute.
-        elemInfo.attributes[name] = new AttributeInfo(value);
-      }
+      info = _readAttribute(elemInfo, name, value);
     }
-    elemInfo.hasDataBinding = true;
+
+    if (info != null) {
+      elemInfo.attributes[name] = info;
+      elemInfo.hasDataBinding = true;
+    }
   }
 
-  bool _readDataValue(Element elem, ElementInfo elemInfo, String value) {
+  bool _readDataValue(ElementInfo info, String value) {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-value attribute should be of the form '
           'data-value="name:value" or data-value='
           '"name1:value1,name2:value2,..." for multiple assigments.',
-          elem.span, file: _fileInfo.path);
+          info.node.span, file: _fileInfo.path);
       return false;
     }
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
 
-    elemInfo.values[name] = value;
+    info.values[name] = value;
     return true;
   }
 
-  bool _readDataAction(Element elem, ElementInfo elemInfo, String value) {
+  bool _readDataAction(ElementInfo info, String value) {
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
           '"eventName1:action1,eventName2:action2,..." for multiple events.',
-          elem.span, file: _fileInfo.path);
+          info.node.span, file: _fileInfo.path);
       return false;
     }
 
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
-    _addEvent(elemInfo, name, (elem, args) => '${value}($args)');
+    _addEvent(info, name, (elem, args) => '${value}($args)');
     return true;
   }
 
-  void _addEvent(ElementInfo elemInfo, String name, ActionDefinition action) {
-    var events = elemInfo.events.putIfAbsent(name, () => <EventInfo>[]);
+  void _addEvent(ElementInfo info, String name, ActionDefinition action) {
+    var events = info.events.putIfAbsent(name, () => <EventInfo>[]);
     events.add(new EventInfo(name, action));
   }
 
-  AttributeInfo _readDataBindAttribute(
-      Element elem, ElementInfo elemInfo, String value) {
+  void _readDataBindAttribute(ElementInfo info, String value) {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-bind attribute should be of the form '
-          'data-bind="name:value"', elem.span, file: _fileInfo.path);
-      return null;
+          'data-bind="name:value"', info.node.span, file: _fileInfo.path);
+      return;
     }
 
-    var attrInfo;
+    var elem = info.node;
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
     var isInput = elem.tagName == 'input';
     var isTextArea = elem.tagName == 'textarea';
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
-      attrInfo = new AttributeInfo(value);
       // Assume [value] is a field or property setter.
-      _addEvent(elemInfo, 'click', (elem, args) => '$value = $elem.checked');
+      info.attributes[name] = new AttributeInfo([value]);
+      _addEvent(info, 'click', (e, args) => '$value = $e.checked');
     } else if (name == 'value' && (isInput || isTextArea)) {
-      attrInfo = new AttributeInfo(value);
       // Assume [value] is a field or property setter.
-      _addEvent(elemInfo, 'input', (elem, args) => '$value = $elem.value');
+      info.attributes[name] = new AttributeInfo([value]);
+      _addEvent(info, 'input', (e, args) => '$value = $e.value');
     } else {
-      messages.error('Unknown data-bind attribute: ${elem.tagName} - ${name}',
-          elem.span, file: _fileInfo.path);
-      return null;
+      messages.error('Unknown data-bind attribute: ${elem.tagName} - $name',
+          info.node.span, file: _fileInfo.path);
+      return;
     }
-    elemInfo.attributes[name] = attrInfo;
+
+    info.hasDataBinding = true;
+  }
+
+  /**
+   * Data binding support in attributes. Supports multiple bindings.
+   * This is can be used for any attribute, but a typical use case would be
+   * URLs, for example:
+   *
+   *       href="#{item.href}"
+   */
+  AttributeInfo _readAttribute(ElementInfo info, String name, String value) {
+    var parser = new BindingParser(value);
+    if (!parser.moveNext()) return null;
+
+    // TODO(jmesserly): this seems like a common pattern.
+    var bindings = <String>[];
+    var content = <String>[];
+    do {
+      bindings.add(parser.binding);
+      content.add(parser.textContent);
+    } while (parser.moveNext());
+    content.add(parser.textContent);
+
+    // Use a simple attriubte binding if we can.
+    // This kind of binding works for non-String values.
+    if (bindings.length == 1 && content[0] == '' && content[1] == '') {
+      return new AttributeInfo(bindings);
+    }
+
+    // Otherwise do a text attribute that performs string interpolation.
+    return new AttributeInfo(bindings, textContent: content);
   }
 
   /**
@@ -351,25 +379,23 @@ class _Analyzer extends TreeVisitor {
    *
    * Returns list of databound expressions (e.g, class1, class3 and class4).
    */
-  AttributeInfo _readClassAttribute(
-      Element elem, ElementInfo elemInfo, String value) {
+  AttributeInfo _readClassAttribute(ElementInfo info, String value) {
+    var parser = new BindingParser(value);
+    if (!parser.moveNext()) return null;
 
     var bindings = <String>[];
-    if (value != null) {
-      var parser = new BindingParser(value);
-      var content = new StringBuffer();
-      while (parser.moveNext()) {
-        content.add(parser.textContent);
-        bindings.add(parser.binding);
-      }
+    var content = new StringBuffer();
+    do {
       content.add(parser.textContent);
+      bindings.add(parser.binding);
+    } while (parser.moveNext());
+    content.add(parser.textContent);
 
-      // Update class attributes to only have non-databound class names for
-      // attributes for the HTML.
-      elem.attributes['class'] = content.toString();
-    }
+    // Update class attributes to only have non-databound class names for
+    // attributes for the HTML.
+    info.node.attributes['class'] = content.toString();
 
-    return new AttributeInfo.forClass(bindings);
+    return new AttributeInfo(bindings, isClass: true);
   }
 
   void visitText(Text text) {

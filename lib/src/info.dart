@@ -443,24 +443,54 @@ class AttributeInfo {
    * Whether this is a `class` attribute. In which case more than one binding
    * is allowed (one per class).
    */
-  bool isClass = false;
+  final bool isClass;
 
   /**
    * Whether this is a 'data-style' attribute.
    */
-  bool isStyle = false;
+  final bool isStyle;
+
+  /** All bound values that would be monitored for changes. */
+  final List<String> bindings;
 
   /**
-   * A value that will be monitored for changes. All attributes, except `class`,
-   * have a single bound value.
+   * For a text attribute this contains the text content. This is used by most
+   * attributes and represents the value that will be assigned to them. If this
+   * has been assigned then [isText] will be true.
+   *
+   * The entries in this list correspond to the entries in [bindings], and this
+   * will always have one more item than bindings. For example:
+   *
+   *     href="t0 {{b1}} t1 {{b2}} t2"
+   *
+   * Here textContent would be `["t0 ", " t1 ", " t2"]` and bindings would be
+   * `["b1", "b2"]`.
+   */
+  final List<String> textContent;
+
+  AttributeInfo(this.bindings, {this.isStyle: false, this.isClass: false,
+      this.textContent}) {
+
+    assert(isText || isClass || bindings.length == 1);
+    assert(bindings.length > 0);
+    assert(!isText || textContent.length == bindings.length + 1);
+    assert((isText ? 1 : 0) + (isClass ? 1 : 0) + (isStyle ? 1 : 0) <= 1);
+  }
+
+  /**
+   * A value that will be monitored for changes. All attributes have a single
+   * bound value unless [isClass] or [isText] is true.
    */
   String get boundValue => bindings[0];
 
-  /** All bound values that would be monitored for changes. */
-  List<String> bindings;
+  /** True if this attribute binding expression should be assigned directly. */
+  bool get isSimple => !isClass && !isStyle && !isText;
 
-  AttributeInfo(String value, {this.isStyle : false}) : bindings = [value];
-  AttributeInfo.forClass(this.bindings) : isClass = true;
+  /**
+   * True if this attribute value should be concatenated as a string.
+   * This is true whenever [textContent] is non-null.
+   */
+  bool get isText => textContent != null;
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
