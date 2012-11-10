@@ -20,28 +20,44 @@ void main() {
   run(new Options().arguments);
 }
 
+/** Contains the result of a compiler run. */
+class CompilerResult {
+  final List<String> outputs = [];
+}
+
+/** 
+ * Runs the web components compiler with the command-line options in [args].
+ * See [CompilerOptions] for the definition of valid arguments. 
+ */
 // TODO(jmesserly): fix this to return a proper exit code
-Future run(List<String> args) {
+// TODO(justinfagnani): return messages in the result
+Future<CompilerResult> run(List<String> args) {
   var options = CompilerOptions.parse(args);
   if (options == null) return new Future.immediate(null);
 
+  var result = new CompilerResult();
+  
   fileSystem = new ConsoleFileSystem();
   messages = new Messages(options: options);
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
     var currentDir = new Directory.current().path;
     var compiler = new Compiler(fileSystem, options, currentDir);
-    return compiler.run().chain((_) {
-      var entryPoint = null;
-      // Write out the code associated with each source file.
-      for (var file in compiler.output) {
-        writeFile(file.path, file.contents, options.clean);
-        if (file.path.filename.endsWith('_bootstrap.dart')) {
-          entryPoint = file.path;
+    return compiler.run()
+      .chain((_) {
+        var entryPoint = null;
+        // Write out the code associated with each source file.
+        for (var file in compiler.output) {
+          writeFile(file.path, file.contents, options.clean);
+          result.outputs.add(file.path.toString());
+          if (file.path.filename.endsWith('_bootstrap.dart')) {
+            entryPoint = file.path;
+          }
         }
-      }
-      return symlinkPubPackages(entryPoint, options);
-    }).chain((_) => fileSystem.flush());
+        return symlinkPubPackages(entryPoint, options);
+      })
+      .chain((_) => fileSystem.flush())
+      .transform((_) => result);
   }, printTime: true);
 }
 
