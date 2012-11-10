@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>data_style_binding_test</title>
+  <script type='application/javascript' src="testing.js"></script>
+  <style>
+  .uno    { width: 400px }
+  .dos    { color: blue }
+  .tres   { height: 50px }
+  .cuatro { background-color: green }
+  .cinco  { font-family: monospace  }
+  </style>
+</head>
+<body>
+<!-- test that you can set several class attributes with lists and strings with
+spaces. -->
+  <div id="test1" class="{{one}} {{two}} {{three}}">
+  this div will have blue (0000ff) font color and 50px height.
+  </div>
+  <div id="test2" class="{{asList}}">
+  this div will have blue 400px width and 50px height.
+  </div>
+  <div id="test3" class="{{asString}}">
+  this div will have green (008000) bgcolor and monospace font.
+  </div>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:web_components/web_components.dart';
+    import 'package:unittest/unittest.dart';
+
+    var one = 'uno';
+    var two = 'dos';
+    var three = 'tres';
+    var asString = 'uno dos tres';
+    var asList = ['uno', 'dos', 'tres'];
+    main() {
+      window.setTimeout(() {
+        expect(query('#test1').classes.toString(), 'uno dos tres');
+        expect(query('#test2').classes.toString(), 'uno dos tres');
+        expect(query('#test3').classes.toString(), 'uno dos tres');
+        one = null;
+        asList[1] = null;
+        asString = 'cuatro cinco';
+        dispatch();
+        window.setTimeout(() {
+          expect(query('#test1').classes.toString(), 'dos tres');
+          expect(query('#test2').classes.toString(), 'uno tres');
+          expect(query('#test3').classes.toString(), 'cuatro cinco');
+          window.setTimeout(() => window.postMessage('done', '*'), 0);
+        }, 0);
+      }, 0);
+    }
+  </script>
+</body>
+</html>

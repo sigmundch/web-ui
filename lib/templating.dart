@@ -56,41 +56,74 @@ void insertAllBefore(Node parent, Node reference, List<Node> nodes) {
   nodes.forEach((n) => parent.insertBefore(n, reference));
 }
 
-/** A function returning a css-class binding or null. See [bindCssClasses]. */
-typedef String CssClassBinding();
-
 /**
  * Bind the result of [exp] to the class attribute in [elem]. [exp] is a closure
- * that retuns a string or null. You can bind multiple class attributes by
- * calling this function several times. For example
+ * that can return a string, a list of strings, an string with spaces, or null.
+ *
+ * You can bind a single class attribute by binding a getter to the property
+ * defining your class.  For example,
+ *
+ *     var class1 = 'pretty';
+ *     bindCssClasses(e, () => class1);
+ *
+ * In this example, if you update class1 to null or an empty string, the
+ * previous value ('pretty') is removed from the element.
+ *
+ * You can bind multiple class attributes in several ways: by returning a list
+ * of values in [exp], by returning in [exp] a string with multiple classes
+ * separated by spaces, or by calling this function several times. For example,
+ * suppose you want to bind 2 classes on an element,
  *
  *     var class1 = 'pretty';
  *     var class2 = 'selected';
- *     bindCssClasses(e, () => class1);
- *     bindCssClasses(e, () => class2);
  *
- * You can then independently change class1 and class2. If you set `class1` to
- * null, then `pretty` will be removed from `e.classes`, but `selected` will be
- * kept.
+ * and you want to independently change class1 and class2. For instance, If you
+ * set `class1` to null, you'd like `pretty` will be removed from `e.classes`,
+ * but `selected` to be kept.  The tree alternatives mentioned earlier look as
+ * follows:
+ *
+ *   * binding classes with a list:
+ *
+ *         bindCssClasses(e, () => [class1, class2]);
+ *
+ *   * binding classes with a string:
+ *
+ *         bindCssClasses(e, () => "${class1 != null ? class1 : ''} "
+ *                                 "${class2 != null ? class2 : ''}");
+ *
+ *   * binding classes separately:
+ *
+ *         bindCssClasses(e, () => class1);
+ *         bindCssClasses(e, () => class2);
  */
-WatcherDisposer bindCssClasses(Element elem, CssClassBinding exp) {
+WatcherDisposer bindCssClasses(Element elem, dynamic exp()) {
   return watchAndInvoke(exp, (e) {
-    // TODO(sigmund): also support exp being a string with spaces
-    // TODO(sigmund): also support exp being an array of strings
-    if (e.oldValue != null && e.oldValue != '') {
-      elem.classes.remove(e.oldValue);
+    var toRemove = e.oldValue;
+    if (toRemove is String && toRemove != '') {
+      if (toRemove.contains(' ')) {
+        elem.classes.removeAll(toRemove.split(' '));
+      } else {
+        elem.classes.remove(toRemove);
+      }
+    } else if (toRemove is List<String>) {
+      elem.classes.removeAll(toRemove.filter((e) => e != null && e != ''));
     }
-    if (e.newValue != null && e.newValue != '') {
-      elem.classes.add(e.newValue);
+
+    var toAdd = e.newValue;
+    if (toAdd is String && toAdd != '') {
+      if (toAdd.contains(' ')) {
+        elem.classes.addAll(toAdd.split(' '));
+      } else {
+        elem.classes.add(toAdd);
+      }
+    } else if (toAdd is List<String>) {
+      elem.classes.addAll(toAdd.filter((e) => e != null && e != ''));
     }
   });
 }
 
-/** A function returning a css-style definitions. */
-typedef Map<String, String> StyleDefinitions();
-
 /** Bind the result of [exp] to the style attribute in [elem]. */
-WatcherDisposer bindStyle(Element elem, StyleDefinitions exp) {
+WatcherDisposer bindStyle(Element elem, Map<String, String> exp()) {
   return watchAndInvoke(exp, (e) {
     if (e.oldValue is Map<String, String>) {
       var props = e.newValue;

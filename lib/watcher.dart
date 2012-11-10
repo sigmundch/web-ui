@@ -78,28 +78,26 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
   if (callback == null) return () {}; // no use in passing null as a callback.
   if (_watchers == null) _watchers = [];
   Function exp;
+  bool isList = false;
   if (target is Handle) {
-    // TODO(sigmund): replace by 'as' operator when supported by dart2js
-    Handle t = target;
-    exp = t._getter;
+    exp = (target as Handle)._getter;
   } else if (target is Function) {
+    exp = target;
     try {
-      if (target() is List) {
-        exp = new _ListWatcher.getter(target).watchValue;
-      } else {
-        exp = target;
-      }
+      isList = (target() is List);
     } catch (e, trace) { // in case target() throws some error
       // TODO(sigmund): use logging instead of print when logger is in the SDK
       // and available via pub (see dartbug.com/4363)
       print('error: evaluating ${debugName != null ? debugName : "<unnamed>"} '
             'watcher threw error ($e, $trace)');
-      exp = target;
     }
   } else if (target is List) {
-    exp = new _ListWatcher(target).watchValue;
+    exp = () => target;
+    isList = true;
   }
-  var watcher = new _Watcher(exp, callback, debugName);
+  var watcher = isList
+      ? new _ListWatcher(exp, callback, debugName)
+      : new _Watcher(exp, callback, debugName);
   _watchers.add(watcher);
   return () => _unregister(watcher);
 }
@@ -151,7 +149,7 @@ class _Watcher {
   final String debugName;
 
   /** Function that retrieves the value being watched. */
-  final Function _getter;
+  final Getter _getter;
 
   /** Callback to invoke when the value changes. */
   final ValueWatcher _callback;
@@ -164,6 +162,35 @@ class _Watcher {
   }
 
   String toString() => debugName == null ? '<unnamed>' : debugName;
+
+  /** Detect if any changes occurred and if so invoke [_callback]. */
+  bool compareAndNotify() {
+    var oldValue = _lastValue;
+    var currentValue = _safeRead();
+    if (_compare(currentValue)) {
+      var oldValue = _lastValue;
+      _update(currentValue);
+      _callback(new WatchEvent(oldValue, currentValue));
+      return true;
+    }
+    return false;
+  }
+
+  bool _compare(currentValue) => _lastValue != currentValue;
+
+  void _update(currentValue) {
+    _lastValue = currentValue;
+  }
+
+  /** Read [_getter] but detect whether exceptions were thrown. */
+  _safeRead() {
+    try {
+      return _getter();
+    } catch (e, trace) {
+      print('error: evaluating $this watcher threw an exception ($e, $trace)');
+    }
+    return _lastValue;
+  }
 }
 
 
@@ -189,20 +216,7 @@ void dispatch() {
   do {
     dirty = false;
     for (var watcher in _watchers) {
-        var oldValue = watcher._lastValue;
-        var newValue;
-        try {
-          newValue = watcher._getter();
-        } catch (e, trace) {
-          print('error: evaluating $watcher watcher threw an exception '
-              '($e, $trace)');
-          newValue = oldValue;
-        }
-        if (oldValue != newValue) {
-          watcher._lastValue = newValue;
-          watcher._callback(new WatchEvent(oldValue, newValue));
-          dirty = true;
-        }
+      if (watcher.compareAndNotify()) dirty = true;
     }
   } while (dirty && total++ < _maxIter);
   if (total == _maxIter) {
@@ -262,52 +276,27 @@ class Handle<T> {
   }
 }
 
-/** Internal helper to detect changes on list objects. */
-class _ListWatcher<T> {
+/** 
+ * A watcher for list objects. It stores as the last value a shallow copy of the
+ * list as it was when we last detected any changes.
+ */
+class _ListWatcher<T> extends _Watcher {
 
-  /** Shallow copy of the list as it was when this watcher was created. */
-  List<T> _last = <T>[];
-
-  /**
-   * The list reference (the current value of the list). If not null, then
-   * [_getter] should be null.
-   */
-  final List<T> _value;
-
-  /**
-   * A getter to the list reference (the current value of the list). If not
-   * null, then [_value] should be null.
-   */
-  final Getter<List<T>> _getter;
-
-
-  _ListWatcher(this._value) : _getter = null {
-    _last.addAll(_value);
+  _ListWatcher(getter, ValueWatcher callback, String debugName)
+      : super(getter, callback, debugName) {
+    _update(_safeRead());
   }
 
-  _ListWatcher.getter(this._getter) : _value = null {
-    _last.addAll(_getter());
-  }
+  bool _compare(List<T> currentValue) {
+    if (_lastValue.length != currentValue.length) return true;
 
-  /** [_lastResult] changes only when the list changes. */
-  bool _lastResult = false;
-  bool watchValue() {
-    List<T> currentValue = (_value != null ? _value : _getter());
-    if (_changed(currentValue)) {
-      _lastResult = !_lastResult;
-      _last.clear();
-      _last.addAll(currentValue);
-    }
-
-    return _lastResult;
-  }
-
-  bool _changed(List<T> currentValue) {
-    if (_last.length != currentValue.length) return true;
-
-    for (int i = 0 ; i < _last.length; i++) {
-      if (_last[i] != currentValue[i]) return true;
+    for (int i = 0 ; i < _lastValue.length; i++) {
+      if (_lastValue[i] != currentValue[i]) return true;
     }
     return false;
+  }
+
+  void _update(currentValue) {
+    _lastValue = new List<T>.from(currentValue);
   }
 }
