@@ -469,7 +469,6 @@ class _ElementLoader extends TreeVisitor {
       return;
     }
 
-
     var path = _fileInfo.path.directoryPath.join(new Path(href));
     _fileInfo.componentLinks.add(path);
   }
@@ -484,25 +483,34 @@ class _ElementLoader extends TreeVisitor {
       return;
     }
 
-    var component = new ComponentInfo(node, _fileInfo);
-    if (component.constructor == null) {
-      messages.error('Missing the class name associated with this component. '
-          'Please add an attribute of the form  \'constructor="ClassName"\'.',
-          node.span, file: _fileInfo.path);
-      return;
-    }
+    var tagName = node.attributes['name'];
+    var extendsTag = node.attributes['extends'];
+    var constructor = node.attributes['constructor'];
+    var templateNodes = node.nodes.filter((n) => n.tagName == 'template');
 
-    if (component.tagName == null) {
+    if (tagName == null) {
       messages.error('Missing tag name of the component. Please include an '
           'attribute like \'name="x-your-tag-name"\'.',
           node.span, file: _fileInfo.path);
       return;
     }
 
-    if (component.template == null) {
+    var template = null;
+    if (templateNodes.length == 1) {
+      template = templateNodes[0];
+    } else {
       messages.warning('an <element> should have exactly one <template> child.',
           node.span, file: _fileInfo.path);
     }
+
+    if (constructor == null) {
+      var name = tagName;
+      if (name.startsWith('x-')) name = name.substring(2);
+      constructor = toCamelCase(name, startUppercase: true);
+    }
+
+    var component = new ComponentInfo(node, _fileInfo, tagName, extendsTag,
+        constructor, template);
 
     _fileInfo.declaredComponents.add(component);
 

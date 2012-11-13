@@ -10,6 +10,7 @@ import 'dart:io';
 
 void main() {
   build(new Options().arguments, [
+    'example/component/news/index.html',
     'example/explainer/clickcount.html',
     'example/explainer/countcomponent.html',
     'example/explainer/countcomponent5.html',

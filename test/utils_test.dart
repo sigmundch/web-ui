@@ -12,36 +12,45 @@ import 'package:web_components/src/utils.dart';
 main() {
   useVmConfiguration();
 
-  group('toCamelCase', () {
-    test('empty', () {
-      expect(toCamelCase(''), equals(''));
-    });
+  for (bool startUppercase in [false, true]) {
+    Matcher caseEquals(String str) {
+      if (startUppercase) str = str[0].toUpperCase().concat(str.substring(1));
+      return equals(str);
+    }
 
-    test('single token', () {
-      expect(toCamelCase('a'), equals('a'));
-      expect(toCamelCase('ab'), equals('ab'));
-      expect(toCamelCase('Ab'), equals('Ab'));
-      expect(toCamelCase('AB'), equals('AB'));
-      expect(toCamelCase('long_word'), equals('long_word'));
-    });
+    camelCase(str) => toCamelCase(str, startUppercase: startUppercase);
 
-    test('dashes in the middle', () {
-      expect(toCamelCase('a-b'), equals('aB'));
-      expect(toCamelCase('a-B'), equals('aB'));
-      expect(toCamelCase('A-b'), equals('AB'));
-      expect(toCamelCase('long-word'), equals('longWord'));
-    });
+    group('toCamelCase startUppercase=$startUppercase', () {
+      test('empty', () {
+        expect(camelCase(''), equals(''));
+      });
 
-    test('leading/trailing dashes', () {
-      expect(toCamelCase('-hi'), equals('Hi'));
-      expect(toCamelCase('hi-'), equals('hi'));
-      expect(toCamelCase('hi-friend-'), equals('hiFriend'));
-    });
+      test('single token', () {
+        expect(camelCase('a'), caseEquals('a'));
+        expect(camelCase('ab'), caseEquals('ab'));
+        expect(camelCase('Ab'), caseEquals('Ab'));
+        expect(camelCase('AB'), caseEquals('AB'));
+        expect(camelCase('long_word'), caseEquals('long_word'));
+      });
 
-    test('consecutive dashes', () {
-      expect(toCamelCase('--hi-friend'), equals('HiFriend'));
-      expect(toCamelCase('hi--friend'), equals('hiFriend'));
-      expect(toCamelCase('hi-friend--'), equals('hiFriend'));
+      test('dashes in the middle', () {
+        expect(camelCase('a-b'), caseEquals('aB'));
+        expect(camelCase('a-B'), caseEquals('aB'));
+        expect(camelCase('A-b'), caseEquals('AB'));
+        expect(camelCase('long-word'), caseEquals('longWord'));
+      });
+
+      test('leading/trailing dashes', () {
+        expect(camelCase('-hi'), caseEquals('Hi'));
+        expect(camelCase('hi-'), caseEquals('hi'));
+        expect(camelCase('hi-friend-'), caseEquals('hiFriend'));
+      });
+
+      test('consecutive dashes', () {
+        expect(camelCase('--hi-friend'), caseEquals('HiFriend'));
+        expect(camelCase('hi--friend'), caseEquals('hiFriend'));
+        expect(camelCase('hi-friend--'), caseEquals('hiFriend'));
+      });
     });
-  });
+  }
 }

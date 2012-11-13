@@ -31,8 +31,7 @@ import 'templating.dart' as templating;
 abstract class WebComponent implements Element {
   /** The web component element wrapped by this class. */
   final Element _element;
-
-  static bool _hasShadowRoot = true;
+  List _shadowRoots;
 
   /**
    * Default constructor for web components. This contructor is only provided
@@ -62,20 +61,18 @@ abstract class WebComponent implements Element {
   }
 
   /**
-   * Creates the [ShadowRoot] backing this component. This is an implementation
-   * helper and should not need to be called from your code.
+   * **Note**: This is an implementation helper and should not need to be called
+   * from your code.
+   *
+   * Creates the [ShadowRoot] backing this component.
    */
   createShadowRoot() {
-    var shadowRoot;
-    if (ShadowRoot.supported && !polyfillShadowDomForTesting) {
-      shadowRoot = new ShadowRoot(_element);
-      // TODO(jmesserly): what's up with this flag? Why are we setting it?
-      shadowRoot.resetStyleInheritance = false;
-    } else {
-      shadowRoot = new Element.html('<div class="shadowroot"></div>');
-      nodes.add(shadowRoot);
+    if (_realShadowRoot) {
+      return new ShadowRoot(_element);
     }
-    return shadowRoot;
+    if (_shadowRoots == null) _shadowRoots = [];
+    _shadowRoots.add(new Element.html('<div class="shadowroot"></div>'));
+    return _shadowRoots.last;
   }
 
   /**
@@ -95,6 +92,177 @@ abstract class WebComponent implements Element {
   /** Invoked when any attribute of the component is modified. */
   void attributeChanged(
       String name, String oldValue, String newValue) {}
+
+  /**
+   * **Note**: This is an implementation helper and should not need to be called
+   * from your code.
+   *
+   * If [ShadowRoot.supported] or [useShadowDom] is false, this distributes
+   * children to the insertion points of the emulated ShadowRoot.
+   * This is an implementation helper and should not need to be called from your
+   * code.
+   *
+   * This is an implementation of [composition][1] and [rendering][2] from the
+   * Shadow DOM spec. Currently the algorithm will replace children of this
+   * component with the DOM as it should be rendered.
+   *
+   * Note that because we're always expanding to the render tree, and nodes are
+   * expanded in a bottom up fashion, [reprojection][3] is handled naturally.
+   *
+   * [1]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#composition
+   * [2]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#rendering-shadow-trees
+   * [3]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#reprojection
+   */
+  void composeChildren() {
+    if (_realShadowRoot) return;
+
+    if (_shadowRoots.length == 0) {
+      // TODO(jmesserly): this is a limitation of our codegen approach.
+      // We could keep the _shadowRoots around and clone(true) them, but then
+      // bindings wouldn't be properly associated.
+      throw new StateError('Distribution algorithm requires at least one shadow'
+        ' root and can only be run once.');
+    }
+
+    var treeStack = _shadowRoots;
+
+    // Let TREE be the youngest tree in the HOST's tree stack
+    var tree = treeStack.removeLast();
+    var youngestRoot = tree;
+    // Let POOL be the list of nodes
+    var pool = new List.from(nodes);
+
+    // Note: reprojection logic is skipped here because composeChildren is
+    // run on each component in bottom up fashion.
+
+    var shadowInsertionPoints = [];
+    var shadowInsertionTrees = [];
+
+    while (true) {
+      // Run the distribution algorithm, supplying POOL and TREE as input
+      pool = _distributeNodes(tree, pool);
+
+      // Let POINT be the first encountered active shadow insertion point in
+      // TREE, in tree order
+      var point = tree.query('shadow');
+      if (point != null) {
+        if (treeStack.length > 0) {
+          // Find the next older tree, relative to TREE in the HOST's tree stack
+          // Set TREE to be this older tree
+          tree = treeStack.removeLast();
+          // Assign TREE to the POINT
+
+          // Note: we defer the actual tree replace operation until the end, so
+          // we can run _distributeNodes on this tree. This simplifies the query
+          // for content nodes in tree order.
+          shadowInsertionPoints.add(point);
+          shadowInsertionTrees.add(tree);
+
+          // Continue to repeat
+        } else {
+          // If we've hit a built-in element, just use a content selector.
+          // This matches the behavior of built-in HTML elements.
+          // Since <content> can be implemented simply, we just inline it.
+          _distribute(point, pool);
+
+          // If there is no older tree, stop.
+          break;
+        }
+      } else {
+        // If POINT exists: ... Otherwise, stop
+        break;
+      }
+    }
+
+    // Handle shadow tree assignments that we deferred earlier.
+    for (int i = 0; i < shadowInsertionPoints.length; i++) {
+      var point = shadowInsertionPoints[i];
+      var tree = shadowInsertionTrees[i];
+      // Note: defensive copy is a workaround for http://dartbug.com/6684
+      _distribute(point, new List.from(tree.nodes));
+    }
+
+    // Replace our child nodes with the ones in the youngest root.
+    nodes.clear();
+    // Note: defensive copy is a workaround for http://dartbug.com/6684
+    nodes.addAll(new List.from(youngestRoot.nodes));
+  }
+
+
+  /**
+   * This is an implementation of the [distribution algorithm][1] from the
+   * Shadow DOM spec.
+   *
+   * [1]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#dfn-distribution-algorithm
+   */
+  List<Node> _distributeNodes(Element tree, List<Node> pool) {
+    // Repeat for each active insertion point in TREE, in tree order:
+    for (var insertionPoint in tree.queryAll('content')) {
+      if (!_isActive(insertionPoint)) continue;
+      // Let POINT be the current insertion point.
+
+      // TODO(jmesserly): validate selector, as specified here:
+      // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#matching-insertion-points
+      var select = insertionPoint.attributes['select'];
+      if (select == null || select == '') select = '*';
+
+      // Repeat for each node in POOL:
+      //     1. Let NODE be the current node
+      //     2. If the NODE matches POINT's matching criteria:
+      //         1. Distribute the NODE to POINT
+      //         2. Remove NODE from the POOL
+
+      var matching = [];
+      var notMatching = [];
+      for (var node in pool) {
+        (_matches(node, select) ? matching : notMatching).add(node);
+      }
+
+      if (matching.length == 0) {
+        // When an insertion point or a shadow insertion point has nothing
+        // assigned or distributed to them, the fallback content must be used
+        // instead when rendering. The fallback content is all descendants of
+        // the element that represents the insertion point.
+        matching = insertionPoint.nodes;
+      }
+
+      _distribute(insertionPoint, matching);
+
+      pool = notMatching;
+    }
+
+    return pool;
+  }
+
+  static bool _matches(Node node, String selector) {
+    if (node is Text) return selector == '*';
+    return (node as Element).matchesSelector(selector);
+  }
+
+  static bool _isInsertionPoint(Element node) =>
+      node.tagName == 'CONTENT' || node.tagName == 'SHADOW';
+
+  /**
+   * An insertion point is "active" if it is not the child of another insertion
+   * point. A child of an insertion point is "fallback" content and should not
+   * be considered during the distribution algorithm.
+   */
+  static bool _isActive(Element node) {
+    assert(_isInsertionPoint(node));
+    for (node = node.parent; node != null; node = node.parent) {
+      if (_isInsertionPoint(node)) return false;
+    }
+    return true;
+  }
+
+  /** Distribute the [nodes] in place of an existing [insertionPoint]. */
+  static void _distribute(Element insertionPoint, List<Node> nodes) {
+    assert(_isInsertionPoint(insertionPoint));
+    for (var node in nodes) {
+      insertionPoint.parent.insertBefore(node, insertionPoint);
+    }
+    insertionPoint.remove();
+  }
 
   // TODO(jmesserly): this forwarding is temporary until Dart supports
   // subclassing Elements.
@@ -363,5 +531,11 @@ abstract class WebComponent implements Element {
   void addHTML(String html) => _element.addHTML(html);
 }
 
-/** Option to force polyfilling the shadow DOM even when it is supported. */
-bool polyfillShadowDomForTesting = false;
+/**
+ * Set this to true to use native Shadow DOM if it is supported.
+ * Note that this will change behavior of [WebComponent] APIs for tree
+ * traversal.
+ */
+bool useShadowDom = false;
+
+bool get _realShadowRoot => useShadowDom && ShadowRoot.supported;

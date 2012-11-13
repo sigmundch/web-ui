@@ -9,11 +9,13 @@ import 'package:web_components/src/messages.dart';
 
 /**
  * Converts a string name with hyphens into an identifier, by removing hyphens
- * and capitalizing the following letter.
+ * and capitalizing the following letter. Optionally [startUppercase] to
+ * captialize the first letter.
  */
-String toCamelCase(String hyphenedName) {
+String toCamelCase(String hyphenedName, {bool startUppercase: false}) {
   var segments = hyphenedName.split('-');
-  for (int i = 1; i < segments.length; i++) {
+  int start = startUppercase ? 0 : 1;
+  for (int i = start; i < segments.length; i++) {
     var segment = segments[i];
     if (segment.length > 0) {
       // Character between 'a'..'z' mapped to 'A'..'Z'

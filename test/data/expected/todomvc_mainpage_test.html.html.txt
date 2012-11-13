@@ -85,5 +85,5 @@ layer at (115,159) size 65x41
     RenderInline (generated) at (0,0) size 66x39 [color=#D9D9D9]
       RenderText at (25,0) size 16x32
         text run at (25,0) width 16: "\x{BB}"
-caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of {#shadow-root} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 4 {SECTION} of body
+caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 4 {SECTION} of body
 #EOF

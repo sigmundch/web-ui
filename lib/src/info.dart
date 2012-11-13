@@ -260,17 +260,8 @@ class ComponentInfo extends LibraryInfo {
    */
   bool hasConflict = false;
 
-  ComponentInfo(Element element, this.declaringFile)
-    : element = element,
-      tagName = element.attributes['name'],
-      extendsTag = element.attributes['extends'],
-      constructor = element.attributes['constructor'],
-      template = _getTemplate(element);
-
-  static _getTemplate(element) {
-    List template = element.nodes.filter((n) => n.tagName == 'template');
-    return template.length == 1 ? template[0] : null;
-  }
+  ComponentInfo(this.element, this.declaringFile, this.tagName, this.extendsTag,
+      this.constructor, this.template);
 }
 
 /** Base tree visitor for the Analyzer infos. */

@@ -397,15 +397,21 @@ main() {
       expect(compInfo.hasConflict, isFalse);
     });
 
-    test('invalid elements', () {
+    test('element without constructor', () {
       var doc = parse(
         '<body>'
-          // without constructor
           '<element name="x-baz"></element>'
-          // without tag name
-          '<element constructor="Baz"></element>'
+          '<element name="my-quux"></element>'
         '</body>'
       );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(info.declaredComponents.length, equals(2));
+      expect(info.declaredComponents[0].constructor, equals('Baz'));
+      expect(info.declaredComponents[1].constructor, equals('MyQuux'));
+    });
+
+    test('invalid element without tag name', () {
+      var doc = parse('<body><element constructor="Baz"></element>');
       var info = analyzeDefinitionsInTree(doc);
       expect(info.declaredComponents.length, equals(0));
       // TODO(jmesserly): validate warnings
