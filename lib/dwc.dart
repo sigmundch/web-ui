@@ -115,7 +115,7 @@ Future symlinkPubPackages(fs.Path outputFile, CompilerOptions options) {
   // TODO(sigmund): once it's possible in dart:io, we just want to use a full
   // path, but not necessarily resolve symlinks.
   var from = new File.fromPath(fromPath).fullPathSync().toString();
-  var to = toPath.toString();
+  var to = toPath.toNativePath().toString();
   return createSymlink(from, to);
 }
 
