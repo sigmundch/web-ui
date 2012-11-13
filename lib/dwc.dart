@@ -25,9 +25,9 @@ class CompilerResult {
   final List<String> outputs = [];
 }
 
-/** 
+/**
  * Runs the web components compiler with the command-line options in [args].
- * See [CompilerOptions] for the definition of valid arguments. 
+ * See [CompilerOptions] for the definition of valid arguments.
  */
 // TODO(jmesserly): fix this to return a proper exit code
 // TODO(justinfagnani): return messages in the result
@@ -36,7 +36,7 @@ Future<CompilerResult> run(List<String> args) {
   if (options == null) return new Future.immediate(null);
 
   var result = new CompilerResult();
-  
+
   fileSystem = new ConsoleFileSystem();
   messages = new Messages(options: options);
 
@@ -116,14 +116,31 @@ Future symlinkPubPackages(fs.Path outputFile, CompilerOptions options) {
   // path, but not necessarily resolve symlinks.
   var from = new File.fromPath(fromPath).fullPathSync().toString();
   var to = toPath.toString();
+  return createSymlink(from, to);
+}
 
+
+// TODO(jmesserly): this code was taken from Pub's io library.
+// Added error handling and don't return the file result, to match the code
+// we had previously. Also "from" and "to" only accept strings. And inlined
+// the relevant parts of runProcess. Note that it uses "cmd" to get the path
+// on Windows.
+/**
+ * Creates a new symlink that creates an alias from [from] to [to], both of
+ * which can be a [String], [File], or [Directory]. Returns a [Future] which
+ * completes to the symlink file (i.e. [to]).
+ */
+Future createSymlink(String from, String to) {
   var command = 'ln';
   var args = ['-s', from, to];
 
   if (Platform.operatingSystem == 'windows') {
-    // This uses the same technique as 'pub' to create symlinks in windows,
-    // which only works on Vista or later. 
-    command = 'mklink';
+    // Call mklink on Windows to create an NTFS junction point. Only works on
+    // Vista or later. (Junction points are available earlier, but the "mklink"
+    // command is not.) I'm using a junction point (/j) here instead of a soft
+    // link (/d) because the latter requires some privilege shenanigans that
+    // I'm not sure how to specify from the command line.
+    command = 'cmd';
     args = ['/c', 'mklink', '/j', to, from];
   }
 
@@ -133,10 +150,11 @@ Future symlinkPubPackages(fs.Path outputFile, CompilerOptions options) {
                     'subprocess stderr:\n${result.stderr}';
       messages.error(
         'unable to create symlink\n from: $from\n to:$to\n$details', null);
-    } 
+    }
     return null;
   });
 }
+
 
 // TODO(sigmund): this conversion from dart:io paths to internal paths should
 // go away when dartbug.com/5818 is fixed.
