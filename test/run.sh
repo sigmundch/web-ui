@@ -20,13 +20,9 @@ DART_FLAGS="--checked"
 TEST_PATTERN=$1
 
 function show_diff {
-  echo -en "[33mExpected[0m"
-  echo -n "                                                           "
-  echo -e "[32mOutput[0m"
-  diff -t -y $1 $2 | \
-    sed -e "s/\(^.\{63\}\)\(\s[<]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/" |\
-    sed -e "s/\(^.\{63\}\)\(\s[|]\(\s\|$\)\)\(.*\)/[33m\1[33m\2[33m\4[0m/" |\
-    sed -e "s/\(^.\{63\}\)\(\s[>]\(\s\|$\)\)\(.*\)/[31m\1[33m\2[32m\4[0m/"
+  diff -u $1 $2 | \
+    sed -e "s/^\(+.*\)/\x1b[32m\1\x1b[0m/" |\
+    sed -e "s/^\(-.*\)/\x1b[31m\1\x1b[0m/"
   return 1
 }
 

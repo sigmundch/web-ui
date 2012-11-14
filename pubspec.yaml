@@ -2,7 +2,7 @@ name: web_components
 author: "Dart Team <misc@dartlang.org>"
 homepage: https://github.com/dart-lang/dart-web-components
 description: An easy way to build web apps in Dart.
-version: 0.2.5+4
+version: 0.2.5+5
 dependencies:
   unittest: { sdk: unittest }
   args: { sdk: args }

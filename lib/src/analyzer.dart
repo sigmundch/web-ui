@@ -88,8 +88,6 @@ class _Analyzer extends TreeVisitor {
   void visitElementInfo(ElementInfo info) {
     var node = info.node;
 
-    _ensureParentHasQuery(info);
-
     if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
     if (node.tagName == 'body' || (_currentInfo is ComponentInfo
           && (_currentInfo as ComponentInfo).template == node)) {
@@ -129,12 +127,15 @@ class _Analyzer extends TreeVisitor {
 
     _parent = savedParent;
 
-    if (info.identifier == null && _needsIdentifier(info)) {
-      var id = '__e-$_uniqueId';
-      info.identifier = toCamelCase(id);
-      // If it's not created in code, we'll query the element by it's id.
-      if (!info.createdInCode) node.attributes['id'] = id;
-      _uniqueId++;
+    if (_needsIdentifier(info)) {
+      _ensureParentHasQuery(info);
+      if (info.identifier == null) {
+        var id = '__e-$_uniqueId';
+        info.identifier = toCamelCase(id);
+        // If it's not created in code, we'll query the element by it's id.
+        if (!info.createdInCode) node.attributes['id'] = id;
+        _uniqueId++;
+      }
     }
   }
 
