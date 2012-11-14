@@ -88,6 +88,8 @@ class _Analyzer extends TreeVisitor {
   void visitElementInfo(ElementInfo info) {
     var node = info.node;
 
+    _ensureParentHasQuery(info);
+
     if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
     if (node.tagName == 'body' || (_currentInfo is ComponentInfo
           && (_currentInfo as ComponentInfo).template == node)) {
@@ -127,13 +129,41 @@ class _Analyzer extends TreeVisitor {
 
     _parent = savedParent;
 
-    if (info.needsIdentifier && info.identifier == null) {
+    if (info.identifier == null && _needsIdentifier(info)) {
       var id = '__e-$_uniqueId';
       info.identifier = toCamelCase(id);
       // If it's not created in code, we'll query the element by it's id.
       if (!info.createdInCode) node.attributes['id'] = id;
       _uniqueId++;
     }
+  }
+
+  /**
+   * If this [info] is not created in code, ensure that whichever parent element
+   * is created in code has been marked appropriately, so we get an identifier.
+   */
+  static void _ensureParentHasQuery(ElementInfo info) {
+    if (info.isRoot || info.createdInCode) return;
+
+    for (var p = info.parent; p != null; p = p.parent) {
+      if (p.createdInCode) {
+        p.hasQuery = true;
+        return;
+      }
+    }
+  }
+
+  /**
+   * Whether code generators need to create a field to store a reference to this
+   * element. This is typically true whenever we need to access the element
+   * (e.g. to add event listeners, update values on data-bound watchers, etc).
+   */
+  static bool _needsIdentifier(ElementInfo info) {
+    if (info.isRoot) return false;
+
+    return info.hasDataBinding || info.hasIfCondition || info.hasIterate
+       || info.hasQuery || info.component != null || info.values.length > 0 ||
+       info.events.length > 0;
   }
 
   void _bindExtends(ComponentInfo component) {
