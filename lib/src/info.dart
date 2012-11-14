@@ -340,15 +340,6 @@ class ElementInfo extends NodeInfo<Element> {
   // adding/removing a node updates the parent pointer.
   final List<NodeInfo> children = [];
 
-  /**
-   * Whether code generators need to create a field to store a reference to this
-   * element. This is typically true whenever we need to access the element
-   * (e.g. to add event listeners, update values on data-bound watchers, etc).
-   */
-  bool get needsIdentifier => !isRoot &&
-      (hasDataBinding || hasIfCondition || hasIterate
-       || component != null || values.length > 0 || events.length > 0);
-
   bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
   /**
@@ -365,6 +356,12 @@ class ElementInfo extends NodeInfo<Element> {
 
   /** Whether this node represents "body" or the shadow root of a component. */
   bool isRoot = false;
+
+  /**
+   * True if some descendant needs to query starting from this element.
+   * If this is true, we will generate a variable for this node.
+   */
+  bool hasQuery = false;
 
   // Note: we're using sorted maps so items are enumerated in a consistent order
   // between runs, resulting in less "diff" in the generated code.
@@ -394,12 +391,12 @@ class ElementInfo extends NodeInfo<Element> {
 
   String toString() => '#<ElementInfo '
       'identifier: $identifier, '
-      'needsIdentifier: $needsIdentifier, '
       'createdInCode: $createdInCode, '
       'component: $component, '
       'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
       'hasDataBinding: $hasDataBinding, '
+      'hasQuery: $hasQuery, '
       'attributes: $attributes, '
       'events: $events>';
 }
