@@ -801,12 +801,12 @@ class WebComponentEmitter extends RecursiveEmitter {
 
       // Add imports only for those components used by this component.
       var imports = info.usedComponents.keys.map(
-          (c) => PathInfo.relativePath(info, c));
+          (c) => pathInfo.relativePath(info, c));
 
       if (hasExtends) {
         // Inject an import to the base component.
         printer.add(codegen.importList(
-            [PathInfo.relativePath(info, info.extendsComponent)]));
+            [pathInfo.relativePath(info, info.extendsComponent)]));
       }
 
       printer.add(codegen.importList(imports))
@@ -872,7 +872,7 @@ class MainPageEmitter extends RecursiveEmitter {
 
     // Import only those components used by the page.
     var imports = _fileInfo.usedComponents.keys.map(
-          (c) => PathInfo.relativePath(_fileInfo, c));
+          (c) => pathInfo.relativePath(_fileInfo, c));
     printer.add(codegen.importList(imports))
         .addRaw(codegen.mainDartCode(codeInfo.code,
             _context.declarations.formatString(1),

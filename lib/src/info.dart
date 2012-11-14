@@ -19,7 +19,6 @@ import 'files.dart';
 import 'messages.dart';
 import 'utils.dart';
 
-
 /** Information about input, base, and output path locations. */
 class PathInfo {
   /**
@@ -34,24 +33,47 @@ class PathInfo {
   /** Base path where all output is generated. */
   final Path _outputDir;
 
+  /** Whether to add prefixes and to output file names. */
+  final bool _mangleFilenames;
+  
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
-  PathInfo(this._baseDir, this._outputDir);
+  PathInfo(this._baseDir, this._outputDir, [this._mangleFilenames = true]);
 
+  /** Add a prefix and [suffix] if [_mangleFilenames] is true */
+  String mangle(String name, String suffix, [bool forceSuffix = false]) =>
+    _mangleFilenames ? "$_DEFAULT_PREFIX$name$suffix"
+        : (forceSuffix ? "$name$suffix" : name);
+
+  /** 
+   * Checks if [input] is valid. It must be in [_baseDir] and must not be in
+   * the [_outputDir].
+   */
+  bool checkInputPath(Path input) {
+    if (_mangleFilenames) return true;
+    var canonicalized = input.canonicalize().toString();
+    var valid = !canonicalized.startsWith(_outputDir.toString())
+        && canonicalized.startsWith(_baseDir.toString());
+    if (!valid) {
+      messages.error(
+          "The file ${input} cannot be processed. "
+          "Files must be in ${_baseDir} and must not be in ${_outputDir}.", 
+          null, file: input);
+    }
+    return valid;
+  }
+  
   /**
    * The path to the output file corresponding to [input], by adding
    * [_DEFAULT_PREFIX] and a [suffix] to its file name.
    */
-  Path outputPath(Path input, String suffix) {
-    var newName = '$_DEFAULT_PREFIX${input.filename}$suffix';
-    return _outputDirPath(input).append(newName);
-  }
+  Path outputPath(Path input, String suffix) =>
+      _outputDirPath(input).append(mangle(input.filename, suffix));
 
   /** The path to the output file corresponding to [info]. */
-  Path outputLibraryPath(LibraryInfo info) {
-    return _outputDirPath(info.inputPath).append(info.outputFilename);
-  }
+  Path outputLibraryPath(LibraryInfo info) =>
+      _outputDirPath(info.inputPath).append(info._getOutputFilename(mangle));
 
   /** The corresponding output directory for [input]'s directory. */
   Path _outputDirPath(Path input) {
@@ -69,10 +91,10 @@ class PathInfo {
    * [target] from the output library of [src]. In other words, a path to import
    * or export `target.outputFilename` from `src.outputFilename`.
    */
-  static Path relativePath(LibraryInfo src, LibraryInfo target) {
+  Path relativePath(LibraryInfo src, LibraryInfo target) {
     var srcDir = src.inputPath.directoryPath;
     var relDir = target.inputPath.directoryPath.relativeTo(srcDir);
-    return relDir.append(target.outputFilename).canonicalize();
+    return relDir.append(target._getOutputFilename(mangle)).canonicalize();
   }
 
   /**
@@ -81,7 +103,7 @@ class PathInfo {
    */
   Path relativePathFromOutputDir(LibraryInfo info) {
     var relativeDir = info.inputPath.directoryPath.relativeTo(_baseDir);
-    return relativeDir.append(info.outputFilename).canonicalize();
+    return relativeDir.append(info._getOutputFilename(mangle)).canonicalize();
   }
 
   /**
@@ -101,6 +123,13 @@ class PathInfo {
     return pathToTarget.relativeTo(outputLibraryDir).canonicalize().toString();
   }
 }
+
+/** 
+ * Returns a "mangled" name, with a prefix and [suffix] depending on the
+ * compiler's settings. [forceSuffix] causes [suffix] to be appended even if
+ * the compiler is not mangling names.
+ */
+typedef String NameMangler(String name, String suffix, [bool forceSuffix]);
 
 /**
  * Information for any library-like input. We consider each HTML file a library,
@@ -137,7 +166,7 @@ abstract class LibraryInfo {
    * Name of the file that will hold any generated Dart code for this library
    * unit.
    */
-  String get outputFilename;
+  String _getOutputFilename(NameMangler mangle);
 
   /**
    * Components used within this library unit. For [FileInfo] these are
@@ -167,7 +196,8 @@ class FileInfo extends LibraryInfo {
   Path get inputPath => externalFile != null ? externalFile : path;
 
   /** Name of the file that will hold any generated Dart code. */
-  String get outputFilename => '_${inputPath.filename}.dart';
+  String _getOutputFilename(NameMangler mangle) =>
+      mangle(inputPath.filename, '.dart', inputPath.extension == 'html');
 
   /**
    * All custom element definitions in this file. This may contain duplicates.
@@ -243,17 +273,17 @@ class ComponentInfo extends LibraryInfo {
    * components could be defined inline within the HTML file, so we return a
    * unique file name for each component.
    */
-  String get outputFilename {
-    if (externalFile != null) return '_${externalFile.filename}.dart';
+  String _getOutputFilename(NameMangler mangle) {
+    if (externalFile != null) return mangle(externalFile.filename, '.dart');
     var prefix = declaringFile.path.filename;
     if (declaringFile.declaredComponents.length == 1
         && !declaringFile.codeAttached) {
-      return '_$prefix.dart';
+      return mangle(prefix, '.dart', true);
     }
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
-    return '_$prefix.$componentSegment.dart';
+    return mangle('${prefix}_$componentSegment', '.dart', true);
   }
-
+  
   /**
    * True if [tagName] was defined by more than one component. If this happened
    * we will skip over the component.

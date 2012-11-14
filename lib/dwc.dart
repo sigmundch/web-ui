@@ -5,6 +5,8 @@
 /** The entry point to the compiler. Used to implement `bin/dwc.dart`. */
 library dwc;
 
+import 'dart:io';
+import 'package:logging/logging.dart' show Level;
 import 'src/compiler.dart';
 import 'src/file_system.dart';
 import 'src/file_system/console.dart';
@@ -12,7 +14,6 @@ import 'src/file_system/path.dart' as fs;
 import 'src/messages.dart';
 import 'src/options.dart';
 import 'src/utils.dart';
-import 'dart:io';
 
 FileSystem fileSystem;
 
@@ -22,7 +23,10 @@ void main() {
 
 /** Contains the result of a compiler run. */
 class CompilerResult {
-  final List<String> outputs = [];
+  final bool success;
+  final List<String> outputs;
+  final List<String> messages;
+  CompilerResult(this.success, this.outputs, this.messages);
 }
 
 /**
@@ -34,8 +38,6 @@ class CompilerResult {
 Future<CompilerResult> run(List<String> args) {
   var options = CompilerOptions.parse(args);
   if (options == null) return new Future.immediate(null);
-
-  var result = new CompilerResult();
 
   fileSystem = new ConsoleFileSystem();
   messages = new Messages(options: options);
@@ -49,7 +51,6 @@ Future<CompilerResult> run(List<String> args) {
         // Write out the code associated with each source file.
         for (var file in compiler.output) {
           writeFile(file.path, file.contents, options.clean);
-          result.outputs.add(file.path.toString());
           if (file.path.filename.endsWith('_bootstrap.dart')) {
             entryPoint = file.path;
           }
@@ -57,7 +58,10 @@ Future<CompilerResult> run(List<String> args) {
         return symlinkPubPackages(entryPoint, options);
       })
       .chain((_) => fileSystem.flush())
-      .transform((_) => result);
+      .transform((_) => new CompilerResult(
+            !messages.messages.some((m) => m.level == Level.SEVERE),
+            compiler.output.map((f) => f.path.toString()),
+            messages.messages.map((m) => m.toString())));
   }, printTime: true);
 }
 

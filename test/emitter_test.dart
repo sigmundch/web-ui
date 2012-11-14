@@ -353,7 +353,7 @@ main() {
       var doc = parseDocument(html);
       var fileInfo = analyzeNodeForTesting(doc);
       fileInfo.userCode = new DartCodeInfo('main', null, [], '');
-      var pathInfo = new PathInfo(new Path('a'), new Path('b'));
+      var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
       var emitter = new MainPageEmitter(fileInfo);
       emitter.run(doc, pathInfo);

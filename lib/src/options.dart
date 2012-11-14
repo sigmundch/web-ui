@@ -18,7 +18,7 @@ class CompilerOptions {
 
   /** Whether to use colors to print messages on the terminal. */
   final bool useColors;
-
+  
   /** File to process by the compiler. */
   String inputFile;
 
