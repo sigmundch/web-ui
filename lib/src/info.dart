@@ -39,7 +39,10 @@ class PathInfo {
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
-  PathInfo(this._baseDir, this._outputDir, [this._mangleFilenames = true]);
+  PathInfo(Path baseDir, Path outputDir, [bool forceMangle = false])
+      : _baseDir = baseDir,
+        _outputDir = outputDir,
+        _mangleFilenames = forceMangle || (baseDir == outputDir);
 
   /** Add a prefix and [suffix] if [_mangleFilenames] is true */
   String mangle(String name, String suffix, [bool forceSuffix = false]) =>

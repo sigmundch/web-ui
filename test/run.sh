@@ -82,12 +82,12 @@ popd
 # wrapper that sets `--enable-type-checks --enable-asserts`
 for input in $DIR/data/input/*_test.html; do
   if [[ ($TEST_PATTERN == "") || ($input =~ $TEST_PATTERN) ]]; then
-    FILENAME=`basename $input.html`
+    FILENAME=`basename $input`
     echo -e -n "Testing $FILENAME "
     DUMP="$DIR/data/output/$FILENAME.txt"
     EXPECTATION="$DIR/data/expected/$FILENAME.txt"
     DART_PACKAGE_ROOT="file://$DIR/packages/" \
-        DumpRenderTree $DIR/data/output/_$FILENAME > $DUMP
+        DumpRenderTree $DIR/data/output/$FILENAME > $DUMP
 
     compare $EXPECTATION $DUMP
   fi

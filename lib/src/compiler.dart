@@ -60,7 +60,6 @@ class Compiler {
         options.baseDir != null ? new Path(options.baseDir) : mainDir;
     var outputPath =
         options.outputDir != null ? new Path(options.outputDir) : mainDir;
-    var _mangleFilenames = basePath != outputPath;
 
     // Normalize paths - all should be relative or absolute paths.
     bool anyAbsolute = _mainPath.isAbsolute || basePath.isAbsolute ||
@@ -79,7 +78,7 @@ class Compiler {
       if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
       if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
     }
-    _pathInfo = new PathInfo(basePath, outputPath, _mangleFilenames);
+    _pathInfo = new PathInfo(basePath, outputPath);
   }
 
   /** Compile the application starting from the given [mainFile]. */
