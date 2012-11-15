@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type='application/javascript' src="testing.js"></script>
+  <style> .blue { color: #0000FF; } .red { color: #FF0000; } </style>
+</head>
+<body>
+  <!-- regression test for issue #174. -->
+  expect list with 2 bullets, one blue (with blue color style), one red (with
+  red color style):
+  <ul>
+    <template iterate="item in list">
+      <li><span class={{item}}>{{item}}</span></li>
+    </template>
+  </ul>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:web_components/watcher.dart';
+    import 'common.dart';
+    var list = ["blue", "red"];
+    main() {
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
+    }
+  </script>
+</body>
+</html>

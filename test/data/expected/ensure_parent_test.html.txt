@@ -1,0 +1,26 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x100
+  RenderBlock {HTML} at (0,0) size 800x100
+    RenderBody {BODY} at (8,8) size 784x76
+      RenderBlock (anonymous) at (0,0) size 784x20
+        RenderText {#text} at (0,0) size 522x19
+          text run at (0,0) width 428: "expect list with 2 bullets, one blue (with blue color style), one red (with "
+          text run at (428,0) width 94: "red color style):"
+      RenderBlock {UL} at (0,36) size 784x40
+        RenderListItem {LI} at (40,0) size 744x20
+          RenderListMarker at (-18,0) size 7x19: bullet
+          RenderInline {SPAN} at (0,0) size 25x19 [color=#0000FF]
+            RenderText {#text} at (0,0) size 25x19
+              text run at (0,0) width 25: "blue"
+        RenderListItem {LI} at (40,20) size 744x20
+          RenderListMarker at (-18,0) size 7x19: bullet
+          RenderInline {SPAN} at (0,0) size 20x19 [color=#FF0000]
+            RenderText {#text} at (0,0) size 20x19
+              text run at (0,0) width 20: "red"
+      RenderBlock (anonymous) at (0,92) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+#EOF
