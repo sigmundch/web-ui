@@ -9,7 +9,6 @@
 library info;
 
 import 'dart:collection' show SplayTreeMap;
-import 'dart:coreimpl';
 import 'dart:uri';
 
 import 'package:html5lib/dom.dart';
