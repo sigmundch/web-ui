@@ -285,7 +285,9 @@ class _Analyzer extends TreeVisitor {
       }
       return;
     } else if (name == 'data-bind') {
-      _readDataBindAttribute(elemInfo, value);
+      for (var item in value.split(',')) {
+        if (!_readDataBind(elemInfo, item)) return;
+      }
       return;
     }
 
@@ -342,12 +344,12 @@ class _Analyzer extends TreeVisitor {
     events.add(new EventInfo(name, action));
   }
 
-  void _readDataBindAttribute(ElementInfo info, String value) {
+  bool _readDataBind(ElementInfo info, String value) {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-bind attribute should be of the form '
           'data-bind="name:value"', info.node.span, file: _fileInfo.path);
-      return;
+      return false;
     }
 
     var elem = info.node;
@@ -355,22 +357,26 @@ class _Analyzer extends TreeVisitor {
     value = value.substring(colonIdx + 1);
     var isInput = elem.tagName == 'input';
     var isTextArea = elem.tagName == 'textarea';
+    var isSelect = elem.tagName == 'select';
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
       // Assume [value] is a field or property setter.
       info.attributes[name] = new AttributeInfo([value]);
       _addEvent(info, 'click', (e, args) => '$value = $e.checked');
+    } else if (isSelect && (name == 'selectedIndex' || name == 'value')) {
+      info.attributes[name] = new AttributeInfo([value]);
+      _addEvent(info, 'change', (e, args) => '$value = $e.$name');
     } else if (name == 'value' && (isInput || isTextArea)) {
-      // Assume [value] is a field or property setter.
       info.attributes[name] = new AttributeInfo([value]);
       _addEvent(info, 'input', (e, args) => '$value = $e.value');
     } else {
       messages.error('Unknown data-bind attribute: ${elem.tagName} - $name',
           info.node.span, file: _fileInfo.path);
-      return;
+      return false;
     }
 
     info.hasDataBinding = true;
+    return true;
   }
 
   /**

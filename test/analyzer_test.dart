@@ -195,6 +195,24 @@ main() {
         equals('x = foo.value'));
   });
 
+  test('attribute - 2 way binding select', () {
+    var input = '<select data-bind="selectedIndex:x,value:y">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes.keys, equals(['selectedIndex', 'value']));
+    expect(info.attributes['selectedIndex'], isNotNull);
+    expect(info.attributes['selectedIndex'].isSimple, true);
+    expect(info.attributes['selectedIndex'].bindings, equals(['x']));
+    expect(info.attributes['value'], isNotNull);
+    expect(info.attributes['value'].isSimple, true);
+    expect(info.attributes['value'].bindings, equals(['y']));
+    expect(info.events.keys, equals(['change']));
+    expect(info.events['change'].length, equals(2));
+    expect(info.events['change'][0].action('foo', 'e'),
+        equals('x = foo.selectedIndex'));
+    expect(info.events['change'][1].action('foo', 'e'),
+        equals('y = foo.value'));
+  });
+
   test('attribute - 1 way binding checkbox', () {
     var input = '<input checked="{{x}}">';
     var info = analyzeElement(parseSubtree(input));
