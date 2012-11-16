@@ -45,8 +45,8 @@ void build(List<String> arguments, List<String> entryPoints) {
 
   if (cleanBuild) {
     _handleCleanCommand(trackDirs);
-  } else if (fullBuild || changedFiles.some(_isInputFile)
-      || removedFiles.some(_isInputFile)) {
+  } else if (fullBuild || changedFiles.some((f) => _isInputFile(f, trackDirs))
+      || removedFiles.some((f) => _isInputFile(f, trackDirs))) {
     for (var file in entryPoints) {
       dwc.run(['-o', _outDir(file), file]);
     }
@@ -56,13 +56,17 @@ void build(List<String> arguments, List<String> entryPoints) {
 String _outDir(String file) =>
   new Path(file).directoryPath.append('out').toString();
 
-bool _isGeneratedFile(String filePath) {
-  return new Path.fromNative(filePath).filename.startsWith('_');
+bool _isGeneratedFile(String filePath, List<Directory> outputDirs) {
+  var path = new Path.fromNative(filePath);
+  for (var dir in outputDirs) {
+    if (path.directoryPath.toString() == dir.path) return true;
+  }
+  return path.filename.startsWith('_');
 }
 
-bool _isInputFile(String path) {
+bool _isInputFile(String path, List<Directory> outputDirs) {
   return (path.endsWith(".dart") || path.endsWith(".html"))
-      && !_isGeneratedFile(path);
+      && !_isGeneratedFile(path, outputDirs);
 }
 
 /** Delete all generated files. */
@@ -71,7 +75,7 @@ void _handleCleanCommand(List<Directory> trackDirs) {
     dir.exists().then((exists) {
       if (!exists) return;
       dir.list(recursive: false).onFile = (path) {
-        if (_isGeneratedFile(path)) {
+        if (_isGeneratedFile(path, trackDirs)) {
           // TODO(jmesserly): we need a cleaner way to do this with dart:io.
           // The bug is that DirectoryLister returns native paths, so you need
           // to use Path.fromNative to work around this. Ideally we could just

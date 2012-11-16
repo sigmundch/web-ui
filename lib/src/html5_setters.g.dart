@@ -67,9 +67,6 @@ var htmlElementFields = const {
   'DetailsElement': const {
     'open': 'open',
   },
-  'DivElement': const {
-    'align': 'align',
-  },
   'Element': const {
     'xtag': 'xtag',
     'contenteditable': 'contentEditable',
@@ -433,7 +430,6 @@ var htmlElementFields = const {
     'wrap': 'wrap',
   },
   'TrackElement': const {
-    'default': 'defaultValue',
     'kind': 'kind',
     'label': 'label',
     'src': 'src',

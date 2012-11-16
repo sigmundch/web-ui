@@ -9,7 +9,9 @@ if [[ ($DART_SDK == "") ]]; then
   echo "Found SDK at $DART_SDK"
 fi
 
+MIRROR_URL="$DART_SDK/lib/_internal/compiler/implementation/mirrors/mirrors.dart"
+
 # TODO(jmesserly): this should be a package on Pub, then we can delete these
 # shell script shenanigans.
-echo "library compile_mirrors; export '$DART_SDK/pkg/dartdoc/lib/mirrors.dart';" > $DIR/compile_mirrors.dart
+echo -e "library compile_mirrors;\nexport '$MIRROR_URL';" > $DIR/compile_mirrors.dart
 dart --checked $DIR/gen_html_setters.dart

@@ -10,13 +10,13 @@ pub install
 dartium --allow-file-access-from-files \
   --enable-experimental-webkit-features \
   --enable-devtools-experiments
-  example/todomvc/_main.html.html
+  example/todomvc/out/main.html
 ```
 
 You can also compile the generated code with [dart2js][] and run it in any
 of the [modern browsers][browsers] supported by Dart:
 
-    dart2js example/todomvc/_main.html_bootstrap.dart -oexample/todomvc/_main.html_bootstrap.dart.js
+    dart2js example/todomvc/out/main.html_bootstrap.dart -oexample/todomvc/out/main.html_bootstrap.dart.js
   
 Note that [TodoMVC][] uses CSS features that are not supported yet in all of our
 target browsers. If you try running the examples on that site you'll see similar

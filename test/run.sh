@@ -21,8 +21,8 @@ TEST_PATTERN=$1
 
 function show_diff {
   diff -u $1 $2 | \
-    sed -e "s/^\(+.*\)/\x1b[32m\1\x1b[0m/" |\
-    sed -e "s/^\(-.*\)/\x1b[31m\1\x1b[0m/"
+    sed -e "s/^\(+.*\)/[32m\1[0m/" |\
+    sed -e "s/^\(-.*\)/[31m\1[0m/"
   return 1
 }
 
@@ -102,4 +102,4 @@ if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
     --work $DIR/data/output/analyzer/ -batch
 fi
 
-echo All tests pass.
+echo -e "[32mAll tests pass[0m"

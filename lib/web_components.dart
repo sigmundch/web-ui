@@ -54,7 +54,7 @@ abstract class WebComponent implements Element {
    */
   WebComponent.forElement(Element element) : _element = element {
     if (element == null || _element.xtag != null) {
-      throw new IllegalArgumentException(
+      throw new ArgumentError(
           'element must be provided and not have its xtag property set');
     }
     _element.xtag = this;
@@ -320,8 +320,6 @@ abstract class WebComponent implements Element {
     _element.dataAttributes = value;
   }
 
-  Future<ElementRect> get rect => _element.rect;
-
   Future<CSSStyleDeclaration> get computedStyle => _element.computedStyle;
 
   Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
@@ -501,7 +499,7 @@ abstract class WebComponent implements Element {
 
   Node get $dom_lastChild => _element.$dom_lastChild;
 
-  int get $dom_nodeType => _element.$dom_nodeType;
+  int get nodeType => _element.nodeType;
 
   void $dom_addEventListener(String type, EventListener listener,
                              [bool useCapture]) {
@@ -528,7 +526,7 @@ abstract class WebComponent implements Element {
 
   void addText(String text) => _element.addText(text);
 
-  void addHTML(String html) => _element.addHTML(html);
+  void addHtml(String html) => _element.addHtml(html);
 }
 
 /**
