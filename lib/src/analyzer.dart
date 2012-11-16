@@ -257,7 +257,7 @@ class _Analyzer extends TreeVisitor {
           node.span, file: _fileInfo.path);
       }
     } else if (iterate != null) {
-      var match = const RegExp(r"(.*) in (.*)").firstMatch(iterate);
+      var match = new RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
         if (node.nodes.length == 0) return null;
         return new TemplateInfo(node, _parent, loopVariable: match[1],

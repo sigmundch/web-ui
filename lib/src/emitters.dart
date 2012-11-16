@@ -791,7 +791,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       var printer = new CodePrinter();
       var libraryName = (codeInfo.libraryName != null)
           ? codeInfo.libraryName
-          : info.tagName.replaceAll(const RegExp('[-./]'), '_');
+          : info.tagName.replaceAll(new RegExp('[-./]'), '_');
       printer.add(codegen.header(info.declaringFile.path, libraryName));
 
       // Add exisitng import, export, and part directives.
