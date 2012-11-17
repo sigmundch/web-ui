@@ -866,10 +866,6 @@ class MainPageEmitter extends RecursiveEmitter {
       printer.add(codegen.directiveText(directive, _fileInfo, pathInfo));
     }
 
-    // TODO(jmesserly): our method of appending the body is causing it to
-    // lose any attributes that were set.
-    var body = _fileInfo.bodyInfo.node.query('body');
-
     // Import only those components used by the page.
     var imports = _fileInfo.usedComponents.keys.map(
           (c) => pathInfo.relativePath(_fileInfo, c));
@@ -877,8 +873,7 @@ class MainPageEmitter extends RecursiveEmitter {
         .addRaw(codegen.mainDartCode(codeInfo.code,
             _context.declarations.formatString(1),
             _context.createdMethod.formatString(1),
-            _context.insertedMethod.formatString(1),
-            body.innerHTML));
+            _context.insertedMethod.formatString(1)));
     return printer.formatString();
   }
 }

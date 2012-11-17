@@ -159,7 +159,7 @@ class Compiler {
 
   void _addDartFile(SourceFile dartFile) {
     if (!_pathInfo.checkInputPath(dartFile.path)) return;
-    
+
     var fileInfo = new FileInfo(dartFile.path);
     info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode = dartFile.code;
@@ -198,8 +198,11 @@ class Compiler {
     }
   }
 
-  static const String DARTJS_LOADER =
-    "http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js";
+  // TODO(jmesserly): should we bundle a copy of dart.js and link to that?
+  // This URL doesn't work offline, see http://dartbug.com/6723
+  static const String DART_LOADER =
+      '<script type="text/javascript" src="http://dart.googlecode.com/'
+      'svn/branches/bleeding_edge/dart/client/dart.js"></script>\n';
 
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
@@ -214,18 +217,25 @@ class Compiler {
 
     // Clear the body, we moved all of it
     var document = file.document;
-    document.body.nodes.clear();
-    var bootstrapName = 
+    var bootstrapName =
         _pathInfo.mangle('${file.path.filename}_bootstrap.dart','');
     output.add(new OutputFile(
         _pathInfo.fileInOutputDir(bootstrapName),
         codegen.bootstrapCode(_pathInfo.relativePathFromOutputDir(fileInfo))));
 
+    // TODO(jmesserly): should we be adding the loader script?
+    var dartLoader = DART_LOADER;
+    for (var script in document.queryAll('script')) {
+      var src = script.attributes['src'];
+      if (src != null && src.split('/').last == 'dart.js') {
+        dartLoader = '';
+        break;
+      }
+    }
+
     document.body.nodes.add(parseFragment(
-      '<script type="text/javascript" src="$DARTJS_LOADER"></script>\n'
-      '<script type="application/dart"'
-      ' src="$bootstrapName">'
-      '</script>'
+      '$dartLoader'
+      '<script type="application/dart" src="$bootstrapName"></script>'
     ));
 
     for (var link in document.head.queryAll('link')) {

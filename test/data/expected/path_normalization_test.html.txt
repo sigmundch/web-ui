@@ -23,4 +23,5 @@ layer at (0,0) size 800x36
         RenderText {#text} at (149,0) size 28x19
           text run at (149,0) width 28: "hello"
       RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
 #EOF

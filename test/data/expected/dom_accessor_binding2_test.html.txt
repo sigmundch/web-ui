@@ -9,6 +9,7 @@ layer at (0,0) size 800x37
       RenderBlock {INPUT} at (4,3) size 13x13
       RenderText {#text} at (20,1) size 4x19
         text run at (20,1) width 4: " "
+      RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (24,1) size 267x19
         text run at (24,1) width 267: "expected input.checked to be false, got false"
       RenderText {#text} at (291,1) size 259x19

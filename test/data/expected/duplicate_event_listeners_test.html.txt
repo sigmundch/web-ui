@@ -6,17 +6,11 @@ layer at (0,0) size 800x600
 layer at (0,0) size 800x56
   RenderBlock {HTML} at (0,0) size 800x56
     RenderBody {BODY} at (8,8) size 784x40
-      RenderBlock (anonymous) at (0,0) size 784x0
-        RenderInline {X-COMPONENT-WITH-EVENT-LISTENERS} at (0,0) size 0x0
-          RenderText {#text} at (0,0) size 0x0
-      RenderBlock (anonymous) at (0,0) size 784x40
+      RenderBlock {X-COMPONENT-WITH-EVENT-LISTENERS} at (0,0) size 784x40
         RenderBlock {DIV} at (0,0) size 784x20
           RenderText {#text} at (0,0) size 8x19
             text run at (0,0) width 8: "0"
         RenderBlock {DIV} at (0,20) size 784x20
           RenderText {#text} at (0,0) size 8x19
             text run at (0,0) width 8: "1"
-      RenderBlock (anonymous) at (0,40) size 784x0
-        RenderInline {X-COMPONENT-WITH-EVENT-LISTENERS} at (0,0) size 0x0
-        RenderText {#text} at (0,0) size 0x0
 #EOF

@@ -52,6 +52,7 @@ layer at (118,130) size 550x319
           RenderText {#text} at (0,0) size 0x0
       RenderBlock (anonymous) at (0,80) size 548x0
         RenderInline {X-TODO-FORM} at (0,0) size 0x0
+          RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
 layer at (159,131) size 4x317
   RenderBlock (positioned) at (41,1) size 4x317 [border: none (1px solid #F5D6D6) none (1px solid #F5D6D6)]
@@ -119,6 +120,7 @@ layer at (119,211) size 548x237
   RenderBlock (relative positioned) zI: 2 {SECTION} at (1,81) size 548x237 [border: (1px dotted #ADADAD) none]
     RenderBlock (anonymous) at (0,1) size 548x0
       RenderInline {X-TOGGLE-ALL} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
         RenderInline {LABEL} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
@@ -209,5 +211,5 @@ layer at (119,397) size 18x23
   RenderInline (relative positioned) at (0,0) size 18x23 [color=#85ADA7]
     RenderText at (11,10) size 18x23
       text run at (11,10) width 18: "\x{2714}"
-caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 4 {SECTION} of body
+caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 1 {SECTION} of body
 #EOF
