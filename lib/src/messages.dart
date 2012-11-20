@@ -74,6 +74,13 @@ class Messages {
   Messages({CompilerOptions options, this.printHandler: print})
       : options = options != null ? options : new CompilerOptions();
 
+  // Convenience methods for testing
+  int get length => messages.length;
+  Message operator[](int index) => messages[index];
+  void clear() {
+    messages.clear();
+  }
+
   /** [message] is considered a static compile-time error by the Dart lang. */
   void error(String message, SourceSpan span, {Path file}) {
     var msg = new Message(Level.SEVERE, message, file: file, span: span,
@@ -93,6 +100,8 @@ class Messages {
         span: span, useColors: options.useColors);
 
       messages.add(msg);
+
+      printHandler(msg);
     }
   }
 

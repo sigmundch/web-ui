@@ -13,12 +13,12 @@ BSD-style license that can be found in the LICENSE file.
 </head>
 <body>
   <div class="well">
-    <button data-action="click:increment">Click me</button>
+    <button on-click="increment()">Click me</button>
     <span>(click count: {{count}})</span>
   </div>
   <script type="application/dart">
     int count = 0;
-    void increment(e) { count++; }
+    void increment() { count++; }
     main() {}
   </script>
 </body>

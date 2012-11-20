@@ -12,6 +12,7 @@ import 'package:web_components/src/analyzer.dart';
 import 'package:web_components/src/info.dart';
 import 'package:web_components/src/files.dart';
 import 'package:web_components/src/file_system/path.dart';
+import 'package:web_components/src/messages.dart';
 import 'testing.dart';
 
 main() {
@@ -178,8 +179,7 @@ main() {
     expect(info.attributes['value'].bindings, equals(['x']));
     expect(info.events.keys, equals(['input']));
     expect(info.events['input'].length, equals(1));
-    expect(info.events['input'][0].action('foo', 'e'),
-        equals('x = foo.value'));
+    expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
   });
 
   test('attribute - 2 way binding textarea value', () {
@@ -191,8 +191,7 @@ main() {
     expect(info.attributes['value'].boundValue, equals('x'));
     expect(info.events.keys, equals(['input']));
     expect(info.events['input'].length, equals(1));
-    expect(info.events['input'][0].action('foo', 'e'),
-        equals('x = foo.value'));
+    expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
   });
 
   test('attribute - 2 way binding select', () {
@@ -207,10 +206,9 @@ main() {
     expect(info.attributes['value'].bindings, equals(['y']));
     expect(info.events.keys, equals(['change']));
     expect(info.events['change'].length, equals(2));
-    expect(info.events['change'][0].action('foo', 'e'),
+    expect(info.events['change'][0].action('foo'),
         equals('x = foo.selectedIndex'));
-    expect(info.events['change'][1].action('foo', 'e'),
-        equals('y = foo.value'));
+    expect(info.events['change'][1].action('foo'), equals('y = foo.value'));
   });
 
   test('attribute - 1 way binding checkbox', () {
@@ -232,7 +230,7 @@ main() {
     expect(info.attributes['checked'].boundValue, equals('x'));
     expect(info.events.keys, equals(['click']));
     expect(info.events['click'].length, equals(1));
-    expect(info.events['click'][0].action('foo', 'e'),
+    expect(info.events['click'][0].action('foo'),
         equals('x = foo.checked'));
   });
 
@@ -290,16 +288,44 @@ main() {
     expect(info.attributes['data-style'].bindings, equals(['x']));
   });
 
-
-  test('attribute - ui-event hookup', () {
-    var input = '<input data-action="change:foo">';
+  test('attribute - event hookup with on-', () {
+    messages.clear();
+    var input = '<input on-double-click="foo">';
     var info = analyzeElement(parseSubtree(input));
+    expect(info.attributes, isEmpty);
+    expect(info.events.keys, equals(['doubleClick']));
+    var events = info.events['doubleClick'];
+    expect(events.length, equals(1));
+    expect(events[0].eventName, 'doubleClick');
+    expect(events[0].action('bar'), 'foo');
+    expect(messages.length, 0);
+  });
+
+  test('attribute - warning for JavaScript inline handler', () {
+    messages.clear();
+    var node = parseSubtree('<input onclick="foo">');
+    var info = analyzeElement(node);
+    expect(info.attributes, isEmpty);
+    expect(info.events.keys, equals([]));
+    expect(messages.length, 1);
+    expect(messages[0].message,
+        contains('inline JavaScript event handler'));
+    expect(messages[0].span, equals(node.span));
+  });
+
+  test('attribute - deprecated data-action', () {
+    messages.clear();
+    var node = parseSubtree('<input data-action="change:foo">');
+    var info = analyzeElement(node);
     expect(info.attributes, isEmpty);
     expect(info.events.keys, equals(['change']));
     var changeEvents = info.events['change'];
     expect(changeEvents.length, equals(1));
     expect(changeEvents[0].eventName, 'change');
-    expect(changeEvents[0].action('bar', 'args'), 'foo(args)');
+    expect(changeEvents[0].action('bar'), r'foo($event)');
+    expect(messages.length, 1);
+    expect(messages[0].message, contains('data-action is deprecated'));
+    expect(messages[0].span, equals(node.span));
   });
 
   test('template element', () {

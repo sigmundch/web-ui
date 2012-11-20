@@ -42,21 +42,21 @@ li > .square:not(.taken) {
           <tbody template iterate="row in gameBoard.board">
             <tr template iterate="spot in row">
               <td class="square {{spot.taken}}"
-                  data-action="click:spot.move">{{spot.value}}</td>
+                  on-click="gameBoard.makeMove(spot)">{{spot.value}}</td>
             </tr>
           </tbody>
         </table>
       <span hidden="{{!gameBoard.won}}" style="padding-right:4px;">
           {{gameBoard.winner}} wins!
       </span>
-      <a href="#" data-action="click:gameBoard.reset">Play Again</a>
+      <a href="#" on-click="gameBoard.reset()">Play Again</a>
       <template instantiate>
         <ul>
           <template iterate="row in gameBoard.board">
             <li>
               <template iterate="spot in row">
                 <span style="padding:2px;" class="{{spot.taken}} square"
-                      data-action="click:spot.move">{{spot.value}} ,
+                      on-click="gameBoard.makeMove(spot)">{{spot.value}} ,
                 </span>
               </template>
             </li>
@@ -73,11 +73,6 @@ class Square {
   String value = '';
 
   String get taken => value != '' ? 'taken' : '';
-
-  /** Click event hookup. */
-  void move(e) {
-    gameBoard.makeMove(this);
-  }
 }
 
 class Board {
@@ -145,7 +140,7 @@ class Board {
   }
 
   /** Click event for play again. */
-  void reset(e) {
+  void reset() {
     for (var row in board) {
       for (var square in row) {
         square.value = '';

@@ -43,7 +43,7 @@ BSD-style license that can be found in the LICENSE file.
     </div>
   </fieldset>
   <br>
-  <button disabled="{{needAddresses}}" data-action="click:printAddresses">
+  <button disabled="{{needAddresses}}" on-click="printAddresses()">
     OK
   </button>
 </template>
@@ -69,7 +69,7 @@ BSD-style license that can be found in the LICENSE file.
   bool get needAddresses => !shipping.isComplete || !billing.isComplete;
 
   /** Output the addresses to the console. */
-  void printAddresses(e) {
+  void printAddresses() {
     print("${billing.useShipping ? 'Shipping/Billing' : 'Shipping'} "
           "Address: ${shipping.name}, ${shipping.address}");
     if (!billing.useShipping) {

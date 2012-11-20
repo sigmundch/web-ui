@@ -34,7 +34,7 @@ class PathInfo {
 
   /** Whether to add prefixes and to output file names. */
   final bool _mangleFilenames;
-  
+
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
@@ -48,7 +48,7 @@ class PathInfo {
     _mangleFilenames ? "$_DEFAULT_PREFIX$name$suffix"
         : (forceSuffix ? "$name$suffix" : name);
 
-  /** 
+  /**
    * Checks if [input] is valid. It must be in [_baseDir] and must not be in
    * the [_outputDir].
    */
@@ -60,12 +60,12 @@ class PathInfo {
     if (!valid) {
       messages.error(
           "The file ${input} cannot be processed. "
-          "Files must be in ${_baseDir} and must not be in ${_outputDir}.", 
+          "Files must be in ${_baseDir} and must not be in ${_outputDir}.",
           null, file: input);
     }
     return valid;
   }
-  
+
   /**
    * The path to the output file corresponding to [input], by adding
    * [_DEFAULT_PREFIX] and a [suffix] to its file name.
@@ -126,7 +126,7 @@ class PathInfo {
   }
 }
 
-/** 
+/**
  * Returns a "mangled" name, with a prefix and [suffix] depending on the
  * compiler's settings. [forceSuffix] causes [suffix] to be appended even if
  * the compiler is not mangling names.
@@ -285,7 +285,7 @@ class ComponentInfo extends LibraryInfo {
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
     return mangle('${prefix}_$componentSegment', '.dart', true);
   }
-  
+
   /**
    * True if [tagName] was defined by more than one component. If this happened
    * we will skip over the component.
@@ -523,6 +523,9 @@ class EventInfo {
   /** Generated field name, if any, associated with this event. */
   String listenerField;
 
+  /** The original attribute name, if any. Used to clean up the HTML. */
+  String attributeName;
+
   EventInfo(this.eventName, this.action);
 
   String toString() => '#<EventInfo eventName: $eventName, action: $action>';
@@ -575,12 +578,11 @@ class TemplateInfo extends ElementInfo {
 /**
  * Specifies the action to take on a particular event. Some actions need to read
  * attributes from the DOM element that has the event listener (e.g. two way
- * bindings do this). [elementVarName] stores a reference to this element, and
- * [eventArgName] stores a reference to the event parameter name.
- * They are generated outside of the analyzer (in the emitter), so they are
- * passed here as arguments.
+ * bindings do this). [elementVarName] stores a reference to this element.
+ * It is generated outside of the analyzer (in the emitter), so it is passed
+ * here as an argument.
  */
-typedef String ActionDefinition(String elemVarName, String eventArgName);
+typedef String ActionDefinition(String elemVarName);
 
 /** Information extracted from a source Dart file. */
 class DartCodeInfo {

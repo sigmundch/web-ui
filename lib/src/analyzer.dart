@@ -288,6 +288,9 @@ class _Analyzer extends TreeVisitor {
         if (!_readDataBind(elemInfo, item)) return;
       }
       return;
+    } else if (name.startsWith('on')) {
+      _readEventHandler(elemInfo, name, value);
+      return;
     }
 
     AttributeInfo info;
@@ -321,7 +324,15 @@ class _Analyzer extends TreeVisitor {
     return true;
   }
 
+  // TODO(jmesserly): remove this after a grace period.
+  // TODO(jmesserly): would be neat to have an automated refactoring.
   bool _readDataAction(ElementInfo info, String value) {
+    messages.warning('data-action is deprecated. '
+        'Given a handler like data-action="eventName:handlerName", replace it '
+        'with on-event-name="handlerName(\$event)". You may optionally remove '
+        'the \$event or pass in more arguments if desired.',
+        info.node.span, file: _fileInfo.path);
+
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
@@ -334,13 +345,35 @@ class _Analyzer extends TreeVisitor {
 
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
-    _addEvent(info, name, (elem, args) => '${value}($args)');
+    _addEvent(info, name, (elem) => '$value(\$event)');
     return true;
   }
 
-  void _addEvent(ElementInfo info, String name, ActionDefinition action) {
+  /**
+   * Support for inline event handlers that take expressions.
+   * For example: `on-double-click=myHandler($event, todo)`.
+   */
+  void _readEventHandler(ElementInfo info, String name, String value) {
+    if (!name.startsWith('on-')) {
+      // TODO(jmesserly): do we need an option to suppress this warning?
+      messages.warning('Event handler $name will be interpreted as an inline '
+          'JavaScript event handler. Use the form '
+          'on-event-name="handlerName(\$event)" if you want a Dart handler '
+          'that will automatically update the UI based on model changes.',
+          info.node.span, file: _fileInfo.path);
+      return;
+    }
+
+    // Strip leading "on-" and make camel case.
+    var eventName = toCamelCase(name.substring(3));
+    _addEvent(info, eventName, (elem) => value).attributeName = name;
+  }
+
+  EventInfo _addEvent(ElementInfo info, String name, ActionDefinition action) {
     var events = info.events.putIfAbsent(name, () => <EventInfo>[]);
-    events.add(new EventInfo(name, action));
+    var eventInfo = new EventInfo(name, action);
+    events.add(eventInfo);
+    return eventInfo;
   }
 
   bool _readDataBind(ElementInfo info, String value) {
@@ -361,13 +394,13 @@ class _Analyzer extends TreeVisitor {
     if (isInput && name == 'checked') {
       // Assume [value] is a field or property setter.
       info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'click', (e, args) => '$value = $e.checked');
+      _addEvent(info, 'click', (e) => '$value = $e.checked');
     } else if (isSelect && (name == 'selectedIndex' || name == 'value')) {
       info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'change', (e, args) => '$value = $e.$name');
+      _addEvent(info, 'change', (e) => '$value = $e.$name');
     } else if (name == 'value' && (isInput || isTextArea)) {
       info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'input', (e, args) => '$value = $e.value');
+      _addEvent(info, 'input', (e) => '$value = $e.value');
     } else {
       messages.error('Unknown data-bind attribute: ${elem.tagName} - $name',
           info.node.span, file: _fileInfo.path);

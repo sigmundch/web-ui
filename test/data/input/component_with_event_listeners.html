@@ -8,16 +8,16 @@
 <body>
 <element name="x-component-with-event-listeners" extends="span" constructor="ComponentWithEventListeners">
   <template>
-    <div data-action="click:listener">0</div>
+    <div on-click="listener()">0</div>
     <template instantiate="if notCond">
-      <div data-action="click:listener">1</div>
+      <div on-click="listener()">1</div>
     </template>
   </template>
   <script type='application/dart'>
     import 'common.dart';
     import 'package:web_components/web_components.dart';
     class ComponentWithEventListeners extends WebComponent {
-      void listener(e) {}
+      void listener() {}
     }
   </script>
 </element>

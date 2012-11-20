@@ -15,7 +15,7 @@ BSD-style license that can be found in the LICENSE file.
   <element name="x-click-counter" constructor="CounterComponent" extends="div">
     <template>
       <div>
-        <button data-action="click:increment">Click me</button>
+        <button on-click="increment()">Click me</button>
         <span>(click count: {{count}})</span>
       </div>
     </template>
@@ -24,7 +24,7 @@ BSD-style license that can be found in the LICENSE file.
 
       class CounterComponent extends WebComponent {
         int count = 0;
-        void increment(e) { count++; }
+        void increment() { count++; }
       }
     </script>
   </element>
