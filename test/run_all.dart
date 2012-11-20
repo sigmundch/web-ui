@@ -13,6 +13,7 @@ import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
 import 'package:web_components/dwc.dart' as dwc;
 import 'analyzer_test.dart' as analyzer_test;
+import 'compiler_test.dart' as compiler_test;
 import 'directive_parser_test.dart' as directive_test;
 import 'emitter_test.dart' as emitter_test;
 import 'html_cleaner_test.dart' as html_cleaner_test;
@@ -28,6 +29,7 @@ main() {
   useVmConfiguration();
 
   if (pattern.hasMatch('analyzer_test.dart')) analyzer_test.main();
+  if (pattern.hasMatch('compiler_test.dart')) compiler_test.main();
   if (pattern.hasMatch('directive_parser_test.dart')) directive_test.main();
   if (pattern.hasMatch('emitter_test.dart')) emitter_test.main();
   if (pattern.hasMatch('html_cleaner_test.dart')) html_cleaner_test.main();

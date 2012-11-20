@@ -4,6 +4,7 @@
 
 library utils;
 
+import 'dart:isolate';
 import 'package:web_components/src/messages.dart';
 
 /**
@@ -90,24 +91,47 @@ find(List list, bool matcher(elem)) {
 // TODO(sigmund): this should be part of the futures/core libraries.
 class FutureGroup {
   const _FINISHED = -1;
+
   int _pending = 0;
-  Completer<List> _completer = new Completer<List>();
+  Future _failedTask;
+  final Completer<List> _completer = new Completer<List>();
   final List<Future> futures = <Future>[];
 
+  /** Gets the task that failed, if any. */
+  Future get failedTask => _failedTask;
+
   /**
-   * Wait for [task] to complete (assuming this barrier has not already been
-   * marked as completed, otherwise you'll get an exception indicating that a
-   * future has already been completed).
+   * Wait for [task] to complete.
+   *
+   * If this group has already been marked as completed, you'll get a
+   * [FutureAlreadyCompleteException].
+   *
+   * If this group has a [failedTask], new tasks will be ignored, because the
+   * error has already been signaled.
    */
   void add(Future task) {
-    if (_pending == _FINISHED) {
-      throw new FutureAlreadyCompleteException();
-    }
+    if (_failedTask != null) return;
+    if (_pending == _FINISHED) throw new FutureAlreadyCompleteException();
+
     _pending++;
     futures.add(task);
-    task.handleException(
-        (e) => _completer.completeException(e, task.stackTrace));
+    if (task.isComplete) {
+      // TODO(jmesserly): maybe Future itself should do this itself?
+      // But we'd need to fix dart:mirrors to have a sync version.
+      setImmediate(() => _watchTask(task));
+    } else {
+      _watchTask(task);
+    }
+  }
+
+  void _watchTask(Future task) {
+    task.handleException((e) {
+      if (_failedTask != null) return;
+      _failedTask = task;
+      _completer.completeException(e, task.stackTrace);
+    });
     task.then((_) {
+      if (_failedTask != null) return;
       _pending--;
       if (_pending == 0) {
         _pending = _FINISHED;
@@ -155,4 +179,18 @@ String escapeDartString(String text, {bool single: true, bool triple: false}) {
   }
 
   return result == null ? text : result.toString();
+}
+
+// TODO(jmesserly): this should exist in dart:isolates
+/**
+ * Adds an event to call [callback], so the event loop will call this after the
+ * current stack has unwound.
+ */
+void setImmediate(void callback()) {
+  var port = new ReceivePort();
+  port.receive((msg, sendPort) {
+    port.close();
+    callback();
+  });
+  port.toSendPort().send(null);
 }

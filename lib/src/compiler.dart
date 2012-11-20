@@ -41,7 +41,7 @@ Document parseHtml(contents, Path sourcePath) {
 
 /** Compiles an application written with Dart web components. */
 class Compiler {
-  final FileSystem filesystem;
+  final FileSystem fileSystem;
   final CompilerOptions options;
   final List<SourceFile> files = <SourceFile>[];
   final List<OutputFile> output = <OutputFile>[];
@@ -52,7 +52,7 @@ class Compiler {
   /** Information about source [files] given their href. */
   final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
 
-  Compiler(this.filesystem, this.options, [String currentDir]) {
+  Compiler(this.fileSystem, this.options, [String currentDir]) {
     _mainPath = new Path(options.inputFile);
     var mainDir = _mainPath.directoryPath;
     var basePath =
@@ -103,6 +103,7 @@ class Compiler {
     var tasks = new FutureGroup();
     bool isEntry = true;
 
+    var processed = new Set();
     processHtmlFile(SourceFile file) {
       if (!_pathInfo.checkInputPath(file.path)) return;
 
@@ -115,27 +116,37 @@ class Compiler {
 
       // Load component files referenced by [file].
       for (var href in fileInfo.componentLinks) {
-        tasks.add(_parseHtmlFile(href).transform(processHtmlFile));
+        if (!processed.contains(href)) {
+          processed.add(href);
+          tasks.add(_parseHtmlFile(href).transform(processHtmlFile));
+        }
       }
 
       // Load .dart files being referenced in the page.
       var src = fileInfo.externalFile;
-      if (src != null) tasks.add(_parseDartFile(src).transform(_addDartFile));
+      if (src != null && !processed.contains(src)) {
+        processed.add(src);
+        tasks.add(_parseDartFile(src).transform(_addDartFile));
+      }
 
       // Load .dart files being referenced in components.
       for (var component in fileInfo.declaredComponents) {
         var src = component.externalFile;
-        if (src != null) tasks.add(_parseDartFile(src).transform(_addDartFile));
+        if (src != null && !processed.contains(src)) {
+          processed.add(src);
+          tasks.add(_parseDartFile(src).transform(_addDartFile));
+        }
       }
     }
 
+    processed.add(inputFile);
     tasks.add(_parseHtmlFile(inputFile).transform(processHtmlFile));
     return tasks.future;
   }
 
   /** Asynchronously parse [path] as an .html file. */
   Future<SourceFile> _parseHtmlFile(Path path) {
-    return (filesystem.readTextOrBytes(path)
+    return (fileSystem.readTextOrBytes(path)
         ..handleException((e) => _readError(e, path)))
         .transform((source) {
           var file = new SourceFile(path);
@@ -146,7 +157,7 @@ class Compiler {
 
   /** Parse [filename] and treat it as a .dart file. */
   Future<SourceFile> _parseDartFile(Path path) {
-    return (filesystem.readText(path)
+    return (fileSystem.readText(path)
         ..handleException((e) => _readError(e, path)))
         .transform((code) => new SourceFile(path, isDart: true)..code = code);
   }
@@ -160,6 +171,8 @@ class Compiler {
   void _addDartFile(SourceFile dartFile) {
     if (!_pathInfo.checkInputPath(dartFile.path)) return;
 
+    files.add(dartFile);
+
     var fileInfo = new FileInfo(dartFile.path);
     info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode = dartFile.code;
@@ -169,8 +182,6 @@ class Compiler {
       messages.error('expected a library, not a part.', null,
           file: dartFile.path);
     }
-
-    files.add(dartFile);
   }
 
   /** Run the analyzer on every input html file. */
@@ -184,15 +195,14 @@ class Compiler {
   /** Emit the generated code corresponding to each input file. */
   void _emit() {
     for (var file in files) {
+      if (file.isDart) continue;
       _time('Codegen', file.path, () {
-        if (!file.isDart) {
-          var fileInfo = info[file.path];
-          cleanHtmlNodes(fileInfo);
-          _emitComponents(fileInfo);
-          if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
-            _emitMainDart(file);
-            _emitMainHtml(file);
-          }
+        var fileInfo = info[file.path];
+        cleanHtmlNodes(fileInfo);
+        _emitComponents(fileInfo);
+        if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
+          _emitMainDart(file);
+          _emitMainHtml(file);
         }
       });
     }

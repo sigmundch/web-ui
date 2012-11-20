@@ -606,5 +606,27 @@ main() {
       expect(info.components['x-bar'].extendsComponent,
           equals(info.components['x-foo']));
     });
+
+    test('recursive component import', () {
+      var files = parseFiles({
+        'index.html': '<head>'
+                      '<link rel="components" href="foo.html">'
+                      '<link rel="components" href="bar.html">'
+                      '<body><x-foo><x-bar>',
+        'foo.html': '<head><link rel="components" href="bar.html">'
+                    '<body><element name="x-foo" constructor="Foo">',
+        'bar.html': '<head><link rel="components" href="foo.html">'
+                    '<body><element name="x-bar" constructor="Boo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+      var info = fileInfo['index.html'];
+      expect(info.components.keys, equals(['x-bar', 'x-foo']));
+
+      var compInfo = fileInfo['foo.html'].declaredComponents[0];
+      expect(info.query('x-foo').component, equals(compInfo));
+      compInfo = fileInfo['bar.html'].declaredComponents[0];
+      expect(info.query('x-bar').component, equals(compInfo));
+    });
   });
 }
