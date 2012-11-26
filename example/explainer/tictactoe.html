@@ -9,24 +9,19 @@ BSD-style license that can be found in the LICENSE file.
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <link rel="stylesheet"
-    href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
+  href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
 </head>
 <body>
-  <element name="x-redbox" constructor="RedBox" extends="div">
-    <template>
-      <div style='border: solid 2px red; text-align: center;'>
-        <content></content>
-      </div>
-    </template>
-  </element>
-
-  <div class="well">
-    <x-redbox>
-      <span>hi</span>
-    </x-redbox>
-  </div>
+  <table class="table">
+  <tbody template iterate='row in table'>
+    <tr template iterate='cell in row'>
+      <td>{{cell}}</td>
+    </tr>
+  </tbody>
+  </table>
   <script type="application/dart">
-    main(){}
+    var table = [['X', 'O', '_'], ['O', 'X', '_'], ['_', '_', 'X']];
+    main() {}
   </script>
 </body>
 </html>
