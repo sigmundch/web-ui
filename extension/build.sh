@@ -26,4 +26,12 @@ case `uname -s` in
 esac
 
 cp -r ../lib output/
-cp *.html *.js *.json output/
+cp *.html *.js output/
+
+# Copy the version from our pubspec, replace '+' by '.' to make the version
+# number valid for extension manifests:
+PUB_VERSION=$(awk '/version: (.*)/ {print$2}' ../pubspec.yaml)
+MANIFEST_VERSION=${PUB_VERSION/+/.}
+cat manifest.json | \
+  sed -e "s/^  \"version\": .*/  \"version\": \"$MANIFEST_VERSION\",/" > \
+  output/manifest.json
