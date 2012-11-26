@@ -172,7 +172,7 @@ class _Analyzer extends TreeVisitor {
       // extends?
       messages.error('Missing the "extends" tag of the component. Please '
           'include an attribute like \'extends="div"\'.',
-          component.element.span, file: _fileInfo.path);
+          component.element.sourceSpan, file: _fileInfo.path);
       return;
     }
 
@@ -182,7 +182,7 @@ class _Analyzer extends TreeVisitor {
 
       messages.warning(
           'custom element with tag name ${component.extendsTag} not found.',
-          component.element.span, file: _fileInfo.path);
+          component.element.sourceSpan, file: _fileInfo.path);
     }
   }
 
@@ -198,7 +198,7 @@ class _Analyzer extends TreeVisitor {
         component = _fileInfo.components[isAttr];
         if (component == null) {
           messages.warning('custom element with tag name $isAttr not found.',
-              node.span, file: _fileInfo.path);
+              node.sourceSpan, file: _fileInfo.path);
         }
       }
     }
@@ -217,7 +217,7 @@ class _Analyzer extends TreeVisitor {
     // Dart is to be forgiving.
     if (instantiate != null && iterate != null) {
       messages.warning('template cannot have iterate and instantiate '
-          'attributes', node.span, file: _fileInfo.path);
+          'attributes', node.sourceSpan, file: _fileInfo.path);
       return null;
     }
 
@@ -254,7 +254,7 @@ class _Analyzer extends TreeVisitor {
       if (instantiate != '') {
         messages.warning('template instantiate must either have an empty '
           'attribute or be of the form instantiate="if condition".',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
       }
     } else if (iterate != null) {
       var match = new RegExp(r"(.*) in (.*)").firstMatch(iterate);
@@ -266,7 +266,7 @@ class _Analyzer extends TreeVisitor {
       messages.warning('template iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name '
           'and "list" is the list of items.',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
     }
     return null;
   }
@@ -314,7 +314,7 @@ class _Analyzer extends TreeVisitor {
       messages.error('data-value attribute should be of the form '
           'data-value="name:value" or data-value='
           '"name1:value1,name2:value2,..." for multiple assigments.',
-          info.node.span, file: _fileInfo.path);
+          info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
     var name = value.substring(0, colonIdx);
@@ -331,7 +331,7 @@ class _Analyzer extends TreeVisitor {
         'Given a handler like data-action="eventName:handlerName", replace it '
         'with on-event-name="handlerName(\$event)". You may optionally remove '
         'the \$event or pass in more arguments if desired.',
-        info.node.span, file: _fileInfo.path);
+        info.node.sourceSpan, file: _fileInfo.path);
 
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
@@ -339,7 +339,7 @@ class _Analyzer extends TreeVisitor {
       messages.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
           '"eventName1:action1,eventName2:action2,..." for multiple events.',
-          info.node.span, file: _fileInfo.path);
+          info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
 
@@ -360,7 +360,7 @@ class _Analyzer extends TreeVisitor {
           'JavaScript event handler. Use the form '
           'on-event-name="handlerName(\$event)" if you want a Dart handler '
           'that will automatically update the UI based on model changes.',
-          info.node.span, file: _fileInfo.path);
+          info.node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
@@ -380,7 +380,7 @@ class _Analyzer extends TreeVisitor {
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-bind attribute should be of the form '
-          'data-bind="name:value"', info.node.span, file: _fileInfo.path);
+          'data-bind="name:value"', info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
 
@@ -403,7 +403,7 @@ class _Analyzer extends TreeVisitor {
       _addEvent(info, 'input', (e) => '$value = $e.value');
     } else {
       messages.error('Unknown data-bind attribute: ${elem.tagName} - $name',
-          info.node.span, file: _fileInfo.path);
+          info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
 
@@ -527,14 +527,14 @@ class _ElementLoader extends TreeVisitor {
 
     if (!_inHead) {
       messages.warning('link rel="components" only valid in '
-          'head.', node.span, file: _fileInfo.path);
+          'head.', node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
       messages.warning('link rel="components" missing href.',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
@@ -548,7 +548,7 @@ class _ElementLoader extends TreeVisitor {
     // visible from the outside.
     if (_currentInfo is ComponentInfo) {
       messages.error('Nested component definitions are not yet supported.',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
@@ -560,7 +560,7 @@ class _ElementLoader extends TreeVisitor {
     if (tagName == null) {
       messages.error('Missing tag name of the component. Please include an '
           'attribute like \'name="x-your-tag-name"\'.',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
@@ -569,7 +569,7 @@ class _ElementLoader extends TreeVisitor {
       template = templateNodes[0];
     } else {
       messages.warning('an <element> should have exactly one <template> child.',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
     }
 
     if (constructor == null) {
@@ -599,7 +599,7 @@ class _ElementLoader extends TreeVisitor {
       // TODO(jmesserly): is this a good warning?
       messages.warning('ignored script tag, possibly missing '
           'type="application/dart" or type="text/javascript":',
-          node.span, file: _fileInfo.path);
+          node.sourceSpan, file: _fileInfo.path);
     }
 
     if (scriptType != 'application/dart') return;
@@ -609,12 +609,12 @@ class _ElementLoader extends TreeVisitor {
       if (!src.endsWith('.dart')) {
         messages.warning('"application/dart" scripts should'
             'use the .dart file extension.',
-            node.span, file: _fileInfo.path);
+            node.sourceSpan, file: _fileInfo.path);
       }
 
       if (node.innerHTML.trim() != '') {
         messages.error('script tag has "src" attribute and also has script '
-            ' text.', node.span, file: _fileInfo.path);
+            ' text.', node.sourceSpan, file: _fileInfo.path);
       }
 
       if (_currentInfo.codeAttached) {
@@ -638,14 +638,14 @@ class _ElementLoader extends TreeVisitor {
     } else if (_currentInfo == _fileInfo && !_fileInfo.isEntryPoint) {
       messages.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML '
-          'file.', node.span, file: _fileInfo.path);
+          'file.', node.sourceSpan, file: _fileInfo.path);
     } else {
       _currentInfo.inlinedCode = text.value;
       _currentInfo.userCode = parseDartCode(text.value,
           _currentInfo.inputPath, messages);
       if (_currentInfo.userCode.partOf != null) {
         messages.error('expected a library, not a part.',
-            node.span, file: _fileInfo.path);
+            node.sourceSpan, file: _fileInfo.path);
       }
     }
   }
@@ -655,7 +655,7 @@ class _ElementLoader extends TreeVisitor {
         'a custom element declaration' : 'the top-level HTML page';
 
     messages.error('there should be only one dart script tag in $location.',
-        node.span, file: _fileInfo.path);
+        node.sourceSpan, file: _fileInfo.path);
   }
 }
 
@@ -724,18 +724,18 @@ void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
     if (componentInfo.declaringFile == fileInfo) {
       messages.error('duplicate custom element definition for '
           '"${componentInfo.tagName}".',
-          existing.element.span, file: fileInfo.path);
+          existing.element.sourceSpan, file: fileInfo.path);
       messages.error('duplicate custom element definition for '
           '"${componentInfo.tagName}" (second location).',
-          componentInfo.element.span, file: fileInfo.path);
+          componentInfo.element.sourceSpan, file: fileInfo.path);
     } else {
       messages.error('imported duplicate custom element definitions '
           'for "${componentInfo.tagName}".',
-          existing.element.span,
+          existing.element.sourceSpan,
           file: existing.declaringFile.path);
       messages.error('imported duplicate custom element definitions '
           'for "${componentInfo.tagName}" (second location).',
-          componentInfo.element.span,
+          componentInfo.element.sourceSpan,
           file: componentInfo.declaringFile.path);
     }
   } else {

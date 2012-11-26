@@ -2,12 +2,12 @@ name: web_components
 author: "Dart Team <misc@dartlang.org>"
 homepage: https://github.com/dart-lang/dart-web-components
 description: An easy way to build web apps in Dart.
-version: 0.2.6+1
+version: 0.2.7
 dependencies:
   unittest: { sdk: unittest }
   args: { sdk: args }
   logging: { sdk: logging }
-  html5lib: ">=0.2.0 <0.2.1"
+  html5lib: ">=0.2.1 <0.2.2"
   # JS interop is used by the Dartium extension. No version constraint
   # because otherwise it makes it hard to use web_components with JS.
   # If you're rebuilding the extension, be sure to update it for the new JS

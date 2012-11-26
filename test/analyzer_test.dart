@@ -310,7 +310,7 @@ main() {
     expect(messages.length, 1);
     expect(messages[0].message,
         contains('inline JavaScript event handler'));
-    expect(messages[0].span, equals(node.span));
+    expect(messages[0].span, equals(node.sourceSpan));
   });
 
   test('attribute - deprecated data-action', () {
@@ -325,7 +325,7 @@ main() {
     expect(changeEvents[0].action('bar'), r'foo($event)');
     expect(messages.length, 1);
     expect(messages[0].message, contains('data-action is deprecated'));
-    expect(messages[0].span, equals(node.span));
+    expect(messages[0].span, equals(node.sourceSpan));
   });
 
   test('template element', () {

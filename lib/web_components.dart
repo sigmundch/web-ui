@@ -298,7 +298,7 @@ abstract class WebComponent implements Element {
   Node insertBefore(Node newChild, Node refChild) =>
     _element.insertBefore(newChild, refChild);
 
-  AttributeMap get attributes => _element.attributes;
+  Map<String, String> get attributes => _element.attributes;
   set attributes(Map<String, String> value) {
     _element.attributes = value;
   }
@@ -309,13 +309,19 @@ abstract class WebComponent implements Element {
     _element.elements = value;
   }
 
+  List<Element> get children => _element.children;
+
+  set children(Collection<Element> value) {
+    _element.children = value;
+  }
+
   Set<String> get classes => _element.classes;
 
   set classes(Collection<String> value) {
     _element.classes = value;
   }
 
-  AttributeMap get dataAttributes => _element.dataAttributes;
+  Map<String, String> get dataAttributes => _element.dataAttributes;
   set dataAttributes(Map<String, String> value) {
     _element.dataAttributes = value;
   }
@@ -470,10 +476,10 @@ abstract class WebComponent implements Element {
 
   List<ClientRect> getClientRects() => _element.getClientRects();
 
-  NodeList $dom_getElementsByClassName(String name) =>
+  List<Node> $dom_getElementsByClassName(String name) =>
       _element.$dom_getElementsByClassName(name);
 
-  NodeList $dom_getElementsByTagName(String name) =>
+  List<Node> $dom_getElementsByTagName(String name) =>
       _element.$dom_getElementsByTagName(name);
 
   bool $dom_hasAttribute(String name) =>
@@ -482,7 +488,7 @@ abstract class WebComponent implements Element {
   Element $dom_querySelector(String selectors) =>
       _element.$dom_querySelector(selectors);
 
-  NodeList $dom_querySelectorAll(String selectors) =>
+  List<Node> $dom_querySelectorAll(String selectors) =>
       _element.$dom_querySelectorAll(selectors);
 
   void $dom_removeAttribute(String name) =>
@@ -493,7 +499,7 @@ abstract class WebComponent implements Element {
 
   NamedNodeMap get $dom_attributes => _element.$dom_attributes;
 
-  NodeList get $dom_childNodes => _element.$dom_childNodes;
+  List<Node> get $dom_childNodes => _element.$dom_childNodes;
 
   Node get $dom_firstChild => _element.$dom_firstChild;
 

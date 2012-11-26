@@ -42,17 +42,17 @@ spaces. -->
     var asList = ['uno', 'dos', 'tres'];
     main() {
       window.setTimeout(() {
-        expect(query('#test1').classes.toString(), 'uno dos tres');
-        expect(query('#test2').classes.toString(), 'uno dos tres');
-        expect(query('#test3').classes.toString(), 'uno dos tres');
+        expect(query('#test1').classes, unorderedEquals(asList));
+        expect(query('#test2').classes, unorderedEquals(asList));
+        expect(query('#test3').classes, unorderedEquals(asList));
         one = null;
         asList[1] = null;
         asString = 'cuatro cinco';
         dispatch();
         window.setTimeout(() {
-          expect(query('#test1').classes.toString(), 'dos tres');
-          expect(query('#test2').classes.toString(), 'uno tres');
-          expect(query('#test3').classes.toString(), 'cuatro cinco');
+          expect(query('#test1').classes, unorderedEquals(['dos', 'tres']));
+          expect(query('#test2').classes, unorderedEquals(['uno', 'tres']));
+          expect(query('#test3').classes, unorderedEquals(['cuatro', 'cinco']));
           window.setTimeout(() => window.postMessage('done', '*'), 0);
         }, 0);
       }, 0);

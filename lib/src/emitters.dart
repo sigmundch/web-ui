@@ -823,7 +823,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       return printer.formatString();
     } else {
       messages.error('please provide a class definition '
-          'for ${info.constructor}:\n $code', info.element.span,
+          'for ${info.constructor}:\n $code', info.element.sourceSpan,
           file: info.inputPath);
       return '';
     }
