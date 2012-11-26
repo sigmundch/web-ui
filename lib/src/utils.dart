@@ -49,26 +49,32 @@ time(String logMessage, callback(), {bool printTime: false}) {
  * is true.
  */
 Future asyncTime(String logMessage, Future callback(),
-                 {bool printTime: false}) {
+                 {bool printTime: false, bool useColors: false}) {
   final watch = new Stopwatch();
   watch.start();
   return callback()..then((_) {
     watch.stop();
     final duration = watch.elapsedMilliseconds;
     if (printTime) {
-      _printMessage(logMessage, duration);
+      _printMessage(logMessage, duration, useColors);
     }
   });
 }
 
-void _printMessage(String logMessage, int duration) {
+void _printMessage(String logMessage, int duration, bool useColors) {
   var buf = new StringBuffer();
   buf.add(logMessage);
   for (int i = logMessage.length; i < 60; i++) buf.add(' ');
-  buf.add(' -- ').add(GREEN_COLOR);
+  buf.add(' -- '); 
+  if (useColors) {
+    buf.add(GREEN_COLOR);
+  }
   if (duration < 10) buf.add(' ');
   if (duration < 100) buf.add(' ');
-  buf.add(duration).add(' ms').add(NO_COLOR);
+  buf.add(duration).add(' ms');
+  if (useColors) {
+    buf.add(NO_COLOR);
+  }
   print(buf.toString());
 }
 
