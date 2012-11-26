@@ -24,10 +24,13 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:web_components/dwc.dart' as dwc;
 
+/** flag for colored output */
 bool get _isColoredOutput {
   // if this is launched from eclipse then return false; 
-  if (Platform.environment.containsKey("com.apple.java.jvmMode") && Platform.environment.containsKey("com.apple.java.jvmTask")) {
-    return !(Platform.environment["com.apple.java.jvmMode"] == "client" && Platform.environment["com.apple.java.jvmTask"] == "JNI");
+  if (Platform.environment.containsKey("com.apple.java.jvmMode") && 
+      Platform.environment.containsKey("com.apple.java.jvmTask")) {
+    return !(Platform.environment["com.apple.java.jvmMode"] == "client" && 
+             Platform.environment["com.apple.java.jvmTask"] == "JNI");
   }
   
   if (Platform.operatingSystem == "windows") {
@@ -63,7 +66,6 @@ void build(List<String> arguments, List<String> entryPoints) {
     for (var file in entryPoints) {
       // Create build arguments
       var buildArgs = [coloredBuild, '-o', _outDir(file), file];
-      print(buildArgs);
       dwc.run(buildArgs);
     }
   }
