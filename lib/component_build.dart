@@ -24,6 +24,21 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:web_components/dwc.dart' as dwc;
 
+/** flag for colored output */
+bool get _isColoredOutput {
+  // if this is launched from eclipse then return false; 
+  if (Platform.environment.containsKey("com.apple.java.jvmMode") && 
+      Platform.environment.containsKey("com.apple.java.jvmTask")) {
+    return !(Platform.environment["com.apple.java.jvmMode"] == "client" && 
+             Platform.environment["com.apple.java.jvmTask"] == "JNI");
+  }
+  
+  if (Platform.operatingSystem == "windows") {
+    return false;
+  }
+  
+  return true;
+}
 /**
  * Set up 'build.dart' to compile with the dart web components compiler every
  * [entryPoints] listed. On clean commands, the directory where [entryPoints]
@@ -37,6 +52,7 @@ void build(List<String> arguments, List<String> entryPoints) {
   var changedFiles = args["changed"];
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
+  var coloredBuild = _isColoredOutput ? '--colors' : '--no-colors';
   var fullBuild = changedFiles.isEmpty && removedFiles.isEmpty && !cleanBuild;
 
   for (var file in entryPoints) {
@@ -48,7 +64,9 @@ void build(List<String> arguments, List<String> entryPoints) {
   } else if (fullBuild || changedFiles.some((f) => _isInputFile(f, trackDirs))
       || removedFiles.some((f) => _isInputFile(f, trackDirs))) {
     for (var file in entryPoints) {
-      dwc.run(['-o', _outDir(file), file]);
+      // Create build arguments
+      var buildArgs = [coloredBuild, '-o', _outDir(file), file];
+      dwc.run(buildArgs);
     }
   }
 }

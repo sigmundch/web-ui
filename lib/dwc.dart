@@ -62,7 +62,7 @@ Future<CompilerResult> run(List<String> args) {
             !messages.messages.some((m) => m.level == Level.SEVERE),
             compiler.output.map((f) => f.path.toString()),
             messages.messages.map((m) => m.toString())));
-  }, printTime: true);
+  }, printTime: true, useColors: options.useColors);
 }
 
 void writeFile(fs.Path path, String contents, bool clean) {
