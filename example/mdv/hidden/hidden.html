@@ -17,10 +17,10 @@ BSD-style license that can be found in the LICENSE file.
 
     <div>
       <label>Name:
-        <input type="text" autofocus data-bind="value:shipping.name">
+        <input type="text" autofocus bind-value="shipping.name">
       </label>
       <label>Address:
-        <input type="text" data-bind="value:shipping.address">
+        <input type="text" bind-value="shipping.address">
       </label>
     </div>
 
@@ -28,17 +28,17 @@ BSD-style license that can be found in the LICENSE file.
 
     <div>
       <label>
-        <input type="checkbox" data-bind="checked:billing.useShipping">
+        <input type="checkbox" bind-checked="billing.useShipping">
         Same as Shipping Address
       </label>
     </div>
 
     <div hidden="{{billing.useShipping}}">
       <label>Name:
-        <input type="text" data-bind="value:billing.name">
+        <input type="text" bind-value="billing.name">
       </label>
       <label>Address:
-        <input type="text" data-bind="value:billing.address">
+        <input type="text" bind-value="billing.address">
       </label>
     </div>
   </fieldset>

@@ -94,9 +94,7 @@ class _Analyzer extends TreeVisitor {
       info.identifier = '_root';
     }
 
-    node.attributes.forEach((name, value) {
-      visitAttribute(node, info, name, value);
-    });
+    node.attributes.forEach((k, v) => visitAttribute(info, k, v));
 
     _bindCustomElement(node, info);
 
@@ -226,9 +224,12 @@ class _Analyzer extends TreeVisitor {
         var cond = instantiate.substring(3);
 
         var result = new TemplateInfo(node, _parent, ifCondition: cond);
+        result.removeAttributes.add('instantiate');
         if (node.tagName == 'template') {
           return node.nodes.length > 0 ? result : null;
         }
+
+        result.removeAttributes.add('template');
 
 
         // TODO(jmesserly): if-conditions in attributes require injecting a
@@ -260,8 +261,11 @@ class _Analyzer extends TreeVisitor {
       var match = new RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {
         if (node.nodes.length == 0) return null;
-        return new TemplateInfo(node, _parent, loopVariable: match[1],
+        var result = new TemplateInfo(node, _parent, loopVariable: match[1],
             loopItems: match[2]);
+        result.removeAttributes.add('iterate');
+        if (node.tagName != 'template') result.removeAttributes.add('template');
+        return result;
       }
       messages.warning('template iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name '
@@ -271,40 +275,50 @@ class _Analyzer extends TreeVisitor {
     return null;
   }
 
-  void visitAttribute(Element elem, ElementInfo elemInfo, String name,
-                      String value) {
+  void visitAttribute(ElementInfo info, String name, String value) {
     if (name == 'data-value') {
       for (var item in value.split(',')) {
-        if (!_readDataValue(elemInfo, item)) return;
+        if (!_readDataValue(info, item)) break;
       }
+      info.removeAttributes.add(name);
       return;
     } else if (name == 'data-action') {
       for (var item in value.split(',')) {
-        if (!_readDataAction(elemInfo, item)) return;
+        if (!_readDataAction(info, item)) break;
       }
+      info.removeAttributes.add(name);
       return;
     } else if (name == 'data-bind') {
       for (var item in value.split(',')) {
-        if (!_readDataBind(elemInfo, item)) return;
+        if (!_readDataBind(info, item)) break;
       }
+      info.removeAttributes.add(name);
       return;
     } else if (name.startsWith('on')) {
-      _readEventHandler(elemInfo, name, value);
+      _readEventHandler(info, name, value);
+      return;
+    } else if (name.startsWith('bind-')) {
+      // Strip leading "bind-" and make camel case.
+      var fieldName = toCamelCase(name.substring(5));
+      if (_readTwoWayBinding(info, fieldName, value)) {
+        info.removeAttributes.add(name);
+      }
       return;
     }
 
-    AttributeInfo info;
+    AttributeInfo attrInfo;
     if (name == 'data-style') {
-      info = new AttributeInfo([value], isStyle: true);
+      attrInfo = new AttributeInfo([value], isStyle: true);
+      info.removeAttributes.add(name);
     } else if (name == 'class') {
-      info = _readClassAttribute(elemInfo, value);
+      attrInfo = _readClassAttribute(info, value);
     } else {
-      info = _readAttribute(elemInfo, name, value);
+      attrInfo = _readAttribute(info, name, value);
     }
 
-    if (info != null) {
-      elemInfo.attributes[name] = info;
-      elemInfo.hasDataBinding = true;
+    if (attrInfo != null) {
+      info.attributes[name] = attrInfo;
+      info.hasDataBinding = true;
     }
   }
 
@@ -366,7 +380,8 @@ class _Analyzer extends TreeVisitor {
 
     // Strip leading "on-" and make camel case.
     var eventName = toCamelCase(name.substring(3));
-    _addEvent(info, eventName, (elem) => value).attributeName = name;
+    _addEvent(info, eventName, (elem) => value);
+    info.removeAttributes.add(name);
   }
 
   EventInfo _addEvent(ElementInfo info, String name, ActionDefinition action) {
@@ -377,36 +392,109 @@ class _Analyzer extends TreeVisitor {
   }
 
   bool _readDataBind(ElementInfo info, String value) {
+    messages.warning('data-bind is deprecated. '
+        'Given a binding like data-bind="attribute:dartAssignableValue" replace'
+        ' it with bind-attribute="dartAssignableValue".',
+        info.node.sourceSpan, file: _fileInfo.path);
+
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-bind attribute should be of the form '
-          'data-bind="name:value"', info.node.sourceSpan, file: _fileInfo.path);
+          'data-bind="attribute:dartAssignableValue"',
+          info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
-
-    var elem = info.node;
     var name = value.substring(0, colonIdx);
     value = value.substring(colonIdx + 1);
+
+    return _readTwoWayBinding(info, name, value);
+  }
+
+  // http://dev.w3.org/html5/spec/the-input-element.html#the-input-element
+  /** Support for two-way bindings. */
+  bool _readTwoWayBinding(ElementInfo info, String name, String bindingExpr) {
+    var elem = info.node;
     var isInput = elem.tagName == 'input';
     var isTextArea = elem.tagName == 'textarea';
     var isSelect = elem.tagName == 'select';
+    var inputType = elem.attributes['type'];
+
+    String eventName;
+
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
-      // Assume [value] is a field or property setter.
-      info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'click', (e) => '$value = $e.checked');
+      if (inputType == 'radio') {
+        if (!_isValidRadioButton(info)) return false;
+      } else if (inputType != 'checkbox') {
+        messages.error('checked is only supported in HTML with type="radio" '
+            'or type="checked".', info.node.sourceSpan, file: _fileInfo.path);
+        return false;
+      }
+
+      // Both 'click' and 'change' seem reliable on all the modern browsers.
+      eventName = 'change';
     } else if (isSelect && (name == 'selectedIndex' || name == 'value')) {
-      info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'change', (e) => '$value = $e.$name');
-    } else if (name == 'value' && (isInput || isTextArea)) {
-      info.attributes[name] = new AttributeInfo([value]);
-      _addEvent(info, 'input', (e) => '$value = $e.value');
+      eventName = 'change';
+    } else if (isInput && name == 'value' && inputType == 'radio') {
+      return _addRadioValueBinding(info, bindingExpr);
+    } else if (isTextArea && name == 'value' || isInput &&
+        (name == 'value' || name == 'valueAsDate' || name == 'valueAsNumber')) {
+      // Input event is fired more frequently than "change" on some browsers.
+      // We want to update the value for each keystroke.
+      eventName = 'input';
     } else {
-      messages.error('Unknown data-bind attribute: ${elem.tagName} - $name',
+      messages.error('Unknown two-way binding attribute $name. Ignored.',
           info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
 
+    if (elem.attributes[name] != null) {
+      messages.warning('Duplicate attribute $name. You should provide either '
+          'the two-way binding or the attribute itself. The attribute will be '
+          'ignored.', info.node.sourceSpan, file: _fileInfo.path);
+      info.removeAttributes.add(name);
+    }
+
+    info.attributes[name] = new AttributeInfo([bindingExpr]);
+    _addEvent(info, eventName, (e) => '$bindingExpr = $e.$name');
+    info.hasDataBinding = true;
+    return true;
+  }
+
+  bool _isValidRadioButton(ElementInfo info) {
+    if (info.attributes['checked'] == null) return true;
+
+    messages.error('Radio buttons cannot have both "checked" and "value" '
+        'two-way bindings. Either use checked:\n'
+        '  <input type="radio" bind-checked="myBooleanVar">\n'
+        'or value:\n'
+        '  <input type="radio" bind-value="myStringVar" value="theValue">',
+        info.node.sourceSpan, file: _fileInfo.path);
+    return false;
+  }
+
+  /**
+   * Radio buttons use the "value" and "bind-value" fields.
+   * The "value" attribute is assigned to the bindingExpr when checked, and
+   * the checked field is updated if "value" matches bindingExpr.
+   */
+  bool _addRadioValueBinding(ElementInfo info, String bindingExpr) {
+    if (!_isValidRadioButton(info)) return false;
+
+    // TODO(jmesserly): should we read the element's "value" at runtime?
+    var radioValue = info.node.attributes['value'];
+    if (radioValue == null) {
+      messages.error('Radio button bindings need "bind-value" and "value".'
+          'For example: '
+          '<input type="radio" bind-value="myStringVar" value="theValue">',
+          info.node.sourceSpan, file: _fileInfo.path);
+      return false;
+    }
+
+    radioValue = escapeDartString(radioValue);
+    info.attributes['checked'] = new AttributeInfo(
+        ["$bindingExpr == '$radioValue'"]);
+    _addEvent(info, 'change', (e) => "$bindingExpr = '$radioValue'");
     info.hasDataBinding = true;
     return true;
   }
@@ -421,6 +509,8 @@ class _Analyzer extends TreeVisitor {
   AttributeInfo _readAttribute(ElementInfo info, String name, String value) {
     var parser = new BindingParser(value);
     if (!parser.moveNext()) return null;
+
+    info.removeAttributes.add(name);
 
     // TODO(jmesserly): this seems like a common pattern.
     var bindings = <String>[];

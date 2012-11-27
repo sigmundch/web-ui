@@ -1,0 +1,23 @@
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x71
+  RenderBlock {HTML} at (0,0) size 800x71
+    RenderBody {BODY} at (8,8) size 784x50
+      RenderBlock {FORM} at (0,0) size 784x21
+        RenderBlock {INPUT} at (5,3) size 13x13
+        RenderText {#text} at (21,1) size 34x19
+          text run at (21,1) width 34: "Foo! "
+        RenderBlock {INPUT} at (60,3) size 13x13
+        RenderText {#text} at (76,1) size 27x19
+          text run at (76,1) width 27: "Bar!"
+      RenderBlock {PRE} at (0,34) size 784x16
+        RenderText {#text} at (0,0) size 88x16
+          text run at (0,0) width 88: "You picked "
+        RenderText {#text} at (88,0) size 24x16
+          text run at (88,0) width 24: "Bar"
+        RenderText {#text} at (112,0) size 232x16
+          text run at (112,0) width 232: ". Final value should be 'Bar'"
+#EOF

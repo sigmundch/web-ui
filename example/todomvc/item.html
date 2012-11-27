@@ -11,8 +11,7 @@ BSD-style license that can be found in the LICENSE file.
   <template>
     <div class="todo-item {{_editingClass}} {{_completedClass}}">
       <div class="view" on-double-click="edit()">
-        <input class="toggle" type="checkbox"
-               data-bind="checked:todo.done">
+        <input class="toggle" type="checkbox" bind-checked="todo.done">
         <label>{{todo.task}}</label>
         <button class="destroy" on-click="delete()"></button>
       </div>

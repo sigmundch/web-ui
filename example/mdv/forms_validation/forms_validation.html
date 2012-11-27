@@ -12,9 +12,9 @@ BSD-style license that can be found in the LICENSE file.
     <form>
       <template instantiate>
         <button disabled="{{invalid}}">Submit</button><br>
-        Email <input type="text" data-bind="value:email" autofocus><br>
-        Repeat Email <input type="text" data-bind="value:repeatEmail"><br>
-        <input type="checkbox" data-bind="checked:agree"> I agree<br>
+        Email <input type="text" bind-value="email" autofocus><br>
+        Repeat Email <input type="text" bind-value="repeatEmail"><br>
+        <input type="checkbox" bind-checked="agree"> I agree<br>
         <button disabled="{{invalid}}">Submit</button>
       </template>
     </form>

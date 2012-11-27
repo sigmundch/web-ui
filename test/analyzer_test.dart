@@ -90,9 +90,37 @@ main() {
   });
 
   test('hasDataBinding - attribute with data, 2 way binding', () {
-    var input = '<input data-bind="value:x">';
+    messages.clear();
+    var input = '<input bind-value="x">';
     var info = analyzeElement(parseSubtree(input));
     expect(info.hasDataBinding, true);
+    expect(messages.length, 0);
+  });
+
+  test('hasDataBinding - attribute with data, 2 way binding', () {
+    messages.clear();
+    var input = '<input bind-value-as-date="x">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.hasDataBinding, true);
+    expect(messages.length, 0);
+  });
+
+  test('hasDataBinding - attribute with data, 2 way binding', () {
+    messages.clear();
+    var input = '<input bind-value-as-number="x">';
+    var info = analyzeElement(parseSubtree(input));
+    expect(info.hasDataBinding, true);
+    expect(messages.length, 0);
+  });
+
+  test('hasDataBinding - attribute with data, 2 way binding - deprecated', () {
+    messages.clear();
+    var node = parseSubtree('<input data-bind="value:x">');
+    var info = analyzeElement(node);
+    expect(info.hasDataBinding, true);
+    expect(messages.length, 1);
+    expect(messages[0].message, contains('data-bind is deprecated'));
+    expect(messages[0].span, equals(node.sourceSpan));
   });
 
   test('hasDataBinding - content with data', () {
@@ -212,7 +240,7 @@ main() {
   });
 
   test('attribute - 1 way binding checkbox', () {
-    var input = '<input checked="{{x}}">';
+    var input = '<input type="checkbox" checked="{{x}}">';
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
@@ -221,16 +249,26 @@ main() {
     expect(info.events, isEmpty);
   });
 
+  test('attribute - 2 way binding checkbox - invalid', () {
+    messages.clear();
+    var node = parseSubtree('<input bind-checked="x">');
+    var info = analyzeElement(node);
+    expect(info.attributes.length, equals(0));
+    expect(messages.length, 1);
+    expect(messages[0].message, contains('type="radio" or type="checked"'));
+    expect(messages[0].span, equals(node.sourceSpan));
+  });
+
   test('attribute - 2 way binding checkbox', () {
-    var input = '<input data-bind="checked:x">';
+    var input = '<input type="checkbox" data-bind="checked:x">';
     var info = analyzeElement(parseSubtree(input));
     expect(info.attributes.length, equals(1));
     expect(info.attributes['checked'], isNotNull);
     expect(info.attributes['checked'].isSimple, true);
     expect(info.attributes['checked'].boundValue, equals('x'));
-    expect(info.events.keys, equals(['click']));
-    expect(info.events['click'].length, equals(1));
-    expect(info.events['click'][0].action('foo'),
+    expect(info.events.keys, equals(['change']));
+    expect(info.events['change'].length, equals(1));
+    expect(info.events['change'][0].action('foo'),
         equals('x = foo.checked'));
   });
 

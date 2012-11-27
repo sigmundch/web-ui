@@ -47,22 +47,8 @@ class _HtmlCleaner extends InfoVisitor {
       node.remove();
     }
 
-    for (var name in info.attributes.keys) {
-      if (name != 'class') node.attributes.remove(name);
-    }
-
-    for (var eventList in info.events.values) {
-      for (var event in eventList) {
-        if (event.attributeName != null) {
-          node.attributes.remove(event.attributeName);
-        }
-      }
-    }
-
-    const [
-      'data-action', 'data-bind', 'data-value',
-      'instantiate', 'iterate', 'template'
-    ].forEach(node.attributes.remove);
+    info.removeAttributes.forEach(node.attributes.remove);
+    info.removeAttributes.clear();
 
     super.visitElementInfo(info);
   }

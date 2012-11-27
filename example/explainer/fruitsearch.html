@@ -14,7 +14,7 @@ BSD-style license that can be found in the LICENSE file.
 <body>
   <div style="width:250px;" class="well">
     <span>Search for something:</span>
-    <input type="text" data-bind="value:query">
+    <input type="text" bind-value="query">
     <div>
       <template instantiate='if noMatches'><span>No matches</span></template>
       <template instantiate='if !noMatches'><span>Top results:</span></template>
@@ -43,7 +43,7 @@ BSD-style license that can be found in the LICENSE file.
     List<String> get results {
       var res = fruits.filter(
           (v) => v.toLowerCase().contains(query.toLowerCase()));
-      if (res.length > 20) { 
+      if (res.length > 20) {
         res.length = 20;
         res.add('... and many more');
       }

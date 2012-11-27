@@ -411,6 +411,10 @@ class ElementInfo extends NodeInfo<Element> {
   /** Collected information about `data-value="name:value"` expressions. */
   final Map<String, String> values = new SplayTreeMap<String, String>();
 
+  // TODO(jmesserly): we could keep this local to the analyzer.
+  /** Attribute names to remove in cleanup phase. */
+  final Set<String> removeAttributes = new Set<String>();
+
   /** Whether the template element has `iterate="... in ...". */
   bool get hasIterate => false;
 
@@ -522,9 +526,6 @@ class EventInfo {
 
   /** Generated field name, if any, associated with this event. */
   String listenerField;
-
-  /** The original attribute name, if any. Used to clean up the HTML. */
-  String attributeName;
 
   EventInfo(this.eventName, this.action);
 

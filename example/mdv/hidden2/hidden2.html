@@ -212,13 +212,13 @@ License agreement. License agreement. License agreement. License agreement.
 
 <template instantiate>
   <label>
-    <input data-bind="checked:layoutVisible" type=checkbox>
+    <input bind-checked="layoutVisible" type=checkbox>
       I have read the agreement
   </label>
 
   <div hidden="{{!readAgreement}}">
     <label>
-      <input data-bind="checked:layoutVisible2" type=checkbox>
+      <input bind-checked="layoutVisible2" type=checkbox>
         I agree
     </label>
   </div>

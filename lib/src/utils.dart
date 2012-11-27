@@ -30,14 +30,15 @@ String toCamelCase(String hyphenedName, {bool startUppercase: false}) {
  * whatever [callback] returns. The log message will be printed if [printTime]
  * is true.
  */
-time(String logMessage, callback(), {bool printTime: false}) {
+time(String logMessage, callback(),
+     {bool printTime: false, bool useColors: false}) {
   final watch = new Stopwatch();
   watch.start();
   var result = callback();
   watch.stop();
   final duration = watch.elapsedMilliseconds;
   if (printTime) {
-    _printMessage(logMessage, duration);
+    _printMessage(logMessage, duration, useColors);
   }
   return result;
 }
@@ -65,7 +66,7 @@ void _printMessage(String logMessage, int duration, bool useColors) {
   var buf = new StringBuffer();
   buf.add(logMessage);
   for (int i = logMessage.length; i < 60; i++) buf.add(' ');
-  buf.add(' -- '); 
+  buf.add(' -- ');
   if (useColors) {
     buf.add(GREEN_COLOR);
   }
