@@ -136,6 +136,7 @@ class FutureGroup {
       if (_failedTask != null) return;
       _failedTask = task;
       _completer.completeException(e, task.stackTrace);
+      return true;
     });
     task.then((_) {
       if (_failedTask != null) return;

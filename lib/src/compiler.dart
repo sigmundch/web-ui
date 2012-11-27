@@ -105,7 +105,7 @@ class Compiler {
 
     var processed = new Set();
     processHtmlFile(SourceFile file) {
-      if (!_pathInfo.checkInputPath(file.path)) return;
+      if (file == null || !_pathInfo.checkInputPath(file.path)) return;
 
       files.add(file);
 
@@ -146,30 +146,31 @@ class Compiler {
 
   /** Asynchronously parse [path] as an .html file. */
   Future<SourceFile> _parseHtmlFile(Path path) {
-    return (fileSystem.readTextOrBytes(path)
-        ..handleException((e) => _readError(e, path)))
+    return fileSystem.readTextOrBytes(path)
         .transform((source) {
           var file = new SourceFile(path);
           file.document = _time('Parsed', path, () => parseHtml(source, path));
           return file;
-        });
+        })
+        .transformException((e) => _readError(e, path));
   }
 
   /** Parse [filename] and treat it as a .dart file. */
   Future<SourceFile> _parseDartFile(Path path) {
-    return (fileSystem.readText(path)
-        ..handleException((e) => _readError(e, path)))
-        .transform((code) => new SourceFile(path, isDart: true)..code = code);
+    return fileSystem.readText(path)
+        .transform((code) => new SourceFile(path, isDart: true)..code = code)
+        .transformException((e) => _readError(e, path));
   }
 
-  bool _readError(error, Path path) {
+  SourceFile _readError(error, Path path) {
     messages.error('exception while reading file, original message:\n $error',
         null, file: path);
-    return true;
+
+    return null;
   }
 
   void _addDartFile(SourceFile dartFile) {
-    if (!_pathInfo.checkInputPath(dartFile.path)) return;
+    if (dartFile == null || !_pathInfo.checkInputPath(dartFile.path)) return;
 
     files.add(dartFile);
 

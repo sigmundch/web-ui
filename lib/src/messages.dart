@@ -97,7 +97,7 @@ class Messages {
       error(message, span, file: file);
     } else {
       var msg = new Message(Level.WARNING, message, file: file,
-        span: span, useColors: options.useColors);
+          span: span, useColors: options.useColors);
 
       messages.add(msg);
 

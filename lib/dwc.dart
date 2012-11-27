@@ -18,7 +18,9 @@ import 'src/utils.dart';
 FileSystem fileSystem;
 
 void main() {
-  run(new Options().arguments);
+  run(new Options().arguments).then((result) {
+    exit(result.success ? 0 : 1);
+  });
 }
 
 /** Contains the result of a compiler run. */
