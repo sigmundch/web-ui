@@ -6,26 +6,26 @@ to pub.
 
 ## Unreleased
 
-  * Two-way bindings changes:
+  * Two-way binding changes:
     * New syntax: `bind-attribute="dartAssignableValue"`, `data-bind` is
       deprecated
     * Support for radio buttons
     * Support for valueAsDate and valueAsNumber
     * Better detection of error conditions, like duplicate value attributes.
   * Bug fixes:
-    * Make sure dartium extension uses the latest dart.js
+    * Make dartium extension use the latest dart.js
 
 ## Pub version 0.2.7 - Nov 26 (SDK 15355)
 
   * New syntax for inline event handlers: `on-click="increment($event)"` instead
     of `data-action="click:increment"`
   * Added new explainer examples
+  * Updated dartium extension
   * Bug fixes:
       * Support for querying for elements from main()
       * Recursive imports between components
       * Warnings are emitted (previously they were generated but not printed)
-  * Updated dartium extension
-
+  
 ## Pub version 0.2.6+1 - 16 Nov 2012
 
   * Name mangling turned off if --out is specified
