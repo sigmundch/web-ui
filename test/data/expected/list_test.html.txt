@@ -9,9 +9,13 @@ layer at (0,0) size 800x36
       RenderInline {SPAN} at (0,0) size 7x19
         RenderText {#text} at (0,0) size 7x19
           text run at (0,0) width 7: "a"
+      RenderText {#text} at (7,0) size 4x19
+        text run at (7,0) width 4: " "
+      RenderText {#text} at (0,0) size 0x0
       RenderInline {SPAN} at (0,0) size 8x19
-        RenderText {#text} at (7,0) size 8x19
-          text run at (7,0) width 8: "b"
+        RenderText {#text} at (11,0) size 8x19
+          text run at (11,0) width 8: "b"
+      RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
 #EOF

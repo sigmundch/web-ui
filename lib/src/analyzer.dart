@@ -70,6 +70,11 @@ class _Analyzer extends TreeVisitor {
       info = _createTemplateInfo(node);
     }
 
+    // TODO(jmesserly): it would be nice not to create infos for text or
+    // elements that don't need data binding. Ideally, we would visit our
+    // child nodes and get their infos, and if any of them need data binding,
+    // we create an ElementInfo for ourselves and return it, otherwise we just
+    // return null.
     if (info == null) {
       // <element> tags are tracked in the file's declared components, so they
       // don't need a parent.
@@ -559,10 +564,13 @@ class _Analyzer extends TreeVisitor {
 
   void visitText(Text text) {
     var parser = new BindingParser(text.value);
-    // nothing to do if there are no bindings.
-    if (!parser.moveNext()) return;
+    if (!parser.moveNext()) {
+      new TextInfo(text, _parent);
+      return;
+    }
 
     _parent.hasDataBinding = true;
+    _parent.childrenCreatedInCode = true;
 
     // We split [text] so that each binding has its own text node.
     var node = text.parent;
@@ -570,19 +578,16 @@ class _Analyzer extends TreeVisitor {
       _addRawTextContent(parser.textContent, text);
       var placeholder = new Text('');
       var id = '_binding$_uniqueId';
-      var info = new TextInfo(placeholder, _parent, parser.binding, id);
+      new TextInfo(placeholder, _parent, parser.binding, id);
       _uniqueId++;
-      text.parent.insertBefore(placeholder, text);
     } while (parser.moveNext());
+
     _addRawTextContent(parser.textContent, text);
-    text.remove();
   }
 
-  _addRawTextContent(String content, Text location) {
+  void _addRawTextContent(String content, Text location) {
     if (content != '') {
-      var node = new Text(content);
-      new TextInfo(node, _parent);
-      location.parent.insertBefore(node, location);
+      new TextInfo(new Text(content), _parent);
     }
   }
 }

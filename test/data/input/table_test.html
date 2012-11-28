@@ -28,19 +28,19 @@ BSD-style license that can be found in the LICENSE file.
   main() {
     window.setTimeout(() {
       expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
-          '<tr><td>1</td><td>2</td><td>3</td></tr>'
-          '<tr><td>a</td><td>b</td><td>c</td></tr>'
-          '<tr><td>A</td><td>B</td><td>C</td></tr>'));
+          '<tr> <td>1</td> <td>2</td> <td>3</td> </tr> '
+          '<tr> <td>a</td> <td>b</td> <td>c</td> </tr> '
+          '<tr> <td>A</td> <td>B</td> <td>C</td> </tr>'));
       table[0][2] = 'X';
       table[1][1] = 'Y';
       table.add(['_', '__', '___']);
       dispatch();
       window.setTimeout(() {
         expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
-            '<tr><td>1</td><td>2</td><td>X</td></tr>'
-            '<tr><td>a</td><td>Y</td><td>c</td></tr>'
-            '<tr><td>A</td><td>B</td><td>C</td></tr>'
-            '<tr><td>_</td><td>__</td><td>___</td></tr>'));
+            '<tr> <td>1</td> <td>2</td> <td>X</td> </tr> '
+            '<tr> <td>a</td> <td>Y</td> <td>c</td> </tr> '
+            '<tr> <td>A</td> <td>B</td> <td>C</td> </tr> '
+            '<tr> <td>_</td> <td>__</td> <td>___</td> </tr>'));
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       }, 0);
     }, 0);

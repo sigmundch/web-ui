@@ -342,15 +342,12 @@ abstract class NodeInfo<T extends Node> {
   /** Info for the nearest enclosing element, iterator, or conditional. */
   final ElementInfo parent;
 
-  // TODO(jmesserly): ideally we should only create Infos for things that need
-  // an identifier. So this would always be non-null. That is not the case yet.
   /**
    * The name used to refer to this node in Dart code.
    * Depending on the context, this can be a variable or a field.
    */
   String identifier;
 
-  // TODO(jmesserly): it'd be nice if we didn't need to query.
   /**
    * Whether the node represented by this info will be constructed from code.
    * If true, its identifier is initialized programatically, otherwise, its
@@ -359,7 +356,7 @@ abstract class NodeInfo<T extends Node> {
    * siblings of text nodes with data-bindings, and immediate children of loops
    * and conditionals.
    */
-  bool get createdInCode;
+  bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
   NodeInfo(this.node, this.parent, [this.identifier]) {
     if (parent != null) parent.children.add(this);
@@ -371,8 +368,6 @@ class ElementInfo extends NodeInfo<Element> {
   // TODO(jmesserly): make childen work like DOM children collection, so that
   // adding/removing a node updates the parent pointer.
   final List<NodeInfo> children = [];
-
-  bool get createdInCode => parent != null && parent.childrenCreatedInCode;
 
   /**
    * If this element is a web component instantiation (e.g. `<x-foo>`), this
@@ -427,7 +422,7 @@ class ElementInfo extends NodeInfo<Element> {
 
   String toString() => '#<ElementInfo '
       'identifier: $identifier, '
-      'createdInCode: $createdInCode, '
+      'childrenCreatedInCode: $childrenCreatedInCode, '
       'component: $component, '
       'hasIterate: $hasIterate, '
       'hasIfCondition: $hasIfCondition, '
@@ -448,12 +443,8 @@ class TextInfo extends NodeInfo<Text> {
   /** The data-bound Dart expression. */
   final String binding;
 
-  bool get createdInCode => true;
-
   TextInfo(Text node, ElementInfo parent, [this.binding, String identifier])
-      : super(node, parent, identifier) {
-    parent.childrenCreatedInCode = true;
-  }
+      : super(node, parent, identifier);
 }
 
 /** Information extracted for each attribute in an element. */

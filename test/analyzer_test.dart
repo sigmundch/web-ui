@@ -130,21 +130,21 @@ main() {
     expect(info.node.nodes.length, 1);
     var textInfo = info.children[0];
     expect(textInfo.binding, 'x');
-    expect(textInfo.node, same(info.node.nodes[0]));
+    expect(textInfo.node.value, '');
   });
 
   test('hasDataBinding - content with text and data', () {
     var input = '<div> a b {{x}}c</div>';
     var info = analyzeElement(parseSubtree(input));
-    expect(info.node.nodes.length, 3);
-    expect(info.node.nodes[0].value, ' a b ');
-    expect(info.node.nodes[1].value, '');
-    expect(info.node.nodes[2].value, 'c');
+    expect(info.node.nodes.length, 1);
+    expect(info.node.nodes[0].value, ' a b {{x}}c');
     expect(info.hasDataBinding, true);
 
-    var textInfo = info.children[1];
-    expect(textInfo.node, same(info.node.nodes[1]));
-    expect(textInfo.binding, 'x');
+    expect(info.children.length, 3);
+    expect(info.children[0].node.value, ' a b ');
+    expect(info.children[1].node.value, '');
+    expect(info.children[1].binding, 'x');
+    expect(info.children[2].node.value, 'c');
   });
 
   test('attribute - no info', () {

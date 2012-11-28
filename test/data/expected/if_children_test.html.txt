@@ -9,28 +9,41 @@ layer at (0,0) size 800x260
       RenderBlock (anonymous) at (0,0) size 784x20
         RenderText {#text} at (0,0) size 319x19
           text run at (0,0) width 319: "You should see counting numbers from \"one\" to \"six\":"
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,36) size 784x20
         RenderText {#text} at (0,0) size 22x19
           text run at (0,0) width 22: "one"
+      RenderBlock (anonymous) at (0,72) size 784x0
+        RenderText {#text} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,72) size 784x20
         RenderText {#text} at (0,0) size 23x19
           text run at (0,0) width 23: "two"
+      RenderBlock (anonymous) at (0,108) size 784x0
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,108) size 784x20
         RenderText {#text} at (0,0) size 30x19
           text run at (0,0) width 30: "three"
+      RenderBlock (anonymous) at (0,144) size 784x0
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,144) size 784x20
         RenderText {#text} at (0,0) size 24x19
           text run at (0,0) width 24: "four"
       RenderBlock (anonymous) at (0,180) size 784x0
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,180) size 784x20
         RenderText {#text} at (0,0) size 21x19
           text run at (0,0) width 21: "five"
+      RenderBlock (anonymous) at (0,216) size 784x0
+        RenderText {#text} at (0,0) size 0x0
       RenderBlock {P} at (0,216) size 784x20
         RenderText {#text} at (0,0) size 16x19
           text run at (0,0) width 16: "six"
       RenderBlock (anonymous) at (0,252) size 784x0
+        RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
