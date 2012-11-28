@@ -9,7 +9,7 @@ import 'dart:html';
 import 'package:web_components/safe_html.dart';
 import 'package:web_components/watcher.dart';
 
-/** 
+/**
  * Removes all sibling nodes from `start.nextNode` until [end] (inclusive). For
  * convinience, this function returns [start].
  */
@@ -24,7 +24,7 @@ Node removeNodes(Node start, Node end) {
 
 /**
  * Take the value of a bound expression and creates an HTML node with its value.
- * Normaly bindings are associated with text nodes, unless [binding] has the
+ * Normally bindings are associated with text nodes, unless [binding] has the
  * [SafeHtml] type, in which case an html element is created for it.
  */
 Node nodeForBinding(binding) => binding is SafeHtml
@@ -34,10 +34,15 @@ Node nodeForBinding(binding) => binding is SafeHtml
  * Updates a data-bound [node] to a new [value]. If the new value is not
  * [SafeHtml] and the node is a [Text] node, then we update the node in place.
  * Otherwise, the node is replaced in the DOM tree and the new node is returned.
+ * [stringValue] should be equivalent to `value.toString()` and can be passed
+ * here if it has already been computed.
  */
-Node updateBinding(value, Node node) {
+Node updateBinding(value, Node node, [String stringValue]) {
   var isSafeHtml = value is SafeHtml;
-  var stringValue = value.toString();
+  if (stringValue == null) {
+    stringValue = value.toString();
+  }
+
   if (!isSafeHtml && node is Text) {
     node.text = stringValue;
   } else {

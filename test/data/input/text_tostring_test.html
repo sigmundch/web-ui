@@ -1,0 +1,47 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>watch_global_var_test</title>
+  <script type='application/javascript' src="testing.js"></script>
+</head>
+<body>
+  <p>These two sentences should match:</p>
+  <pre id="expected">The quick brown [fox, jumps] over the {lazy: dog}.</pre>
+  <pre id="actual">The quick brown {{list}} over the {{map}}.</pre>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    import 'package:web_components/watcher.dart';
+
+    List list = ['initial', 'list state'];
+    Map map = {'initial': 'map', 'state': '!'};
+    final expected = query('#expected');
+    final actual = query('#actual');
+
+    main() {
+      window.setTimeout(() {
+        expect(actual.innerHTML, 'The quick brown [initial, list state] over '
+          'the {initial: map, state: !}.');
+
+        list[0] = 'fox';
+        list[1] = 'jumps';
+        map.clear();
+        map['lazy'] = 'dog';
+
+        dispatch();
+
+        expect(actual.innerHTML, expected.innerHTML);
+
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
+    }
+  </script>
+</body>
+</html>
