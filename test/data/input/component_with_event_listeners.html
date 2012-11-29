@@ -9,7 +9,7 @@
 <element name="x-component-with-event-listeners" extends="span" constructor="ComponentWithEventListeners">
   <template>
     <div on-click="listener()">0</div>
-    <template instantiate="if notCond">
+    <template if="notCond">
       <div on-click="listener()">1</div>
     </template>
   </template>

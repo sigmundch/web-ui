@@ -32,7 +32,7 @@ class _HtmlCleaner extends InfoVisitor {
     info.removeAttributes.clear();
 
     // Hide all template elements. At the very least, we must do this for
-    // template attributes, such as `<td template instantiate="if cond">`.
+    // template attributes, such as `<td template if="cond">`.
     // TODO(jmesserly): should probably inject a stylesheet into the page:
     // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html#css-additions
     if (info.isTemplateElement || info.hasIfCondition) {

@@ -14,10 +14,10 @@
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
-  <template instantiate="if cond">
+  <template if="cond">
     <x-error></x-error>
   </template>
-  <template instantiate="if notCond">
+  <template if="notCond">
     <x-pass></x-pass>
   </template>
   <script type="application/dart">

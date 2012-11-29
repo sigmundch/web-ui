@@ -64,9 +64,12 @@ class _Analyzer extends TreeVisitor {
       return;
     }
 
-    // Bind to the parent element.
-    if (node.tagName == 'template' || node.attributes.containsKey('template')) {
-      // template tags are handled specially.
+    if (node.tagName == 'template'
+        || node.attributes.containsKey('template')
+        || node.attributes.containsKey('if')
+        || node.attributes.containsKey('instantiate')
+        || node.attributes.containsKey('iterate')) {
+      // template tags, conditionals and iteration are handled specially.
       info = _createTemplateInfo(node);
     }
 
@@ -213,55 +216,62 @@ class _Analyzer extends TreeVisitor {
   }
 
   TemplateInfo _createTemplateInfo(Element node) {
+    if (node.tagName != 'template' &&
+        !node.attributes.containsKey('template')) {
+      messages.warning('template attribute is required when using if, '
+          'instantiate, or iterate attributes.',
+          node.sourceSpan, file: _fileInfo.path);
+    }
+
     var instantiate = node.attributes['instantiate'];
+    var condition = node.attributes['if'];
+    if (instantiate != null) {
+      if (instantiate.startsWith('if ')) {
+        if (condition != null) {
+          messages.warning(
+              'another condition was already defined on this element.',
+              node.sourceSpan, file: _fileInfo.path);
+        } else {
+          condition = instantiate.substring(3);
+        }
+      }
+    }
     var iterate = node.attributes['iterate'];
 
     // Note: we issue warnings instead of errors because the spirit of HTML and
     // Dart is to be forgiving.
-    if (instantiate != null && iterate != null) {
-      messages.warning('template cannot have iterate and instantiate '
+    if (condition != null && iterate != null) {
+      messages.warning('template cannot have both iteration and conditional '
           'attributes', node.sourceSpan, file: _fileInfo.path);
       return null;
     }
 
-    if (instantiate != null) {
-      if (instantiate.startsWith('if ')) {
-        var cond = instantiate.substring(3);
-
-        var result = new TemplateInfo(node, _parent, ifCondition: cond);
-        result.removeAttributes.add('instantiate');
-        if (node.tagName == 'template') {
-          return node.nodes.length > 0 ? result : null;
-        }
-
-        result.removeAttributes.add('template');
-
-
-        // TODO(jmesserly): if-conditions in attributes require injecting a
-        // placeholder node, and a real node which is a clone. We should
-        // consider a design where we show/hide the node instead (with care
-        // taken not to evaluate hidden bindings). That is more along the lines
-        // of AngularJS, and would have a cleaner DOM. See issue #142.
-        var contentNode = node.clone();
-        // Clear out the original attributes. This is nice to have, but
-        // necessary for ID because of issue #141.
-        node.attributes.clear();
-        contentNode.nodes.addAll(node.nodes);
-
-        // Create a new ElementInfo that is a child of "result" -- the
-        // placeholder node. This will become result.contentInfo.
-        visitElementInfo(new ElementInfo(contentNode, result));
-        return result;
+    if (condition != null) {
+      var result = new TemplateInfo(node, _parent, ifCondition: condition);
+      result.removeAttributes.add('if');
+      result.removeAttributes.add('instantiate');
+      if (node.tagName == 'template') {
+        return node.nodes.length > 0 ? result : null;
       }
 
-      // TODO(jmesserly): we need better support for <template instantiate>
-      // as it exists in MDV. Right now we ignore it, but we provide support for
-      // data binding everywhere.
-      if (instantiate != '') {
-        messages.warning('template instantiate must either have an empty '
-          'attribute or be of the form instantiate="if condition".',
-          node.sourceSpan, file: _fileInfo.path);
-      }
+      result.removeAttributes.add('template');
+
+
+      // TODO(jmesserly): if-conditions in attributes require injecting a
+      // placeholder node, and a real node which is a clone. We should
+      // consider a design where we show/hide the node instead (with care
+      // taken not to evaluate hidden bindings). That is more along the lines
+      // of AngularJS, and would have a cleaner DOM. See issue #142.
+      var contentNode = node.clone();
+      // Clear out the original attributes. This is nice to have, but
+      // necessary for ID because of issue #141.
+      node.attributes.clear();
+      contentNode.nodes.addAll(node.nodes);
+
+      // Create a new ElementInfo that is a child of "result" -- the
+      // placeholder node. This will become result.contentInfo.
+      visitElementInfo(new ElementInfo(contentNode, result));
+      return result;
     } else if (iterate != null) {
       var match = new RegExp(r"(.*) in (.*)").firstMatch(iterate);
       if (match != null) {

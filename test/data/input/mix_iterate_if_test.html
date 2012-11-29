@@ -15,7 +15,7 @@ BSD-style license that can be found in the LICENSE file.
   <table>
     <tbody id='test' template iterate="row in table">
     <tr template iterate="cell in row">
-      <td template instantiate="if cell != 0">{{cell}}</td>
+      <td template if="cell != 0">{{cell}}</td>
     </tr>
   </tbody></table>
   <script type="application/dart">

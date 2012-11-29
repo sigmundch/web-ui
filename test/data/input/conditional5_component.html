@@ -8,10 +8,10 @@
 <body>
 <element name="x-conditional" extends="div" constructor="ConditionalExample">
   <template>
-    <template instantiate="if cond">
+    <template if="cond">
       <span>yay! test passes</span>
     </template>
-    <template instantiate="if notCond">
+    <template if="notCond">
       <span>error: test failed</span>
     </template>
   </template>

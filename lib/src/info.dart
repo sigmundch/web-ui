@@ -413,7 +413,7 @@ class ElementInfo extends NodeInfo<Element> {
   /** Whether the template element has `iterate="... in ...". */
   bool get hasIterate => false;
 
-  /** Whether the template element has an `instantiate="if ..."` conditional. */
+  /** Whether the template element has an `if="..."` conditional. */
   bool get hasIfCondition => false;
 
   bool get isTemplateElement => false;
@@ -525,9 +525,8 @@ class EventInfo {
 
 class TemplateInfo extends ElementInfo {
   /**
-   * The expression that is used in `<template instantiate="if cond">
-   * conditionals, or null if this there is no `instantiate="if ..."`
-   * attribute.
+   * The expression that is used in `<template if="cond"> conditionals, or null
+   * if this there is no `if="..."` attribute.
    */
   final String ifCondition;
 

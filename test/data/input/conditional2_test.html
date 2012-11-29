@@ -11,10 +11,10 @@
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
-  <template instantiate="if cond">
+  <template if="cond">
     <span>yay! test passes</span>
   </template>
-  <template instantiate="if notCond">
+  <template if="notCond">
     <span>error: test failed</span>
   </template>
   <script type="application/dart">

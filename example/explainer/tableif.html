@@ -12,30 +12,30 @@ BSD-style license that can be found in the LICENSE file.
   href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
 </head>
 <body>
-  <input type="checkbox" data-bind="checked:show">Show phones
+  <input type="checkbox" bind-checked="show">Show phones
   <br>
   <table class="table">
   <thead>
     <tr>
     <td>Last</td><td>First</td>
-    <td template instantiate="if show">Phone</td>
+    <td template if="show">Phone</td>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Bracha</td>
       <td>Gilad</td>
-      <td template instantiate="if show">555-555-5555</td>
+      <td template if="show">555-555-5555</td>
     </tr>
     <tr>
       <td>Bak</td>
       <td>Lars</td>
-      <td template instantiate="if show">222-222-2222</td>
+      <td template if="show">222-222-2222</td>
     </tr>
     <tr>
       <td>Ladd</td>
       <td>Seth</td>
-      <td template instantiate="if show">111-222-3333</td>
+      <td template if="show">111-222-3333</td>
     </tr>
   </tbody></table>
   <script type="application/dart">

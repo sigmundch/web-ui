@@ -383,15 +383,15 @@ main() {
         reason: 'example is not a valid template');
   });
 
-  test('template instantiate if (empty)', () {
-    var elem = parseSubtree(
-        '<template instantiate="if foo" is="x-if"></template>');
+  test('template if (empty)', () {
+    var elem = parseSubtree('<template if="foo"></template>');
     var info = analyzeElement(elem);
     expect(info.hasIfCondition, false);
   });
 
-  test('template instantiate if', () {
-    var elem = parseSubtree('<template instantiate="if foo" is="x-if"><div>');
+  test('template if', () {
+    messages.clear();
+    var elem = parseSubtree('<template if="foo"><div>');
     var div = elem.query('div');
     TemplateInfo info = analyzeElement(elem);
     expect(info.hasIfCondition, true);
@@ -399,10 +399,44 @@ main() {
     expect(info.children[0].node, equals(div));
     expect(info.children[0].createdInCode, true);
     expect(div.id, '');
-    expect(elem.attributes, equals({
-        'instantiate': 'if foo', 'is': 'x-if', 'id': '__e-0'}));
+    expect(elem.attributes, equals({'if': 'foo', 'id': '__e-0'}));
     expect(info.ifCondition, equals('foo'));
     expect(info.hasIterate, isFalse);
+    expect(messages.length, 0);
+  });
+
+  test('template instantiate if', () {
+    messages.clear();
+    var elem = parseSubtree('<template instantiate="if foo"><div>');
+    var div = elem.query('div');
+    TemplateInfo info = analyzeElement(elem);
+    expect(info.hasIfCondition, true);
+    expect(info.createdInCode, false);
+    expect(info.children[0].node, equals(div));
+    expect(info.children[0].createdInCode, true);
+    expect(div.id, '');
+    expect(elem.attributes, equals({'instantiate': 'if foo', 'id': '__e-0'}));
+    expect(info.ifCondition, equals('foo'));
+    expect(info.hasIterate, isFalse);
+    expect(messages.length, 0);
+  });
+
+  test('if w/o template has warning', () {
+    messages.clear();
+    var elem = parseSubtree('<div if="foo">');
+    analyzeElement(elem);
+    expect(messages.length, 1);
+    expect(messages[0].message, contains('template attribute is required'));
+    expect(messages[0].span, equals(elem.sourceSpan));
+  });
+
+  test('instantiate-if w/o template has warning', () {
+    messages.clear();
+    var elem = parseSubtree('<div instantiate="if foo">');
+    analyzeElement(elem);
+    expect(messages.length, 1);
+    expect(messages[0].message, contains('template attribute is required'));
+    expect(messages[0].span, equals(elem.sourceSpan));
   });
 
   test('template iterate (invalid)', () {

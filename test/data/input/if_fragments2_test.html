@@ -14,10 +14,10 @@ BSD-style license that can be found in the LICENSE file.
   <!-- Tests that we can combine text and bindings inside an if, and that
   rerendering after updating the condition works. -->
   expect f - f:
-  <template instantiate="if cond">
+  <template if="cond">
     t {{value}} t
   </template>
-  <template instantiate="if !cond">
+  <template if="!cond">
     f {{value}} f
   </template>
   <script type="application/dart">

@@ -16,8 +16,8 @@ BSD-style license that can be found in the LICENSE file.
     <span>Search for something:</span>
     <input type="text" bind-value="query">
     <div>
-      <template instantiate='if noMatches'><span>No matches</span></template>
-      <template instantiate='if !noMatches'><span>Top results:</span></template>
+      <template if='noMatches'><span>No matches</span></template>
+      <template if='!noMatches'><span>Top results:</span></template>
     </div>
     <div>
       <ul>

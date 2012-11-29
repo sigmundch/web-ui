@@ -13,19 +13,19 @@
 </head>
 <body>
   You should see counting numbers from "one" to "six":
-  <template instantiate="if cond">
+  <template if="cond">
     <p>one</p>
-    <template instantiate="if false"><p>SEVEN</p></template>
+    <template if="false"><p>SEVEN</p></template>
     <p>two</p>
-    <p template instantiate="if true">three</p>
-    <template instantiate="if true"><p>four</p></template>
+    <p template if="true">three</p>
+    <template if="true"><p>four</p></template>
   </template>
   <!-- This intentionally has no data binding. -->
-  <template instantiate="if cond">
+  <template if="cond">
     <p>five</p>
     <p>six</p>
   </template>
-  <template instantiate="if cond"></template>
+  <template if="cond"></template>
   <script type="application/dart">
     import 'dart:html';
     import 'common.dart';
