@@ -95,7 +95,7 @@ class _Analyzer extends TreeVisitor {
   void visitElementInfo(ElementInfo info) {
     var node = info.node;
 
-    if (node.id != '') info.identifier = '_${toCamelCase(node.id)}';
+    if (node.id != '') info.identifier = '__${toCamelCase(node.id)}';
     if (node.tagName == 'body' || (_currentInfo is ComponentInfo
           && (_currentInfo as ComponentInfo).template == node)) {
       info.isRoot = true;
@@ -587,7 +587,7 @@ class _Analyzer extends TreeVisitor {
     do {
       _addRawTextContent(parser.textContent, text);
       var placeholder = new Text('');
-      var id = '_binding$_uniqueId';
+      var id = '__binding$_uniqueId';
       new TextInfo(placeholder, _parent, parser.binding, id);
       _uniqueId++;
     } while (parser.moveNext());
