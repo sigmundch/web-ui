@@ -3,6 +3,10 @@ maintained libraries. The external maintained libraries used by
 this project are:
 
 TodoMVC - in example/todomvc/
+          (MIT license)
+
+sanitizeUri - in lib/templating.dart
+              (adapted from GWT code under Apache Liscence 2.0)
 
 
 The libraries may have their own licenses; we recommend you read them,

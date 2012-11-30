@@ -6,6 +6,7 @@
 library templating;
 
 import 'dart:html';
+import 'dart:uri';
 import 'package:web_components/safe_html.dart';
 import 'package:web_components/watcher.dart';
 
@@ -146,6 +147,32 @@ WatcherDisposer bindStyle(Element elem, Map<String, String> exp()) {
     }
     e.newValue.forEach(elem.style.setProperty);
   });
+}
+
+/**
+ * Ensure that [usiString] is a safe URI. Otherwise, return a '#' URL.
+ *
+ * The logic in this method was based on the GWT implementation located at:
+ * http://code.google.com/p/google-web-toolkit/source/browse/trunk/user/src/com/google/gwt/safehtml/shared/UriUtils.java
+ */
+String sanitizeUri(uri) {
+  if (uri is SafeUri) return uri.toString();
+  uri = uri.toString();
+  return _isSafeUri(uri) ? uri : '#';
+}
+
+const _SAFE_SCHEMES = const ["http", "https", "ftp", "mailto"];
+
+bool _isSafeUri(String uri) {
+  var scheme = new Uri(uri).scheme;
+  if (scheme == '') return true;
+
+  // There are two checks for mailto to correctly handle the Turkish locale.
+  //   i -> to upper in Turkish locale -> İ
+  //   I -> to lower in Turkish locale -> ı
+  // For details, see: http://www.i18nguy.com/unicode/turkish-i18n.html
+  return _SAFE_SCHEMES.contains(scheme.toLowerCase()) ||
+      "MAILTO" == scheme.toUpperCase();
 }
 
 /** An error thrown when data bindings are set up with incorrect data. */

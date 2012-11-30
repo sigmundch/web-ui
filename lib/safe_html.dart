@@ -17,3 +17,17 @@ class SafeHtml {
 
   String toString() => _html;
 }
+
+/**
+ * Declares a string that is safe to use in a Uri attribute, such as `<a href=`,
+ * to avoid cross-site scripting (XSS) attacks.
+ */
+class SafeUri {
+  String _uri;
+
+  // TODO(sigmund): provide a constructor that takes or creates a Uri and
+  // validates that it is safe (not a javascript: scheme, for example)
+  SafeUri.unsafe(this._uri);
+
+  String toString() => _uri;
+}
