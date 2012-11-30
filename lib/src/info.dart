@@ -294,6 +294,14 @@ class ComponentInfo extends LibraryInfo {
 
   ComponentInfo(this.element, this.declaringFile, this.tagName, this.extendsTag,
       this.constructor, this.template);
+
+  /**
+   * Gets the HTML tag extended by the base of the component hierarchy.
+   * Equivalent to [extendsTag] if this inherits directly from an HTML element,
+   * in other words, if [extendsComponent] is null.
+   */
+  String get baseExtendsTag =>
+      extendsComponent == null ? extendsTag : extendsComponent.baseExtendsTag;
 }
 
 /** Base tree visitor for the Analyzer infos. */
@@ -403,7 +411,10 @@ class ElementInfo extends NodeInfo<Element> {
   final Map<String, List<EventInfo>> events =
       new SplayTreeMap<String, List<EventInfo>>();
 
-  /** Collected information about `data-value="name:value"` expressions. */
+  /**
+   * Collected information about `data-value="name:value"` expressions.
+   * Note: this feature is deprecated and should be removed after grace period.
+   */
   final Map<String, String> values = new SplayTreeMap<String, String>();
 
   // TODO(jmesserly): we could keep this local to the analyzer.
@@ -417,6 +428,19 @@ class ElementInfo extends NodeInfo<Element> {
   bool get hasIfCondition => false;
 
   bool get isTemplateElement => false;
+
+  /**
+   * For a builtin HTML element this returns the [node.tagName], otherwise it
+   * returns [component.baseExtendsTag]. This is useful when looking up which
+   * DOM property this element supports.
+   *
+   * **Note:** this returns node.tagName right now, until we fix issue #82.
+   */
+  String get baseTagName {
+    return node.tagName;
+    // TODO(jmesserly): turn this on when issue #82 is fixed.
+    //return component != null ? component.baseExtendsTag : node.tagName;
+  }
 
   ElementInfo(Element node, ElementInfo parent) : super(node, parent);
 
@@ -465,6 +489,12 @@ class AttributeInfo {
   final List<String> bindings;
 
   /**
+   * A two-way binding that needs a watcher. This is used in cases where we
+   * don't have an event.
+   */
+  final bool customTwoWayBinding;
+
+  /**
    * For a text attribute this contains the text content. This is used by most
    * attributes and represents the value that will be assigned to them. If this
    * has been assigned then [isText] will be true.
@@ -480,7 +510,7 @@ class AttributeInfo {
   final List<String> textContent;
 
   AttributeInfo(this.bindings, {this.isStyle: false, this.isClass: false,
-      this.textContent}) {
+      this.textContent, this.customTwoWayBinding: false}) {
 
     assert(isText || isClass || bindings.length == 1);
     assert(bindings.length > 0);

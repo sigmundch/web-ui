@@ -463,13 +463,53 @@ main() {
     expect(info.loopItems, equals('bar'));
   });
 
-  test('data-value', () {
+  test('data-value - deprecated', () {
+    messages.clear();
     var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
     var info = analyzeElement(elem);
-    elem = elem.query('li');
     expect(info.attributes, isEmpty);
     expect(info.events, isEmpty);
     expect(info.values, equals({'todo': 'x'}));
+    expect(messages.length, 2);
+    expect(messages[0].message, contains('x-todo-row not found'));
+    expect(messages[0].span, equals(elem.sourceSpan));
+    expect(messages[1].message, contains('data-value is deprecated'));
+    expect(messages[1].span, equals(elem.sourceSpan));
+  });
+
+  test('component properties 1-way binding', () {
+    var files = parseFiles({
+      'index.html': '<head><link rel="components" href="foo.html">'
+                    '<body><element name="x-bar" extends="x-foo" '
+                                   'constructor="Bar"></element>'
+                    '<x-bar quux="{{123}}">',
+      'foo.html': '<body><element name="x-foo" constructor="Foo">'
+    });
+
+    var fileInfo = analyzeFiles(files);
+    var bar = fileInfo['index.html'].query('x-bar');
+    expect(bar.hasDataBinding, true);
+    expect(bar.attributes.keys, ['quux']);
+    expect(bar.attributes['quux'].customTwoWayBinding, false);
+    expect(bar.attributes['quux'].boundValue, '123');
+  });
+
+  test('component properties 2-way binding', () {
+    var files = parseFiles({
+      'index.html': '<head><link rel="components" href="foo.html">'
+                    '<body><element name="x-bar" extends="x-foo" '
+                                   'constructor="Bar"></element>'
+                    '<x-bar bind-quux="assignable">',
+      'foo.html': '<body><element name="x-foo" constructor="Foo">'
+    });
+
+    var fileInfo = analyzeFiles(files)['index.html'];
+    var bar = fileInfo.query('x-bar');
+    expect(bar.component, same(fileInfo.declaredComponents[0]));
+    expect(bar.hasDataBinding, true);
+    expect(bar.attributes.keys, ['quux']);
+    expect(bar.attributes['quux'].customTwoWayBinding, true);
+    expect(bar.attributes['quux'].boundValue, 'assignable');
   });
 
   group('analyzeDefinitions', () {

@@ -9,7 +9,7 @@ BSD-style license that can be found in the LICENSE file.
 <!--
  This test runs the TodoMVC app, adds a few elements, marks some as done, and
  switches from back and forth between "Active" and "All". This will make some
- nodes to be hidden and readded to the page. 
+ nodes to be hidden and readded to the page.
 
  This is a regression test for a bug in dwc that made the nodes appear in the
  wrong order when using lists and ifs together.
@@ -35,7 +35,7 @@ BSD-style license that can be found in the LICENSE file.
       <ul id="todo-list">
         <template iterate="x in app.todos">
           <template if="viewModel.isVisible(x)">
-            <x-todo-row data-value="todo:x"></x-todo-row>
+            <x-todo-row todo="{{x}}"></x-todo-row>
           </template>
         </template>
       </ul>

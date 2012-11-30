@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>watch_global_var_test</title>
+  <script type='application/javascript' src="testing.js"></script>
+</head>
+<body>
+  <element name="x-my-input" extends="input">
+    <template></template>
+    <script type="application/dart">
+    import 'package:web_components/web_components.dart';
+    class MyInput extends WebComponent {
+      int clicked;
+      created() {
+        clicked = 0;
+      }
+      inserted() {
+        on.click.add((e) { clicked++; });
+      }
+    }
+    </script>
+  </element>
+  <form>
+  <!-- TODO(jmesserly): if fix #82 we can use <x-my-input> tags. -->
+  <input is="x-my-input" name="a" type="radio" value="Foo" bind-value="name">
+  Foo!
+  <input is="x-my-input" name="a" type="radio" value="Bar" bind-value="name">
+  Bar!
+  </form>
+  <pre>You picked {{name}}. Final value should be 'Bar'</pre>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:web_components/web_components.dart';
+    import 'package:unittest/unittest.dart';
+
+    var name = 'Bar';
+    var foo = queryAll('input')[0];
+    var bar = queryAll('input')[1];
+
+    main() {
+      useShadowDom = false;
+
+      expect(foo.checked, false, reason: 'watchers not run yet.');
+      expect(bar.checked, false, reason: 'watchers not run yet.');
+
+      window.setTimeout(() {
+        expect(foo.checked, false, reason: 'bar picked.');
+        expect(bar.checked, true, reason: 'bar picked.');
+        expect(name, 'Bar');
+
+        name = 'Nothing';
+        dispatch();
+        expect(foo.checked, false, reason: 'nothing picked.');
+        expect(bar.checked, false, reason: 'nothing picked.');
+        expect(name, 'Nothing');
+
+        name = 'Foo';
+        dispatch();
+        expect(foo.checked, true, reason: 'foo picked.');
+        expect(bar.checked, false, reason: 'foo picked.');
+        expect(name, 'Foo');
+
+        expect(foo.xtag.clicked, 0);
+        expect(bar.xtag.clicked, 0);
+        bar.on.click.dispatch(
+            new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
+        expect(name, 'Bar', reason: 'bar clicked.');
+        expect(foo.checked, false, reason: 'bar clicked.');
+        expect(bar.checked, true, reason: 'bar clicked.');
+        expect(foo.xtag.clicked, 0);
+        expect(bar.xtag.clicked, 1);
+
+        foo.checked = true;
+        expect(bar.checked, false, reason: 'only one can be checked.');
+        expect(foo.checked, true, reason: 'explicitly set this.');
+        // It would be nice if this was "Foo".
+        expect(name, 'Bar', reason: 'DOM checked does not fire event.');
+
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
+    }
+  </script>
+</body>
+</html>

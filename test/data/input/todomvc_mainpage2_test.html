@@ -31,7 +31,7 @@ BSD-style license that can be found in the LICENSE file.
       <ul id="todo-list">
         <template iterate="x in app.todos">
           <template if="viewModel.isVisible(x)">
-            <x-todo-row data-value="todo:x"></x-todo-row>
+            <x-todo-row todo="{{x}}"></x-todo-row>
           </template>
         </template>
       </ul>

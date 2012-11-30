@@ -266,6 +266,8 @@ abstract class WebComponent implements Element {
 
   // TODO(jmesserly): this forwarding is temporary until Dart supports
   // subclassing Elements.
+  // TODO(jmesserly): we were missing the setter for title, are other things
+  // missing setters?
 
   List<Node> get nodes => _element.nodes;
 
@@ -360,6 +362,8 @@ abstract class WebComponent implements Element {
   int get tabIndex => _element.tabIndex;
 
   String get title => _element.title;
+
+  set title(String value) { _element.title = value; }
 
   bool get translate => _element.translate;
 

@@ -1,0 +1,55 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+  <style>x-greeter { display: block; }</style>
+</head>
+<body>
+  <element name="x-greeter" extends="div" constructor="Greeter">
+    <template></template>
+    <script type='application/dart'>
+      import 'package:web_components/web_components.dart';
+      class Greeter extends WebComponent {
+        String greeting;
+        changeStuff() {
+          greeting = 'Yo dawg';
+          title = 'I heard you like $title so we put $title in yo $title.';
+        }
+      }
+    </script>
+  </element>
+  <p>
+  The message changes from "hello world" to something more interesting.
+  </p>
+  <!-- Note: "title" is a DOM field on all elements.
+       Also this element has no rendering. -->
+  <x-greeter id="greet" bind-title="data[1]" bind-greeting="data[0]">
+  </x-greeter>
+  <p id="actual">{{data[0]}} {{data[1]}}</p>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    import 'package:web_components/web_components.dart';
+
+    var data = ['hello', 'world'];
+    main() {
+      window.setTimeout(() {
+        var actual = query('#actual');
+        var greet = query('#greet');
+        expect(actual.innerHTML, 'hello world');
+        greet.xtag.changeStuff();
+        dispatch();
+        expect(actual.innerHTML, contains('Yo dawg I heard'));
+        window.postMessage('done', '*');
+      }, 0);
+    }
+  </script>
+</body>
+</html>

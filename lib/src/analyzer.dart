@@ -102,8 +102,6 @@ class _Analyzer extends TreeVisitor {
       info.identifier = '_root';
     }
 
-    node.attributes.forEach((k, v) => visitAttribute(info, k, v));
-
     _bindCustomElement(node, info);
 
     var lastInfo = _currentInfo;
@@ -122,6 +120,8 @@ class _Analyzer extends TreeVisitor {
 
       _currentInfo = component;
     }
+
+    node.attributes.forEach((k, v) => visitAttribute(info, k, v));
 
     var savedParent = _parent;
     _parent = info;
@@ -338,6 +338,13 @@ class _Analyzer extends TreeVisitor {
   }
 
   bool _readDataValue(ElementInfo info, String value) {
+    messages.warning('data-value is deprecated. '
+        'Given data-value="fieldName:expr", replace it with '
+        'field-name="{{expr}}". Unlike data-value, "expr" will be watched and '
+        'fieldName will automatically update. You may also use '
+        'bind-field-name="dartAssignableValue" to get two-way data binding.',
+        info.node.sourceSpan, file: _fileInfo.path);
+
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
       messages.error('data-value attribute should be of the form '
@@ -429,9 +436,11 @@ class _Analyzer extends TreeVisitor {
   /** Support for two-way bindings. */
   bool _readTwoWayBinding(ElementInfo info, String name, String bindingExpr) {
     var elem = info.node;
-    var isInput = elem.tagName == 'input';
-    var isTextArea = elem.tagName == 'textarea';
-    var isSelect = elem.tagName == 'select';
+
+    // Find the HTML tag name.
+    var isInput = info.baseTagName == 'input';
+    var isTextArea = info.baseTagName == 'textarea';
+    var isSelect = info.baseTagName == 'select';
     var inputType = elem.attributes['type'];
 
     String eventName;
@@ -457,23 +466,38 @@ class _Analyzer extends TreeVisitor {
       // Input event is fired more frequently than "change" on some browsers.
       // We want to update the value for each keystroke.
       eventName = 'input';
+    } else if (info.component != null) {
+      // Assume we are binding a field on the component.
+      // TODO(jmesserly): validate this assumption about the user's code by
+      // using compile time mirrors.
+
+      _checkDuplicateAttribute(info, name);
+      info.attributes[name] = new AttributeInfo([bindingExpr],
+          customTwoWayBinding: true);
+      info.hasDataBinding = true;
+      return true;
+
     } else {
       messages.error('Unknown two-way binding attribute $name. Ignored.',
           info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
 
-    if (elem.attributes[name] != null) {
-      messages.warning('Duplicate attribute $name. You should provide either '
-          'the two-way binding or the attribute itself. The attribute will be '
-          'ignored.', info.node.sourceSpan, file: _fileInfo.path);
-      info.removeAttributes.add(name);
-    }
+    _checkDuplicateAttribute(info, name);
 
     info.attributes[name] = new AttributeInfo([bindingExpr]);
     _addEvent(info, eventName, (e) => '$bindingExpr = $e.$name');
     info.hasDataBinding = true;
     return true;
+  }
+
+  void _checkDuplicateAttribute(ElementInfo info, String name) {
+    if (info.node.attributes[name] != null) {
+      messages.warning('Duplicate attribute $name. You should provide either '
+          'the two-way binding or the attribute itself. The attribute will be '
+          'ignored.', info.node.sourceSpan, file: _fileInfo.path);
+      info.removeAttributes.add(name);
+    }
   }
 
   bool _isValidRadioButton(ElementInfo info) {
