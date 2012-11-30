@@ -98,6 +98,8 @@ ArgResults _processArgs(List<String> arguments) {
     ..addOption("removed", help: "the file was removed since the last build",
         allowMultiple: true)
     ..addFlag("clean", negatable: false, help: "remove any build artifacts")
+    ..addFlag("machine", negatable: false,
+        help: "produce warnings in a machine parseable format")
     ..addFlag("help", negatable: false, help: "displays this help and exit");
   var args = parser.parse(arguments);
   if (args["help"]) {
