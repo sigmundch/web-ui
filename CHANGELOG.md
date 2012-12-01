@@ -4,22 +4,22 @@ This file contains highlights of what changes on each version of the web
 components package. This file is normally updated whenever we push a new version
 to pub.
 
-## Pub version 0.2.8+3 (SDK 15595)
+## Pub version 0.2.8+3 - Nov 30 (SDK 15595)
 
   * Upgrades for new trunk release (mainly breaking changes in dart:html)
   * Bug fix:
     * URI attributes are now checked for XSS: use SafeUri if validation is too
       strict.
 
-## Pub version 0.2.8+2 (SDK 15355)
+## Pub version 0.2.8+2 - Nov 30 (SDK 15355)
 
   * Bug fix: hosted and sdk dependencies errors due to changes in html5lib.
 
-## Pub version 0.2.8+1 (SDK 15355)
+## Pub version 0.2.8+1 - Nov 30 (SDK 15355)
 
   * Accept, but ignore, the new editor flag '--machine' in build.dart 
 
-## Pub version 0.2.8 (SDK 15355)
+## Pub version 0.2.8 - Nov 30 (SDK 15355)
 
   * Two-way binding changes:
     * New syntax: `bind-attribute="dartAssignableValue"`, `data-bind` is
