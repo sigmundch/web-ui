@@ -40,10 +40,13 @@ The information is used to create "$OUTPUT_NAME".
   }
 
   var htmlPath = new Path('dart:html');
-  var libPath = new Path(sdk);
+  var audioPath = new Path('dart:web_audio');
+  var svgPath = new Path('dart:svg');
+  var libPath = new Path(sdk).append('/');
   var pkgPath = new Path(sdk).append('pkg/');
 
-  var mirrors = new Compilation.library([htmlPath], libPath, pkgPath).mirrors;
+  var mirrors = new Compilation.library(
+      [htmlPath, audioPath, svgPath], libPath, pkgPath).mirrors;
   var html = mirrors.libraries['html'];
 
 
@@ -56,20 +59,22 @@ The information is used to create "$OUTPUT_NAME".
   
   var elemSet = new Set();
   for (var name in htmlElementNames.values) {
-    _addElement(html.classes[name], elemSet);
+    var qualifiedName = name.split('.');
+    var lib = mirrors.libraries[qualifiedName[0]];
+    _addElement(lib.classes[qualifiedName[1]], elemSet);
   }
   _addElement(html.classes['UnknownElement'], elemSet);
 
   code.add('var htmlElementFields = const {\n');
   var elements = new List.from(elemSet);
-  elements.sort();
-  for (var element in elements) {
-    var cls = html.classes[element];
+  elements.sort((a, b) => a.displayName.compareTo(b.displayName));
+  for (var cls in elements) {
+    var element = cls.qualifiedName;
     var setters = [];
 
     if (cls.superclass != null
         && cls.superclass.displayName.endsWith('Element')) {
-      extendsCode.add("  '$element': '${cls.superclass.displayName}',\n");
+      extendsCode.add("  '$element': '${cls.superclass.qualifiedName}',\n");
     }
 
     // TODO(jmesserly): using "cls.setters" does not seem to work
@@ -108,11 +113,11 @@ The information is used to create "$OUTPUT_NAME".
 /** Add an element class and its element super classes to [elemSet]. */
 void _addElement(ClassMirror cls, Set elemSet) {
   while (cls != null) {
-    var name = cls.displayName;
-    if (!name.endsWith('Element') || elemSet.contains(name)) {
+    if (!cls.isOriginalDeclaration) cls = cls.originalDeclaration;
+    if (!cls.displayName.endsWith('Element') || elemSet.contains(cls)) {
       break;
     }
-    elemSet.add(name);
+    elemSet.add(cls);
     cls = cls.superclass;
   }
 }

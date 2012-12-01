@@ -20,12 +20,12 @@
     main() {
       window.on.load.add((e) {
         var input = query('input');
-        document.body.addText('expected input.checked to be false, got '
-                              '${input.checked}');
+        document.body.appendText('expected input.checked to be false, got '
+                                 '${input.checked}');
         boolVar = true;
         dispatch();
-        document.body.addText('expected input.checked to be true, got '
-                              '${input.checked}');
+        document.body.appendText('expected input.checked to be true, got '
+                                 '${input.checked}');
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       });
     }

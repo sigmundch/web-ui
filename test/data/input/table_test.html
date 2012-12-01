@@ -27,7 +27,7 @@ BSD-style license that can be found in the LICENSE file.
   List<List> table = [[1, 2, 3], ['a', 'b', 'c'], ['A', 'B', 'C']];
   main() {
     window.setTimeout(() {
-      expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+      expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
           '<tr> <td>1</td> <td>2</td> <td>3</td> </tr> '
           '<tr> <td>a</td> <td>b</td> <td>c</td> </tr> '
           '<tr> <td>A</td> <td>B</td> <td>C</td> </tr>'));
@@ -36,7 +36,7 @@ BSD-style license that can be found in the LICENSE file.
       table.add(['_', '__', '___']);
       dispatch();
       window.setTimeout(() {
-        expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+        expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
             '<tr> <td>1</td> <td>2</td> <td>X</td> </tr> '
             '<tr> <td>a</td> <td>Y</td> <td>c</td> </tr> '
             '<tr> <td>A</td> <td>B</td> <td>C</td> </tr> '

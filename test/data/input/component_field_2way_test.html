@@ -43,10 +43,10 @@
       window.setTimeout(() {
         var actual = query('#actual');
         var greet = query('#greet');
-        expect(actual.innerHTML, 'hello world');
+        expect(actual.innerHtml, 'hello world');
         greet.xtag.changeStuff();
         dispatch();
-        expect(actual.innerHTML, contains('Yo dawg I heard'));
+        expect(actual.innerHtml, contains('Yo dawg I heard'));
         window.postMessage('done', '*');
       }, 0);
     }

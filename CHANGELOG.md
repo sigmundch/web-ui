@@ -4,7 +4,22 @@ This file contains highlights of what changes on each version of the web
 components package. This file is normally updated whenever we push a new version
 to pub.
 
-## Unreleased
+## Pub version 0.2.8+3 (SDK 15595)
+
+  * Upgrades for new trunk release (mainly breaking changes in dart:html)
+  * Bug fix:
+    * URI attributes are now checked for XSS: use SafeUri if validation is too
+      strict.
+
+## Pub version 0.2.8+2 (SDK 15355)
+
+  * Bug fix: hosted and sdk dependencies errors due to changes in html5lib.
+
+## Pub version 0.2.8+1 (SDK 15355)
+
+  * Accept, but ignore, the new editor flag '--machine' in build.dart 
+
+## Pub version 0.2.8 (SDK 15355)
 
   * Two-way binding changes:
     * New syntax: `bind-attribute="dartAssignableValue"`, `data-bind` is
@@ -12,8 +27,24 @@ to pub.
     * Support for radio buttons
     * Support for valueAsDate and valueAsNumber
     * Better detection of error conditions, like duplicate value attributes.
+
+  * Binding in components:
+    * you can use `attribute="{{}}"` and `bind-attribute="x"` to initialize,
+      update, and bind fields of components (exposed as attributes in the HTML
+      tag).
+
+  * Conditional templates:
+    * Added new experimental syntax `<template if="exp">`.
+
   * Bug fixes:
     * Make dartium extension use the latest dart.js
+    * html fragments: fix issues with text nodes mixed with elements
+    * Internally data bindings watch the result of 'toString()', so types
+      implementing toString (like Maps or StringBuffer) can be used directly in
+      templates.
+    * Most generated identifiers are now hidden: all identifiers generated for
+      html elements in the template are hidden, except '_root'. Root will be
+      hidden in the future.
 
 ## Pub version 0.2.7 - Nov 26 (SDK 15355)
 

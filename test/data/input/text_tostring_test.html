@@ -27,7 +27,7 @@ BSD-style license that can be found in the LICENSE file.
 
     main() {
       window.setTimeout(() {
-        expect(actual.innerHTML, 'The quick brown [initial, list state] over '
+        expect(actual.innerHtml, 'The quick brown [initial, list state] over '
           'the {initial: map, state: !}.');
 
         list[0] = 'fox';
@@ -37,7 +37,7 @@ BSD-style license that can be found in the LICENSE file.
 
         dispatch();
 
-        expect(actual.innerHTML, expected.innerHTML);
+        expect(actual.innerHtml, expected.innerHtml);
 
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       }, 0);

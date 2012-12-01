@@ -30,7 +30,7 @@ BSD-style license that can be found in the LICENSE file.
       window.setTimeout(() {
         var div = document.query('#test');
         expect(div, isNotNull);
-        expect(div.innerHTML, equals('3'));
+        expect(div.innerHtml, equals('3'));
         expect(div.previousNode, same(placeholder));
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       }, 0);

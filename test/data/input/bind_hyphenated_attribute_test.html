@@ -18,8 +18,8 @@
     String topLevelVar = "hi";
     main() {
       window.on.load.add((e) {
-        document.body.addText('expected data-hi to be "hi", got '
-                              '"${query('div').dataAttributes['hi']}"');
+        document.body.appendText('expected data-hi to be "hi", got '
+                                 '"${query('div').dataAttributes['hi']}"');
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       });
     }

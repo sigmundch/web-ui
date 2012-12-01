@@ -328,6 +328,9 @@ abstract class WebComponent implements Element {
     _element.dataAttributes = value;
   }
 
+  Map<String, String> getNamespacedAttributes(String namespace) =>
+      _element.getNamespacedAttributes(namespace);
+
   Future<CSSStyleDeclaration> get computedStyle => _element.computedStyle;
 
   Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
@@ -349,13 +352,22 @@ abstract class WebComponent implements Element {
 
   String get id => _element.id;
 
-  String get innerHTML => _element.innerHTML;
+  String get innerHTML => _element.innerHtml;
+
+  void set innerHTML(String v) {
+    _element.innerHtml = v;
+  }
+
+  String get innerHtml => _element.innerHtml;
+  void set innerHtml(String v) {
+    _element.innerHtml = v;
+  }
 
   bool get isContentEditable => _element.isContentEditable;
 
   String get lang => _element.lang;
 
-  String get outerHTML => _element.outerHTML;
+  String get outerHtml => _element.outerHtml;
 
   bool get spellcheck => _element.spellcheck;
 
@@ -374,8 +386,8 @@ abstract class WebComponent implements Element {
   Element insertAdjacentElement(String where, Element element) =>
     _element.insertAdjacentElement(where, element);
 
-  void insertAdjacentHTML(String where, String html) {
-    _element.insertAdjacentHTML(where, html);
+  void insertAdjacentHtml(String where, String html) {
+    _element.insertAdjacentHtml(where, html);
   }
 
   void insertAdjacentText(String where, String text) {
@@ -476,6 +488,20 @@ abstract class WebComponent implements Element {
   String $dom_getAttribute(String name) =>
       _element.$dom_getAttribute(name);
 
+  String $dom_getAttributeNS(String namespaceUri, String localName) =>
+      _element.$dom_getAttributeNS(namespaceUri, localName);
+
+  String $dom_setAttributeNS(
+      String namespaceUri, String localName, String value) {
+    _element.$dom_setAttributeNS(namespaceUri, localName, value);
+  }
+
+  bool $dom_hasAttributeNS(String namespaceUri, String localName) =>
+      _element.$dom_hasAttributeNS(namespaceUri, localName);
+
+  void $dom_removeAttributeNS(String namespaceUri, String localName) =>
+      _element.$dom_removeAttributeNS(namespaceUri, localName);
+
   ClientRect getBoundingClientRect() => _element.getBoundingClientRect();
 
   List<ClientRect> getClientRects() => _element.getClientRects();
@@ -509,6 +535,10 @@ abstract class WebComponent implements Element {
 
   Node get $dom_lastChild => _element.$dom_lastChild;
 
+  String get $dom_localName => _element.$dom_localName;
+
+  String get $dom_namespaceUri => _element.$dom_namespaceUri;
+
   int get nodeType => _element.nodeType;
 
   void $dom_addEventListener(String type, EventListener listener,
@@ -534,9 +564,11 @@ abstract class WebComponent implements Element {
 
   set xtag(value) { _element.xtag = value; }
 
-  void addText(String text) => _element.addText(text);
+  void append(Element e) => _element.append(e);
 
-  void addHtml(String html) => _element.addHtml(html);
+  void appendText(String text) => _element.appendText(text);
+
+  void appendHtml(String html) => _element.appendHtml(html);
 }
 
 /**

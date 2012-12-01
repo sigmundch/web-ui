@@ -20,13 +20,13 @@
     main() {
       window.on.load.add((e) {
         var input = query('input');
-        document.body.addText('expected input.value to be "A", got '
-                              '${input.value}');
+        document.body.appendText('expected input.value to be "A", got '
+                                 '${input.value}');
         input.value = "B";
         topLevelVar = "C";
         dispatch();
-        document.body.addText('expected input.value to be "C", got '
-                              '${input.value}');
+        document.body.appendText('expected input.value to be "C", got '
+                                 '${input.value}');
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       });
     }

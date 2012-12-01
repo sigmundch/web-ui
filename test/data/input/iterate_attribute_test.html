@@ -23,12 +23,12 @@ BSD-style license that can be found in the LICENSE file.
   var list = <String>['a', 'b', 'c', 'e'];
   main() {
     window.setTimeout(() {
-      expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+      expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
           '<span>a</span> <span>b</span> <span>c</span> <span>e</span>'));
       list[3] = 'd';
       dispatch();
       window.setTimeout(() {
-        expect(document.query("#test").innerHTML, equalsIgnoringWhitespace(
+        expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
             '<span>a</span> <span>b</span> <span>c</span> <span>d</span>'));
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       }, 0);
