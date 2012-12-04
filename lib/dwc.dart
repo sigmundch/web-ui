@@ -28,7 +28,10 @@ class CompilerResult {
   final bool success;
   final List<String> outputs;
   final List<String> messages;
-  CompilerResult(this.success, this.outputs, this.messages);
+
+  CompilerResult([this.success = true,
+                  this.outputs = const [],
+                  this.messages = const []]);
 }
 
 /**
@@ -39,7 +42,7 @@ class CompilerResult {
 // TODO(justinfagnani): return messages in the result
 Future<CompilerResult> run(List<String> args) {
   var options = CompilerOptions.parse(args);
-  if (options == null) return new Future.immediate(null);
+  if (options == null) return new Future.immediate(new CompilerResult());
 
   fileSystem = new ConsoleFileSystem();
   messages = new Messages(options: options);
