@@ -7,13 +7,13 @@ to pub.
 ## Pub version 0.2.8+3 - Nov 30 (SDK 15595)
 
   * Upgrades for new trunk release (mainly breaking changes in dart:html)
-  * Bug fix:
-    * URI attributes are now checked for XSS: use SafeUri if validation is too
-      strict.
 
 ## Pub version 0.2.8+2 - Nov 30 (SDK 15355)
 
-  * Bug fix: hosted and sdk dependencies errors due to changes in html5lib.
+  * Bug fix:
+    * hosted and sdk dependencies errors due to changes in html5lib.
+    * URI attributes are now checked for XSS: use SafeUri if validation is too
+      strict.
 
 ## Pub version 0.2.8+1 - Nov 30 (SDK 15355)
 
