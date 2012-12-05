@@ -38,7 +38,7 @@ class PathInfo {
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
-  PathInfo(Path baseDir, Path outputDir, [bool forceMangle = false])
+  PathInfo(Path baseDir, Path outputDir, bool forceMangle)
       : _baseDir = baseDir,
         _outputDir = outputDir,
         _mangleFilenames = forceMangle || (baseDir == outputDir);
@@ -80,7 +80,27 @@ class PathInfo {
   /** The corresponding output directory for [input]'s directory. */
   Path _outputDirPath(Path input) {
     var outputSubdir = input.directoryPath.relativeTo(_baseDir);
-    return _outputDir.join(outputSubdir).canonicalize();
+    return _rewritePackages(_outputDir.join(outputSubdir).canonicalize());
+  }
+
+  /**
+   * We deal with `packages/` directories in a very special way. We assume it
+   * points to resources loaded from other pub packages. If an output directory
+   * is specified, the compiler will create a packages symlink so that
+   * `package:` imports work.
+   *
+   * To make it possible to share components through pub, we allow using tags of
+   * the form `<link rel="component" href="packages/...">`, so that you can
+   * refer to components within the packages symlink.  Regardless of whether an
+   * --out option was given to the compiler, we don't want to generate files
+   * inside `packages/` for those components.  Instead we will generate such
+   * code in a special directory called `_from_packages/`.
+   */
+  Path _rewritePackages(Path outputPath) {
+    if (!outputPath.toString().contains('packages')) return outputPath;
+    var segments = outputPath.segments().map(
+        (segment) => segment == 'packages' ? '_from_packages' : segment);
+    return new Path(Strings.join(segments, '/'));
   }
 
   /** Path for a file directly under [_outputDir] with the given [filename]. */
@@ -96,7 +116,8 @@ class PathInfo {
   Path relativePath(LibraryInfo src, LibraryInfo target) {
     var srcDir = src.inputPath.directoryPath;
     var relDir = target.inputPath.directoryPath.relativeTo(srcDir);
-    return relDir.append(target._getOutputFilename(mangle)).canonicalize();
+    return _rewritePackages(
+        relDir.append(target._getOutputFilename(mangle)).canonicalize());
   }
 
   /**
@@ -105,23 +126,24 @@ class PathInfo {
    */
   Path relativePathFromOutputDir(LibraryInfo info) {
     var relativeDir = info.inputPath.directoryPath.relativeTo(_baseDir);
-    return relativeDir.append(info._getOutputFilename(mangle)).canonicalize();
+    return _rewritePackages(
+        relativeDir.append(info._getOutputFilename(mangle)).canonicalize());
   }
 
   /**
-   * Transforms a [target] url seen in `src.inputPath` (e.g. a Dart import, a
-   * .css href in an HTML file, etc) into a corresponding url from the output
-   * library of [src]. This will keep 'package:', 'dart:', path-absolute, and
+   * Transforms a [target] url seen in [src] (e.g. a Dart import, a .css href in
+   * an HTML file, etc) into a corresponding url from the output file associated
+   * with [src]). This will keep 'package:', 'dart:', path-absolute, and
    * absolute urls intact, but it will fix relative paths to walk from the
    * output directory back to the input directory. An exception will be thrown
    * if [target] is not under [_baseDir].
    */
-  String transformUrl(LibraryInfo src, String target) {
+  String transformUrl(Path src, String target) {
     if (new Uri.fromString(target).isAbsolute()) return target;
     var path = new Path(target);
     if (path.isAbsolute) return target;
-    var pathToTarget = src.inputPath.directoryPath.join(path);
-    var outputLibraryDir = _outputDirPath(src.inputPath);
+    var pathToTarget = src.directoryPath.join(path);
+    var outputLibraryDir = _outputDirPath(src);
     return pathToTarget.relativeTo(outputLibraryDir).canonicalize().toString();
   }
 }
@@ -221,7 +243,7 @@ class FileInfo extends LibraryInfo {
   /** Root is associated with the body info. */
   ElementInfo bodyInfo;
 
-  FileInfo([this.path, this.isEntryPoint = false]);
+  FileInfo(this.path, [this.isEntryPoint = false]);
 
   /**
    * Query for an ElementInfo matching the provided [tag], starting from the

@@ -361,6 +361,22 @@ main() {
       emitter.run(doc, pathInfo);
       expect(doc.outerHTML, equals(html));
     });
+
+    test('transform css urls', () {
+      var html = '<html><head>'
+          '<link href="a.css" rel="stylesheet">'
+          '</head><body></body></html>';
+      var doc = parseDocument(html);
+      var fileInfo = analyzeNodeForTesting(doc);
+      fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+      // Issue #207 happened because we used to mistakenly take the path of the
+      // external file when transforming the urls in the html file.
+      fileInfo.externalFile = new Path('dir/a.dart');
+      var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+      var emitter = new MainPageEmitter(fileInfo);
+      emitter.run(doc, pathInfo);
+      expect(doc.outerHTML, html.replaceAll('a.css', '../a.css'));
+    });
   });
 }
 

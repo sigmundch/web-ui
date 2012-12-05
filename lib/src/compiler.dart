@@ -77,7 +77,7 @@ class Compiler {
       if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
       if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
     }
-    _pathInfo = new PathInfo(basePath, outputPath);
+    _pathInfo = new PathInfo(basePath, outputPath, options.forceMangle);
   }
 
   /** Compile the application starting from the given [mainFile]. */

@@ -845,7 +845,7 @@ class MainPageEmitter extends RecursiveEmitter {
      if (tag.attributes['type'] == 'application/dart') {
        tag.remove();
      } else if (src != null) {
-       tag.attributes["src"] = pathInfo.transformUrl(_fileInfo, src);
+       tag.attributes["src"] = pathInfo.transformUrl(_fileInfo.path, src);
      }
     });
     document.queryAll('link').forEach((tag) {
@@ -853,7 +853,7 @@ class MainPageEmitter extends RecursiveEmitter {
        if (tag.attributes['rel'] == 'components') {
          tag.remove();
        } else if (href != null) {
-         tag.attributes['href'] = pathInfo.transformUrl(_fileInfo, href);
+         tag.attributes['href'] = pathInfo.transformUrl(_fileInfo.path, href);
        }
      });
 

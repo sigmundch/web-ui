@@ -136,7 +136,7 @@ String exportList(List<Path> exports) =>
 String directiveText(
     DartDirectiveInfo directive, LibraryInfo src, PathInfo pathInfo) {
   var buff = new StringBuffer();
-  var uri = pathInfo.transformUrl(src, directive.uri);
+  var uri = pathInfo.transformUrl(src.inputPath, directive.uri);
   buff.add(directive.label)
       .add(" '")
       .add(uri.replaceAll("'", "\\'"))

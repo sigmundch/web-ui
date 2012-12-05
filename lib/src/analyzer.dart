@@ -33,7 +33,7 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  * Used for testing.
  */
 FileInfo analyzeNodeForTesting(Node source) {
-  var result = new FileInfo();
+  var result = new FileInfo(new Path('mock_testing_file.html'));
   new _Analyzer(result).visit(source);
   return result;
 }

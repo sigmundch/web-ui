@@ -18,7 +18,10 @@ class CompilerOptions {
 
   /** Whether to use colors to print messages on the terminal. */
   final bool useColors;
-  
+
+  /** Force mangling any generated name (even when --out is provided). */
+  final bool forceMangle;
+
   /** File to process by the compiler. */
   String inputFile;
 
@@ -38,6 +41,7 @@ class CompilerOptions {
       useColors = args['colors'],
       baseDir = args['basedir'],
       outputDir = args['out'],
+      forceMangle = args['unique_output_filenames'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
@@ -46,10 +50,16 @@ class CompilerOptions {
           defaultsTo: false, negatable: false)
       ..addFlag('clean', help: 'Remove all generated files',
           defaultsTo: false, negatable: false)
-      ..addFlag('warnings_as_errors', help: 'Warning handled as errors',
+      ..addFlag('warnings_as_errors', abbr: 'e',
+          help: 'Warnings handled as errors',
           defaultsTo: false, negatable: false)
       ..addFlag('colors', help: 'Display errors/warnings in colored text',
           defaultsTo: true)
+      ..addFlag('unique_output_filenames', abbr: 'u',
+          help: 'Use unique names for all generated files, so they will not '
+                'have the same name as your input files, even if they are in a '
+                'different directory',
+          defaultsTo: false, negatable: false)
       ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
           ' (defaults to the same directory as the source file)')
       ..addOption('basedir', help: 'Base directory where to find all source '
