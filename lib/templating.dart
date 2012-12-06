@@ -15,9 +15,13 @@ import 'package:web_components/watcher.dart';
  * convinience, this function returns [start].
  */
 Node removeNodes(Node start, Node end) {
+  var parent = end != null ? end.parent : null;
+  if (parent == null) return start;
+
   while (start != end) {
     var prev = end.previousNode;
-    end.remove();
+    // TODO(sigmund): use `end.remove()` after dartbug.com/7173 is fixed
+    parent.$dom_removeChild(end);
     end = prev;
   }
   return start;
