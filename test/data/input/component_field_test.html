@@ -13,12 +13,12 @@
 </head>
 <body>
   <element name="x-greeter" extends="div" constructor="Greeter">
-    <template>{{greeting}}, {{title}}{{ending}}</template>
+    <template>{{greetIng}}, {{title}}{{ending}}</template>
     <script type='application/dart'>
       import 'common.dart';
       import 'package:web_components/web_components.dart';
       class Greeter extends WebComponent {
-        String greeting, ending;
+        String greetIng, ending;
       }
     </script>
   </element>
@@ -30,7 +30,7 @@
   <template iterate="g in greetings">
     <template iterate="n in names">
       <template iterate="e in endings">
-        <x-greeter greeting="{{g}}" title="{{n}}" ending="{{e}}"></x-greeter>
+        <x-greeter greet-ing="{{g}}" title="{{n}}" ending="{{e}}"></x-greeter>
       </template>
     </template>
   </template>

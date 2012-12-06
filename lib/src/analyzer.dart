@@ -34,15 +34,16 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  */
 FileInfo analyzeNodeForTesting(Node source) {
   var result = new FileInfo(new Path('mock_testing_file.html'));
-  new _Analyzer(result).visit(source);
+  new _Analyzer(result, new IntIterator()).visit(source);
   return result;
 }
 
 /** Extract relevant information from all files found from the root document. */
-void analyzeFile(SourceFile file, Map<Path, FileInfo> info) {
+void analyzeFile(SourceFile file, Map<Path, FileInfo> info,
+    Iterator<int> uniqueIds) {
   var fileInfo = info[file.path];
   _normalize(fileInfo, info);
-  new _Analyzer(fileInfo).visit(file.document);
+  new _Analyzer(fileInfo, uniqueIds).visit(file.document);
 }
 
 
@@ -51,9 +52,9 @@ class _Analyzer extends TreeVisitor {
   final FileInfo _fileInfo;
   LibraryInfo _currentInfo;
   ElementInfo _parent;
-  int _uniqueId = 0;
+  Iterator<int> _uniqueIds;
 
-  _Analyzer(this._fileInfo) {
+  _Analyzer(this._fileInfo, this._uniqueIds) {
     _currentInfo = _fileInfo;
   }
 
@@ -135,11 +136,10 @@ class _Analyzer extends TreeVisitor {
     if (_needsIdentifier(info)) {
       _ensureParentHasQuery(info);
       if (info.identifier == null) {
-        var id = '__e-$_uniqueId';
+        var id = '__e-${_uniqueIds.next()}';
         info.identifier = toCamelCase(id);
         // If it's not created in code, we'll query the element by it's id.
         if (!info.createdInCode) node.attributes['id'] = id;
-        _uniqueId++;
       }
     }
   }
@@ -611,9 +611,8 @@ class _Analyzer extends TreeVisitor {
     do {
       _addRawTextContent(parser.textContent, text);
       var placeholder = new Text('');
-      var id = '__binding$_uniqueId';
+      var id = '__binding${_uniqueIds.next()}';
       new TextInfo(placeholder, _parent, parser.binding, id);
-      _uniqueId++;
     } while (parser.moveNext());
 
     _addRawTextContent(parser.textContent, text);

@@ -187,9 +187,11 @@ class Compiler {
 
   /** Run the analyzer on every input html file. */
   void _analyze() {
+    var uniqueIds = new IntIterator();
     for (var file in files) {
       if (file.isDart) continue;
-      _time('Analyzed contents', file.path, () => analyzeFile(file, info));
+      _time('Analyzed contents', file.path,
+          () => analyzeFile(file, info, uniqueIds));
     }
   }
 

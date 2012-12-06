@@ -13,6 +13,7 @@ import 'package:web_components/src/info.dart';
 import 'package:web_components/src/files.dart';
 import 'package:web_components/src/file_system/path.dart';
 import 'package:web_components/src/messages.dart';
+import 'package:web_components/src/utils.dart';
 import 'testing.dart';
 
 main() {
@@ -590,7 +591,7 @@ main() {
 
       var quuxElement = doc.query('element');
       expect(quuxElement, isNotNull);
-      analyzeFile(srcFile, toPathMap({'main.html': info }));
+      analyzeFile(srcFile, toPathMap({'main.html': info }), new IntIterator());
 
       expect(info.components.length, equals(1));
       var compInfo = info.components['x-quux'];
@@ -635,7 +636,7 @@ main() {
       var info = analyzeDefinitions(srcFile);
       expect(info.declaredComponents.length, equals(1));
 
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }));
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator());
       expect(info.components.keys, equals(['x-foo']));
       expect(info.query('x-foo').component, equals(info.declaredComponents[0]));
     });
@@ -726,7 +727,7 @@ main() {
 
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
       var info = analyzeDefinitions(srcFile);
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }));
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator());
     });
 
     test('components extends another component', () {

@@ -217,6 +217,8 @@ class EventListenerEmitter extends Emitter<ElementInfo> {
     var elemField = info.identifier;
     info.events.forEach((name, events) {
       for (var event in events) {
+        // TODO(jmesserly): use .on.camelCaseName when possible. But make sure
+        // that custom events still work.
         var field = event.listenerField;
         // Note: the name $event is from AngularJS and is essentially public
         // API. See issue #175.
@@ -938,7 +940,7 @@ String _findDomField(ElementInfo info, String name) {
   // If we didn't find a DOM setter, and this is a component, set a property on
   // the component.
   if (info.component != null && !name.startsWith('data-')) {
-    return 'xtag.$name';
+    return 'xtag.${toCamelCase(name)}';
   }
   return "attributes['$name']";
 }

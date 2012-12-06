@@ -1,0 +1,40 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="components" href="component_unique_ids_component.html">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  You should see a message from B then A
+  <element name="x-component-a" extends="span">
+    <template>
+      <x-component-b></x-component-b>
+      <div class='a' title="{{'TitleA'}}">hello from A</div>
+    </template>
+  </element>
+  <x-component-a></x-component-a>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:web_components/web_components.dart';
+    import 'package:unittest/unittest.dart';
+    main() {
+      useShadowDom = false; // need to query inside components
+      window.setTimeout(() {
+        // Make sure we don't get confused and data-bind the wrong thing.
+        expect(query('.a').title, 'TitleA');
+        expect(query('.b').title, 'TitleB');
+
+        window.postMessage('done', '*');
+      }, 0);
+    }
+  </script>
+</body>
+</html>
+

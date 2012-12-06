@@ -202,3 +202,12 @@ void setImmediate(void callback()) {
   });
   port.toSendPort().send(null);
 }
+
+/** Iterates through an infinite sequence, starting from zero. */
+class IntIterator implements Iterator<int> {
+  int _next = 0;
+
+  bool get hasNext => true;
+
+  int next() => _next++;
+}

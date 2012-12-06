@@ -17,9 +17,9 @@
     <script type='application/dart'>
       import 'package:web_components/web_components.dart';
       class Greeter extends WebComponent {
-        String greeting;
+        String greetIng;
         changeStuff() {
-          greeting = 'Yo dawg';
+          greetIng = 'Yo dawg';
           title = 'I heard you like $title so we put $title in yo $title.';
         }
       }
@@ -30,7 +30,7 @@
   </p>
   <!-- Note: "title" is a DOM field on all elements.
        Also this element has no rendering. -->
-  <x-greeter id="greet" bind-title="data[1]" bind-greeting="data[0]">
+  <x-greeter id="greet" bind-title="data[1]" bind-greet-ing="data[0]">
   </x-greeter>
   <p id="actual">{{data[0]}} {{data[1]}}</p>
   <script type="application/dart">

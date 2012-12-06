@@ -13,6 +13,7 @@ import 'package:web_components/src/messages.dart';
 import 'package:web_components/src/options.dart';
 import 'package:web_components/src/files.dart';
 import 'package:web_components/src/file_system/path.dart';
+import 'package:web_components/src/utils.dart';
 
 useMockMessages() {
   messages = new Messages(shouldPrint: false);
@@ -52,8 +53,9 @@ Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
   }
 
   // analyze file contents
+  var uniqueIds = new IntIterator();
   for (var file in files) {
-    analyzeFile(file, result);
+    analyzeFile(file, result, uniqueIds);
   }
   return _toStringMap(result);
 }
