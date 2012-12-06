@@ -4,6 +4,8 @@
 
 library messages;
 
+import 'dart:json';
+
 import 'package:html5lib/dom_parsing.dart' show SourceSpan;
 import 'package:logging/logging.dart' show Level;
 
@@ -55,23 +57,39 @@ class Message {
 
     return output.toString();
   }
-}
 
-typedef void PrintHandler(Object obj);
+  String toJson() {
+    if (file == null) return toString();
+
+    var kind = (level == Level.SEVERE ? 'error' :
+        (level == Level.WARNING ? 'warning' : 'info'));
+    var json = {
+      'method': kind,
+      'params': {
+        'file': file.toString(),
+        'message': message,
+        'line': span == null ? 1 : span.line + 1,
+      }
+    };
+    if (span != null) {
+      json['params']['charStart'] = span.start;
+      json['params']['charEnd'] = span.end;
+    }
+    return JSON.stringify([json]);
+  }
+}
 
 /**
  * This class tracks and prints information, warnings, and errors emitted by the
  * compiler.
  */
 class Messages {
-  /** Called on every error. Set to blank function to supress printing. */
-  final PrintHandler printHandler;
-
   final CompilerOptions options;
+  final bool shouldPrint;
 
   final List<Message> messages = <Message>[];
 
-  Messages({CompilerOptions options, this.printHandler: print})
+  Messages({CompilerOptions options, this.shouldPrint: true})
       : options = options != null ? options : new CompilerOptions();
 
   // Convenience methods for testing
@@ -87,8 +105,7 @@ class Messages {
         useColors: options.useColors);
 
     messages.add(msg);
-
-    printHandler(msg);
+    printMessage(msg);
   }
 
   /** [message] is considered a type warning by the Dart lang. */
@@ -100,8 +117,7 @@ class Messages {
           span: span, useColors: options.useColors);
 
       messages.add(msg);
-
-      printHandler(msg);
+      printMessage(msg);
     }
   }
 
@@ -114,7 +130,10 @@ class Messages {
         useColors: options.useColors);
 
     messages.add(msg);
+    if (options.verbose) printMessage(msg);
+  }
 
-    if (options.verbose) printHandler(msg);
+  void printMessage(msg) {
+    if (shouldPrint) print(options.jsonFormat ? msg.toJson() : msg);
   }
 }

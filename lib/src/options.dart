@@ -31,6 +31,12 @@ class CompilerOptions {
   /** Directory where all output will be generated. */
   final String outputDir;
 
+  /**
+   * Whether to print error messages using the json format understood by the
+   * Dart editor.
+   */
+  final bool jsonFormat;
+
   // We could make this faster, if it ever matters.
   factory CompilerOptions() => parse(['']);
 
@@ -42,6 +48,7 @@ class CompilerOptions {
       baseDir = args['basedir'],
       outputDir = args['out'],
       forceMangle = args['unique_output_filenames'],
+      jsonFormat = args['json_format'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
@@ -59,6 +66,10 @@ class CompilerOptions {
           help: 'Use unique names for all generated files, so they will not '
                 'have the same name as your input files, even if they are in a '
                 'different directory',
+          defaultsTo: false, negatable: false)
+      ..addFlag('json_format',
+          help: 'Print error messsages in a json format easy to parse by tools,'
+                ' such as the Dart editor',
           defaultsTo: false, negatable: false)
       ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
           ' (defaults to the same directory as the source file)')

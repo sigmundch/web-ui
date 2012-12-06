@@ -27,6 +27,10 @@ function proxyUrls(port, requests) {
   port.postMessage({type: 'CREATE_DATA_URLS', requests: requests});
 }
 
+function proxyMessages(port, messages) {
+  port.postMessage({type: 'MESSAGES', messages: messages});
+}
+
 function onProxyUrls(requests) {
   var rulesToAdd = [];
   var ruleIdsToRemove = [];

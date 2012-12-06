@@ -61,6 +61,19 @@ function onRequestParse() {
           }
         }
       }, 100);
+    } else if (msg.type == 'MESSAGES') {
+      var messages = msg.messages;
+      for (var i = 0; i < messages.length; i++) {
+        var level = messages[i][0];
+        var message = messages[i][1];
+        if (level == 'SEVERE') {
+          window.console.error(message);
+        } else if (level == 'WARNING') {
+          window.console.warn(message);
+        } else {
+          window.console.info(message);
+        }
+      }
     }
   })
 

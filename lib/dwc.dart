@@ -62,7 +62,7 @@ Future<CompilerResult> run(List<String> args) {
   if (options == null) return new Future.immediate(new CompilerResult());
 
   fileSystem = new ConsoleFileSystem();
-  messages = new Messages(options: options);
+  messages = new Messages(options: options, shouldPrint: true);
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
     var currentDir = new Directory.current().path;

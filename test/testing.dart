@@ -15,7 +15,7 @@ import 'package:web_components/src/files.dart';
 import 'package:web_components/src/file_system/path.dart';
 
 useMockMessages() {
-  messages = new Messages(printHandler: (message) {});
+  messages = new Messages(shouldPrint: false);
 }
 
 Document parseDocument(String html) => parse(html);

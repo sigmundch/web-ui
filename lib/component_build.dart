@@ -37,6 +37,7 @@ void build(List<String> arguments, List<String> entryPoints) {
   var changedFiles = args["changed"];
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
+  var machineFormat = args["machine"];
   var fullBuild = changedFiles.isEmpty && removedFiles.isEmpty && !cleanBuild;
 
   for (var file in entryPoints) {
@@ -47,11 +48,21 @@ void build(List<String> arguments, List<String> entryPoints) {
     _handleCleanCommand(trackDirs);
   } else if (fullBuild || changedFiles.some((f) => _isInputFile(f, trackDirs))
       || removedFiles.some((f) => _isInputFile(f, trackDirs))) {
-    // TODO(sigmund): allow colors if we find a way to detect reliably where
-    // colors are supported (e.g. we are not running in the editor or in
-    // windows) 
     for (var file in entryPoints) {
-      dwc.run(['--no-colors', '-o', _outDir(file), file]);
+      var path = new Path(file);
+      var outDir = path.directoryPath.append('out');
+      var args = [];
+      if (machineFormat) args.add('--json_format');
+      if (Platform.operatingSystem == 'windows') args.add('--no-colors');
+      args.addAll(['-o', outDir.toString(), file]);
+      dwc.run(args);
+
+      if (machineFormat) {
+        // Print for the Dart Editor the mapping from the input entry point file
+        // and its corresponding output.
+        var out = outDir.append(path.filename);
+        print('[{"method":"mapping","params":{"from":"$file","to":"$out"}}]');
+      }
     }
   }
 }
