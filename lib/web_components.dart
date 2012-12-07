@@ -236,7 +236,9 @@ abstract class WebComponent implements Element {
 
   static bool _matches(Node node, String selector) {
     if (node is Text) return selector == '*';
-    return (node as Element).matchesSelector(selector);
+    // TODO(jmesserly): cannot use matchesSelector because of dartbug.com/4401
+    //return (node as Element).matchesSelector(selector);
+    return (node.parent as Element).queryAll(selector).some((n) => n == node);
   }
 
   static bool _isInsertionPoint(Element node) =>
