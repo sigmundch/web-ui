@@ -4,6 +4,14 @@ This file contains highlights of what changes on each version of the web
 components package. This file is normally updated whenever we push a new version
 to pub.
 
+## Pub version 0.2.8+4 - Dec 7 (SDK 15595)
+
+  * Support for forwarding error messages and file mappings to the editor
+  * Bug fixes:
+    * errors in FF
+    * allow including web-components from packages/...
+    * fix --basedir
+
 ## Pub version 0.2.8+3 - Nov 30 (SDK 15595)
 
   * Upgrades for new trunk release (mainly breaking changes in dart:html)
