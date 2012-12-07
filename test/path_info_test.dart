@@ -10,8 +10,8 @@ library path_info_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/info.dart';
-import 'package:web_components/src/file_system/path.dart' show Path;
+import 'package:web_ui/src/info.dart';
+import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'testing.dart';
 
 
