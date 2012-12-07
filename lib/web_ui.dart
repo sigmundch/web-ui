@@ -88,7 +88,7 @@ abstract class WebComponent implements Element {
   void removed() {}
 
   // TODO(jmesserly): how do we implement this efficiently?
-  // See https://github.com/dart-lang/dart-web-components/issues/37
+  // See https://github.com/dart-lang/web-ui/issues/37
   /** Invoked when any attribute of the component is modified. */
   void attributeChanged(
       String name, String oldValue, String newValue) {}

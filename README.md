@@ -1,7 +1,7 @@
-Dart Web Components
-===================
+Dart Web UI
+===========
 
-Dart Web Components let you build web apps as if you had a browser from the
+Dart Web UI lets you build web apps as if you had a browser from the
 future. You can use the cool new web technologies like [Web Components][wc],
 [Model Driven Views][mdv] and [Dart][d] today. Build apps easily using HTML as
 your template language, express your application's components in HTML, and
@@ -9,7 +9,7 @@ synchronize your data automatically between Dart and your components.
 
 We believe that:
 
-- Web Components are on their way, we should start using them now.
+- Web Components and MDV are on their way, we should start using them now.
 - Cool new features should be made available to [modern browsers][mb] that
   haven't yet implemented them.
 - Write/reload is just as important as write/compile/minimize/ship.
@@ -56,5 +56,5 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
 [drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
 [TodoMVC]: http://addyosmani.github.com/todomvc/
-[todo_readme]: https://github.com/dart-lang/dart-web-components/blob/master/example/todomvc/README.md
-[todo_live]:http://dart-lang.github.com/dart-web-components/example/todomvc/index.html
+[todo_readme]: https://github.com/dart-lang/web-ui/blob/master/example/todomvc/README.md
+[todo_live]:http://dart-lang.github.com/dart-ui/example/todomvc/index.html
