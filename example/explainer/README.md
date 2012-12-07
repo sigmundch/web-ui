@@ -23,7 +23,7 @@ branch of this repo. There are 2 possible ways to update the samples:
 
       # clone dart-web-components
       cd $ALL_REPOS
-      git clone git@github.com:dart-lang/dart-web-components.git pages_clone
+      git clone git@github.com:dart-lang/web-ui.git pages_clone
 
       # switch it to the gh-pages branch
       cd pages_clone

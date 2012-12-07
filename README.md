@@ -1,7 +1,7 @@
-Dart Web Components
-===================
+Dart Web UI
+===========
 
-Dart Web Components let you build web apps as if you had a browser from the
+Dart Web UI let you build web apps as if you had a browser from the
 future. You can use the cool new web technologies like [Web Components][wc],
 [Model Driven Views][mdv] and [Dart][d] today. Build apps easily using HTML as
 your template language, express your application's components in HTML, and
@@ -16,7 +16,7 @@ We believe that:
 - Working in open source is the way to go.
 - Developers from all backgrounds should be building awesome modern web apps.
 
-[![](https://drone.io/dart-lang/dart-web-components/status.png)](https://drone.io/dart-lang/dart-web-components/latest)
+[![](https://drone.io/dart-lang/web-ui/status.png)](https://drone.io/dart-lang/dart-web-components/latest)
 
 Try It Now
 -----------
@@ -56,5 +56,5 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [drtwin]: http://gsdview.appspot.com/dartium-archive/continuous/drt-win.zip
 [drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
 [TodoMVC]: http://addyosmani.github.com/todomvc/
-[todo_readme]: https://github.com/dart-lang/dart-web-components/blob/master/example/todomvc/README.md
-[todo_live]:http://dart-lang.github.com/dart-web-components/example/todomvc/index.html
+[todo_readme]: https://github.com/dart-lang/web-ui/blob/master/example/todomvc/README.md
+[todo_live]:http://dart-lang.github.com/dart-ui/example/todomvc/index.html
