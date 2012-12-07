@@ -15,13 +15,13 @@ BSD-style license that can be found in the LICENSE file.
   <div class="well">Hello counter: {{count}}</div>
   <script type="application/dart">
     import 'dart:html' as html;
-    import 'package:web_components/watcher.dart' as watchers;
+    import 'package:web_ui/watcher.dart' as watchers;
     int count;
     main() {
       count = 0;
       html.window.setInterval(() {
         count++;
-        watchers.dispatch(); 
+        watchers.dispatch();
       }, 1000);
     }
   </script>

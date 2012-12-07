@@ -7,7 +7,7 @@
  * the [WebComponent] base class. See this article for more information about
  * this library: <http://www.dartlang.org/articles/dart-web-components/>.
  */
-library web_components;
+library web_ui;
 
 export 'watcher.dart';
 export 'safe_html.dart';

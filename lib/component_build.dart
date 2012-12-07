@@ -12,7 +12,7 @@
  * A common `build.dart` would look as follows:
  *
  *     import 'dart:io';
- *     import 'package:web_components/component_build.dart';
+ *     import 'package:web_ui/component_build.dart';
  *
  *     main() => build(new Options().arguments, ['web/main.html']);
  *
@@ -22,7 +22,7 @@ library build_utils;
 
 import 'dart:io';
 import 'package:args/args.dart';
-import 'package:web_components/dwc.dart' as dwc;
+import 'package:web_ui/dwc.dart' as dwc;
 
 /**
  * Set up 'build.dart' to compile with the dart web components compiler every

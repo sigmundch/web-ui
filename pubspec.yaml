@@ -1,6 +1,6 @@
-name: web_components
-author: "Dart Team <misc@dartlang.org>"
-homepage: https://github.com/dart-lang/dart-web-components
+name: web_ui
+author: "Web UI Authors <misc@dartlang.org>"
+homepage: https://github.com/dart-lang/web-ui
 description: An easy way to build web apps in Dart.
 version: 0.2.8+4
 dependencies:

@@ -8,10 +8,10 @@ import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/html_cleaner.dart';
-import 'package:web_components/src/info.dart';
-import 'package:web_components/src/files.dart';
-import 'package:web_components/src/file_system/path.dart';
+import 'package:web_ui/src/html_cleaner.dart';
+import 'package:web_ui/src/info.dart';
+import 'package:web_ui/src/files.dart';
+import 'package:web_ui/src/file_system/path.dart';
 import 'testing.dart';
 
 main() {

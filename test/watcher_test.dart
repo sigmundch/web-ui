@@ -6,10 +6,10 @@
 library watcher_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:web_components/watcher.dart';
+import 'package:web_ui/watcher.dart';
 
 main() {
-  group('core', () { 
+  group('core', () {
     test('simple watcher ', () {
       int x = 0;
       int valueSeen = null;

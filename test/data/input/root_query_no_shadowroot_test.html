@@ -17,7 +17,7 @@ BSD-style license that can be found in the LICENSE file.
       <pre>FAIL - this text should be replaced</pre>
     </template>
     <script type="application/dart">
-      import 'package:web_components/web_components.dart';
+      import 'package:web_ui/web_ui.dart';
       import 'package:unittest/unittest.dart';
       class Test extends WebComponent {
         inserted() {
@@ -31,7 +31,7 @@ BSD-style license that can be found in the LICENSE file.
   <div is="x-test"></div>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_components/web_components.dart';
+    import 'package:web_ui/web_ui.dart';
     main() {
       // This is a regression test for our emulated Shadow DOM.
       useShadowDom = false;

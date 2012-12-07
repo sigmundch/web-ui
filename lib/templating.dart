@@ -7,8 +7,8 @@ library templating;
 
 import 'dart:html';
 import 'dart:uri';
-import 'package:web_components/safe_html.dart';
-import 'package:web_components/watcher.dart';
+import 'package:web_ui/safe_html.dart';
+import 'package:web_ui/watcher.dart';
 
 /**
  * Removes all sibling nodes from `start.nextNode` until [end] (inclusive). For
