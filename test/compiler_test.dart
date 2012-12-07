@@ -8,10 +8,10 @@ library compiler_test;
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/compiler.dart';
-import 'package:web_components/src/file_system.dart';
-import 'package:web_components/src/file_system/path.dart';
-import 'package:web_components/src/options.dart';
+import 'package:web_ui/src/compiler.dart';
+import 'package:web_ui/src/file_system.dart';
+import 'package:web_ui/src/file_system/path.dart';
+import 'package:web_ui/src/options.dart';
 import 'testing.dart';
 
 main() {

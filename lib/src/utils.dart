@@ -5,7 +5,7 @@
 library utils;
 
 import 'dart:isolate';
-import 'package:web_components/src/messages.dart';
+import 'package:web_ui/src/messages.dart';
 
 /**
  * Converts a string name with hyphens into an identifier, by removing hyphens

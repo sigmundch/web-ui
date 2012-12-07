@@ -15,7 +15,7 @@ BSD-style license that can be found in the LICENSE file.
   <element name="x-my-input" extends="input">
     <template></template>
     <script type="application/dart">
-    import 'package:web_components/web_components.dart';
+    import 'package:web_ui/web_ui.dart';
     class MyInput extends WebComponent {
       int clicked;
       created() {
@@ -37,7 +37,7 @@ BSD-style license that can be found in the LICENSE file.
   <pre>You picked {{name}}. Final value should be 'Bar'</pre>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_components/web_components.dart';
+    import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
 
     var name = 'Bar';

@@ -6,7 +6,7 @@ library main;
 
 import 'dart:html';
 import 'model.dart';
-import 'package:web_components/web_components.dart';
+import 'package:web_ui/web_ui.dart';
 
 main() {
   // listen on changes to #hash in the URL

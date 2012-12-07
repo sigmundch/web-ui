@@ -15,14 +15,14 @@ BSD-style license that can be found in the LICENSE file.
     <template>{{topLevelVar}}</template>
     <script type="application/dart">
       import 'common.dart';
-      import 'package:web_components/web_components.dart';
+      import 'package:web_ui/web_ui.dart';
       class XVar extends WebComponent {}
     </script>
   </element>
   expect to see 'two': <x-var></x-var>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_components/watcher.dart';
+    import 'package:web_ui/watcher.dart';
     import 'common.dart';
 
     main() {

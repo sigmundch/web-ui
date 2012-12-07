@@ -14,8 +14,8 @@ import 'dart:io';
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/html5_utils.dart';
-import 'package:web_components/src/html5_setters.g.dart';
+import 'package:web_ui/src/html5_utils.dart';
+import 'package:web_ui/src/html5_setters.g.dart';
 import 'testing.dart';
 
 main() {

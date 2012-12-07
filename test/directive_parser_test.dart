@@ -6,9 +6,9 @@ library directive_parser_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/src/info.dart' show DartCodeInfo;
-import 'package:web_components/src/messages.dart' show messages;
-import 'package:web_components/src/directive_parser.dart';
+import 'package:web_ui/src/info.dart' show DartCodeInfo;
+import 'package:web_ui/src/messages.dart' show messages;
+import 'package:web_ui/src/directive_parser.dart';
 import 'testing.dart';
 
 main() {

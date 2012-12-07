@@ -7,7 +7,7 @@ library browser;
 import 'dart:math';
 import 'dart:html';
 import 'path.dart';
-import 'package:web_components/src/file_system.dart';
+import 'package:web_ui/src/file_system.dart';
 import 'package:js/js.dart' as js;
 
 /**

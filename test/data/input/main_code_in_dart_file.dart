@@ -1,7 +1,7 @@
 library main;
 
 import 'dart:html';
-import 'package:web_components/watcher.dart';
+import 'package:web_ui/watcher.dart';
 import 'common.dart';
 
 main() {

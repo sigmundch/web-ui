@@ -11,7 +11,7 @@ library run_impl;
 import 'dart:io';
 import 'package:unittest/unittest.dart';
 import 'package:unittest/vm_config.dart';
-import 'package:web_components/dwc.dart' as dwc;
+import 'package:web_ui/dwc.dart' as dwc;
 
 import 'analyzer_test.dart' as analyzer_test;
 import 'compiler_test.dart' as compiler_test;

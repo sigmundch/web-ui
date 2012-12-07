@@ -6,7 +6,7 @@ library console;
 
 import 'dart:io';
 import 'dart:utf';
-import 'package:web_components/src/file_system.dart';
+import 'package:web_ui/src/file_system.dart';
 import 'path.dart' as internal;
 
 /** File system implementation for console VM (i.e. no browser). */
