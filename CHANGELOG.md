@@ -11,6 +11,7 @@ to pub.
     * errors in FF
     * allow including web-components from packages/...
     * fix --basedir
+    * bugs with id when using nested components (component composition)
 
 ## Pub version 0.2.8+3 - Nov 30 (SDK 15595)
 
