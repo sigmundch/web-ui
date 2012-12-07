@@ -67,6 +67,60 @@ void insertAllBefore(Node parent, Node reference, List<Node> nodes) {
 }
 
 /**
+ * Adds CSS [classes] if [addClasses] is true, otherwise removes them.
+ * This is useful to keep one or more CSS classes in sync with a boolean
+ * property.
+ *
+ * The classes parameter can be either a [String] or [List<String>].
+ * If it is a single string, it may contain spaces and several class names.
+ * If it is a list of strings, null and empty strings are ignored.
+ * Any other type except null will throw an [ArgumentError].
+ *
+ * For example:
+ *
+ *     updateCssClass(node, item.isDone, 'item-checked item-completed');
+ *
+ * It can also be used with a watcher:
+ *
+ *     watch(() => item.isDone, (e) {
+ *       updateCssClass(node, e.newValue, 'item-checked item-completed');
+ *     });
+ *
+ * If the set of classes is changing dynamically, it is better to use
+ * [bindCssClasses].
+ */
+void updateCssClass(Element elem, bool addClasses, classes) {
+  if (classes == '' || classes == null) return;
+  if (addClasses) {
+    // Add classess
+    if (classes is String) {
+      if (classes.contains(' ')) {
+        elem.classes.addAll(classes.split(' '));
+      } else {
+        elem.classes.add(classes);
+      }
+    } else if (classes is List<String>) {
+      elem.classes.addAll(classes.filter((e) => e != null && e != ''));
+    } else {
+      throw new ArgumentError('classes must be a String or List<String>.');
+    }
+  } else {
+    // Remove classes
+    if (classes is String) {
+      if (classes.contains(' ')) {
+        elem.classes.removeAll(classes.split(' '));
+      } else {
+        elem.classes.remove(classes);
+      }
+    } else if (classes is List<String>) {
+      elem.classes.removeAll(classes.filter((e) => e != null && e != ''));
+    } else {
+      throw new ArgumentError('classes must be a String or List<String>.');
+    }
+  }
+}
+
+/**
  * Bind the result of [exp] to the class attribute in [elem]. [exp] is a closure
  * that can return a string, a list of strings, an string with spaces, or null.
  *
@@ -108,27 +162,8 @@ void insertAllBefore(Node parent, Node reference, List<Node> nodes) {
  */
 WatcherDisposer bindCssClasses(Element elem, dynamic exp()) {
   return watchAndInvoke(exp, (e) {
-    var toRemove = e.oldValue;
-    if (toRemove is String && toRemove != '') {
-      if (toRemove.contains(' ')) {
-        elem.classes.removeAll(toRemove.split(' '));
-      } else {
-        elem.classes.remove(toRemove);
-      }
-    } else if (toRemove is List<String>) {
-      elem.classes.removeAll(toRemove.filter((e) => e != null && e != ''));
-    }
-
-    var toAdd = e.newValue;
-    if (toAdd is String && toAdd != '') {
-      if (toAdd.contains(' ')) {
-        elem.classes.addAll(toAdd.split(' '));
-      } else {
-        elem.classes.add(toAdd);
-      }
-    } else if (toAdd is List<String>) {
-      elem.classes.addAll(toAdd.filter((e) => e != null && e != ''));
-    }
+    updateCssClass(elem, false, e.oldValue);
+    updateCssClass(elem, true, e.newValue);
   });
 }
 

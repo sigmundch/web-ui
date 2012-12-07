@@ -43,16 +43,7 @@ layer at (0,0) size 800x579
 layer at (125,130) size 550x260
   RenderBlock (relative positioned) {SECTION} at (0,0) size 550x260 [bgcolor=#FFFFFFE6] [border: (1px solid #CCCCCC)]
     RenderBlock {HEADER} at (1,1) size 548x80
-      RenderBlock (anonymous) at (0,15) size 548x0
-        RenderInline {X-TODO-FORM} at (0,0) size 0x0
-          RenderText {#text} at (0,0) size 0x0
-          RenderText {#text} at (0,0) size 0x0
-      RenderBlock (anonymous) at (0,15) size 548x65
-        RenderBlock {FORM} at (0,0) size 548x65
-          RenderText {#text} at (0,0) size 0x0
-      RenderBlock (anonymous) at (0,80) size 548x0
-        RenderInline {X-TODO-FORM} at (0,0) size 0x0
-          RenderText {#text} at (0,0) size 0x0
+      RenderBlock {FORM} at (0,15) size 548x65
         RenderText {#text} at (0,0) size 0x0
 layer at (166,131) size 4x258
   RenderBlock (positioned) at (41,1) size 4x258 [border: none (1px solid #F5D6D6) none (1px solid #F5D6D6)]
@@ -66,13 +57,13 @@ layer at (126,289) size 548x100
   RenderBlock (positioned) zI: -1 at (0,-111) size 548x100
     RenderText zI: -1 at (0,0) size 0x0
 layer at (126,400) size 548x20 layerType: foreground only
-  RenderBlock (positioned) zI: 1 {X-TODO-FOOTER} at (1,270) size 548x20 [color=#777777]
+  RenderBlock (positioned) zI: 1 {FOOTER} at (1,270) size 548x20 [color=#777777]
     RenderBlock (floating) {SPAN} at (15,0) size 8x19
       RenderInline {STRONG} at (0,0) size 8x16
         RenderText {#text} at (0,1) size 8x16
           text run at (0,1) width 8: "2"
 layer at (126,400) size 548x19
-  RenderBlock (positioned) {UL} at (0,0) size 548x19
+  RenderBlock (positioned) {X-ROUTER-OPTIONS} at (0,0) size 548x19
     RenderInline {LI} at (0,0) size 26x16
       RenderText {#text} at (0,0) size 0x0
       RenderInline {A} at (0,0) size 18x16 [color=#83756F]
@@ -118,13 +109,6 @@ layer at (186,162) size 472x33
   RenderBlock {DIV} at (60,16) size 472x33
 layer at (126,211) size 548x178
   RenderBlock (relative positioned) zI: 2 {SECTION} at (1,81) size 548x178 [border: (1px dotted #ADADAD) none]
-    RenderBlock (anonymous) at (0,1) size 548x0
-      RenderInline {X-TOGGLE-ALL} at (0,0) size 0x0
-        RenderText {#text} at (0,0) size 0x0
-        RenderText {#text} at (0,0) size 0x0
-        RenderInline {LABEL} at (0,0) size 0x0
-        RenderText {#text} at (0,0) size 0x0
-      RenderText zI: 2 {#text} at (0,0) size 0x0
     RenderBlock {UL} at (0,1) size 548x177
       RenderBlock (anonymous) at (0,0) size 548x0
         RenderInline {X-TODO-ROW} at (0,0) size 0x0
@@ -160,13 +144,17 @@ layer at (115,159) size 65x41
         text run at (25,0) width 16: "\x{BB}"
 layer at (126,212) size 548x59
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x59 [border: none (1px dotted #CCCCCC) none]
-    RenderBlock {DIV} at (0,0) size 548x58
+    RenderInline {X-EDITABLE-LABEL} at (0,0) size 256x27
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
       RenderBlock {LABEL} at (60,15) size 181x28
         RenderText {#text} at (0,0) size 181x27
           text run at (0,0) width 181: "one (unchecked)"
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
-    RenderBlock {FORM} at (0,58) size 548x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
 layer at (126,212) size 40x58
   RenderBlock (positioned) {INPUT} at (0,0) size 40x58 [color=#000000]
     RenderInline (generated) at (0,0) size 18x23 [color=#D9D9D9]
@@ -174,13 +162,17 @@ layer at (126,212) size 40x58
         text run at (11,10) width 18: "\x{2714}"
 layer at (126,271) size 548x59
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x59 [border: none (1px dotted #CCCCCC) none]
-    RenderBlock {DIV} at (0,0) size 548x58
-      RenderBlock {LABEL} at (60,15) size 150x28 [color=#A9A9A9]
+    RenderInline {X-EDITABLE-LABEL} at (0,0) size 225x27 [color=#A9A9A9]
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+      RenderBlock {LABEL} at (60,15) size 150x28
         RenderText {#text} at (0,0) size 150x27
           text run at (0,0) width 150: "two (checked)"
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
-    RenderBlock {FORM} at (0,58) size 548x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
 layer at (126,271) size 40x58
   RenderBlock (positioned) {INPUT} at (0,0) size 40x58 [color=#000000]
 layer at (126,270) size 18x23
@@ -189,17 +181,21 @@ layer at (126,270) size 18x23
       text run at (11,10) width 18: "\x{2714}"
 layer at (126,330) size 548x59
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x59 [border: none (1px dotted #CCCCCC) none]
-    RenderBlock {DIV} at (0,0) size 548x58
+    RenderInline {X-EDITABLE-LABEL} at (0,0) size 271x27
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
       RenderBlock {LABEL} at (60,15) size 196x28
         RenderText {#text} at (0,0) size 196x27
           text run at (0,0) width 196: "three (unchecked)"
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
-    RenderBlock {FORM} at (0,58) size 548x0
+      RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
+    RenderText {#text} at (0,0) size 0x0
 layer at (126,330) size 40x58
   RenderBlock (positioned) {INPUT} at (0,0) size 40x58 [color=#000000]
     RenderInline (generated) at (0,0) size 18x23 [color=#D9D9D9]
       RenderText at (11,10) size 18x23
         text run at (11,10) width 18: "\x{2714}"
-caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 3 {X-TODO-FORM} of child 1 {HEADER} of child 1 {SECTION} of body
+caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 1 {HEADER} of child 1 {SECTION} of body
 #EOF

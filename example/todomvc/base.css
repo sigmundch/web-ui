@@ -204,15 +204,16 @@ TODO(jmesserly): fix this. It's broken in our sample.
   padding: 0;
 }
 
-.todo-item.editing .edit {
+/*
+TODO(jmesserly): it seems to be impossible to have selectors that span a
+ShadowRoot transition, even with allow-author-styles set. Various workarounds
+are included in the code below.
+*/
+.edit.editing {
   display: block;
   width: 506px;
   padding: 13px 17px 12px 17px;
   margin: 0 0 0 43px;
-}
-
-.todo-item.editing .view {
-  display: none;
 }
 
 .todo-item .toggle {
@@ -247,7 +248,11 @@ TODO(jmesserly): fix this. It's broken in our sample.
   position: relative;
 }
 
-.todo-item label {
+/*
+TODO(jmesserly): the ".todo-item label" selector does not work with real
+ShadowRoot because it crosses the shadow boundary.
+*/
+.edit-label {
   word-break: break-word;
   margin: 15px 15px 15px 60px;
   display: inline-block;
@@ -259,9 +264,13 @@ TODO(jmesserly): fix this. It's broken in our sample.
   transition: color 0.4s;
 }
 
-.todo-item.completed label {
+.todo-item.completed x-editable-label {
   color: #a9a9a9;
   text-decoration: line-through;
+}
+
+.edit-label {
+  text-decoration: inherit;
 }
 
 .todo-item .destroy {
@@ -300,7 +309,8 @@ TODO(jmesserly): fix this. It's broken in our sample.
   display: block;
 }
 
-.todo-item .edit {
+.todo-item.editing .destroy,
+.todo-item.editing .toggle {
   display: none;
 }
 
