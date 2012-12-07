@@ -209,10 +209,14 @@ class _Path implements Path {
     //    base.join(relative) == this.canonicalize.
     // Throws an exception if no such path exists, or the case is not
     // implemented yet.
+
+    if (base._path == '' || base._path == '.' || base._path == './') {
+      return this;
+    }
+
     if (_path.startsWith(base._path)) {
       // For instance:
       // 'a/b/c/d' relative to 'a/b/' returns 'c/d/'
-      if (base._path == '') return this;
       if (_path == base._path) return new Path('.');
       if (base.hasTrailingSeparator) {
         return new Path(_path.substring(base._path.length));

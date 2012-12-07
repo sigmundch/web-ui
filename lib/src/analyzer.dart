@@ -32,8 +32,9 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
  * Extract relevant information from [source] and it's children.
  * Used for testing.
  */
-FileInfo analyzeNodeForTesting(Node source) {
-  var result = new FileInfo(new Path('mock_testing_file.html'));
+FileInfo analyzeNodeForTesting(Node source,
+    {String filepath: 'mock_testing_file.html'}) {
+  var result = new FileInfo(new Path(filepath));
   new _Analyzer(result, new IntIterator()).visit(source);
   return result;
 }

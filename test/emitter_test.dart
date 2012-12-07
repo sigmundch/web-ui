@@ -345,7 +345,7 @@ main() {
     test('external resource URLs', () {
       var html =
           '<html><head>'
-          '<script src="http://example.com/a.js" type="text/javascript"></script>'
+          '<script src="http://ex.com/a.js" type="text/javascript"></script>'
           '<script src="//example.com/a.js" type="text/javascript"></script>'
           '<script src="/a.js" type="text/javascript"></script>'
           '<link href="http://example.com/a.css" rel="stylesheet">'
@@ -362,20 +362,49 @@ main() {
       expect(doc.outerHTML, equals(html));
     });
 
-    test('transform css urls', () {
+    group('transform css urls', () {
       var html = '<html><head>'
           '<link href="a.css" rel="stylesheet">'
           '</head><body></body></html>';
-      var doc = parseDocument(html);
-      var fileInfo = analyzeNodeForTesting(doc);
-      fileInfo.userCode = new DartCodeInfo('main', null, [], '');
-      // Issue #207 happened because we used to mistakenly take the path of the
-      // external file when transforming the urls in the html file.
-      fileInfo.externalFile = new Path('dir/a.dart');
-      var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
-      var emitter = new MainPageEmitter(fileInfo);
-      emitter.run(doc, pathInfo);
-      expect(doc.outerHTML, html.replaceAll('a.css', '../a.css'));
+
+      test('html at the top level', () {
+        var doc = parseDocument(html);
+        var fileInfo = analyzeNodeForTesting(doc, filepath: 'a.html');
+        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        // Issue #207 happened because we used to mistakenly take the path of
+        // the external file when transforming the urls in the html file.
+        fileInfo.externalFile = new Path('dir/a.dart');
+        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var emitter = new MainPageEmitter(fileInfo);
+        emitter.run(doc, pathInfo);
+        expect(doc.outerHTML, html.replaceAll('a.css', '../a.css'));
+      });
+
+      test('file within dir -- base dir match input file dir', () {
+        var doc = parseDocument(html);
+        var fileInfo = analyzeNodeForTesting(doc, filepath: 'dir/a.html');
+        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        // Issue #207 happened because we used to mistakenly take the path of
+        // the external file when transforming the urls in the html file.
+        fileInfo.externalFile = new Path('dir/a.dart');
+        var pathInfo = new PathInfo(new Path('dir/'), new Path('out'), true);
+        var emitter = new MainPageEmitter(fileInfo);
+        emitter.run(doc, pathInfo);
+        expect(doc.outerHTML, html.replaceAll('a.css', '../dir/a.css'));
+      });
+
+      test('file within dir, base dir at top-level', () {
+        var doc = parseDocument(html);
+        var fileInfo = analyzeNodeForTesting(doc, filepath: 'dir/a.html');
+        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        // Issue #207 happened because we used to mistakenly take the path of
+        // the external file when transforming the urls in the html file.
+        fileInfo.externalFile = new Path('dir/a.dart');
+        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var emitter = new MainPageEmitter(fileInfo);
+        emitter.run(doc, pathInfo);
+        expect(doc.outerHTML, html.replaceAll('a.css', '../../dir/a.css'));
+      });
     });
   });
 }

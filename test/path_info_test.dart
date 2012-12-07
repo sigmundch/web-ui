@@ -70,18 +70,6 @@ main() {
       });
     });
 
-    test('relativePathFromOutputDir include packages/', () {
-      var paths = _newPathInfo('a', 'a', false);
-      var file1 = _mockFile('a/b.dart');
-      var file2 = _mockFile('a/c/d.dart');
-      var file3 = _mockFile('a/packages/f.dart');
-      expect(paths.relativePathFromOutputDir(file1).toString(), '_b.dart.dart');
-      expect(paths.relativePathFromOutputDir(file2).toString(),
-          'c/_d.dart.dart');
-      expect(paths.relativePathFromOutputDir(file3).toString(),
-          '_from_packages/_f.dart.dart');
-    });
-
     test('transformUrl simple paths', () {
       var paths = _newPathInfo('a', 'a', false);
       var file1 = new Path('a/b.dart');
@@ -206,32 +194,6 @@ main() {
         expect(paths.relativePath(file3, file2).toString(),
             '../c/_d.dart.dart');
         expect(paths.relativePath(file3, file1).toString(), '../_b.dart.dart');
-      });
-    });
-
-    group('relativePathFromOutputDir', () {
-      test('include packages/, no mangle', () {
-        var paths = _newPathInfo('a', 'out', false);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/packages/f.dart');
-        expect(paths.relativePathFromOutputDir(file1).toString(), 'b.dart');
-        expect(paths.relativePathFromOutputDir(file2).toString(), 'c/d.dart');
-        expect(paths.relativePathFromOutputDir(file3).toString(),
-            '_from_packages/f.dart');
-      });
-
-      test('include packages/, mangle', () {
-        var paths = _newPathInfo('a', 'out', true);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/packages/f.dart');
-        expect(paths.relativePathFromOutputDir(file1).toString(),
-            '_b.dart.dart');
-        expect(paths.relativePathFromOutputDir(file2).toString(),
-            'c/_d.dart.dart');
-        expect(paths.relativePathFromOutputDir(file3).toString(),
-            '_from_packages/_f.dart.dart');
       });
     });
 

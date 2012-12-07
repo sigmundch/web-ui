@@ -54,16 +54,23 @@ class PathInfo {
    */
   bool checkInputPath(Path input) {
     if (_mangleFilenames) return true;
-    var canonicalized = input.canonicalize().toString();
-    var valid = !canonicalized.startsWith(_outputDir.toString())
-        && canonicalized.startsWith(_baseDir.toString());
-    if (!valid) {
+    var canonicalized = input.canonicalize();
+    if (!canonicalized.relativeTo(_outputDir).toString().startsWith('../')) {
       messages.error(
-          "The file ${input} cannot be processed. "
-          "Files must be in ${_baseDir} and must not be in ${_outputDir}.",
+          'The file ${input} cannot be processed. '
+          'Files cannot be under the output folder (${_outputDir}).',
           null, file: input);
+      return false;
     }
-    return valid;
+    if (canonicalized.relativeTo(_baseDir).toString().startsWith('../')) {
+      messages.error(
+          'The file ${input} cannot be processed. '
+          'All processed files must be under the base folder (${_baseDir}), you'
+          ' can specify the base folder using the --basedir flag.',
+          null, file: input);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -71,14 +78,14 @@ class PathInfo {
    * [_DEFAULT_PREFIX] and a [suffix] to its file name.
    */
   Path outputPath(Path input, String suffix) =>
-      _outputDirPath(input).append(mangle(input.filename, suffix));
+      outputDirPath(input).append(mangle(input.filename, suffix));
 
   /** The path to the output file corresponding to [info]. */
   Path outputLibraryPath(LibraryInfo info) =>
-      _outputDirPath(info.inputPath).append(info._getOutputFilename(mangle));
+      outputDirPath(info.inputPath).append(info._getOutputFilename(mangle));
 
   /** The corresponding output directory for [input]'s directory. */
-  Path _outputDirPath(Path input) {
+  Path outputDirPath(Path input) {
     var outputSubdir = input.directoryPath.relativeTo(_baseDir);
     return _rewritePackages(_outputDir.join(outputSubdir).canonicalize());
   }
@@ -103,11 +110,6 @@ class PathInfo {
     return new Path(Strings.join(segments, '/'));
   }
 
-  /** Path for a file directly under [_outputDir] with the given [filename]. */
-  Path fileInOutputDir(String filename) {
-    return _outputDir.append(filename);
-  }
-
   /**
    * Returns a relative path to import/export the output library represented by
    * [target] from the output library of [src]. In other words, a path to import
@@ -121,29 +123,19 @@ class PathInfo {
   }
 
   /**
-   * Returns the relative path to import the output library represented [info]
-   * from a file at the top-level output directory.
-   */
-  Path relativePathFromOutputDir(LibraryInfo info) {
-    var relativeDir = info.inputPath.directoryPath.relativeTo(_baseDir);
-    return _rewritePackages(
-        relativeDir.append(info._getOutputFilename(mangle)).canonicalize());
-  }
-
-  /**
    * Transforms a [target] url seen in [src] (e.g. a Dart import, a .css href in
    * an HTML file, etc) into a corresponding url from the output file associated
-   * with [src]). This will keep 'package:', 'dart:', path-absolute, and
-   * absolute urls intact, but it will fix relative paths to walk from the
-   * output directory back to the input directory. An exception will be thrown
-   * if [target] is not under [_baseDir].
+   * with [src]. This will keep 'package:', 'dart:', path-absolute, and absolute
+   * urls intact, but it will fix relative paths to walk from the output
+   * directory back to the input directory. An exception will be thrown if
+   * [target] is not under [_baseDir].
    */
   String transformUrl(Path src, String target) {
     if (new Uri.fromString(target).isAbsolute()) return target;
     var path = new Path(target);
     if (path.isAbsolute) return target;
     var pathToTarget = src.directoryPath.join(path);
-    var outputLibraryDir = _outputDirPath(src);
+    var outputLibraryDir = outputDirPath(src);
     return pathToTarget.relativeTo(outputLibraryDir).canonicalize().toString();
   }
 }
