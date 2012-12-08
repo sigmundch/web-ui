@@ -1,6 +1,6 @@
 library bootstrap;
 
-import '_main.html.dart' as userMain;
+import '_main.dart.dart' as userMain;
 
 main() {
   userMain.main();
