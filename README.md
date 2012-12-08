@@ -1,11 +1,11 @@
-Dart Web UI
+Web UI
 ===========
 
-Dart Web UI lets you build web apps as if you had a browser from the
-future. You can use the cool new web technologies like [Web Components][wc],
-[Model Driven Views][mdv] and [Dart][d] today. Build apps easily using HTML as
-your template language, express your application's components in HTML, and
-synchronize your data automatically between Dart and your components.
+Web UI lets you build web apps as if you had a browser from the future. You can
+use the cool new web technologies like [Web Components][wc], [Model Driven
+Views][mdv] and [Dart][d] today. Build apps easily using HTML as your template
+language, express your application's components in HTML, and synchronize your
+data automatically between Dart and your components.
 
 We believe that:
 
@@ -57,4 +57,4 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [drtsrc]: http://code.google.com/p/dart/wiki/BuildingDartium
 [TodoMVC]: http://addyosmani.github.com/todomvc/
 [todo_readme]: https://github.com/dart-lang/web-ui/blob/master/example/todomvc/README.md
-[todo_live]:http://dart-lang.github.com/dart-ui/example/todomvc/index.html
+[todo_live]:http://dart-lang.github.com/web-ui/example/todomvc/index.html
