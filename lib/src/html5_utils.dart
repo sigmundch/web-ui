@@ -157,7 +157,7 @@ final Map<String, String> htmlElementConstructors = (() {
   }
   var result = {};
   htmlElementNames.forEach((tag, type) {
-    if (used[type] == 1) result[tag] = type;
+    if (typeCount[type] == 1) result[tag] = type;
   });
   return result;
 })();
