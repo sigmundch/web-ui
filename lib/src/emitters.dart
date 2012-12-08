@@ -906,11 +906,13 @@ String _emitCreateHtml(Node node) {
 
   var constructor;
   // Generate precise types like "new ButtonElement()" if we can.
-  var elemName = htmlElementNames[node.tagName];
-  if (isEmpty && elemName != null && isHtml) {
-    constructor = '$elemName()';
-  } else if (isEmpty && isHtml) {
-    constructor = "html.Element.tag('${node.tagName}')";
+  if (isEmpty && isHtml) {
+    constructor = htmlElementConstructors[node.tagName];
+    if (constructor != null) {
+      constructor = '$constructor()';
+    } else {
+      constructor = "html.Element.tag('${node.tagName}')";
+    }
   } else if (isEmpty && isSvg) {
     constructor = "svg.Element.tag('${node.tagName}')";
   } else {

@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>h4_test</title>
+  <script type='application/javascript' src="testing.js"></script>
+</head>
+<body>
+  <p>This tests data binding of heading. You should see test state:</p>
+  <!--
+  Regresion test for #222. This used to try to call new HeadingElement() from
+  generated Dart code, but that constructor doesn't exist.
+  -->
+  <template if="true">
+    <h4>{{result}}</h4>
+  </template>
+  <h4 id="fail">FAIL</h4>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    import 'package:web_ui/watcher.dart';
+
+    var result = 'FAIL';
+
+    main() {
+      window.setTimeout(() {
+        result = 'PASS';
+        query('#fail').style.display = 'none';
+        dispatch();
+        window.setTimeout(() => window.postMessage('done', '*'), 0);
+      }, 0);
+    }
+  </script>
+</body>
+</html>

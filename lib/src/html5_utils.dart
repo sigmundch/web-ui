@@ -142,6 +142,27 @@ const htmlElementNames = const {
   'wbr': 'html.Element',
 };
 
+/**
+ * HTML element to DOM constructor mapping.
+ * It is the same as [htmlElementNames] but removes any tags that map to the
+ * same type, such as HeadingElement.
+ * If the type is not in this map, it should use `new html.Element.tag` instead.
+ */
+final Map<String, String> htmlElementConstructors = (() {
+  var typeCount = <int>{};
+  for (var type in htmlElementNames.values) {
+    var value = typeCount[type];
+    if (value == null) value = 0;
+    typeCount[type] = value + 1;
+  }
+  var result = {};
+  htmlElementNames.forEach((tag, type) {
+    if (used[type] == 1) result[tag] = type;
+  });
+  return result;
+})();
+
+
 
 /**
  * HTML attributes that expect a URL value.
