@@ -1,7 +1,7 @@
 {
-  "name": "Dart Web Components",
+  "name": "Dart Web UI",
   "version": "1.0",
-  "description": "An implementation for Dart Web Components. Requires the experimental webRequest chrome extension API.",
+  "description": "An implementation for Dart Web UI. Requires the experimental webRequest chrome extension API.",
   "permissions": ["declarativeWebRequest", "http://*/*", "https://*/*", "file:///*"],
   "background": {
     "page": "background.html"
