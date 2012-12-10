@@ -2,10 +2,11 @@ Web UI
 ===========
 
 Web UI lets you build web apps as if you had a browser from the future. You can
-use the cool new web technologies like [Web Components][wc], [Model Driven
-Views][mdv] and [Dart][d] today. Build apps easily using HTML as your template
-language, express your application's components in HTML, and synchronize your
-data automatically between Dart and your components.
+use the cool new web technologies like [Web Components][wc],
+and features like dynamic templates and live data binding inspired by
+[Model Driven Views][mdv] and [Dart][d] today. Build apps easily using HTML as
+your template language, express your application's components in HTML, and
+synchronize your data automatically between Dart and your components.
 
 We believe that:
 
@@ -20,9 +21,12 @@ We believe that:
 
 Try It Now
 -----------
+Add web-ui to your pubspec.yaml file:
+
+    dependencies:
+      web_ui: any
 
 Learn more at <http://www.dartlang.org/articles/dart-web-components/>.
-
 
 See our [TodoMVC][] example [running][todo_live]. Read the [README.md][todo_readme] in
 `example/todomvc` for more details.
