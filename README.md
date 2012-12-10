@@ -21,7 +21,7 @@ We believe that:
 
 Try It Now
 -----------
-Add web-ui to your pubspec.yaml file:
+Add the Web UI package to your pubspec.yaml file:
 
     dependencies:
       web_ui: any
