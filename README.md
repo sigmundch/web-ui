@@ -24,8 +24,10 @@ Try It Now
 Add the Web UI package to your pubspec.yaml file, selecting a version range
 that works with your version of the SDK. For example:
 
-    dependencies:
-      web_ui: >=0.2.8 <0.2.9 #works with SDK 15595
+```bash
+dependencies:
+  web_ui: >=0.2.8 <0.2.9    # works with SDK 15595
+```
 
 Versions change within the range when we release small bug fixes, but it
 changes outside of the range on any breaking change. See our
@@ -33,8 +35,10 @@ changes outside of the range on any breaking change. See our
 
 If you continually update your SDK, you can use the latest version of web_ui:
 
-    dependencies:
-      web_ui: any
+```bash
+dependencies:
+  web_ui: any
+```
 
 Learn More
 ----------
