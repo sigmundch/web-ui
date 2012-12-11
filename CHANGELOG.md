@@ -1,14 +1,26 @@
 # changelog
 
-This file contains highlights of what changes on each version of the web
-components package. This file is normally updated whenever we push a new version
-to pub.
+This file contains highlights of what changes on each version of the web_ui
+package. This file is normally updated whenever we push a new version to pub.
+
+## Pub version 0.2.8+6 - Dec 10 (SDK 15595)
+
+  * Bug fix:
+    * No longer generates calls to Element constructors that don't exist
+      (affected heading and strong elements, among others)
+
+## Pub version 0.2.8+5 - Dec 7 (SDK 15595)
+
+  * Rename package to web_ui
+  * Change TodoMVC to have component with composition
+  * Bug fix:
+    * fix component composition in Firefox (workaround dart:html matchesSelector)
 
 ## Pub version 0.2.8+4 - Dec 7 (SDK 15595)
 
   * Support for forwarding error messages and file mappings to the editor
   * Bug fixes:
-    * errors in FF
+    * errors in Firefox
     * allow including web-components from packages/...
     * fix --basedir
     * bugs with id when using nested components (component composition)
