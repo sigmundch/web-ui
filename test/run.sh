@@ -100,6 +100,7 @@ if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
   # TODO(jmesserly): batch mode does not return the right exit code.
   ls $OUT_PATTERN | dart_analyzer --fatal-warnings --fatal-type-errors \
     --work $DIR/data/output/analyzer/ -batch
+  rm -r $DIR/data/output/analyzer/
 fi
 
 echo -e "[32mAll tests pass[0m"
