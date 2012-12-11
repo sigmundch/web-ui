@@ -12,15 +12,20 @@ BSD-style license that can be found in the LICENSE file.
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
-  <p>This tests data binding of heading. You should see test state:</p>
   <!--
-  Regresion test for #222. This used to try to call new HeadingElement() from
-  generated Dart code, but that constructor doesn't exist.
+  Regresion test for #222 and #254. This used to try to call
+  new HeadingElement() and new Element() from generated Dart code, but that
+  constructor doesn't exist.
   -->
+  <p>This tests data binding of heading.</p>
   <template if="true">
     <h4>{{result}}</h4>
   </template>
-  <h4 id="fail">FAIL</h4>
+  <p>This tests data binding of strong.</p>
+  <template if="true">
+    <strong>{{result}}</strong>
+  </template>
+  <h4 id="fail">FAIL - some tests failed</h4>
   <script type="application/dart">
     import 'dart:html';
     import 'package:unittest/unittest.dart';
@@ -31,8 +36,8 @@ BSD-style license that can be found in the LICENSE file.
     main() {
       window.setTimeout(() {
         result = 'PASS';
-        query('#fail').style.display = 'none';
         dispatch();
+        query('#fail').style.display = 'none';
         window.setTimeout(() => window.postMessage('done', '*'), 0);
       }, 0);
     }
