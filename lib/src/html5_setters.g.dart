@@ -447,7 +447,7 @@ var htmlElementFields = const {
 var htmlElementExtends = const {
   'html.AnchorElement': 'html.Element',
   'html.AreaElement': 'html.Element',
-  'web_audio.AudioElement': 'html.MediaElement',
+  'html.AudioElement': 'html.MediaElement',
   'html.BRElement': 'html.Element',
   'html.BaseElement': 'html.Element',
   'html.BodyElement': 'html.Element',

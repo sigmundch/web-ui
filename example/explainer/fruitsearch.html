@@ -41,7 +41,7 @@ BSD-style license that can be found in the LICENSE file.
         'Tangerine', 'Tomato', 'Watermelon'];
 
     List<String> get results {
-      var res = fruits.filter(
+      List<String> res = fruits.filter(
           (v) => v.toLowerCase().contains(query.toLowerCase()));
       if (res.length > 20) {
         res.length = 20;

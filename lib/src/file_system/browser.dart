@@ -7,7 +7,7 @@ library browser;
 import 'dart:math';
 import 'dart:html';
 import 'path.dart';
-import 'package:web_ui/src/file_system.dart';
+import 'package:web_ui/src/file_system.dart' as fs;
 import 'package:js/js.dart' as js;
 
 /**
@@ -15,7 +15,7 @@ import 'package:js/js.dart' as js;
  * proxy arbitrary urls. See extension/background.js for the code that does
  * the actual proxying.
  */
-class BrowserFileSystem implements FileSystem {
+class BrowserFileSystem implements fs.FileSystem {
 
   /**
    * Chrome extension port used to communicate back to the source page that

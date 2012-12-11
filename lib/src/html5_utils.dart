@@ -36,7 +36,7 @@ const htmlElementNames = const {
   'area': 'html.AreaElement',
   'article': 'html.Element',
   'aside': 'html.Element',
-  'audio': 'web_audio.AudioElement',
+  'audio': 'html.AudioElement',
   'b': 'html.Element',
   'base': 'html.BaseElement',
   'bdi': 'html.Element',

@@ -40,13 +40,12 @@ The information is used to create "$OUTPUT_NAME".
   }
 
   var htmlPath = new Path('dart:html');
-  var audioPath = new Path('dart:web_audio');
   var svgPath = new Path('dart:svg');
   var libPath = new Path(sdk).append('/');
   var pkgPath = new Path(sdk).append('pkg/');
 
   var mirrors = new Compilation.library(
-      [htmlPath, audioPath, svgPath], libPath, pkgPath).mirrors;
+      [htmlPath, svgPath], libPath, pkgPath).mirrors;
   var html = mirrors.libraries['html'];
 
 

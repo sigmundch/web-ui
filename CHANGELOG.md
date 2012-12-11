@@ -3,6 +3,9 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+## Pub version 0.2.9 - Dec 11 (trunk SDK 15948)
+  * Updates to comply with all breaking changes in the new trunk SDK
+
 ## Pub version 0.2.8+6 - Dec 10 (SDK 15595)
 
   * Bug fix:
@@ -16,7 +19,7 @@ package. This file is normally updated whenever we push a new version to pub.
   * Bug fix:
     * fix component composition in Firefox (workaround dart:html matchesSelector)
 
-## Pub version 0.2.8+4 - Dec 7 (SDK 15595)
+## Pub version 0.2.8+4 - Dec 7 (trunk SDK 15595, integration SDK 15699)
 
   * Support for forwarding error messages and file mappings to the editor
   * Bug fixes:
@@ -25,11 +28,11 @@ package. This file is normally updated whenever we push a new version to pub.
     * fix --basedir
     * bugs with id when using nested components (component composition)
 
-## Pub version 0.2.8+3 - Nov 30 (SDK 15595)
+## Pub version 0.2.8+3 - Nov 30 (trunk SDK 15595, integration SDK 15699)
 
   * Upgrades for new trunk release (mainly breaking changes in dart:html)
 
-## Pub version 0.2.8+2 - Nov 30 (SDK 15355)
+## Pub version 0.2.8+2 - Nov 30 (trunk SDK 15355)
 
   * Bug fix:
     * hosted and sdk dependencies errors due to changes in html5lib.

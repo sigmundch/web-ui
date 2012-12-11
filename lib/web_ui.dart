@@ -333,9 +333,9 @@ abstract class WebComponent implements Element {
   Map<String, String> getNamespacedAttributes(String namespace) =>
       _element.getNamespacedAttributes(namespace);
 
-  Future<CSSStyleDeclaration> get computedStyle => _element.computedStyle;
+  Future<CssStyleDeclaration> get computedStyle => _element.computedStyle;
 
-  Future<CSSStyleDeclaration> getComputedStyle(String pseudoElement)
+  Future<CssStyleDeclaration> getComputedStyle(String pseudoElement)
     => _element.getComputedStyle(pseudoElement);
 
   Element clone(bool deep) => _element.clone(deep);
@@ -404,7 +404,7 @@ abstract class WebComponent implements Element {
 
   Element get previousElementSibling => _element.previousElementSibling;
 
-  CSSStyleDeclaration get style => _element.style;
+  CssStyleDeclaration get style => _element.style;
 
   String get tagName => _element.tagName;
 
@@ -442,7 +442,7 @@ abstract class WebComponent implements Element {
 
   List<Element> queryAll(String selectors) => _element.queryAll(selectors);
 
-  HTMLCollection get $dom_children => _element.$dom_children;
+  HtmlCollection get $dom_children => _element.$dom_children;
 
   int get $dom_childElementCount => _element.$dom_childElementCount;
 
@@ -456,12 +456,6 @@ abstract class WebComponent implements Element {
   int get clientTop => _element.clientTop;
 
   int get clientWidth => _element.clientWidth;
-
-  int get childElementCount => _element.childElementCount;
-
-  Element get firstElementChild => _element.firstElementChild;
-
-  Element get lastElementChild => _element.lastElementChild;
 
   Element get $dom_firstElementChild => _element.$dom_firstElementChild;
 
