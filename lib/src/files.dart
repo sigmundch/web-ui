@@ -25,6 +25,14 @@ class SourceFile {
 class OutputFile {
   final Path path;
   final String contents;
+  
+  /** 
+   * Path to the source file that was transformed into this OutputFile, `null`
+   * for files that are generated and do not correspond to an input
+   * [SourceFile].
+   */
+  final Path source;
 
-  OutputFile(this.path, this.contents);
+  OutputFile(this.path, this.contents, {Path source})
+      : source = source;
 }

@@ -27,26 +27,29 @@ void main() {
 /** Contains the result of a compiler run. */
 class CompilerResult {
   final bool success;
-  final List<String> outputs;
+  /** Map of output path to source, if there is one */
+  final Map<String, String> outputs;
   final List<String> messages;
   String bootstrapFile;
 
   CompilerResult([this.success = true,
-                  this.outputs = const [],
+                  this.outputs,
                   this.messages = const [],
                   this.bootstrapFile]);
 
   factory CompilerResult._(Messages messages, List<OutputFile> outputs) {
     var success = !messages.messages.some((m) => m.level == Level.SEVERE);
-    var outs = outputs.map((f) => f.path.toString());
-    var msgs = messages.messages.map((m) => m.toString());
     var file;
+    var outs = new Map<String, String>();
     for (var out in outputs) {
       if (out.path.filename.endsWith('_bootstrap.dart')) {
         file = out.path.toString();
-        break;
       }
+      var sourcePath = (out.source == null) ? null : out.source.toString();
+      var outputPath = out.path.toString();
+      outs[outputPath] = sourcePath;
     }
+    var msgs = messages.messages.map((m) => m.toString());
     return new CompilerResult(success, outs, msgs, file);
   }
 }
