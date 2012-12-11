@@ -2,10 +2,11 @@ Web UI
 ===========
 
 Web UI lets you build web apps as if you had a browser from the future. You can
-use the cool new web technologies like [Web Components][wc], [Model Driven
-Views][mdv] and [Dart][d] today. Build apps easily using HTML as your template
-language, express your application's components in HTML, and synchronize your
-data automatically between Dart and your components.
+use the cool new web technologies like [Web Components][wc],
+and features like dynamic templates and live data binding inspired by
+[Model Driven Views][mdv] and [Dart][d] today. Build apps easily using HTML as
+your template language, express your application's components in HTML, and
+synchronize your data automatically between Dart and your components.
 
 We believe that:
 
@@ -20,12 +21,31 @@ We believe that:
 
 Try It Now
 -----------
+Add the Web UI package to your pubspec.yaml file, selecting a version range
+that works with your version of the SDK. For example:
 
-Learn more at <http://www.dartlang.org/articles/dart-web-components/>.
+    dependencies:
+      web_ui: >=0.2.8 <0.2.9 #works with SDK 15595
 
+Versions change within the range when we release small bug fixes, but it
+changes outside of the range on any breaking change. See our
+[changelog][changelog] to find the version that works best for you.
 
-See our [TodoMVC][] example [running][todo_live]. Read the [README.md][todo_readme] in
-`example/todomvc` for more details.
+If you continually update your SDK, you can use the latest version of web_ui:
+
+    dependencies:
+      web_ui: any
+
+Learn More
+----------
+
+* [Read an overview][overview]
+* [Setup your tools][tools]
+* [Browse the features][features]
+* [Dive into the specification][spec]
+
+See our [TodoMVC][] example [running][todo_live]. Read the
+[README.md][todo_readme] in `example/todomvc` for more details.
 
 
 Running Tests
@@ -45,6 +65,12 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build it from the
 [Dartium and DRT sources][drtsrc].
 
+Contacting Us
+-------------
+
+Please file issues in our [Issue Tracker][issues] or contact us on the
+[Dart Web UI mailing list][mailinglist].
+
 [wc]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html
 [mdv]: http://code.google.com/p/mdv/
 [d]: http://www.dartlang.org
@@ -58,3 +84,10 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [TodoMVC]: http://addyosmani.github.com/todomvc/
 [todo_readme]: https://github.com/dart-lang/web-ui/blob/master/example/todomvc/README.md
 [todo_live]:http://dart-lang.github.com/web-ui/example/todomvc/index.html
+[changelog]:https://github.com/dart-lang/web-ui/blob/master/CHANGELOG.md
+[issues]:https://github.com/dart-lang/web-ui/issues
+[mailinglist]:https://groups.google.com/a/dartlang.org/forum/?fromgroups#!forum/web-ui
+[overview]:http://www.dartlang.org/articles/dart-web-components/
+[tools]:https://www.dartlang.org/articles/dart-web-components/tools.html
+[spec]:https://www.dartlang.org/articles/dart-web-components/spec.html
+[features]:https://www.dartlang.org/articles/dart-web-components/summary.html
