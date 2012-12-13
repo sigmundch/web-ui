@@ -15,10 +15,18 @@ import 'package:web_ui/dwc.dart' as dwc;
 
 main() {
   var argParser = new ArgParser();
+  argParser.addFlag('help', abbr: 'h', help: 'Displayes this help message',
+      defaultsTo: false, negatable: false);
   argParser.addOption('out', abbr: 'o',
       help: 'output directory for the generated code',
       defaultsTo: 'generated');
   var args = argParser.parse(new Options().arguments);
+
+  if (args['help']) {
+    print('Usage: build_examples.dart [-o outdir] [file1, file2, ...]');
+    print(argParser.getUsage());
+    exit(0);
+  }
 
   var output = args['out'];
   if (args.rest.isEmpty) {
