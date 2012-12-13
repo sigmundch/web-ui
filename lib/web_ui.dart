@@ -307,10 +307,10 @@ abstract class WebComponent implements Element {
     _element.attributes = value;
   }
 
-  List<Element> get elements => _element.elements;
+  List<Element> get elements => _element.children;
 
   set elements(Collection<Element> value) {
-    _element.elements = value;
+    _element.children = value;
   }
 
   List<Element> get children => _element.children;
@@ -341,6 +341,8 @@ abstract class WebComponent implements Element {
   Element clone(bool deep) => _element.clone(deep);
 
   Element get parent => _element.parent;
+
+  Node get parentNode => _element.parentNode;
 
   ElementEvents get on => _element.on;
 

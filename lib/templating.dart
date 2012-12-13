@@ -15,7 +15,7 @@ import 'package:web_ui/watcher.dart';
  * convinience, this function returns [start].
  */
 Node removeNodes(Node start, Node end) {
-  var parent = end != null ? end.parent : null;
+  var parent = end != null ? end.parentNode : null;
   if (parent == null) return start;
 
   while (start != end) {

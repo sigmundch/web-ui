@@ -3,16 +3,19 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
-## Pub version 0.2.9 - Dec 11 (trunk SDK 15948)
+## Pub version 0.2.10 - Dec 12 (SDK 16053)
+  * Updates to comply with SDK 16053
+
+## Pub version 0.2.9 - Dec 11 (SDK 15948)
   * Updates to comply with all breaking changes in the new trunk SDK
 
-## Pub version 0.2.8+6 - Dec 10 (SDK 15595)
+## Pub version 0.2.8+6 - Dec 10 (SDK 15595, integration SDK 15699)
 
   * Bug fix:
     * No longer generates calls to Element constructors that don't exist
       (affected heading and strong elements, among others)
 
-## Pub version 0.2.8+5 - Dec 7 (SDK 15595)
+## Pub version 0.2.8+5 - Dec 7 (SDK 15595, integration SDK 15699)
 
   * Rename package to web_ui
   * Change TodoMVC to have component with composition

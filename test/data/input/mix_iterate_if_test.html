@@ -30,12 +30,12 @@ BSD-style license that can be found in the LICENSE file.
       dispatch();
       window.setTimeout(() {
         var test = document.query('#test');
-        expect(test.elements.length, table.length);
+        expect(test.children.length, table.length);
         for (int row = 0; row < table.length; row++) {
-          var tr = test.elements[row];
+          var tr = test.children[row];
           expect(tr.tagName, 'TR');
           int column = -1;
-          for (var td in tr.elements) {
+          for (var td in tr.children) {
             expect(td.tagName, 'TD');
             if (td.style.display == 'none') {
               column++;
