@@ -214,7 +214,7 @@ class Compiler {
   // TODO(jmesserly): should we bundle a copy of dart.js and link to that?
   // This URL doesn't work offline, see http://dartbug.com/6723
   static const String DART_LOADER =
-      '<script type="text/javascript" src="http://dart.googlecode.com/'
+      '<script type="text/javascript" src="https://dart.googlecode.com/'
       'svn/branches/bleeding_edge/dart/client/dart.js"></script>\n';
 
   /** Emit the main .dart file. */
