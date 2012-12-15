@@ -14,7 +14,9 @@ import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/utils.dart';
+import 'package:logging/logging.dart';
 import 'testing.dart';
+
 
 main() {
   useVmConfiguration();
@@ -626,6 +628,61 @@ main() {
       expect(compInfo.constructor, equals('Quux'));
       expect(compInfo.element, equals(quux2));
       expect(compInfo.hasConflict, isFalse);
+    });
+    
+    test('script element without type - accept with warning', () {
+      messages = new Messages();
+      var doc = parse(
+        '<body>'
+          '<script src="a.darr"></script>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.length, 0);
+    });
+    
+    test('script element with illegal suffix - accept with warning', () {
+      messages = new Messages();
+      var doc = parse(
+        '<body>'
+          '<script type="application/dart" src="a.darr"></script>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.messages.filter((m) => m.level == Level.WARNING).length, 1);
+    });
+    
+    test('script element with relative path - accept', () {
+      messages = new Messages();
+      var doc = parse(
+        '<body>'
+          '<script type="application/dart" src="a.dart"></script>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.length, 0);
+    });
+    
+    test('script element with absolute path - accept with error', () {
+      messages = new Messages();
+      var doc = parse(
+        '<body>'
+          '<script type="application/dart" src="/a.dart"></script>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
+    });
+    
+    test("script element with 'src' and content - accept with error", () {
+      messages = new Messages();
+      var doc = parse(
+        '<body>'
+          '<script type="application/dart" src="a.dart">main(){}</script>'
+        '</body>'
+      );
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
     });
   });
 

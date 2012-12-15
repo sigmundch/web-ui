@@ -745,12 +745,19 @@ class _ElementLoader extends TreeVisitor {
         messages.error('script tag has "src" attribute and also has script '
             ' text.', node.sourceSpan, file: _fileInfo.path);
       }
-
+      
       if (_currentInfo.codeAttached) {
         _tooManyScriptsError(node);
       } else {
-        _currentInfo.externalFile =
-            _fileInfo.path.directoryPath.join(new Path(src));
+        Path srcPath = new Path(src);
+        if (srcPath.isAbsolute) {
+          messages.error(
+              'script tag should not use absolute path in attribute "src". '
+              'Got "src"="$src".', node.sourceSpan, file: _fileInfo.path);
+        } else {
+          _currentInfo.externalFile =
+              _fileInfo.path.directoryPath.join(srcPath);
+        }
       }
       return;
     }
