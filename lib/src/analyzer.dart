@@ -736,20 +736,20 @@ class _ElementLoader extends TreeVisitor {
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
-        messages.warning('"application/dart" scripts should'
+        messages.warning('"application/dart" scripts should '
             'use the .dart file extension.',
             node.sourceSpan, file: _fileInfo.path);
       }
 
       if (node.innerHTML.trim() != '') {
         messages.error('script tag has "src" attribute and also has script '
-            ' text.', node.sourceSpan, file: _fileInfo.path);
+            'text.', node.sourceSpan, file: _fileInfo.path);
       }
       
       if (_currentInfo.codeAttached) {
         _tooManyScriptsError(node);
       } else {
-        Path srcPath = new Path(src);
+        var srcPath = new Path(src);
         if (srcPath.isAbsolute) {
           messages.error(
               'script tag should not use absolute path in attribute "src". '
