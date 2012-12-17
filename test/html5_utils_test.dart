@@ -20,7 +20,6 @@ import 'testing.dart';
 
 main() {
   useVmConfiguration();
-  useMockMessages();
 
   test('generate type test for tag -> element mapping', () {
     var code = new StringBuffer();

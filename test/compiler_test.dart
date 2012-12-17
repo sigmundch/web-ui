@@ -13,10 +13,22 @@ import 'package:web_ui/src/file_system.dart';
 import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/options.dart';
 import 'testing.dart';
+import 'package:web_ui/src/messages.dart';
 
 main() {
   useVmConfiguration();
-  useMockMessages();
+  
+  var messages;
+  setUp(() {
+    messages = new Messages.silent();
+  });
+  
+  Compiler createCompiler(Map files) {
+    var options = CompilerOptions.parse([
+                                         '--no-colors', '-o', 'out', 'index.html']);
+    var fs = new MockFileSystem(files);
+    return new Compiler(fs, options, currentDir: '.', messages: messages);
+  }
 
   test('recursive dependencies', () {
     var compiler = createCompiler({
@@ -52,15 +64,6 @@ main() {
     }));
   });
 }
-
-
-Compiler createCompiler(Map files) {
-  var options = CompilerOptions.parse([
-      '--no-colors', '-o', 'out', 'index.html']);
-  var fs = new MockFileSystem(files);
-  return new Compiler(fs, options, '.');
-}
-
 
 /**
  * Abstraction around file system access to work in a variety of different

@@ -13,7 +13,8 @@ import 'messages.dart' show Messages;
 import 'file_system/path.dart';
 
 /** Parse and extract top-level directives from [code]. */
-DartCodeInfo parseDartCode(String code, Path file, Messages messages) {
+DartCodeInfo parseDartCode(String code, Path file, {Messages messages: null}) {
+  messages = messages == null ? new Messages.silent() : messages;
   return new _DirectiveParser(messages, file).parse(code);
 }
 

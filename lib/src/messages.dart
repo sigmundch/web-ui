@@ -13,12 +13,6 @@ import 'file_system/path.dart';
 import 'options.dart';
 import 'utils.dart';
 
-// TODO(jmesserly): remove the global messages. We instead use some
-// object that tracks compilation state.
-
-/** The global [Messages] for tracking info/warnings/messages. */
-Messages messages;
-
 /** Map between error levels and their display color. */
 final Map<Level, String> _ERROR_COLORS = (() {
   // TODO(jmesserly): the SourceSpan printer does not use our colors.
@@ -91,6 +85,12 @@ class Messages {
 
   Messages({CompilerOptions options, this.shouldPrint: true})
       : options = options != null ? options : new CompilerOptions();
+  
+  /**
+   * Creates a new instance of [Messages] which doesn't write messages to
+   * the console.
+   */
+  Messages.silent(): this(shouldPrint: false);
 
   // Convenience methods for testing
   int get length => messages.length;
@@ -131,6 +131,29 @@ class Messages {
 
     messages.add(msg);
     if (options.verbose) printMessage(msg);
+  }
+  
+  /**
+   * Adds one or more messages.
+   * 
+   * [messages] is either
+   *   * an individual [Message]
+   *   * a collection of [Message]s
+   *   * a instance of [Messages]
+   *   
+   * Does nothing if [messages] is null
+   */
+  void add(messages) {
+    if (messages == null) return;
+    if (messages is Message) {
+      this.messages.add(messages);
+    } else if (messages is Collection<Message>) {
+      this.messages.addAll(messages);
+    } else if (messages is Messages) {
+      this.messages.addAll(messages.messages);
+    } else {
+      throw new ArgumentError("Expected Message, collection of Message, or Messages, got $messages");
+    }    
   }
 
   void printMessage(msg) {

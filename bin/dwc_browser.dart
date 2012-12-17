@@ -42,7 +42,7 @@ void parse(js.Proxy sourcePagePort, String sourceUri) {
   fileSystem = new BrowserFileSystem(uri.scheme, sourcePagePort);
   // TODO(jacobr): provide a way to pass in options.
   var options = CompilerOptions.parse(['--no-colors', uri.path]);
-  messages = new Messages(options: options, shouldPrint: false);
+  var messages = new Messages(options: options, shouldPrint: false);
   asyncTime('Compiled $sourceUri', () {
     var compiler = new Compiler(fileSystem, options);
     return compiler.run().chain((_) {

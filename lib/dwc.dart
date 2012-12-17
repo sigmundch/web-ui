@@ -65,11 +65,11 @@ Future<CompilerResult> run(List<String> args) {
   if (options == null) return new Future.immediate(new CompilerResult());
 
   fileSystem = new ConsoleFileSystem();
-  messages = new Messages(options: options, shouldPrint: true);
+  var messages = new Messages(options: options, shouldPrint: true);
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
     var currentDir = new Directory.current().path;
-    var compiler = new Compiler(fileSystem, options, currentDir);
+    var compiler = new Compiler(fileSystem, options, currentDir: currentDir, messages: messages);
     var res;
     return compiler.run()
       .transform((_) => (res = new CompilerResult._(messages, compiler.output)))
@@ -110,7 +110,8 @@ void _createIfNeeded(Path outdir) {
  * returned future completes when the symlink was created (or immediately if it
  * already exists).
  */
-Future symlinkPubPackages(CompilerResult result, CompilerOptions options) {
+Future symlinkPubPackages(CompilerResult result, CompilerOptions options, {Messages messages: null}) {
+  messages = messages == null? new Messages.silent() : messages;
   if (options.outputDir == null || result.bootstrapFile == null) {
     // We don't need to copy the packages directory if the output was generated
     // in-place where the input lives or if the compiler was called without an
@@ -141,7 +142,7 @@ Future symlinkPubPackages(CompilerResult result, CompilerOptions options) {
   // path, but not necessarily resolve symlinks.
   var target = new File.fromPath(targetPath).fullPathSync().toString();
   var link = linkPath.toNativePath().toString();
-  return createSymlink(target, link);
+  return createSymlink(target, link, messages: messages);
 }
 
 
@@ -155,7 +156,8 @@ Future symlinkPubPackages(CompilerResult result, CompilerOptions options) {
  * which can be a [String], [File], or [Directory]. Returns a [Future] which
  * completes to the symlink file (i.e. [link]).
  */
-Future createSymlink(String target, String link) {
+Future createSymlink(String target, String link, {Messages messages: null}) {
+  messages = messages == null? new Messages.silent() : messages;
   var command = 'ln';
   var args = ['-s', target, link];
 

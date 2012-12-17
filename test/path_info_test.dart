@@ -17,7 +17,6 @@ import 'testing.dart';
 
 main() {
   useVmConfiguration();
-  useMockMessages();
   group('outdir == basedir:', () {
     group('outputPath', () {
       test('mangle automatic', () {
