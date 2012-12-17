@@ -72,8 +72,9 @@ String _outDir(String file) =>
 
 bool _isGeneratedFile(String filePath, List<Directory> outputDirs) {
   var path = new Path.fromNative(filePath);
+  var dirPrefix = path.directoryPath.toString();
   for (var dir in outputDirs) {
-    if (path.directoryPath.toString() == dir.path) return true;
+    if (dirPrefix.startsWith(dir.path)) return true;
   }
   return path.filename.startsWith('_');
 }
