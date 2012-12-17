@@ -57,7 +57,7 @@ class BrowserFileSystem implements fs.FileSystem {
     // We must add a random id or a timestamp to defeat proxy servers and Chrome
     // caching when accessing file urls.
     var uniqueUrl = '$_uriScheme://$path?random_id=${_random.nextDouble()}';
-    new HttpRequest.get(uniqueUrl, onSuccess(HttpRequest request) {
+    new HttpRequest.get(uniqueUrl, (HttpRequest request) {
       completer.complete(request.responseText);
     });
     return completer.future;
