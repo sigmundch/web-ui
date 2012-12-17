@@ -639,7 +639,7 @@ main() {
       );
       var info = analyzeDefinitionsInTree(doc);
       expect(messages.messages.filter((m) => m.level == Level.WARNING).length, 1);
-      expect(messages.messages.first.message, matches("possibly missing type"));
+      expect(messages[0].message, contains("possibly missing type"));
     });
     
     test('script element with illegal suffix - accept with warning', () {
@@ -651,7 +651,7 @@ main() {
       );
       var info = analyzeDefinitionsInTree(doc);
       expect(messages.messages.filter((m) => m.level == Level.WARNING).length, 1);
-      expect(messages.messages.first.message, matches("scripts should use the \\.dart file extension"));
+      expect(messages[0].message, contains("scripts should use the .dart file extension"));
     });
     
     test('script element with relative path - accept', () {
@@ -674,7 +674,7 @@ main() {
       );
       var info = analyzeDefinitionsInTree(doc);
       expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
-      expect(messages.messages.first.message, matches("script tag should not use absolute path"));
+      expect(messages[0].message, contains("script tag should not use absolute path"));
     });
     
     test("script element with 'src' and content - accept with error", () {
@@ -686,7 +686,7 @@ main() {
       );
       var info = analyzeDefinitionsInTree(doc);
       expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
-      expect(messages.messages.first.message, matches('script tag has "src" attribute and also has script text'));
+      expect(messages[0].message, contains('script tag has "src" attribute and also has script text'));
     });
   });
 
