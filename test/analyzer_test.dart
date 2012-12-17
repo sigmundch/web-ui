@@ -631,7 +631,7 @@ main() {
     });
     
     test('script element without type - accept with warning', () {
-      messages = new Messages();
+      messages.clear();
       var doc = parse(
         '<body>'
           '<script src="a.darr"></script>'
@@ -643,7 +643,7 @@ main() {
     });
     
     test('script element with illegal suffix - accept with warning', () {
-      messages = new Messages();
+      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.darr"></script>'
@@ -655,7 +655,7 @@ main() {
     });
     
     test('script element with relative path - accept', () {
-      messages = new Messages();
+      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.dart"></script>'
@@ -666,7 +666,7 @@ main() {
     });
     
     test('script element with absolute path - accept with error', () {
-      messages = new Messages();
+      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="/a.dart"></script>'
@@ -678,7 +678,7 @@ main() {
     });
     
     test("script element with 'src' and content - accept with error", () {
-      messages = new Messages();
+      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.dart">main(){}</script>'
