@@ -3,7 +3,10 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
-## Pub version 0.2.10 - Dec 12 (trunk SDK 16102)
+## Pub version 0.2.10+2 - Dec 17 (trunk candidate SDK 16102)
+  * Bug fix: build.dart kept running nonstop (wihtin the Editor) if you had components code under a subdirectory.
+
+## Pub version 0.2.10, 0.2.10+1 - Dec 12 (trunk candidate SDK 16102)
   * Updates to comply with trunk SDK 16102
 
 ## Pub version 0.2.9 - Dec 11 (SDK 15948)
