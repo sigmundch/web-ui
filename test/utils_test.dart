@@ -6,11 +6,11 @@
 library utils_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/utils.dart';
+import 'compact_vm_config.dart';
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
 
   for (bool startUppercase in [false, true]) {
     Matcher caseEquals(String str) {

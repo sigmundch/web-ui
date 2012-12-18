@@ -26,12 +26,8 @@ class ConsoleFileSystem implements FileSystem {
 
   void writeString(internal.Path path, String text) {
     var future = new File(path.toString()).open(FileMode.WRITE).chain((file) {
-      // TODO(jmesserly): RandomAccessFile.writeString is broken for non-ASCII,
-      // See http://dartbug.com/6392
-      var bytes = encodeUtf8(text);
-      return file.writeList(bytes, 0, bytes.length).chain((_) => file.close());
+      return file.writeString(text).chain((_) => file.close());
     });
-
     _pending.add(future);
   }
 

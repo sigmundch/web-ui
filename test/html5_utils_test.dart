@@ -13,13 +13,13 @@ library html_type_test;
 import 'dart:io';
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/html5_setters.g.dart';
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
   useMockMessages();
 
   test('generate type test for tag -> element mapping', () {

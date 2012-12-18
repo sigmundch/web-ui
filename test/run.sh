@@ -19,6 +19,10 @@ DIR=$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )
 DART_FLAGS="--checked"
 TEST_PATTERN=$1
 
+function fail {
+  return 1
+}
+
 function show_diff {
   diff -u $1 $2 | \
     sed -e "s/^\(+.*\)/[32m\1[0m/" |\
@@ -36,7 +40,7 @@ function update {
 }
 
 function pass {
-  echo -e "[32mPASS[0m"
+  echo -e "[32mOK[0m"
 }
 
 function compare {
@@ -73,25 +77,30 @@ if [[ ! -e $DIR/data/input/example ]]; then
   ln -s `dirname $DIR`/example/ $DIR/data/input/example
 fi
 
-pushd $DIR
-dart $DART_FLAGS run_all.dart $TEST_PATTERN
-popd
 
+function compare_all {
 # TODO(jmesserly): bash and dart regexp might not be 100% the same. Ideally we
 # could do all the heavy lifting in Dart code, and keep this script as a thin
 # wrapper that sets `--enable-type-checks --enable-asserts`
-for input in $DIR/data/input/*_test.html; do
-  if [[ ($TEST_PATTERN == "") || ($input =~ $TEST_PATTERN) ]]; then
-    FILENAME=`basename $input`
-    echo -e -n "Testing $FILENAME "
-    DUMP="$DIR/data/output/$FILENAME.txt"
-    EXPECTATION="$DIR/data/expected/$FILENAME.txt"
-    DART_PACKAGE_ROOT="file://$DIR/packages/" \
-        DumpRenderTree $DIR/data/output/$FILENAME > $DUMP
+  for input in $DIR/data/input/*_test.html; do
+    if [[ ($TEST_PATTERN == "") || ($input =~ $TEST_PATTERN) ]]; then
+      FILENAME=`basename $input`
+      echo -e -n "Checking diff for $FILENAME "
+      DUMP="$DIR/data/output/$FILENAME.txt"
+      ERR="$DIR/data/output/_errors.$FILENAME.txt"
+      EXPECTATION="$DIR/data/expected/$FILENAME.txt"
 
-    compare $EXPECTATION $DUMP
-  fi
-done
+      compare $EXPECTATION $DUMP || \
+        (echo "Errors printed by DumpRenderTree:"; cat $ERR; fail)
+    fi
+  done
+}
+
+pushd $DIR
+dart $DART_FLAGS run_all.dart $TEST_PATTERN || compare_all
+popd
+
+
 
 # Run Dart analyzer to check that we're generating warning clean code.
 OUT_PATTERN="$DIR/data/output/*$TEST_PATTERN*_bootstrap.dart"

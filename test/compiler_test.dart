@@ -7,15 +7,15 @@ library compiler_test;
 
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/compiler.dart';
 import 'package:web_ui/src/file_system.dart';
 import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/options.dart';
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
   useMockMessages();
 
   test('recursive dependencies', () {

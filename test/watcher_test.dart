@@ -7,8 +7,11 @@ library watcher_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/watcher.dart';
+import 'compact_vm_config.dart';
 
 main() {
+  useCompactVMConfiguration();
+
   group('core', () {
     test('simple watcher ', () {
       int x = 0;

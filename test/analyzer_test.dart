@@ -7,7 +7,6 @@ library analyzer_test;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/files.dart';
@@ -16,10 +15,11 @@ import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/utils.dart';
 import 'package:logging/logging.dart';
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
   useMockMessages();
 
   test('parse single element', () {
