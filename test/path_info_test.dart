@@ -9,14 +9,14 @@
 library path_info_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
   group('outdir == basedir:', () {
     group('outputPath', () {
       test('mangle automatic', () {

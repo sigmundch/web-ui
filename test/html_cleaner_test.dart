@@ -7,16 +7,15 @@ library html_cleaner_test;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/html_cleaner.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/file_system/path.dart';
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 main() {
-  useVmConfiguration();
-
+  useCompactVMConfiguration();
   test('remove attributes with data bindings (1)', () {
     // Note: we use an id in all these tests so that the analyzer will not
     // inject one for us.

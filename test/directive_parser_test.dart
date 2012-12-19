@@ -5,14 +5,14 @@
 library directive_parser_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/info.dart' show DartCodeInfo;
 import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/directive_parser.dart';
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 main() {
-  useVmConfiguration();
+  useCompactVMConfiguration();
   
   var messages;
   setUp() {

@@ -10,19 +10,18 @@ library emitter_test;
 
 import 'package:html5lib/dom.dart';
 import 'package:unittest/unittest.dart';
-import 'package:unittest/vm_config.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/emitters.dart';
 import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'testing.dart';
+import 'compact_vm_config.dart';
 
 
 
 main() {
-  useVmConfiguration();
-    
+  useCompactVMConfiguration();
   group('emit element field', () {
     group('declaration', () {
       test('no data binding', () {

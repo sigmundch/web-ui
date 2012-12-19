@@ -60,7 +60,7 @@ class CompilerResult {
  */
 // TODO(jmesserly): fix this to return a proper exit code
 // TODO(justinfagnani): return messages in the result
-Future<CompilerResult> run(List<String> args) {
+Future<CompilerResult> run(List<String> args, {bool printTime: true}) {
   var options = CompilerOptions.parse(args);
   if (options == null) return new Future.immediate(new CompilerResult());
 
@@ -76,7 +76,7 @@ Future<CompilerResult> run(List<String> args) {
       .chain((_) => symlinkPubPackages(res, options))
       .chain((_) => emitFiles(compiler.output, options.clean))
       .transform((_) => res);
-  }, printTime: true, useColors: options.useColors);
+  }, printTime: printTime, useColors: options.useColors);
 }
 
 Future emitFiles(List<OutputFile> outputs, bool clean) {
