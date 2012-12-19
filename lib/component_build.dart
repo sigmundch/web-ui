@@ -30,7 +30,9 @@ import 'package:web_ui/dwc.dart' as dwc;
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-void build(List<String> arguments, List<String> entryPoints) {
+void build(List<String> arguments, List<String> entryPoints,
+           {String baseDir : null}) {
+
   var args = _processArgs(arguments);
 
   var trackDirs = <Directory>[];
@@ -54,6 +56,7 @@ void build(List<String> arguments, List<String> entryPoints) {
       var args = [];
       if (machineFormat) args.add('--json_format');
       if (Platform.operatingSystem == 'windows') args.add('--no-colors');
+      if(baseDir != null) args.addAll(['--basedir', baseDir]);
       args.addAll(['-o', outDir.toString(), file]);
       dwc.run(args);
 
