@@ -65,6 +65,17 @@ class Context {
   final CodePrinter removedMethod;
 
   final LifecycleScope scope;
+  Messages _messages = new Messages.silent();
+  
+  /**
+   * If [messages] is null, sets a new silent instance of [Messages]
+   */
+  set messages(Messages messages) {
+    messages = messages == null ? new Messages.silent() : messages;
+    _messages = messages; 
+  }
+  
+  Messages get messages => _messages;
 
   Context([CodePrinter declarations,
            CodePrinter createdMethod,
@@ -828,7 +839,7 @@ class WebComponentEmitter extends RecursiveEmitter {
           .add(code.substring(match.end));
       return printer.formatString();
     } else {
-      messages.error('please provide a class definition '
+      _context.messages.error('please provide a class definition '
           'for ${info.constructor}:\n $code', info.element.sourceSpan,
           file: info.inputPath);
       return '';

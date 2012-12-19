@@ -6,14 +6,20 @@ library directive_parser_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/info.dart' show DartCodeInfo;
-import 'package:web_ui/src/messages.dart' show messages;
+import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/directive_parser.dart';
 import 'testing.dart';
 import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
+  
+  var messages;
+  setUp() {
+    messages = new Messages.silent();
+  }
+  
+  _parse(String code) => parseDartCode(code, null, messages:messages);
 
   test('empty contents', () {
     var info = _parse('');
@@ -158,7 +164,7 @@ main() {
     expect(info.directives[1].hide, equals(['d', 'e']));
     expect(info.directives[1].show, equals(['a', 'b', 'c']));
     expect(info.code, equals('code();\n'));
-  });
+  });  
 }
 
-_parse(String code) => parseDartCode(code, null, messages);
+

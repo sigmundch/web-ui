@@ -15,507 +15,511 @@ import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/utils.dart';
 import 'package:logging/logging.dart';
 import 'testing.dart';
+import 'testing.dart' as testing show analyzeElement, analyzeDefinitionsInTree;
 import 'compact_vm_config.dart';
-
 
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
 
-  test('parse single element', () {
-    var input = '<div></div>';
-    var elem = parseSubtree(input);
-    expect(elem.outerHTML, input);
-  });
+  // the mock messages
+  var messages;
 
-  test('id extracted - shallow element', () {
-    var input = '<div id="foo"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.node.id, equals('foo'));
-    expect(info.identifier, equals('__foo'));
-  });
+  analyzeElement(elem) => testing.analyzeElement(elem, messages: messages);
 
-  test('id extracted - deep element', () {
-    var input = '<div><div><div id="foo"></div></div></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.identifier, isNull);
-    expect(info.children[0].identifier, isNull);
-    expect(info.children[0].children[0].identifier, equals('__foo'));
-  });
+  analyzeDefinitionsInTree(doc) => testing.analyzeDefinitionsInTree(
+      doc, messages: messages);
 
-  test('ElementInfo.toString()', () {
-    var input = '<div id="foo"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.toString().startsWith('#<ElementInfo '), true);
-  });
+  group("", () {
+    setUp(() {
+      messages = new Messages.silent();
+    });
 
-  test('id as identifier - found in dom', () {
-    var input = '<div id="foo-bar"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.identifier, equals('__fooBar'));
-  });
+    test('parse single element', () {
+      var input = '<div></div>';
+      var elem = parseSubtree(input);
+      expect(elem.outerHTML, input);
+    });
 
-  test('id as identifier - many id names', () {
-    identifierOf(String id) {
-      var input = '<div id="$id"></div>';
+    test('id extracted - shallow element', () {
+      var input = '<div id="foo"></div>';
       var info = analyzeElement(parseSubtree(input));
-      return info.identifier;
-    }
-    expect(identifierOf('foo-bar'), equals('__fooBar'));
-    expect(identifierOf('foo-b'), equals('__fooB'));
-    expect(identifierOf('foo-'), equals('__foo'));
-    expect(identifierOf('foo--bar'), equals('__fooBar'));
-    expect(identifierOf('foo--bar---z'), equals('__fooBarZ'));
-  });
+      expect(info.node.id, equals('foo'));
+      expect(info.identifier, equals('__foo'));
+    });
 
-  test('id as identifier - deep element', () {
-    var input = '<div><div><div id="foo-ba"></div></div></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.children[0].children[0].identifier, equals('__fooBa'));
-  });
+    test('id extracted - deep element', () {
+      var input = '<div><div><div id="foo"></div></div></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.identifier, isNull);
+      expect(info.children[0].identifier, isNull);
+      expect(info.children[0].children[0].identifier, equals('__foo'));
+    });
 
-  test('id as identifier - no id', () {
-    var input = '<div></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.identifier, isNull);
-  });
+    test('ElementInfo.toString()', () {
+      var input = '<div id="foo"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.toString().startsWith('#<ElementInfo '), true);
+    });
 
-  test('hasDataBinding - attribute w/o data', () {
-    var input = '<input value="x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, false);
-  });
+    test('id as identifier - found in dom', () {
+      var input = '<div id="foo-bar"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.identifier, equals('__fooBar'));
+    });
 
-  test('hasDataBinding - attribute with data, 1 way binding', () {
-    var input = '<input value="{{x}}">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, true);
-  });
+    test('id as identifier - many id names', () {
+      identifierOf(String id) {
+        var input = '<div id="$id"></div>';
+        var info = analyzeElement(parseSubtree(input));
+        return info.identifier;
+      }
+      expect(identifierOf('foo-bar'), equals('__fooBar'));
+      expect(identifierOf('foo-b'), equals('__fooB'));
+      expect(identifierOf('foo-'), equals('__foo'));
+      expect(identifierOf('foo--bar'), equals('__fooBar'));
+      expect(identifierOf('foo--bar---z'), equals('__fooBarZ'));
+    });
 
-  test('hasDataBinding - attribute with data, 2 way binding', () {
-    messages.clear();
-    var input = '<input bind-value="x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, true);
-    expect(messages.length, 0);
-  });
+    test('id as identifier - deep element', () {
+      var input = '<div><div><div id="foo-ba"></div></div></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.children[0].children[0].identifier, equals('__fooBa'));
+    });
 
-  test('hasDataBinding - attribute with data, 2 way binding', () {
-    messages.clear();
-    var input = '<input bind-value-as-date="x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, true);
-    expect(messages.length, 0);
-  });
+    test('id as identifier - no id', () {
+      var input = '<div></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.identifier, isNull);
+    });
 
-  test('hasDataBinding - attribute with data, 2 way binding', () {
-    messages.clear();
-    var input = '<input bind-value-as-number="x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, true);
-    expect(messages.length, 0);
-  });
+    test('hasDataBinding - attribute w/o data', () {
+      var input = '<input value="x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, false);
+    });
 
-  test('hasDataBinding - attribute with data, 2 way binding - deprecated', () {
-    messages.clear();
-    var node = parseSubtree('<input data-bind="value:x">');
-    var info = analyzeElement(node);
-    expect(info.hasDataBinding, true);
-    expect(messages.length, 1);
-    expect(messages[0].message, contains('data-bind is deprecated'));
-    expect(messages[0].span, equals(node.sourceSpan));
-  });
+    test('hasDataBinding - attribute with data, 1 way binding', () {
+      var input = '<input value="{{x}}">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+    });
 
-  test('hasDataBinding - content with data', () {
-    var input = '<div>{{x}}</div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.hasDataBinding, true);
-    expect(info.node.nodes.length, 1);
-    var textInfo = info.children[0];
-    expect(textInfo.binding, 'x');
-    expect(textInfo.node.value, '');
-  });
+    test('hasDataBinding - attribute with data, 2 way binding', () {
+      var input = '<input bind-value="x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+      expect(messages.length, 0);
+    });
 
-  test('hasDataBinding - content with text and data', () {
-    var input = '<div> a b {{x}}c</div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.node.nodes.length, 1);
-    expect(info.node.nodes[0].value, ' a b {{x}}c');
-    expect(info.hasDataBinding, true);
+    test('hasDataBinding - attribute with data, 2 way binding', () {
+      var input = '<input bind-value-as-date="x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+      expect(messages.length, 0);
+    });
 
-    expect(info.children.length, 3);
-    expect(info.children[0].node.value, ' a b ');
-    expect(info.children[1].node.value, '');
-    expect(info.children[1].binding, 'x');
-    expect(info.children[2].node.value, 'c');
-  });
+    test('hasDataBinding - attribute with data, 2 way binding', () {
+      var input = '<input bind-value-as-number="x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+      expect(messages.length, 0);
+    });
 
-  test('attribute - no info', () {
-    var input = '<input value="x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes, isNotNull);
-    expect(info.attributes, isEmpty);
-  });
+    test('hasDataBinding - attribute with data, 2 way binding - deprecated', () {
+      var node = parseSubtree('<input data-bind="value:x">');
+      var info = analyzeElement(node);
+      expect(info.hasDataBinding, true);
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('data-bind is deprecated'));
+      expect(messages[0].span, equals(node.sourceSpan));
+    });
 
-  test('attribute - 1 way binding input value', () {
-    var input = '<input value="{{x}}">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isSimple, true);
-    expect(info.attributes['value'].bindings, equals(['x']));
-    expect(info.attributes['value'].textContent, isNull);
-    expect(info.events, isEmpty);
-  });
+    test('hasDataBinding - content with data', () {
+      var input = '<div>{{x}}</div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+      expect(info.node.nodes.length, 1);
+      var textInfo = info.children[0];
+      expect(textInfo.binding, 'x');
+      expect(textInfo.node.value, '');
+    });
 
-  test('attribute - 1 way binding data-hi', () {
-    var input = '<div data-hi="{{x}}">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['data-hi'], isNotNull);
-    expect(info.attributes['data-hi'].isSimple, true);
-    expect(info.attributes['data-hi'].bindings, equals(['x']));
-    expect(info.attributes['data-hi'].textContent, isNull);
-    expect(info.events, isEmpty);
-  });
+    test('hasDataBinding - content with text and data', () {
+      var input = '<div> a b {{x}}c</div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.node.nodes.length, 1);
+      expect(info.node.nodes[0].value, ' a b {{x}}c');
+      expect(info.hasDataBinding, true);
 
-  test('attribute - single binding with text', () {
-    var input = '<input value="foo {{x}} bar">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isText, true);
-    expect(info.attributes['value'].bindings, equals(['x']));
-    expect(info.attributes['value'].textContent, equals(['foo ', ' bar']));
-    expect(info.events, isEmpty);
-  });
+      expect(info.children.length, 3);
+      expect(info.children[0].node.value, ' a b ');
+      expect(info.children[1].node.value, '');
+      expect(info.children[1].binding, 'x');
+      expect(info.children[2].node.value, 'c');
+    });
 
-  test('attribute - multiple bindings with text', () {
-    var input = '<input value="a{{x}}b{{y}}">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isText, true);
-    expect(info.attributes['value'].bindings, equals(['x', 'y']));
-    expect(info.attributes['value'].textContent, equals(['a', 'b', '']));
-    expect(info.events, isEmpty);
-  });
+    test('attribute - no info', () {
+      var input = '<input value="x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes, isNotNull);
+      expect(info.attributes, isEmpty);
+    });
 
-  test('attribute - 2 way binding input value', () {
-    var input = '<input data-bind="value:x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isSimple, true);
-    expect(info.attributes['value'].bindings, equals(['x']));
-    expect(info.events.keys, equals(['input']));
-    expect(info.events['input'].length, equals(1));
-    expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
-  });
+    test('attribute - 1 way binding input value', () {
+      var input = '<input value="{{x}}">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isSimple, true);
+      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.attributes['value'].textContent, isNull);
+      expect(info.events, isEmpty);
+    });
 
-  test('attribute - 2 way binding textarea value', () {
-    var input = '<textarea data-bind="value:x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isSimple, true);
-    expect(info.attributes['value'].boundValue, equals('x'));
-    expect(info.events.keys, equals(['input']));
-    expect(info.events['input'].length, equals(1));
-    expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
-  });
+    test('attribute - 1 way binding data-hi', () {
+      var input = '<div data-hi="{{x}}">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['data-hi'], isNotNull);
+      expect(info.attributes['data-hi'].isSimple, true);
+      expect(info.attributes['data-hi'].bindings, equals(['x']));
+      expect(info.attributes['data-hi'].textContent, isNull);
+      expect(info.events, isEmpty);
+    });
 
-  test('attribute - 2 way binding select', () {
-    var input = '<select data-bind="selectedIndex:x,value:y">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.keys, equals(['selectedIndex', 'value']));
-    expect(info.attributes['selectedIndex'], isNotNull);
-    expect(info.attributes['selectedIndex'].isSimple, true);
-    expect(info.attributes['selectedIndex'].bindings, equals(['x']));
-    expect(info.attributes['value'], isNotNull);
-    expect(info.attributes['value'].isSimple, true);
-    expect(info.attributes['value'].bindings, equals(['y']));
-    expect(info.events.keys, equals(['change']));
-    expect(info.events['change'].length, equals(2));
-    expect(info.events['change'][0].action('foo'),
-        equals('x = foo.selectedIndex'));
-    expect(info.events['change'][1].action('foo'), equals('y = foo.value'));
-  });
+    test('attribute - single binding with text', () {
+      var input = '<input value="foo {{x}} bar">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isText, true);
+      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.attributes['value'].textContent, equals(['foo ', ' bar']));
+      expect(info.events, isEmpty);
+    });
 
-  test('attribute - 1 way binding checkbox', () {
-    var input = '<input type="checkbox" checked="{{x}}">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['checked'], isNotNull);
-    expect(info.attributes['checked'].isSimple, true);
-    expect(info.attributes['checked'].boundValue, equals('x'));
-    expect(info.events, isEmpty);
-  });
+    test('attribute - multiple bindings with text', () {
+      var input = '<input value="a{{x}}b{{y}}">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isText, true);
+      expect(info.attributes['value'].bindings, equals(['x', 'y']));
+      expect(info.attributes['value'].textContent, equals(['a', 'b', '']));
+      expect(info.events, isEmpty);
+    });
 
-  test('attribute - 2 way binding checkbox - invalid', () {
-    messages.clear();
-    var node = parseSubtree('<input bind-checked="x">');
-    var info = analyzeElement(node);
-    expect(info.attributes.length, equals(0));
-    expect(messages.length, 1);
-    expect(messages[0].message, contains('type="radio" or type="checked"'));
-    expect(messages[0].span, equals(node.sourceSpan));
-  });
+    test('attribute - 2 way binding input value', () {
+      var input = '<input data-bind="value:x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isSimple, true);
+      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.events.keys, equals(['input']));
+      expect(info.events['input'].length, equals(1));
+      expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
+    });
 
-  test('attribute - 2 way binding checkbox', () {
-    var input = '<input type="checkbox" data-bind="checked:x">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['checked'], isNotNull);
-    expect(info.attributes['checked'].isSimple, true);
-    expect(info.attributes['checked'].boundValue, equals('x'));
-    expect(info.events.keys, equals(['change']));
-    expect(info.events['change'].length, equals(1));
-    expect(info.events['change'][0].action('foo'),
-        equals('x = foo.checked'));
-  });
+    test('attribute - 2 way binding textarea value', () {
+      var input = '<textarea data-bind="value:x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isSimple, true);
+      expect(info.attributes['value'].boundValue, equals('x'));
+      expect(info.events.keys, equals(['input']));
+      expect(info.events['input'].length, equals(1));
+      expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
+    });
 
-  test('attribute - 1 way binding, normal field', () {
-    var input = '<div foo="{{x}}"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['foo'], isNotNull);
-    expect(info.attributes['foo'].isSimple, true);
-    expect(info.attributes['foo'].boundValue, equals('x'));
-  });
+    test('attribute - 2 way binding select', () {
+      var input = '<select data-bind="selectedIndex:x,value:y">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.keys, equals(['selectedIndex', 'value']));
+      expect(info.attributes['selectedIndex'], isNotNull);
+      expect(info.attributes['selectedIndex'].isSimple, true);
+      expect(info.attributes['selectedIndex'].bindings, equals(['x']));
+      expect(info.attributes['value'], isNotNull);
+      expect(info.attributes['value'].isSimple, true);
+      expect(info.attributes['value'].bindings, equals(['y']));
+      expect(info.events.keys, equals(['change']));
+      expect(info.events['change'].length, equals(2));
+      expect(info.events['change'][0].action('foo'),
+          equals('x = foo.selectedIndex'));
+      expect(info.events['change'][1].action('foo'), equals('y = foo.value'));
+    });
 
-  test('attribute - single class', () {
-    var input = '<div class="{{x}}"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['class'], isNotNull);
-    expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].bindings, equals(['x']));
-  });
+    test('attribute - 1 way binding checkbox', () {
+      var input = '<input type="checkbox" checked="{{x}}">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['checked'], isNotNull);
+      expect(info.attributes['checked'].isSimple, true);
+      expect(info.attributes['checked'].boundValue, equals('x'));
+      expect(info.events, isEmpty);
+    });
 
-  test('attribute - many classes', () {
-    var input = '<div class="{{x}} {{y}}{{z}}  {{w}}"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['class'], isNotNull);
-    expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].bindings,
-        equals(['x', 'y', 'z', 'w']));
-  });
+    test('attribute - 2 way binding checkbox - invalid', () {
+      var node = parseSubtree('<input bind-checked="x">');
+      var info = analyzeElement(node);
+      expect(info.attributes.length, equals(0));
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('type="radio" or type="checked"'));
+      expect(messages[0].span, equals(node.sourceSpan));
+    });
 
-  test('attribute - many classes 2', () {
-    var input =
-        '<div class="class1 {{x}} class2 {{y}}{{z}} {{w}} class3 class4">'
-        '</div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['class'], isNotNull);
-    expect(info.attributes['class'].isClass, true);
-    expect(info.attributes['class'].bindings,
-        equals(['x', 'y', 'z', 'w']));
-    expect(info.node.attributes['class'].length, 30);
-    expect(info.node.attributes['class'].contains('class1'), true);
-    expect(info.node.attributes['class'].contains('class2'), true);
-    expect(info.node.attributes['class'].contains('class3'), true);
-    expect(info.node.attributes['class'].contains('class4'), true);
-  });
+    test('attribute - 2 way binding checkbox', () {
+      var input = '<input type="checkbox" data-bind="checked:x">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['checked'], isNotNull);
+      expect(info.attributes['checked'].isSimple, true);
+      expect(info.attributes['checked'].boundValue, equals('x'));
+      expect(info.events.keys, equals(['change']));
+      expect(info.events['change'].length, equals(1));
+      expect(info.events['change'][0].action('foo'),
+          equals('x = foo.checked'));
+    });
 
-  test('attribute - data style', () {
-    var input = '<div data-style="x"></div>';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes.length, equals(1));
-    expect(info.attributes['data-style'], isNotNull);
-    expect(info.attributes['data-style'].isStyle, true);
-    expect(info.attributes['data-style'].bindings, equals(['x']));
-  });
+    test('attribute - 1 way binding, normal field', () {
+      var input = '<div foo="{{x}}"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['foo'], isNotNull);
+      expect(info.attributes['foo'].isSimple, true);
+      expect(info.attributes['foo'].boundValue, equals('x'));
+    });
 
-  test('attribute - event hookup with on-', () {
-    messages.clear();
-    var input = '<input on-double-click="foo">';
-    var info = analyzeElement(parseSubtree(input));
-    expect(info.attributes, isEmpty);
-    expect(info.events.keys, equals(['doubleClick']));
-    var events = info.events['doubleClick'];
-    expect(events.length, equals(1));
-    expect(events[0].eventName, 'doubleClick');
-    expect(events[0].action('bar'), 'foo');
-    expect(messages.length, 0);
-  });
+    test('attribute - single class', () {
+      var input = '<div class="{{x}}"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['class'], isNotNull);
+      expect(info.attributes['class'].isClass, true);
+      expect(info.attributes['class'].bindings, equals(['x']));
+    });
 
-  test('attribute - warning for JavaScript inline handler', () {
-    messages.clear();
-    var node = parseSubtree('<input onclick="foo">');
-    var info = analyzeElement(node);
-    expect(info.attributes, isEmpty);
-    expect(info.events.keys, equals([]));
-    expect(messages.length, 1);
-    expect(messages[0].message,
-        contains('inline JavaScript event handler'));
-    expect(messages[0].span, equals(node.sourceSpan));
-  });
+    test('attribute - many classes', () {
+      var input = '<div class="{{x}} {{y}}{{z}}  {{w}}"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['class'], isNotNull);
+      expect(info.attributes['class'].isClass, true);
+      expect(info.attributes['class'].bindings,
+          equals(['x', 'y', 'z', 'w']));
+    });
 
-  test('attribute - deprecated data-action', () {
-    messages.clear();
-    var node = parseSubtree('<input data-action="change:foo">');
-    var info = analyzeElement(node);
-    expect(info.attributes, isEmpty);
-    expect(info.events.keys, equals(['change']));
-    var changeEvents = info.events['change'];
-    expect(changeEvents.length, equals(1));
-    expect(changeEvents[0].eventName, 'change');
-    expect(changeEvents[0].action('bar'), r'foo($event)');
-    expect(messages.length, 1);
-    expect(messages[0].message, contains('data-action is deprecated'));
-    expect(messages[0].span, equals(node.sourceSpan));
-  });
+    test('attribute - many classes 2', () {
+      var input =
+          '<div class="class1 {{x}} class2 {{y}}{{z}} {{w}} class3 class4">'
+          '</div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['class'], isNotNull);
+      expect(info.attributes['class'].isClass, true);
+      expect(info.attributes['class'].bindings,
+          equals(['x', 'y', 'z', 'w']));
+      expect(info.node.attributes['class'].length, 30);
+      expect(info.node.attributes['class'].contains('class1'), true);
+      expect(info.node.attributes['class'].contains('class2'), true);
+      expect(info.node.attributes['class'].contains('class3'), true);
+      expect(info.node.attributes['class'].contains('class4'), true);
+    });
 
-  test('template element', () {
-    var info = analyzeElement(parseSubtree('<template></template>'));
-    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
-        reason: 'example does not need TemplateInfo');
-  });
+    test('attribute - data style', () {
+      var input = '<div data-style="x"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['data-style'], isNotNull);
+      expect(info.attributes['data-style'].isStyle, true);
+      expect(info.attributes['data-style'].bindings, equals(['x']));
+    });
 
-  // TODO(jmesserly): I'm not sure we are implementing correct behavior for
-  // `<template instantiate>` in Model-Driven-Views.
-  test('template instantiate (invalid)', () {
-    var elem = parseSubtree('<template instantiate="foo"></template>');
-    var info = analyzeElement(elem);
+    test('attribute - event hookup with on-', () {
+      var input = '<input on-double-click="foo">';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes, isEmpty);
+      expect(info.events.keys, equals(['doubleClick']));
+      var events = info.events['doubleClick'];
+      expect(events.length, equals(1));
+      expect(events[0].eventName, 'doubleClick');
+      expect(events[0].action('bar'), 'foo');
+      expect(messages.length, 0);
+    });
 
-    expect(elem.attributes, equals({'instantiate': 'foo'}));
-    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+    test('attribute - warning for JavaScript inline handler', () {
+      var node = parseSubtree('<input onclick="foo">');
+      var info = analyzeElement(node);
+      expect(info.attributes, isEmpty);
+      expect(info.events.keys, equals([]));
+      expect(messages.length, 1);
+      expect(messages[0].message,
+          contains('inline JavaScript event handler'));
+      expect(messages[0].span, equals(node.sourceSpan));
+    });
+
+    test('attribute - deprecated data-action', () {
+      var node = parseSubtree('<input data-action="change:foo">');
+      var info = analyzeElement(node);
+      expect(info.attributes, isEmpty);
+      expect(info.events.keys, equals(['change']));
+      var changeEvents = info.events['change'];
+      expect(changeEvents.length, equals(1));
+      expect(changeEvents[0].eventName, 'change');
+      expect(changeEvents[0].action('bar'), r'foo($event)');
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('data-action is deprecated'));
+      expect(messages[0].span, equals(node.sourceSpan));
+    });
+
+    test('template element', () {
+      var info = analyzeElement(parseSubtree('<template></template>'));
+      expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+          reason: 'example does not need TemplateInfo');
+    });
+
+    // TODO(jmesserly): I'm not sure we are implementing correct behavior for
+    // `<template instantiate>` in Model-Driven-Views.
+    test('template instantiate (invalid)', () {
+      var elem = parseSubtree('<template instantiate="foo"></template>');
+      var info = analyzeElement(elem);
+
+      expect(elem.attributes, equals({'instantiate': 'foo'}));
+      expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
+          reason: 'example is not a valid template');
+    });
+
+    test('template if (empty)', () {
+      var elem = parseSubtree('<template if="foo"></template>');
+      var info = analyzeElement(elem);
+      expect(info.hasIfCondition, false);
+    });
+
+    test('template if', () {
+      var elem = parseSubtree('<template if="foo"><div>');
+      var div = elem.query('div');
+      TemplateInfo info = analyzeElement(elem);
+      expect(info.hasIfCondition, true);
+      expect(info.createdInCode, false);
+      expect(info.children[0].node, equals(div));
+      expect(info.children[0].createdInCode, true);
+      expect(div.id, '');
+      expect(elem.attributes, equals({'if': 'foo', 'id': '__e-0'}));
+      expect(info.ifCondition, equals('foo'));
+      expect(info.hasIterate, isFalse);
+      expect(messages.length, 0);
+    });
+
+    test('template instantiate if', () {
+      var elem = parseSubtree('<template instantiate="if foo"><div>');
+      var div = elem.query('div');
+      TemplateInfo info = analyzeElement(elem);
+      expect(info.hasIfCondition, true);
+      expect(info.createdInCode, false);
+      expect(info.children[0].node, equals(div));
+      expect(info.children[0].createdInCode, true);
+      expect(div.id, '');
+      expect(elem.attributes, equals({'instantiate': 'if foo', 'id': '__e-0'}));
+      expect(info.ifCondition, equals('foo'));
+      expect(info.hasIterate, isFalse);
+      expect(messages.length, 0);
+    });
+
+    test('if w/o template has warning', () {
+      var elem = parseSubtree('<div if="foo">');
+      analyzeElement(elem);
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('template attribute is required'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
+    test('instantiate-if w/o template has warning', () {
+      var elem = parseSubtree('<div instantiate="if foo">');
+      analyzeElement(elem);
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('template attribute is required'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
+    test('template iterate (invalid)', () {
+      var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
+      var info = analyzeElement(elem);
+
+      expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
+      expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
         reason: 'example is not a valid template');
-  });
-
-  test('template if (empty)', () {
-    var elem = parseSubtree('<template if="foo"></template>');
-    var info = analyzeElement(elem);
-    expect(info.hasIfCondition, false);
-  });
-
-  test('template if', () {
-    messages.clear();
-    var elem = parseSubtree('<template if="foo"><div>');
-    var div = elem.query('div');
-    TemplateInfo info = analyzeElement(elem);
-    expect(info.hasIfCondition, true);
-    expect(info.createdInCode, false);
-    expect(info.children[0].node, equals(div));
-    expect(info.children[0].createdInCode, true);
-    expect(div.id, '');
-    expect(elem.attributes, equals({'if': 'foo', 'id': '__e-0'}));
-    expect(info.ifCondition, equals('foo'));
-    expect(info.hasIterate, isFalse);
-    expect(messages.length, 0);
-  });
-
-  test('template instantiate if', () {
-    messages.clear();
-    var elem = parseSubtree('<template instantiate="if foo"><div>');
-    var div = elem.query('div');
-    TemplateInfo info = analyzeElement(elem);
-    expect(info.hasIfCondition, true);
-    expect(info.createdInCode, false);
-    expect(info.children[0].node, equals(div));
-    expect(info.children[0].createdInCode, true);
-    expect(div.id, '');
-    expect(elem.attributes, equals({'instantiate': 'if foo', 'id': '__e-0'}));
-    expect(info.ifCondition, equals('foo'));
-    expect(info.hasIterate, isFalse);
-    expect(messages.length, 0);
-  });
-
-  test('if w/o template has warning', () {
-    messages.clear();
-    var elem = parseSubtree('<div if="foo">');
-    analyzeElement(elem);
-    expect(messages.length, 1);
-    expect(messages[0].message, contains('template attribute is required'));
-    expect(messages[0].span, equals(elem.sourceSpan));
-  });
-
-  test('instantiate-if w/o template has warning', () {
-    messages.clear();
-    var elem = parseSubtree('<div instantiate="if foo">');
-    analyzeElement(elem);
-    expect(messages.length, 1);
-    expect(messages[0].message, contains('template attribute is required'));
-    expect(messages[0].span, equals(elem.sourceSpan));
-  });
-
-  test('template iterate (invalid)', () {
-    var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
-    var info = analyzeElement(elem);
-
-    expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
-    expect(info, isNot(new isInstanceOf<TemplateInfo>('TemplateInfo')),
-      reason: 'example is not a valid template');
-  });
-
-  test('template iterate', () {
-    var elem = parseSubtree('<template iterate="foo in bar" is="x-list"><div>');
-    TemplateInfo info = analyzeElement(elem);
-    var div = elem.query('div');
-    expect(info.createdInCode, false);
-    expect(info.children[0].node, equals(div));
-    expect(info.children[0].createdInCode, true);
-    expect(div.id, '');
-    expect(elem.attributes, equals({
-        'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-0'}));
-    expect(info.ifCondition, isNull);
-    expect(info.loopVariable, equals('foo'));
-    expect(info.loopItems, equals('bar'));
-  });
-
-  test('data-value - deprecated', () {
-    messages.clear();
-    var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
-    var info = analyzeElement(elem);
-    expect(info.attributes, isEmpty);
-    expect(info.events, isEmpty);
-    expect(info.values, equals({'todo': 'x'}));
-    expect(messages.length, 2);
-    expect(messages[0].message, contains('x-todo-row not found'));
-    expect(messages[0].span, equals(elem.sourceSpan));
-    expect(messages[1].message, contains('data-value is deprecated'));
-    expect(messages[1].span, equals(elem.sourceSpan));
-  });
-
-  test('component properties 1-way binding', () {
-    var files = parseFiles({
-      'index.html': '<head><link rel="components" href="foo.html">'
-                    '<body><element name="x-bar" extends="x-foo" '
-                                   'constructor="Bar"></element>'
-                    '<x-bar quux="{{123}}">',
-      'foo.html': '<body><element name="x-foo" constructor="Foo">'
     });
 
-    var fileInfo = analyzeFiles(files);
-    var bar = fileInfo['index.html'].query('x-bar');
-    expect(bar.hasDataBinding, true);
-    expect(bar.attributes.keys, ['quux']);
-    expect(bar.attributes['quux'].customTwoWayBinding, false);
-    expect(bar.attributes['quux'].boundValue, '123');
-  });
-
-  test('component properties 2-way binding', () {
-    var files = parseFiles({
-      'index.html': '<head><link rel="components" href="foo.html">'
-                    '<body><element name="x-bar" extends="x-foo" '
-                                   'constructor="Bar"></element>'
-                    '<x-bar bind-quux="assignable">',
-      'foo.html': '<body><element name="x-foo" constructor="Foo">'
+    test('template iterate', () {
+      var elem = parseSubtree('<template iterate="foo in bar" is="x-list"><div>');
+      TemplateInfo info = analyzeElement(elem);
+      var div = elem.query('div');
+      expect(info.createdInCode, false);
+      expect(info.children[0].node, equals(div));
+      expect(info.children[0].createdInCode, true);
+      expect(div.id, '');
+      expect(elem.attributes, equals({
+          'iterate': 'foo in bar', 'is': 'x-list', 'id': '__e-0'}));
+      expect(info.ifCondition, isNull);
+      expect(info.loopVariable, equals('foo'));
+      expect(info.loopItems, equals('bar'));
     });
 
-    var fileInfo = analyzeFiles(files)['index.html'];
-    var bar = fileInfo.query('x-bar');
-    expect(bar.component, same(fileInfo.declaredComponents[0]));
-    expect(bar.hasDataBinding, true);
-    expect(bar.attributes.keys, ['quux']);
-    expect(bar.attributes['quux'].customTwoWayBinding, true);
-    expect(bar.attributes['quux'].boundValue, 'assignable');
+    test('data-value - deprecated', () {
+      var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
+      var info = analyzeElement(elem);
+      expect(info.attributes, isEmpty);
+      expect(info.events, isEmpty);
+      expect(info.values, equals({'todo': 'x'}));
+      expect(messages.length, 2);
+      expect(messages[0].message, contains('x-todo-row not found'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+      expect(messages[1].message, contains('data-value is deprecated'));
+      expect(messages[1].span, equals(elem.sourceSpan));
+    });
+
+    test('component properties 1-way binding', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><element name="x-bar" extends="x-foo" '
+                                     'constructor="Bar"></element>'
+                      '<x-bar quux="{{123}}">',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files);
+      var bar = fileInfo['index.html'].query('x-bar');
+      expect(bar.hasDataBinding, true);
+      expect(bar.attributes.keys, ['quux']);
+      expect(bar.attributes['quux'].customTwoWayBinding, false);
+      expect(bar.attributes['quux'].boundValue, '123');
+    });
+
+    test('component properties 2-way binding', () {
+      var files = parseFiles({
+        'index.html': '<head><link rel="components" href="foo.html">'
+                      '<body><element name="x-bar" extends="x-foo" '
+                                     'constructor="Bar"></element>'
+                      '<x-bar bind-quux="assignable">',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">'
+      });
+
+      var fileInfo = analyzeFiles(files)['index.html'];
+      var bar = fileInfo.query('x-bar');
+      expect(bar.component, same(fileInfo.declaredComponents[0]));
+      expect(bar.hasDataBinding, true);
+      expect(bar.attributes.keys, ['quux']);
+      expect(bar.attributes['quux'].customTwoWayBinding, true);
+      expect(bar.attributes['quux'].boundValue, 'assignable');
+    });
   });
 
   group('analyzeDefinitions', () {
+    setUp(() {
+      messages = new Messages.silent();
+    });
+
     test('links', () {
       var info = analyzeDefinitionsInTree(parse(
         '<head>'
@@ -629,33 +633,31 @@ main() {
       expect(compInfo.element, equals(quux2));
       expect(compInfo.hasConflict, isFalse);
     });
-    
+
     test('script element without type - accept with warning', () {
-      messages.clear();
       var doc = parse(
         '<body>'
           '<script src="a.darr"></script>'
         '</body>'
       );
       var info = analyzeDefinitionsInTree(doc);
-      expect(messages.messages.filter((m) => m.level == Level.WARNING).length, 1);
+      expect(messages.warnings.length, 1);
       expect(messages[0].message, contains("possibly missing type"));
     });
-    
+
     test('script element with illegal suffix - accept with warning', () {
-      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.darr"></script>'
         '</body>'
       );
       var info = analyzeDefinitionsInTree(doc);
-      expect(messages.messages.filter((m) => m.level == Level.WARNING).length, 1);
-      expect(messages[0].message, contains("scripts should use the .dart file extension"));
+      expect(messages.warnings.length, 1);
+      expect(messages[0].message,
+          contains("scripts should use the .dart file extension"));
     });
-    
+
     test('script element with relative path - accept', () {
-      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.dart"></script>'
@@ -664,33 +666,37 @@ main() {
       var info = analyzeDefinitionsInTree(doc);
       expect(messages.length, 0);
     });
-    
+
     test('script element with absolute path - accept with error', () {
-      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="/a.dart"></script>'
         '</body>'
       );
       var info = analyzeDefinitionsInTree(doc);
-      expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
-      expect(messages[0].message, contains("script tag should not use absolute path"));
+      expect(messages.errors.length, 1);
+      expect(messages[0].message,
+          contains("script tag should not use absolute path"));
     });
-    
+
     test("script element with 'src' and content - accept with error", () {
-      messages.clear();
       var doc = parse(
         '<body>'
           '<script type="application/dart" src="a.dart">main(){}</script>'
         '</body>'
       );
       var info = analyzeDefinitionsInTree(doc);
-      expect(messages.messages.filter((m) => m.level == Level.SEVERE).length, 1);
-      expect(messages[0].message, contains('script tag has "src" attribute and also has script text'));
+      expect(messages.errors.length, 1);
+      expect(messages[0].message,
+          contains('script tag has "src" attribute and also has script text'));
     });
   });
 
   group('analyzeFile', () {
+    setUp(() {
+      messages = new Messages.silent();
+    });
+
     test('binds components in same file', () {
       var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;

@@ -15,20 +15,23 @@ import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/utils.dart';
 
-useMockMessages() {
-  messages = new Messages(shouldPrint: false);
-}
 
 Document parseDocument(String html) => parse(html);
 
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
 
-ElementInfo analyzeElement(Element elem) {
-  return analyzeNodeForTesting(elem).bodyInfo;
+ElementInfo analyzeElement(Element elem, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
+  var fileInfo = analyzeNodeForTesting(elem, messages: messages);
+  return fileInfo.bodyInfo;
 }
 
-FileInfo analyzeDefinitionsInTree(Document doc) =>
-    analyzeDefinitions(new SourceFile(new Path(''))..document = doc);
+FileInfo analyzeDefinitionsInTree(Document doc, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
+  return analyzeDefinitions(
+      new SourceFile(new Path(''))..document = doc, messages: messages
+  );
+}
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
 List<SourceFile> parseFiles(Map<String, String> fileContents,

@@ -16,8 +16,6 @@ import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
-
   test('remove attributes with data bindings (1)', () {
     // Note: we use an id in all these tests so that the analyzer will not
     // inject one for us.

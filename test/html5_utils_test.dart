@@ -20,7 +20,6 @@ import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
 
   test('generate type test for tag -> element mapping', () {
     var code = new StringBuffer();

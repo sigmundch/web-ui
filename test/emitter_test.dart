@@ -19,9 +19,9 @@ import 'testing.dart';
 import 'compact_vm_config.dart';
 
 
+
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
   group('emit element field', () {
     group('declaration', () {
       test('no data binding', () {
@@ -243,6 +243,7 @@ main() {
   });
 
   group('emit data binding watchers for attributes', () {
+    
     test('declaration', () {
       var elem = parseSubtree('<div foo="{{bar}}"></div>');
       var emitter = new AttributeEmitter(analyzeElement(elem));
@@ -313,6 +314,7 @@ main() {
   });
 
   group('emit data binding watchers for content', () {
+    
     test('declaration', () {
       var elem = parseSubtree('<div>fo{{bar}}o</div>');
       var emitter = new ContentDataBindingEmitter(
@@ -342,6 +344,7 @@ main() {
   });
 
   group('emit main page class', () {
+    
     test('external resource URLs', () {
       var html =
           '<html><head>'
@@ -363,6 +366,7 @@ main() {
     });
 
     group('transform css urls', () {
+      
       var html = '<html><head>'
           '<link href="a.css" rel="stylesheet">'
           '</head><body></body></html>';

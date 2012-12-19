@@ -21,30 +21,47 @@ import 'utils.dart';
 /**
  * Finds custom elements in this file and the list of referenced files with
  * component declarations. This is the first pass of analysis on a file.
+ *
+ * Adds emitted error/warning messages to [messages], if [messages] is
+ * supplied.
  */
-FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false}) {
+FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false,
+    Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var result = new FileInfo(file.path, isEntryPoint);
-  new _ElementLoader(result).visit(file.document);
+  var loader = new _ElementLoader(result, messages);
+  loader.visit(file.document);
   return result;
 }
 
 /**
  * Extract relevant information from [source] and it's children.
  * Used for testing.
+ *
+ * Adds emitted error/warning messages to [messages], if [messages] is
+ * supplied.
  */
 FileInfo analyzeNodeForTesting(Node source,
-    {String filepath: 'mock_testing_file.html'}) {
+    {String filepath: 'mock_testing_file.html', Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var result = new FileInfo(new Path(filepath));
-  new _Analyzer(result, new IntIterator()).visit(source);
+  new _Analyzer(result, new IntIterator(), messages).visit(source);
   return result;
 }
 
-/** Extract relevant information from all files found from the root document. */
+/**
+ *  Extract relevant information from all files found from the root document.
+ *
+ *  Adds emitted error/warning messages to [messages], if [messages] is
+ *  supplied.
+ */
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info,
-    Iterator<int> uniqueIds) {
+    Iterator<int> uniqueIds, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var fileInfo = info[file.path];
-  _normalize(fileInfo, info);
-  new _Analyzer(fileInfo, uniqueIds).visit(file.document);
+  var analyzer = new _Analyzer(fileInfo, uniqueIds, messages);
+  analyzer._normalize(fileInfo, info);
+  analyzer.visit(file.document);
 }
 
 
@@ -54,8 +71,14 @@ class _Analyzer extends TreeVisitor {
   LibraryInfo _currentInfo;
   ElementInfo _parent;
   Iterator<int> _uniqueIds;
+  Messages _messages;
 
-  _Analyzer(this._fileInfo, this._uniqueIds) {
+  /**
+   * Adds emitted error/warning messages to [_messages].
+   * [_messages] must not be null.
+   */
+  _Analyzer(this._fileInfo, this._uniqueIds, this._messages) {
+    assert(this._messages != null);
     _currentInfo = _fileInfo;
   }
 
@@ -177,7 +200,7 @@ class _Analyzer extends TreeVisitor {
     if (component.extendsTag == null) {
       // TODO(jmesserly): is web components spec going to have a default
       // extends?
-      messages.error('Missing the "extends" tag of the component. Please '
+      _messages.error('Missing the "extends" tag of the component. Please '
           'include an attribute like \'extends="div"\'.',
           component.element.sourceSpan, file: _fileInfo.path);
       return;
@@ -187,7 +210,7 @@ class _Analyzer extends TreeVisitor {
     if (component.extendsComponent == null &&
         component.extendsTag.startsWith('x-')) {
 
-      messages.warning(
+      _messages.warning(
           'custom element with tag name ${component.extendsTag} not found.',
           component.element.sourceSpan, file: _fileInfo.path);
     }
@@ -204,7 +227,7 @@ class _Analyzer extends TreeVisitor {
       if (isAttr != null) {
         component = _fileInfo.components[isAttr];
         if (component == null) {
-          messages.warning('custom element with tag name $isAttr not found.',
+          _messages.warning('custom element with tag name $isAttr not found.',
               node.sourceSpan, file: _fileInfo.path);
         }
       }
@@ -219,7 +242,7 @@ class _Analyzer extends TreeVisitor {
   TemplateInfo _createTemplateInfo(Element node) {
     if (node.tagName != 'template' &&
         !node.attributes.containsKey('template')) {
-      messages.warning('template attribute is required when using if, '
+      _messages.warning('template attribute is required when using if, '
           'instantiate, or iterate attributes.',
           node.sourceSpan, file: _fileInfo.path);
     }
@@ -229,7 +252,7 @@ class _Analyzer extends TreeVisitor {
     if (instantiate != null) {
       if (instantiate.startsWith('if ')) {
         if (condition != null) {
-          messages.warning(
+          _messages.warning(
               'another condition was already defined on this element.',
               node.sourceSpan, file: _fileInfo.path);
         } else {
@@ -242,7 +265,7 @@ class _Analyzer extends TreeVisitor {
     // Note: we issue warnings instead of errors because the spirit of HTML and
     // Dart is to be forgiving.
     if (condition != null && iterate != null) {
-      messages.warning('template cannot have both iteration and conditional '
+      _messages.warning('template cannot have both iteration and conditional '
           'attributes', node.sourceSpan, file: _fileInfo.path);
       return null;
     }
@@ -283,7 +306,7 @@ class _Analyzer extends TreeVisitor {
         if (node.tagName != 'template') result.removeAttributes.add('template');
         return result;
       }
-      messages.warning('template iterate must be of the form: '
+      _messages.warning('template iterate must be of the form: '
           'iterate="variable in list", where "variable" is your variable name '
           'and "list" is the list of items.',
           node.sourceSpan, file: _fileInfo.path);
@@ -339,7 +362,7 @@ class _Analyzer extends TreeVisitor {
   }
 
   bool _readDataValue(ElementInfo info, String value) {
-    messages.warning('data-value is deprecated. '
+    _messages.warning('data-value is deprecated. '
         'Given data-value="fieldName:expr", replace it with '
         'field-name="{{expr}}". Unlike data-value, "expr" will be watched and '
         'fieldName will automatically update. You may also use '
@@ -348,7 +371,7 @@ class _Analyzer extends TreeVisitor {
 
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
-      messages.error('data-value attribute should be of the form '
+      _messages.error('data-value attribute should be of the form '
           'data-value="name:value" or data-value='
           '"name1:value1,name2:value2,..." for multiple assigments.',
           info.node.sourceSpan, file: _fileInfo.path);
@@ -364,7 +387,7 @@ class _Analyzer extends TreeVisitor {
   // TODO(jmesserly): remove this after a grace period.
   // TODO(jmesserly): would be neat to have an automated refactoring.
   bool _readDataAction(ElementInfo info, String value) {
-    messages.warning('data-action is deprecated. '
+    _messages.warning('data-action is deprecated. '
         'Given a handler like data-action="eventName:handlerName", replace it '
         'with on-event-name="handlerName(\$event)". You may optionally remove '
         'the \$event or pass in more arguments if desired.',
@@ -373,7 +396,7 @@ class _Analyzer extends TreeVisitor {
     // Special data-attribute specifying an event listener.
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
-      messages.error('data-action attribute should be of the form '
+      _messages.error('data-action attribute should be of the form '
           'data-action="eventName:action", or data-action='
           '"eventName1:action1,eventName2:action2,..." for multiple events.',
           info.node.sourceSpan, file: _fileInfo.path);
@@ -393,7 +416,7 @@ class _Analyzer extends TreeVisitor {
   void _readEventHandler(ElementInfo info, String name, String value) {
     if (!name.startsWith('on-')) {
       // TODO(jmesserly): do we need an option to suppress this warning?
-      messages.warning('Event handler $name will be interpreted as an inline '
+      _messages.warning('Event handler $name will be interpreted as an inline '
           'JavaScript event handler. Use the form '
           'on-event-name="handlerName(\$event)" if you want a Dart handler '
           'that will automatically update the UI based on model changes.',
@@ -415,14 +438,14 @@ class _Analyzer extends TreeVisitor {
   }
 
   bool _readDataBind(ElementInfo info, String value) {
-    messages.warning('data-bind is deprecated. '
+    _messages.warning('data-bind is deprecated. '
         'Given a binding like data-bind="attribute:dartAssignableValue" replace'
         ' it with bind-attribute="dartAssignableValue".',
         info.node.sourceSpan, file: _fileInfo.path);
 
     var colonIdx = value.indexOf(':');
     if (colonIdx <= 0) {
-      messages.error('data-bind attribute should be of the form '
+      _messages.error('data-bind attribute should be of the form '
           'data-bind="attribute:dartAssignableValue"',
           info.node.sourceSpan, file: _fileInfo.path);
       return false;
@@ -451,7 +474,7 @@ class _Analyzer extends TreeVisitor {
       if (inputType == 'radio') {
         if (!_isValidRadioButton(info)) return false;
       } else if (inputType != 'checkbox') {
-        messages.error('checked is only supported in HTML with type="radio" '
+        _messages.error('checked is only supported in HTML with type="radio" '
             'or type="checked".', info.node.sourceSpan, file: _fileInfo.path);
         return false;
       }
@@ -479,7 +502,7 @@ class _Analyzer extends TreeVisitor {
       return true;
 
     } else {
-      messages.error('Unknown two-way binding attribute $name. Ignored.',
+      _messages.error('Unknown two-way binding attribute $name. Ignored.',
           info.node.sourceSpan, file: _fileInfo.path);
       return false;
     }
@@ -494,7 +517,7 @@ class _Analyzer extends TreeVisitor {
 
   void _checkDuplicateAttribute(ElementInfo info, String name) {
     if (info.node.attributes[name] != null) {
-      messages.warning('Duplicate attribute $name. You should provide either '
+      _messages.warning('Duplicate attribute $name. You should provide either '
           'the two-way binding or the attribute itself. The attribute will be '
           'ignored.', info.node.sourceSpan, file: _fileInfo.path);
       info.removeAttributes.add(name);
@@ -504,7 +527,7 @@ class _Analyzer extends TreeVisitor {
   bool _isValidRadioButton(ElementInfo info) {
     if (info.attributes['checked'] == null) return true;
 
-    messages.error('Radio buttons cannot have both "checked" and "value" '
+    _messages.error('Radio buttons cannot have both "checked" and "value" '
         'two-way bindings. Either use checked:\n'
         '  <input type="radio" bind-checked="myBooleanVar">\n'
         'or value:\n'
@@ -524,7 +547,7 @@ class _Analyzer extends TreeVisitor {
     // TODO(jmesserly): should we read the element's "value" at runtime?
     var radioValue = info.node.attributes['value'];
     if (radioValue == null) {
-      messages.error('Radio button bindings need "bind-value" and "value".'
+      _messages.error('Radio button bindings need "bind-value" and "value".'
           'For example: '
           '<input type="radio" bind-value="myStringVar" value="theValue">',
           info.node.sourceSpan, file: _fileInfo.path);
@@ -624,6 +647,90 @@ class _Analyzer extends TreeVisitor {
       new TextInfo(new Text(content), _parent);
     }
   }
+
+  /**
+   * Normalizes references in [info]. On the [analyzeDefinitions] phase, the
+   * analyzer extracted names of files and components. Here we link those names to
+   * actual info classes. In particular:
+   *   * we initialize the [components] map in [info] by importing all
+   *     [declaredComponents],
+   *   * we scan all [componentLinks] and import their [declaredComponents],
+   *     using [files] to map the href to the file info. Names in [info] will
+   *     shadow names from imported files.
+   *   * we fill [externalCode] on each component declared in [info].
+   */
+  void _normalize(FileInfo info, Map<Path, FileInfo> files) {
+    _attachExtenalScript(info, files);
+
+    for (var component in info.declaredComponents) {
+      _addComponent(info, component);
+      _attachExtenalScript(component, files);
+    }
+
+    for (var link in info.componentLinks) {
+      var file = files[link];
+      // We already issued an error for missing files.
+      if (file == null) continue;
+      file.declaredComponents.forEach((c) => _addComponent(info, c));
+    }
+  }
+
+  /**
+   * Stores a direct reference in [info] to a dart source file that was loaded in
+   * a script tag with the 'src' attribute.
+   */
+  void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
+    var path = info.externalFile;
+    if (path != null) {
+      info.externalCode = files[path];
+      info.userCode = info.externalCode.userCode;
+    }
+  }
+
+  /** Adds a component's tag name to the names in scope for [fileInfo]. */
+  void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
+    var existing = fileInfo.components[componentInfo.tagName];
+    if (existing != null) {
+      if (existing == componentInfo) {
+        // This is the same exact component as the existing one.
+        return;
+      }
+
+      if (existing.declaringFile == fileInfo &&
+          componentInfo.declaringFile != fileInfo) {
+        // Components declared in [fileInfo] are allowed to shadow component
+        // names declared in imported files.
+        return;
+      }
+
+      if (existing.hasConflict) {
+        // No need to report a second error for the same name.
+        return;
+      }
+
+      existing.hasConflict = true;
+
+      if (componentInfo.declaringFile == fileInfo) {
+        _messages.error('duplicate custom element definition for '
+            '"${componentInfo.tagName}".',
+            existing.element.sourceSpan, file: fileInfo.path);
+        _messages.error('duplicate custom element definition for '
+            '"${componentInfo.tagName}" (second location).',
+            componentInfo.element.sourceSpan, file: fileInfo.path);
+      } else {
+        _messages.error('imported duplicate custom element definitions '
+            'for "${componentInfo.tagName}".',
+            existing.element.sourceSpan,
+            file: existing.declaringFile.path);
+        _messages.error('imported duplicate custom element definitions '
+            'for "${componentInfo.tagName}" (second location).',
+            componentInfo.element.sourceSpan,
+            file: componentInfo.declaringFile.path);
+      }
+    } else {
+      fileInfo.components[componentInfo.tagName] = componentInfo;
+    }
+  }
 }
 
 /** A visitor that finds `<link rel="components">` and `<element>` tags.  */
@@ -631,8 +738,14 @@ class _ElementLoader extends TreeVisitor {
   final FileInfo _fileInfo;
   LibraryInfo _currentInfo;
   bool _inHead = false;
+  Messages _messages;
 
-  _ElementLoader(this._fileInfo) {
+  /**
+   * Adds emitted warning/error messages to [_messages]. [_messages]
+   * must not be null.
+   */
+  _ElementLoader(this._fileInfo, this._messages) {
+    assert(this._messages != null);
     _currentInfo = _fileInfo;
   }
 
@@ -655,14 +768,14 @@ class _ElementLoader extends TreeVisitor {
     if (node.attributes['rel'] != 'components') return;
 
     if (!_inHead) {
-      messages.warning('link rel="components" only valid in '
+      _messages.warning('link rel="components" only valid in '
           'head.', node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
-      messages.warning('link rel="components" missing href.',
+      _messages.warning('link rel="components" missing href.',
           node.sourceSpan, file: _fileInfo.path);
       return;
     }
@@ -676,7 +789,7 @@ class _ElementLoader extends TreeVisitor {
     // inside a Shadow DOM should be scoped to that <template> tag, and not
     // visible from the outside.
     if (_currentInfo is ComponentInfo) {
-      messages.error('Nested component definitions are not yet supported.',
+      _messages.error('Nested component definitions are not yet supported.',
           node.sourceSpan, file: _fileInfo.path);
       return;
     }
@@ -687,7 +800,7 @@ class _ElementLoader extends TreeVisitor {
     var templateNodes = node.nodes.filter((n) => n.tagName == 'template');
 
     if (tagName == null) {
-      messages.error('Missing tag name of the component. Please include an '
+      _messages.error('Missing tag name of the component. Please include an '
           'attribute like \'name="x-your-tag-name"\'.',
           node.sourceSpan, file: _fileInfo.path);
       return;
@@ -697,7 +810,7 @@ class _ElementLoader extends TreeVisitor {
     if (templateNodes.length == 1) {
       template = templateNodes[0];
     } else {
-      messages.warning('an <element> should have exactly one <template> child.',
+      _messages.warning('an <element> should have exactly one <template> child.',
           node.sourceSpan, file: _fileInfo.path);
     }
 
@@ -726,7 +839,7 @@ class _ElementLoader extends TreeVisitor {
       // text/javascript. Because this might be a common error, we warn about it
       // and force explicit type="text/javascript".
       // TODO(jmesserly): is this a good warning?
-      messages.warning('ignored script tag, possibly missing '
+      _messages.warning('ignored script tag, possibly missing '
           'type="application/dart" or type="text/javascript":',
           node.sourceSpan, file: _fileInfo.path);
     }
@@ -736,22 +849,22 @@ class _ElementLoader extends TreeVisitor {
     var src = node.attributes["src"];
     if (src != null) {
       if (!src.endsWith('.dart')) {
-        messages.warning('"application/dart" scripts should '
+        _messages.warning('"application/dart" scripts should '
             'use the .dart file extension.',
             node.sourceSpan, file: _fileInfo.path);
       }
 
       if (node.innerHTML.trim() != '') {
-        messages.error('script tag has "src" attribute and also has script '
+        _messages.error('script tag has "src" attribute and also has script '
             'text.', node.sourceSpan, file: _fileInfo.path);
       }
-      
+
       if (_currentInfo.codeAttached) {
         _tooManyScriptsError(node);
       } else {
         var srcPath = new Path(src);
         if (srcPath.isAbsolute) {
-          messages.error(
+          _messages.error(
               'script tag should not use absolute path in attribute "src". '
               'Got "src"="$src".', node.sourceSpan, file: _fileInfo.path);
         } else {
@@ -772,15 +885,15 @@ class _ElementLoader extends TreeVisitor {
     if (_currentInfo.codeAttached) {
       _tooManyScriptsError(node);
     } else if (_currentInfo == _fileInfo && !_fileInfo.isEntryPoint) {
-      messages.warning('top-level dart code is ignored on '
+      _messages.warning('top-level dart code is ignored on '
           ' HTML pages that define components, but are not the entry HTML '
           'file.', node.sourceSpan, file: _fileInfo.path);
     } else {
       _currentInfo.inlinedCode = text.value;
       _currentInfo.userCode = parseDartCode(text.value,
-          _currentInfo.inputPath, messages);
+          _currentInfo.inputPath, messages:_messages);
       if (_currentInfo.userCode.partOf != null) {
-        messages.error('expected a library, not a part.',
+        _messages.error('expected a library, not a part.',
             node.sourceSpan, file: _fileInfo.path);
       }
     }
@@ -790,92 +903,8 @@ class _ElementLoader extends TreeVisitor {
     var location = _currentInfo is ComponentInfo ?
         'a custom element declaration' : 'the top-level HTML page';
 
-    messages.error('there should be only one dart script tag in $location.',
+    _messages.error('there should be only one dart script tag in $location.',
         node.sourceSpan, file: _fileInfo.path);
-  }
-}
-
-/**
- * Normalizes references in [info]. On the [analyzeDefinitions] phase, the
- * analyzer extracted names of files and components. Here we link those names to
- * actual info classes. In particular:
- *   * we initialize the [components] map in [info] by importing all
- *     [declaredComponents],
- *   * we scan all [componentLinks] and import their [declaredComponents],
- *     using [files] to map the href to the file info. Names in [info] will
- *     shadow names from imported files.
- *   * we fill [externalCode] on each component declared in [info].
- */
-void _normalize(FileInfo info, Map<Path, FileInfo> files) {
-  _attachExtenalScript(info, files);
-
-  for (var component in info.declaredComponents) {
-    _addComponent(info, component);
-    _attachExtenalScript(component, files);
-  }
-
-  for (var link in info.componentLinks) {
-    var file = files[link];
-    // We already issued an error for missing files.
-    if (file == null) continue;
-    file.declaredComponents.forEach((c) => _addComponent(info, c));
-  }
-}
-
-/**
- * Stores a direct reference in [info] to a dart source file that was loaded in
- * a script tag with the 'src' attribute.
- */
-void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
-  var path = info.externalFile;
-  if (path != null) {
-    info.externalCode = files[path];
-    info.userCode = info.externalCode.userCode;
-  }
-}
-
-/** Adds a component's tag name to the names in scope for [fileInfo]. */
-void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
-  var existing = fileInfo.components[componentInfo.tagName];
-  if (existing != null) {
-    if (existing == componentInfo) {
-      // This is the same exact component as the existing one.
-      return;
-    }
-
-    if (existing.declaringFile == fileInfo &&
-        componentInfo.declaringFile != fileInfo) {
-      // Components declared in [fileInfo] are allowed to shadow component
-      // names declared in imported files.
-      return;
-    }
-
-    if (existing.hasConflict) {
-      // No need to report a second error for the same name.
-      return;
-    }
-
-    existing.hasConflict = true;
-
-    if (componentInfo.declaringFile == fileInfo) {
-      messages.error('duplicate custom element definition for '
-          '"${componentInfo.tagName}".',
-          existing.element.sourceSpan, file: fileInfo.path);
-      messages.error('duplicate custom element definition for '
-          '"${componentInfo.tagName}" (second location).',
-          componentInfo.element.sourceSpan, file: fileInfo.path);
-    } else {
-      messages.error('imported duplicate custom element definitions '
-          'for "${componentInfo.tagName}".',
-          existing.element.sourceSpan,
-          file: existing.declaringFile.path);
-      messages.error('imported duplicate custom element definitions '
-          'for "${componentInfo.tagName}" (second location).',
-          componentInfo.element.sourceSpan,
-          file: componentInfo.declaringFile.path);
-    }
-  } else {
-    fileInfo.components[componentInfo.tagName] = componentInfo;
   }
 }
 

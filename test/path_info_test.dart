@@ -17,7 +17,6 @@ import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();
-  useMockMessages();
   group('outdir == basedir:', () {
     group('outputPath', () {
       test('mangle automatic', () {

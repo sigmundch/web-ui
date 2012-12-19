@@ -13,12 +13,6 @@ import 'file_system/path.dart';
 import 'options.dart';
 import 'utils.dart';
 
-// TODO(jmesserly): remove the global messages. We instead use some
-// object that tracks compilation state.
-
-/** The global [Messages] for tracking info/warnings/messages. */
-Messages messages;
-
 /** Map between error levels and their display color. */
 final Map<Level, String> _ERROR_COLORS = (() {
   // TODO(jmesserly): the SourceSpan printer does not use our colors.
@@ -92,6 +86,12 @@ class Messages {
   Messages({CompilerOptions options, this.shouldPrint: true})
       : options = options != null ? options : new CompilerOptions();
 
+  /**
+   * Creates a new instance of [Messages] which doesn't write messages to
+   * the console.
+   */
+  Messages.silent(): this(shouldPrint: false);
+
   // Convenience methods for testing
   int get length => messages.length;
   Message operator[](int index) => messages[index];
@@ -120,6 +120,14 @@ class Messages {
       printMessage(msg);
     }
   }
+
+  /// the list of error messages. Empty list, if there are no error messages.
+  List<Message> get errors =>
+        messages.filter((m) => m.level == Level.SEVERE);
+
+  /// the list of warning messages. Empty list if there are no warning messages.
+  List<Message> get warnings =>
+        messages.filter((m) => m.level == Level.WARNING);
 
   /**
    * [message] at [file] will tell the user about what the compiler
