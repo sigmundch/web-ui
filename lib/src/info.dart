@@ -51,11 +51,11 @@ class PathInfo {
   /**
    * Checks if [input] is valid. It must be in [_baseDir] and must not be in
    * the [_outputDir].
-   * 
-   * Adds emitted error/warning messages to [messages], if [messages] is supplied
-   * and not null.
+   *
+   * Adds emitted error/warning messages to [messages], if [messages] is
+   * supplied.
    */
-  bool checkInputPath(Path input, {Messages messages: null}) {
+  bool checkInputPath(Path input, {Messages messages}) {
     messages = messages == null ? new Messages.silent() : messages;
     if (_mangleFilenames) return true;
     var canonicalized = input.canonicalize();

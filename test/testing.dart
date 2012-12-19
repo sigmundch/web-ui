@@ -20,14 +20,17 @@ Document parseDocument(String html) => parse(html);
 
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
 
-ElementInfo analyzeElement(Element elem, {Messages messages: null}) {
-  messages = messages == null ? new Messages(shouldPrint: false) : messages;
+ElementInfo analyzeElement(Element elem, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var fileInfo = analyzeNodeForTesting(elem, messages: messages);
   return fileInfo.bodyInfo;
 }
 
-FileInfo analyzeDefinitionsInTree(Document doc) {
-  return analyzeDefinitions(new SourceFile(new Path(''))..document = doc);
+FileInfo analyzeDefinitionsInTree(Document doc, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
+  return analyzeDefinitions(
+      new SourceFile(new Path(''))..document = doc, messages: messages
+  );
 }
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */

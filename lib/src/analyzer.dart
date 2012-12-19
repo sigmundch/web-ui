@@ -21,13 +21,15 @@ import 'utils.dart';
 /**
  * Finds custom elements in this file and the list of referenced files with
  * component declarations. This is the first pass of analysis on a file.
- * 
- * Adds emitted error/warning messages to [messages], if [messages] is supplied and
- * not null.
+ *
+ * Adds emitted error/warning messages to [messages], if [messages] is
+ * supplied.
  */
-FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false, Messages messages: null}) {
+FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false,
+    Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var result = new FileInfo(file.path, isEntryPoint);
-  var loader = new _ElementLoader(result, messages: messages);
+  var loader = new _ElementLoader(result, messages);
   loader.visit(file.document);
   return result;
 }
@@ -35,26 +37,29 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false, Messages
 /**
  * Extract relevant information from [source] and it's children.
  * Used for testing.
- * 
- * Adds emitted error/warning messages to [messages], if [messages] is supplied and
- * not null.
+ *
+ * Adds emitted error/warning messages to [messages], if [messages] is
+ * supplied.
  */
 FileInfo analyzeNodeForTesting(Node source,
-    {String filepath: 'mock_testing_file.html', Messages messages: null}) {
+    {String filepath: 'mock_testing_file.html', Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var result = new FileInfo(new Path(filepath));
-  new _Analyzer(result, new IntIterator(), messages: messages).visit(source);
+  new _Analyzer(result, new IntIterator(), messages).visit(source);
   return result;
 }
 
-/** Extract relevant information from all files found from the root document. 
+/**
+ *  Extract relevant information from all files found from the root document.
  *
- *  Adds emitted error/warning messages to [messages], if [messages] is supplied and
- *  not null. 
+ *  Adds emitted error/warning messages to [messages], if [messages] is
+ *  supplied.
  */
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info,
-    Iterator<int> uniqueIds, {Messages messages: null}) {
+    Iterator<int> uniqueIds, {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var fileInfo = info[file.path];
-  var analyzer = new _Analyzer(fileInfo, uniqueIds, messages: messages);
+  var analyzer = new _Analyzer(fileInfo, uniqueIds, messages);
   analyzer._normalize(fileInfo, info);
   analyzer.visit(file.document);
 }
@@ -69,15 +74,14 @@ class _Analyzer extends TreeVisitor {
   Messages _messages;
 
   /**
-   * Adds emitted error/warning messages to [messages], if [messages] is supplied
-   * and not null.
+   * Adds emitted error/warning messages to [_messages].
+   * [_messages] must not be null.
    */
-  _Analyzer(this._fileInfo, this._uniqueIds, {Messages messages: null}) {    
+  _Analyzer(this._fileInfo, this._uniqueIds, this._messages) {
+    assert(this._messages != null);
     _currentInfo = _fileInfo;
-    _messages = messages == null ? new Messages.silent() : messages;
   }
-  
-  
+
   void visitElement(Element node) {
     var info = null;
     if (node.tagName == 'script') {
@@ -643,7 +647,7 @@ class _Analyzer extends TreeVisitor {
       new TextInfo(new Text(content), _parent);
     }
   }
-  
+
   /**
    * Normalizes references in [info]. On the [analyzeDefinitions] phase, the
    * analyzer extracted names of files and components. Here we link those names to
@@ -726,7 +730,7 @@ class _Analyzer extends TreeVisitor {
     } else {
       fileInfo.components[componentInfo.tagName] = componentInfo;
     }
-  }  
+  }
 }
 
 /** A visitor that finds `<link rel="components">` and `<element>` tags.  */
@@ -737,14 +741,14 @@ class _ElementLoader extends TreeVisitor {
   Messages _messages;
 
   /**
-   * Adds emitted warning/error messages to [messages], if [messages]
-   * is supplied and not null. 
+   * Adds emitted warning/error messages to [_messages]. [_messages]
+   * must not be null.
    */
-  _ElementLoader(this._fileInfo, {Messages messages: null}) {
+  _ElementLoader(this._fileInfo, this._messages) {
+    assert(this._messages != null);
     _currentInfo = _fileInfo;
-    _messages = messages == null ? new Messages.silent() : messages;
   }
-  
+
   void visitElement(Element node) {
     switch (node.tagName) {
       case 'link': visitLinkElement(node); break;
@@ -854,13 +858,13 @@ class _ElementLoader extends TreeVisitor {
         _messages.error('script tag has "src" attribute and also has script '
             'text.', node.sourceSpan, file: _fileInfo.path);
       }
-      
+
       if (_currentInfo.codeAttached) {
         _tooManyScriptsError(node);
       } else {
         var srcPath = new Path(src);
         if (srcPath.isAbsolute) {
-          messages.error(
+          _messages.error(
               'script tag should not use absolute path in attribute "src". '
               'Got "src"="$src".', node.sourceSpan, file: _fileInfo.path);
         } else {
@@ -903,7 +907,6 @@ class _ElementLoader extends TreeVisitor {
         node.sourceSpan, file: _fileInfo.path);
   }
 }
-
 
 
 /**

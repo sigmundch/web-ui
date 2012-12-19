@@ -12,8 +12,13 @@ import 'info.dart' show DartCodeInfo, DartDirectiveInfo;
 import 'messages.dart' show Messages;
 import 'file_system/path.dart';
 
-/** Parse and extract top-level directives from [code]. */
-DartCodeInfo parseDartCode(String code, Path file, {Messages messages: null}) {
+/**
+ * Parse and extract top-level directives from [code].
+ *
+ * Adds emitted error/warning messages to [messages], if [messages] is
+ * supplied.
+ */
+DartCodeInfo parseDartCode(String code, Path file, {Messages messages}) {
   messages = messages == null ? new Messages.silent() : messages;
   return new _DirectiveParser(messages, file).parse(code);
 }

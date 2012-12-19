@@ -17,15 +17,15 @@ import 'package:web_ui/src/messages.dart';
 
 main() {
   useCompactVMConfiguration();
-  
+
   var messages;
   setUp(() {
     messages = new Messages.silent();
   });
-  
+
   Compiler createCompiler(Map files) {
     var options = CompilerOptions.parse([
-                                         '--no-colors', '-o', 'out', 'index.html']);
+        '--no-colors', '-o', 'out', 'index.html']);
     var fs = new MockFileSystem(files);
     return new Compiler(fs, options, currentDir: '.', messages: messages);
   }
