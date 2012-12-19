@@ -30,8 +30,7 @@ import 'package:web_ui/dwc.dart' as dwc;
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-void build(List<String> arguments, List<String> entryPoints,
-           {String baseDir : null}) {
+void build(List<String> arguments, List<String> entryPoints, {String baseDir}) {
 
   var args = _processArgs(arguments);
 
