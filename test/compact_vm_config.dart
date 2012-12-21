@@ -16,6 +16,7 @@ import 'package:unittest/unittest.dart';
 const String _GREEN = '\u001b[32m';
 const String _RED = '\u001b[31m';
 const String _NONE = '\u001b[0m';
+const int MAX_LINE = 80;
 
 class CompactVMConfiguration extends Configuration {
   Date _start;
@@ -82,6 +83,8 @@ class CompactVMConfiguration extends Configuration {
 
   int _lastLength = 0;
 
+  final int _nonVisiblePrefix = 1 + _GREEN.length + _NONE.length;
+
   void _progressLine(Date startTime, int passed, int failed, String message,
       [String color = _NONE]) {
     var duration = (new Date.now()).difference(startTime);
@@ -98,15 +101,24 @@ class CompactVMConfiguration extends Configuration {
     if (failed != 0) buffer.add(_NONE);
     buffer.add(': ');
     buffer.add(color);
-    buffer.add(message);
+
+    int nonVisible = _nonVisiblePrefix + color.length  +
+        (failed != 0 ? (_RED.length + _NONE.length) : 0);
+    int len = buffer.length - nonVisible;
+    var mx = MAX_LINE - len;
+    buffer.add(_snippet(message, MAX_LINE - len));
     buffer.add(_NONE);
 
     // Pad the rest of the line so that it looks erased.
-    int len = buffer.length + 1;
-    while (buffer.length < _lastLength) {
-      buffer.add(' ');
+    len = buffer.length - nonVisible - _NONE.length;
+    if (len > _lastLength) {
+      _lastLength = len;
+    } else {
+      while (len < _lastLength) {
+        buffer.add(' ');
+        _lastLength--;
+      }
     }
-    _lastLength = len;
     stdout.writeString(buffer.toString());
   }
 
@@ -117,6 +129,42 @@ class CompactVMConfiguration extends Configuration {
     var min = duration.inMinutes;
     var sec = duration.inSeconds % 60;
     return '${_padTime(min)}:${_padTime(sec)}';
+  }
+
+  String _snippet(String text, int maxLength) {
+    // Return the full message if it fits
+    if (text.length <= maxLength) return text;
+
+    // If we can fit the first and last three words, do so.
+    var words = text.split(' ');
+    if (words.length > 1) {
+      int i = words.length;
+      var len = words.first.length + 4;
+      do {
+        len += 1 + words[--i].length;
+      } while (len <= maxLength && i > 0);
+      if (len > maxLength || i == 0) i++;
+      if (i < words.length - 4) {
+        // Require at least 3 words at the end.
+        var buffer = new StringBuffer();
+        buffer.add(words.first);
+        buffer.add(' ...');
+        for (; i < words.length; i++) {
+          buffer.add(' ');
+          buffer.add(words[i]);
+        }
+        return buffer.toString();
+      }
+    }
+
+    // Otherwise truncate to return the trailing text, but attempt to start at
+    // the beginning of a word.
+    var res = text.substring(text.length - maxLength + 4);
+    var firstSpace = res.indexOf(' ');
+    if (firstSpace > 0) {
+      res = res.substring(firstSpace);
+    }
+    return '...$res';
   }
 }
 
