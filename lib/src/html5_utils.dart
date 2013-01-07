@@ -127,6 +127,8 @@ const htmlElementNames = const {
   'table': 'html.TableElement',
   'tbody': 'html.TableSectionElement',
   'td': 'html.TableCellElement', // see doc comment, was: 'TableDataCellElement'
+  'template': 'html.Element', // should be 'TemplateElement', but it is not yet
+                              // in dart:html
   'textarea': 'html.TextAreaElement',
   'tfoot': 'html.TableSectionElement',
   'th': 'html.TableCellElement', // see doc comment, was: 'TableHeaderCellElement'

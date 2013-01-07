@@ -27,7 +27,7 @@ class CodePrinter {
   }
 
   /** Returns everything on this printer without any fixes on indentation. */
-  String toString() => new StringBuffer().addAll(_items).toString();
+  String toString() => (new StringBuffer()..addAll(_items)).toString();
 
   /**
    * Returns a formatted code block, with indentation appropriate to code

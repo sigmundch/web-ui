@@ -68,7 +68,7 @@ abstract class WebComponent implements Element {
    */
   createShadowRoot() {
     if (_realShadowRoot) {
-      return new ShadowRoot(_element);
+      return _element.createShadowRoot();
     }
     if (_shadowRoots == null) _shadowRoots = [];
     _shadowRoots.add(new Element.html('<div class="shadowroot"></div>'));
@@ -409,6 +409,14 @@ abstract class WebComponent implements Element {
   CssStyleDeclaration get style => _element.style;
 
   String get tagName => _element.tagName;
+
+  String get webkitPseudo => _element.webkitPseudo;
+
+  void set webkitPseudo(String value) {
+    _element.webkitPseudo = value;
+  }
+
+  ShadowRoot get webkitShadowRoot => _element.webkitShadowRoot;
 
   void blur() { _element.blur(); }
 

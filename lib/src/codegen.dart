@@ -142,21 +142,21 @@ String directiveText(
     DartDirectiveInfo directive, LibraryInfo src, PathInfo pathInfo) {
   var buff = new StringBuffer();
   var uri = pathInfo.transformUrl(src.inputPath, directive.uri);
-  buff.add(directive.label)
-      .add(" '")
-      .add(uri.replaceAll("'", "\\'"))
-      .add("'");
+  buff..add(directive.label)
+      ..add(" '")
+      ..add(uri.replaceAll("'", "\\'"))
+      ..add("'");
   if (directive.prefix != null) {
-    buff.add(' as ')
-        .add(directive.prefix);
+    buff..add(' as ')
+        ..add(directive.prefix);
   }
   if (directive.show != null) {
-    buff.add(' show ')
-        .add(Strings.join(directive.show, ','));
+    buff..add(' show ')
+        ..add(Strings.join(directive.show, ','));
   }
   if (directive.hide != null) {
-    buff.add(' hide ')
-        .add(Strings.join(directive.hide, ','));
+    buff..add(' hide ')
+        ..add(Strings.join(directive.hide, ','));
   }
   buff.add(';');
   return buff.toString();

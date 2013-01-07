@@ -72,7 +72,7 @@ void _printMessage(String logMessage, int duration, bool useColors) {
   }
   if (duration < 10) buf.add(' ');
   if (duration < 100) buf.add(' ');
-  buf.add(duration).add(' ms');
+  buf..add(duration)..add(' ms');
   if (useColors) {
     buf.add(NO_COLOR);
   }
