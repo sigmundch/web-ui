@@ -42,6 +42,10 @@ class CodePrinter {
         buff.add(item);
         continue;
       }
+      if (item is Declarations) {
+        (item as Declarations)._format(buff, indent);
+        continue;
+      }
 
       for (var line in item.toString().split('\n')) {
         line = line.trim();
@@ -51,10 +55,10 @@ class CodePrinter {
         } else {
           lastEmpty = false;
         }
-        bool decIndent = line.startsWith("}");
-        bool incIndent = line.endsWith("{");
+        bool decIndent = line.startsWith("}") || line.startsWith("]");
+        bool incIndent = line.endsWith("{") || line.endsWith("[");
         if (decIndent) indent--;
-        for (int i = 0; i < indent; i++) buff.add('  ');
+        _indent(buff, indent);
         buff.add(line);
         buff.add('\n');
         if (incIndent) indent++;
@@ -74,4 +78,69 @@ class _Raw {
   final item;
   _Raw(this.item);
   String toString() => item.toString();
+}
+
+/** A declaration of a field or local variable. */
+class Declaration implements Comparable {
+  final String type;
+  final String name;
+  Declaration(this.type, this.name);
+
+  int compareTo(Declaration other) {
+    if (type != other.type) return type.compareTo(other.type);
+    return name.compareTo(other.name);
+  }
+}
+
+/** A set of declarations grouped together. */
+class Declarations {
+
+  /** All declarations in this group. */
+  final List<Declaration> declarations = <Declaration>[];
+
+  /**
+   * Whether these declarations are local variables (otherwise they are fields
+   * in a class.
+   */
+  final bool isLocal;
+
+  Declarations(this.isLocal);
+
+  void add(String type, String identifier) {
+    declarations.add(new Declaration(isLocal ? 'var' : type, identifier));
+  }
+
+  String formatString([int indent = 0]) {
+    var buff = new StringBuffer();
+    _format(buff, indent);
+    return buff.toString();
+  }
+
+  void _format(StringBuffer buff, int indent) {
+    if (declarations.length == 0) return;
+    declarations.sort();
+    var lastType = null;
+    _indent(buff, indent);
+    for (var d in declarations) {
+      if (d.type != lastType) {
+        if (lastType != null) {
+          buff.add(';\n');
+          _indent(buff, indent);
+        }
+        buff.add(d.type);
+        lastType = d.type;
+      } else {
+        buff.add(',');
+      }
+      buff.add(' ');
+      buff.add(d.name);
+    }
+    buff.add(';');
+  }
+
+  String toString() => formatString(0);
+}
+
+_indent(StringBuffer buff, int indent) {
+  for (int i = 0; i < indent; i++) buff.add('  ');
 }

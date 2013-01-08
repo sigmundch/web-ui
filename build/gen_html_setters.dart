@@ -58,9 +58,7 @@ The information is used to create "$OUTPUT_NAME".
   
   var elemSet = new Set();
   for (var name in htmlElementNames.values) {
-    var qualifiedName = name.split('.');
-    var lib = mirrors.libraries[qualifiedName[0]];
-    _addElement(lib.classes[qualifiedName[1]], elemSet);
+    _addElement(html.classes[name], elemSet);
   }
   _addElement(html.classes['UnknownElement'], elemSet);
 
@@ -68,12 +66,12 @@ The information is used to create "$OUTPUT_NAME".
   var elements = new List.from(elemSet);
   elements.sort((a, b) => a.displayName.compareTo(b.displayName));
   for (var cls in elements) {
-    var element = cls.qualifiedName;
+    var element = cls.displayName;
     var setters = [];
 
     if (cls.superclass != null
         && cls.superclass.displayName.endsWith('Element')) {
-      extendsCode.add("  '$element': '${cls.superclass.qualifiedName}',\n");
+      extendsCode.add("  '$element': '${cls.superclass.displayName}',\n");
     }
 
     // TODO(jmesserly): using "cls.setters" does not seem to work

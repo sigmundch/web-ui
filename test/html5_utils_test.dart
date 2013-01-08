@@ -24,10 +24,8 @@ main() {
   test('generate type test for tag -> element mapping', () {
     var code = new StringBuffer();
     code.add('import "dart:html" as html;\n');
-    code.add('import "dart:web_audio" as web_audio;\n');
-    code.add('import "dart:svg" as svg;\n');
     htmlElementNames.forEach((tag, className) {
-      code.add('$className _$tag;\n');
+      code.add('html.$className _$tag;\n');
     });
 
     // Note: name is important for this to get picked up by run.sh
@@ -41,14 +39,12 @@ main() {
   test('generate type test for attribute -> field mapping', () {
     var code = new StringBuffer();
     code.add('import "dart:html" as html;\n');
-    code.add('import "dart:web_audio" as web_audio;\n');
-    code.add('import "dart:svg" as svg;\n');
     code.add('main() {\n');
 
     var allTags = htmlElementNames.keys;
     htmlElementFields.forEach((type, attrToField) {
       var id = type.replaceAll('.', '_');
-      code.add('  $type _$id = null;\n');
+      code.add('  html.$type _$id = null;\n');
       for (var field in attrToField.values) {
         code.add('_$id.$field = null;\n');
       }

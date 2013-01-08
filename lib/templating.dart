@@ -11,23 +11,6 @@ import 'package:web_ui/safe_html.dart';
 import 'package:web_ui/watcher.dart';
 
 /**
- * Removes all sibling nodes from `start.nextNode` until [end] (inclusive). For
- * convinience, this function returns [start].
- */
-Node removeNodes(Node start, Node end) {
-  var parent = end != null ? end.parentNode : null;
-  if (parent == null) return start;
-
-  while (start != end) {
-    var prev = end.previousNode;
-    // TODO(sigmund): use `end.remove()` after dartbug.com/7173 is fixed
-    parent.$dom_removeChild(end);
-    end = prev;
-  }
-  return start;
-}
-
-/**
  * Take the value of a bound expression and creates an HTML node with its value.
  * Normally bindings are associated with text nodes, unless [binding] has the
  * [SafeHtml] type, in which case an html element is created for it.
@@ -56,14 +39,6 @@ Node updateBinding(value, Node node, [String stringValue]) {
     old.replaceWith(node);
   }
   return node;
-}
-
-/**
- * Insert every node in [nodes] under [parent] before [reference]. [reference]
- * should be a child of [parent] or `null` if inserting at the end.
- */
-void insertAllBefore(Node parent, Node reference, List<Node> nodes) {
-  nodes.forEach((n) => parent.insertBefore(n, reference));
 }
 
 /**
@@ -219,4 +194,419 @@ class DataBindingError implements Error {
   final message;
   DataBindingError(this.message);
   toString() => "Data binding error: $message";
+}
+
+/** 
+ * An item that is part of a template and hence will have the same lifetime as
+ * other elements in the template.
+ */
+abstract class TemplateItem {
+  TemplateItem();
+
+  /** Invoked when the template contents are created. */
+  void create();
+
+  /** Invoked when the template contents are inserted to the document. */
+  void insert();
+
+  /** Invoked when the template is removed (undoes created and inserted). */
+  void remove();
+}
+
+/** Represents an event listener within a template. */
+class Listener extends TemplateItem {
+  final EventListenerList target;
+  final EventListener listener;
+
+  Listener(this.target, this.listener);
+
+  void create() {}
+  void insert() { target.add(listener); }
+  void remove() { target.remove(listener); }
+}
+
+/** Represents a generic data binding and a corresponding action. */
+class Binding extends TemplateItem {
+  final exp;
+  final ValueWatcher action;
+  WatcherDisposer stopper;
+
+  Binding(this.exp, this.action);
+
+  void create() {}
+  void insert() {
+    if (stopper != null) throw new StateError('binding already attached');
+    stopper = watchAndInvoke(exp, action);
+  }
+  void remove() {
+    stopper();
+    stopper = null;
+  }
+}
+
+/** Represents a binding to a style attribute. */
+class StyleAttrBinding extends TemplateItem {
+  final exp;
+  final Element elem;
+  WatcherDisposer stopper;
+
+  StyleAttrBinding(this.elem, this.exp);
+
+  void create() {}
+  void insert() {
+    if (stopper != null) throw new StateError('style binding already attached');
+    stopper = bindStyle(elem, exp);
+  }
+  void remove() {
+    stopper();
+    stopper = null;
+  }
+}
+
+/** Represents a binding to a class attribute. */
+class ClassAttrBinding extends TemplateItem {
+  final Element elem;
+  final exp;
+  WatcherDisposer stopper;
+
+  ClassAttrBinding(this.elem, this.exp);
+
+  void create() {}
+  void insert() {
+    if (stopper != null) throw new StateError('class binding already attached');
+    stopper = bindCssClasses(elem, exp);
+  }
+  void remove() {
+    stopper();
+    stopper = null;
+  }
+}
+
+/** 
+ * Represents a one-way binding between a dart getter expression and a DOM
+ * property, or conversely between a DOM property value and a dart property.
+ */
+class DomPropertyBinding extends TemplateItem {
+  /** Value updated by this binding. */
+  final Setter setter;
+
+  /**
+   * Getter that reads the value of the binding, either from a Dart expression
+   * or from a DOM property (which is internally also a Dart expression).
+   */
+  final Getter getter;
+
+  /**
+   * Whether this is a binding that assigns a DOM attribute accepting URL
+   * values. If so, the value assigned to the attribute needs to be sanitized.
+   */
+  final bool isUrl;
+
+  WatcherDisposer stopper;
+
+  DomPropertyBinding(this.getter, this.setter, this.isUrl);
+
+  void create() {}
+  void insert() {
+    if (stopper != null) throw new StateError('data binding already attached.');
+    stopper = watchAndInvoke(getter, (e) {
+      setter(isUrl ? sanitizeUri(e.newValue) : e.newValue);
+    });
+  }
+  void remove() {
+    stopper();
+    stopper = null;
+  }
+}
+
+/** Represents a component added within a template. */
+class ComponentItem extends TemplateItem {
+  /** The element whose `xtag` is the actual component. */
+  final Element elem;
+
+  ComponentItem(this.elem);
+
+  get _xtag {
+    if (elem.xtag == null) {
+      throw new StateError("element doesn't have an associated component");
+    }
+    return elem.xtag;
+  }
+
+  void create() {
+    _xtag..created_autogenerated()..created()..composeChildren();
+  }
+
+  void insert() {
+    _xtag..inserted()..inserted_autogenerated();
+  }
+
+  void remove() {
+    _xtag..removed_autogenerated()..removed();
+  }
+}
+
+/** A template, which can contain template items and DOM nodes. */
+class Template extends TemplateItem {
+  /** Root of the template. */
+  final Node node;
+
+  /** Children template items. */
+  final List<TemplateItem> children = [];
+
+  /** Nodes that this template will insert/remove programatically. */
+  // TODO(sigmund): consider moving this down to PlaceholderTemplate.
+  final List<Node> nodes = [];
+
+  Template(this.node);
+ 
+  /** Associate the event listener while this template is visible.  */
+  void listen(EventListenerList target, EventListener listener) {
+    children.add(new Listener(target, (e) { listener(e); dispatch(); }));
+  }
+
+  /** Run [action] when [exp] changes (while this template is visible).  */
+  void bind(exp, ValueWatcher action) {
+    children.add(new Binding(exp, action));
+  }
+
+  /** Create and bind a [Node] to [exp] while this template is visible. */
+  Node contentBind(Function exp) {
+    var bindNode = new Text('');
+    children.add(new Binding(() => '${exp()}', (e) {
+      bindNode = updateBinding(exp(), bindNode, e.newValue);
+    }));
+    return bindNode;
+  }
+
+  /** Bind [exp] to `elem.class` while this template is visible.  */
+  void bindClass(elem, exp) {
+    children.add(new ClassAttrBinding(elem, exp));
+  }
+
+  /** Bind [exp] to `elem.style` while this template is visible.  */
+  void bindStyle(elem, exp) {
+    children.add(new StyleAttrBinding(elem, exp));
+  }
+
+  /** Bind [exp] to [setter] while this template is visible.  */
+  void oneWayBind(exp, setter, [isUrl = false]) {
+    children.add(new DomPropertyBinding(exp, setter, isUrl));
+  }
+
+  /** Watch [exp] and render a conditional while this template is visible. */
+  void conditional(Node template, exp, bodySetup) {
+    children.add(new ConditionalTemplate(template, exp, bodySetup));
+  }
+
+  /** Watch [exp] and render a loop while this template is visible. */
+  void loop(Node template, exp, iterSetup, {isTemplateElement: true}) {
+    children.add(
+        isTemplateElement ?  new LoopTemplate(template, exp, iterSetup)
+        : new LoopTemplateInAttribute(template, exp, iterSetup));
+  }
+
+  /**
+   * Bind the lifecycle of the component associated with [elem] with this
+   * template's lifecycle.
+   */
+  void component(Element elem) {
+    children.add(new ComponentItem(elem));
+  }
+
+  // TODO(sigmund): consider changing emitter to accept compact arguments here
+  // for instance:
+  //   __t.add(string) => add(new Text(string))
+  //   __t.addHtml(s) => add(new Element.html(s));
+
+  /** Ensure [n] is inserted in the tree when this template gets inserted. */
+  void add(Node n) => nodes.add(n);
+
+  /** Inserts every node in [list] when this template gets inserted. */
+  void addAll(List<Node> list) => nodes.addAll(list);
+
+  /** Create this template and its children (templates are [TemplateItem]s). */
+  void create() => _visitChildren((t) => t.create());
+
+  /** Insert this template and its children. */
+  void insert() => _visitChildren((t) => t.insert());
+
+  /** Remove this template and its children. */
+  void remove() {
+    _visitChildren((t) => t.remove(), reverseOrder: true);
+    children.clear();
+  }
+
+  void _visitChildren(onTemplateItem, {reverseOrder: false}) {
+    var len = children.length;
+    for (int i = 0; i < len; i++) {
+      var t = children[reverseOrder ? (len - i) - 1 : i];
+      onTemplateItem(t);
+    }
+  }
+}
+
+/**
+ * A template to represent conditionals and loops of the form:
+ *
+ *     <template instantiate="if test">
+ *     <template iterate="x in list">
+ *     <td template instantiate="if test">
+ *
+ * For a template element, we leave the (childless) template element in the
+ * tree and use it as a reference point for child insertion. This matches
+ * native MDV behavior.
+ *
+ * For a template attribute, we leave the (childless) element in the tree as
+ * a marker, hidden with 'display:none', and use it as a reference point for
+ * insertion.
+ */
+// TODO(jmesserly): is this good enough for template attributes? we need
+// *something* for this case:
+// <tr>
+//   <td>some stuff</td>
+//   <td>other stuff</td>
+//   <td template instantiate="if test">maybe this stuff</td>
+//   <td template instantiate="if test2">maybe other stuff</td>
+//   <td>more random stuff</td>
+// </tr>
+//
+// We can't necessarily rely on child position because of possible mutation,
+// unless we're willing to say that "if" requires a fixed number of children.
+// If that's the case, we need a way to check for this error case and alert the
+// developer.
+abstract class PlaceholderTemplate extends Template {
+  /** Expression watch by this template (condition or loop expression). */
+  final exp;
+
+  WatcherDisposer stopper;
+
+  PlaceholderTemplate(Node reference, this.exp)
+      : super(reference);
+
+  void create() {}
+
+  void insert() {
+    super.create();
+    if (nodes.length > 0) {
+      var parent = node.parentNode;
+      var reference = node.nextNode;
+      for (var n in nodes) {
+        parent.insertBefore(n, reference);
+      }
+    }
+    super.insert();
+  }
+
+  void remove() {
+    super.remove();
+    var parent = node.parentNode;
+    // TODO(sigmund): use `end.remove()` after dartbug.com/7173 is fixed
+    if (parent != null) {
+      for (var n in nodes) {
+        parent.$dom_removeChild(n);
+      }
+    }
+    nodes.clear();
+  }
+}
+
+/** Function to set up the contents of a conditional template. */
+typedef void ConditionalBodySetup(ConditionalTemplate template);
+
+/**
+ * A template conditionals like `<template instantiate="if test">` or
+ * `<td template instantiate="if test">`.
+ */
+class ConditionalTemplate extends PlaceholderTemplate {
+  bool isVisible;
+  final ConditionalBodySetup bodySetup;
+
+  ConditionalTemplate(Node reference, exp, this.bodySetup)
+      : super(reference, exp);
+
+  void insert() {
+    stopper = watchAndInvoke(exp, (e) {
+      if (!isVisible && e.newValue) {
+        // only create children when they'll be visible
+        bodySetup(this);
+        super.insert();
+        isVisible = true;
+      } else if (isVisible && !e.newValue) {
+        super.remove();
+        isVisible = false;
+      }
+    });
+  }
+
+  void remove() {
+    super.remove();
+    stopper();
+    stopper = null;
+  }
+}
+
+/** Function to set up the contents of a loop template. */
+typedef void LoopIterationSetup(loopVariable, Template template);
+
+/** A template loop of the form `<template iterate="x in list ">`. */
+class LoopTemplate extends PlaceholderTemplate {
+  final LoopIterationSetup iterSetup;
+  
+  LoopTemplate(Node reference, exp, this.iterSetup) : super(reference, exp);
+
+  void insert() {
+    stopper = watchAndInvoke(exp, (e) {
+      super.remove();
+      for (var x in e.newValue) {
+        iterSetup(x, this);
+      }
+      super.insert();
+    });
+  }
+
+  void remove() {
+    super.remove();
+    stopper();
+    stopper = null;
+  }
+}
+
+/**
+ * A template loop of the form `<td template iterate="x in list ">`. Unlike
+ * [LoopTemplate], here we insert children directly then node annotated with the
+ * template attribute.
+ */
+class LoopTemplateInAttribute extends Template {
+  final LoopIterationSetup iterSetup;
+  final exp;
+  WatcherDisposer stopper;
+  
+  LoopTemplateInAttribute(Node node, this.exp, this.iterSetup) : super(node);
+
+  void create() {}
+
+  void insert() {
+    stopper = watchAndInvoke(exp, (e) {
+      _removeInternal();
+      for (var x in e.newValue) {
+        iterSetup(x, this);
+      }
+      super.create();
+      node.nodes.addAll(nodes);
+      super.insert();
+    });
+  }
+
+  void _removeInternal() {
+    super.remove();
+    node.nodes.clear();
+    nodes.clear();
+  }
+
+  void remove() {
+    _removeInternal();
+    stopper();
+    stopper = null;
+  }
 }

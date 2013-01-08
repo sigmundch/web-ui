@@ -278,7 +278,8 @@ class Compiler {
   /** Emits the Dart code for all components in [fileInfo]. */
   void _emitComponents(FileInfo fileInfo) {
     for (var component in fileInfo.declaredComponents) {
-      var code = new WebComponentEmitter(fileInfo).run(component, _pathInfo);
+      var code = new WebComponentEmitter(fileInfo, _messages)
+          .run(component, _pathInfo);
       output.add(new OutputFile(_pathInfo.outputLibraryPath(component), code,
           source: component.externalFile));
     }
