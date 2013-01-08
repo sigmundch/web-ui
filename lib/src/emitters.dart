@@ -66,15 +66,15 @@ class Context {
 
   final LifecycleScope scope;
   Messages _messages = new Messages.silent();
-  
+
   /**
    * If [messages] is null, sets a new silent instance of [Messages]
    */
   set messages(Messages messages) {
     messages = messages == null ? new Messages.silent() : messages;
-    _messages = messages; 
+    _messages = messages;
   }
-  
+
   Messages get messages => _messages;
 
   Context([CodePrinter declarations,
@@ -792,7 +792,7 @@ class WebComponentEmitter extends RecursiveEmitter {
     if (info.template != null && !elemInfo.childrenCreatedInCode) {
       // TODO(jmesserly): we need to emit code to run the <content> distribution
       // algorithm for browsers without ShadowRoot support.
-      _context.createdMethod.add("_root.innerHtml = '''")
+      _context.createdMethod.addRaw("_root.innerHtml = '''")
           .addRaw(escapeDartString(elemInfo.node.innerHTML, triple: true))
           .addRaw("''';\n");
     }
