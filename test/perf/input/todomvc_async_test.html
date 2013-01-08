@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+<!--
+ This performance test runs the TodoMVC app and uses the application as follows:
+  * on each iteration:
+    * clear all todos
+    * add 5 todos
+    * mark 1 as done
+    * clear the todo marked as done.
+
+  This test is just like todomvc_test.html, but we use requestLayoutFrame
+  between rendering steps (after adding each note, or removing a note).
+ -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="components" href="example/todomvc/router_options.html">
+  <link rel="components" href="example/todomvc/todo_row.html">
+  <link rel="stylesheet" href="example/todomvc/base.css">
+  <script type="application/javascript" src="testing.js"></script>
+  <script type="application/javascript" src="start_dart.js"></script>
+  <title>dart - TodoMVC</title>
+</head>
+<body>
+  <section id="todoapp">
+    <header id="header">
+      <h1 class='title'>todos</h1>
+      <form on-submit="addTodo($event)">
+        <input id="new-todo" placeholder="What needs to be done?" autofocus
+               on-change="addTodo($event)">
+      </form>
+    </header>
+    <section id="main">
+      <input id="toggle-all" type="checkbox" bind-checked="app.allChecked">
+      <label for="toggle-all"></label>
+      <ul id="todo-list">
+        <template iterate="x in app.todos">
+          <template if="viewModel.isVisible(x)">
+            <x-todo-row todo="{{x}}"></x-todo-row>
+          </template>
+        </template>
+      </ul>
+    </section>
+    <template if="app.todos.length > 0">
+      <footer id="footer">
+        <span id="todo-count"><strong>{{app.remaining}}</strong></span>
+        <x-router-options id="filters">
+          <li> <a href="#/">All</a> </li>
+          <li> <a href="#/active">Active</a> </li>
+          <li> <a href="#/completed">Completed</a> </li>
+        </x-router-options>
+        <template if="app.doneCount > 0">
+          <button id="clear-completed" on-click="app.clearDone()">
+            Clear completed ({{app.doneCount}})
+          </button>
+        </template>
+      </footer>
+    </template>
+  </section>
+  <footer id="info">
+    <p>Double-click to edit a todo.</p>
+    <p>Credits: the <a href="http://www.dartlang.org">Dart</a> team.</p>
+    <p>
+      Learn more about
+      <a href="https://www.dartlang.org/articles/dart-web-components/">Dart + Web Components</a>
+      or
+      <a href="https://github.com/dart-lang/web-ui/tree/master/example/todomvc">view the source</a>.
+    </p>
+    <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
+  </footer>
+  <script type="application/dart">
+import 'dart:html';
+import 'package:unittest/unittest.dart';
+import 'package:web_ui/web_ui.dart';
+import 'example/todomvc/main.dart' as todomvc_main;
+import 'example/todomvc/model.dart';
+import 'perf_common.dart';
+import 'todomvc_common.dart';
+
+final addTodo = todomvc_main.addTodo;
+
+main() {
+  useShadowDom = false;
+  todomvc_main.main();
+  window.setTimeout(() {
+      var bench = new TodoMvcBenchmark();
+      bench.measure().transform(perfDone);
+  }, 0);
+}
+
+class TodoMvcBenchmark extends AsyncBenchmark {
+  TodoMvcBenchmark() : super('todomvc-async');
+  Future run() {
+    return asyncSteps([
+        app.todos.clear,
+        () => addNote("one"),
+        () => addNote("two"),
+        () => addNote("three"),
+        () => addNote("four"),
+        () => addNote("five"),
+        () => markChecked(3)]);
+  }
+}
+
+Future step(f) {
+  var completer = new Completer();
+  window.requestLayoutFrame(() {
+    var res = f();
+    dispatch();
+    completer.complete(res);
+  });
+  return completer.future;
+}
+
+Future asyncSteps(List<Function> steps) {
+  Future result = step(steps[0]);
+  for (int i = 1; i < steps.length; i++) {
+    result = result.chain((_) => step(steps[i]));
+  }
+  return result;
+
+}
+  </script>
+</body>
+</html>

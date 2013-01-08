@@ -7,6 +7,9 @@ dependencies:
   args: any
   # Pin html5lib so we don't get unexpected API breaks.
   html5lib: ">=0.2.2+1 <0.2.3"
-  js: any
   logging: any
   unittest: any
+  # The following are dev dependencies only, they are not needed by users
+  # of the web_ui package.
+  js: any
+  benchmark_harness: ">=1.0.2 <1.0.3"

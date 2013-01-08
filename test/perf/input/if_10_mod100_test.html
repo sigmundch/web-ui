@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+<!--
+ This performance test toggles 10 conditionals once every 100 iteration.
+ -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+  <script type="application/javascript" src="start_dart.js"></script>
+</head>
+<body>
+  <template instantiate="if x % 100 == 0"><span id='test'>yes</span></template>
+  <template instantiate="if x % 100 == 1"><span>y</span></template>
+  <template instantiate="if x % 100 == 2"><span id='test2'>y</span></template>
+  <template instantiate="if x % 100 == 3"><span>y</span></template>
+  <template instantiate="if x % 100 == 4"><span>y</span></template>
+  <template instantiate="if x % 100 == 0"><span>y</span></template>
+  <template instantiate="if x % 100 == 1"><span>y</span></template>
+  <template instantiate="if x % 100 == 2"><span>y</span></template>
+  <template instantiate="if x % 100 == 3"><span>y</span></template>
+  <template instantiate="if x % 100 == 4"><span>y</span></template>
+  <script type="application/dart">
+import 'dart:html';
+import 'package:web_ui/web_ui.dart';
+import 'package:unittest/unittest.dart';
+import 'perf_common.dart';
+
+main() {
+  useShadowDom = false;
+  window.setTimeout(() {
+    var bench = new ConditionalBenchmark();
+    perfDone(bench.measure());
+  }, 0);
+}
+
+int x = 0;
+
+class ConditionalBenchmark extends BenchmarkBase {
+  ConditionalBenchmark() : super('if-10-mod100');
+  run() {
+    x++;
+    dispatch();
+    expect(query('#test'), x % 100 == 0 ? isNotNull : isNull);
+    expect(query('#test2'), x % 100 == 2 ? isNotNull : isNull);
+  }
+}
+  </script>
+</body>
+</html>

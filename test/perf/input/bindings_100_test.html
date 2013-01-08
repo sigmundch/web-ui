@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+<!--
+ This performance test runs has 100 bindings, which get updated on every
+ iteration of the benchmark.
+ -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+  <script type="application/javascript" src="start_dart.js"></script>
+</head>
+<body>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span id='test'>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <div>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+    <span>{{x}}</span>
+  </div>
+  <script type="application/dart">
+import 'dart:html';
+import 'package:web_ui/web_ui.dart';
+import 'package:unittest/unittest.dart';
+import 'perf_common.dart';
+
+main() {
+  useShadowDom = false;
+  window.setTimeout(() {
+    var bench = new BindingBenchmark();
+    perfDone(bench.measure());
+  }, 0);
+}
+
+int x = 0;
+
+class BindingBenchmark extends BenchmarkBase {
+  BindingBenchmark() : super('bind-100');
+  run() {
+    x++;
+    dispatch();
+    expect(query('#test').innerHTML, "$x");
+  }
+}
+  </script>
+</body>
+</html>
