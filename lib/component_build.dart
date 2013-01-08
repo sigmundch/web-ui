@@ -30,9 +30,11 @@ import 'package:web_ui/dwc.dart' as dwc;
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-void build(List<String> arguments, List<String> entryPoints, {String baseDir}) {
+List<Future<CompilerResult>> build(List<String> arguments,
+    List<String> entryPoints, {String baseDir}) {
 
   var args = _processArgs(arguments);
+  var futures = new List<Future<CompilerResult>>();
 
   var trackDirs = <Directory>[];
   var changedFiles = args["changed"];
@@ -57,7 +59,7 @@ void build(List<String> arguments, List<String> entryPoints, {String baseDir}) {
       if (Platform.operatingSystem == 'windows') args.add('--no-colors');
       if(baseDir != null) args.addAll(['--basedir', baseDir]);
       args.addAll(['-o', outDir.toString(), file]);
-      dwc.run(args);
+      futures.add(dwc.run(args));
 
       if (machineFormat) {
         // Print for the Dart Editor the mapping from the input entry point file
@@ -67,6 +69,7 @@ void build(List<String> arguments, List<String> entryPoints, {String baseDir}) {
       }
     }
   }
+  return futures;
 }
 
 String _outDir(String file) =>
