@@ -560,6 +560,14 @@ main() {
       expect(compInfo.hasConflict, isFalse);
     });
 
+    test('element without extends defaults to span', () {
+      var doc = parse('<body><element name="x-baz"><template>');
+      var info = analyzeDefinitionsInTree(doc);
+      expect(messages.length, 0);
+      expect(info.declaredComponents.length, equals(1));
+      expect(info.declaredComponents[0].extendsTag, equals('span'));
+    });
+
     test('element without constructor', () {
       var doc = parse(
         '<body>'

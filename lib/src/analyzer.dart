@@ -197,15 +197,6 @@ class _Analyzer extends TreeVisitor {
   }
 
   void _bindExtends(ComponentInfo component) {
-    if (component.extendsTag == null) {
-      // TODO(jmesserly): is web components spec going to have a default
-      // extends?
-      _messages.error('Missing the "extends" tag of the component. Please '
-          'include an attribute like \'extends="div"\'.',
-          component.element.sourceSpan, file: _fileInfo.path);
-      return;
-    }
-
     component.extendsComponent = _fileInfo.components[component.extendsTag];
     if (component.extendsComponent == null &&
         component.extendsTag.startsWith('x-')) {
@@ -804,6 +795,14 @@ class _ElementLoader extends TreeVisitor {
           'attribute like \'name="x-your-tag-name"\'.',
           node.sourceSpan, file: _fileInfo.path);
       return;
+    }
+
+    if (extendsTag == null) {
+      // From the spec:
+      // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#extensions-to-document-interface
+      // If PROTOTYPE is null, let PROTOTYPE be the interface prototype object
+      // for the HTMLSpanElement interface.
+      extendsTag = 'span';
     }
 
     var template = null;
