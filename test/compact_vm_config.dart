@@ -79,6 +79,10 @@ class CompactVMConfiguration extends Configuration {
     }
 
     if (!success) exit(1);
+    // TODO(jmesserly): this is a workaround for newer versions of the unittest
+    // package. It will go away once we have the next SDK which has
+    // compact_vm_config in unittest now.
+    exit(0);
   }
 
   int _lastLength = 0;
