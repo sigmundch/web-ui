@@ -174,7 +174,7 @@ main() {
     test('created', () {
       var elem = parseSubtree('<div>{{bar}}</div>');
       expect(_created(elem, child: 0),
-          r"var __binding0 = __t.contentBind(() => bar);");
+          r"var __binding0 = __t.contentBind(() => (bar));");
     });
   });
 
@@ -191,7 +191,7 @@ main() {
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
           r'__t.listen(__e0.on.input, ($event) { bar = __e0.value; }); '
-          r'__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false); '));
+          r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
     });
   });
 
@@ -200,7 +200,7 @@ main() {
       var elem = parseSubtree('<div foo="{{bar}}"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => bar, (e) { "
+          "__t.oneWayBind(() => (bar), (e) { "
               "__e0.attributes['foo'] = e; }, false);"));
     });
 
@@ -208,7 +208,7 @@ main() {
       var elem = parseSubtree('<input value="{{bar}}">');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false);"));
+          "__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false);"));
     });
 
     test('created for 2-way binding with dom accessor', () {
@@ -216,14 +216,14 @@ main() {
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
           r'__t.listen(__e0.on.input, ($event) { bar = __e0.value; }); '
-          r'__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false); '));
+          r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
     });
 
     test('created for data attribute', () {
       var elem = parseSubtree('<div data-foo="{{bar}}"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => bar, (e) { "
+          "__t.oneWayBind(() => (bar), (e) { "
           "__e0.attributes['data-foo'] = e; }, false);"));
     });
 
@@ -231,20 +231,20 @@ main() {
       var elem = parseSubtree('<div class="{{bar}} {{foo}}" />');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.bindClass(__e0, () => bar); "
-          "__t.bindClass(__e0, () => foo);"));
+          "__t.bindClass(__e0, () => (bar)); "
+          "__t.bindClass(__e0, () => (foo));"));
     });
 
     test('created for style', () {
       var elem = parseSubtree('<div data-style="bar"></div>');
-      expect(_created(elem), equalsIgnoringWhitespace( 
+      expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          '__t.bindStyle(__e0, () => bar);'));
+          '__t.bindStyle(__e0, () => (bar));'));
     });
   });
 
   group('emit data binding watchers for content', () {
-    
+
     test('declaration', () {
       var tree = '<div>fo{{bar}}o</div>';
       expect(_declarations(tree, child: 1), '');
@@ -252,13 +252,13 @@ main() {
 
     test('created', () {
       var elem = parseSubtree('<div>fo{{bar}}o</div>');
-      expect(_created(elem, child: 1), 
-        r"var __binding0 = __t.contentBind(() => bar);");
+      expect(_created(elem, child: 1),
+        r"var __binding0 = __t.contentBind(() => (bar));");
     });
   });
 
   group('emit main page class', () {
-    
+
     test('external resource URLs', () {
       var html =
           '<html><head>'
@@ -280,7 +280,7 @@ main() {
     });
 
     group('transform css urls', () {
-      
+
       var html = '<html><head>'
           '<link href="a.css" rel="stylesheet">'
           '</head><body></body></html>';

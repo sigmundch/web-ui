@@ -196,7 +196,7 @@ class DataBindingError implements Error {
   toString() => "Data binding error: $message";
 }
 
-/** 
+/**
  * An item that is part of a template and hence will have the same lifetime as
  * other elements in the template.
  */
@@ -282,7 +282,7 @@ class ClassAttrBinding extends TemplateItem {
   }
 }
 
-/** 
+/**
  * Represents a one-way binding between a dart getter expression and a DOM
  * property, or conversely between a DOM property value and a dart property.
  */
@@ -359,7 +359,7 @@ class Template extends TemplateItem {
   final List<Node> nodes = [];
 
   Template(this.node);
- 
+
   /** Associate the event listener while this template is visible.  */
   void listen(EventListenerList target, EventListener listener) {
     children.add(new Listener(target, (e) { listener(e); dispatch(); }));
@@ -519,7 +519,7 @@ typedef void ConditionalBodySetup(ConditionalTemplate template);
  * `<td template instantiate="if test">`.
  */
 class ConditionalTemplate extends PlaceholderTemplate {
-  bool isVisible;
+  bool isVisible = false;
   final ConditionalBodySetup bodySetup;
 
   ConditionalTemplate(Node reference, exp, this.bodySetup)
@@ -552,7 +552,7 @@ typedef void LoopIterationSetup(loopVariable, Template template);
 /** A template loop of the form `<template iterate="x in list ">`. */
 class LoopTemplate extends PlaceholderTemplate {
   final LoopIterationSetup iterSetup;
-  
+
   LoopTemplate(Node reference, exp, this.iterSetup) : super(reference, exp);
 
   void insert() {
@@ -581,7 +581,7 @@ class LoopTemplateInAttribute extends Template {
   final LoopIterationSetup iterSetup;
   final exp;
   WatcherDisposer stopper;
-  
+
   LoopTemplateInAttribute(Node node, this.exp, this.iterSetup) : super(node);
 
   void create() {}

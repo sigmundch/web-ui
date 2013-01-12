@@ -77,11 +77,10 @@ main() {
               expect(res, 0, reason: "Test output doesn't match expectation.");
             }), completes);
         } else {
-          expect(Process.run('cat', [errorPath]).transform((res) {
-            expect(exitCode, 0, reason:
+          var stderr = new File(errorPath).readAsStringSync();
+          expect(exitCode, 0, reason:
               'DumpRenderTree exited with a non-zero exit code, when running '
-              'on $filename. Contents of stderr: \n${res.stdout}');
-          }), completes);
+              'on $filename. Contents of stderr: \n$stderr');
         }
       }), completes);
     });
