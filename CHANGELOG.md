@@ -3,6 +3,26 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+## Upcoming changes (next release)
+  * Changes to use the new libraries (lib v2)
+  * More readable output: generated code is more compact and easy to correlate
+    with source templates
+  * Making some declarations optional:
+      * You can omit the script tag in the entry page, we will generate
+        an empty one for you.
+        **NOTE**: make sure you only put entrypoint html files in 'build.dart'.
+        This change makes the compiler accept any html file (including files
+        that only define components) and treat them as entrypoints.
+        If you include a component's html file in build.dart, the compiler will
+        generate additional files that you don't need.
+      * Components with no 'extends' attribute extend from 'span' by default
+  * bug fixes:
+       * remove extra whitespace incorrectly inserted in components
+
+## Pub version 0.2.11 - Jan 07 2013 (integration SDK r16761)
+  * internal changes in code structure
+  * fix for type errors with templates in SVG
+
 ## Pub version 0.2.10+2 - Dec 17 (integration SDK 16251)
   * Bug fix: build.dart kept running nonstop (wihtin the Editor) if you had components code under a subdirectory.
 
