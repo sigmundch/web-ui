@@ -1,0 +1,19 @@
+Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x36
+  RenderBlock {HTML} at (0,0) size 800x36
+    RenderBody {BODY} at (8,8) size 784x20
+      RenderText {#text} at (0,0) size 141x19
+        text run at (0,0) width 141: "expect to see 'hi there': "
+      RenderInline {X-FOO} at (0,0) size 10x19
+        RenderText {#text} at (141,0) size 10x19
+          text run at (141,0) width 10: "hi"
+      RenderText {#text} at (151,0) size 4x19
+        text run at (151,0) width 4: " "
+      RenderText {#text} at (155,0) size 30x19
+        text run at (155,0) width 30: "there"
+      RenderText {#text} at (0,0) size 0x0
+#EOF

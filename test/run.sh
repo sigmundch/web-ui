@@ -24,7 +24,7 @@ function fail {
 }
 
 function show_diff {
-  diff -u $1 $2 | \
+  diff -u -N $1 $2 | \
     sed -e "s/^\(+.*\)/[32m\1[0m/" |\
     sed -e "s/^\(-.*\)/[31m\1[0m/"
   return 1

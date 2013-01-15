@@ -408,6 +408,9 @@ class MainPageEmitter extends RecursiveEmitter {
 
     // Inject library name if not pressent.
     var codeInfo = _fileInfo.userCode;
+    if (codeInfo == null) {
+      codeInfo = new DartCodeInfo(null, null, [], 'main(){\n}');
+    }
     var libraryName = codeInfo.libraryName != null
         ? codeInfo.libraryName : _fileInfo.libraryName;
     printer.add(codegen.header(_fileInfo.path, libraryName));

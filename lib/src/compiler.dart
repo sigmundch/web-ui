@@ -113,7 +113,7 @@ class Compiler {
    */
   Future _parseAndDiscover(Path inputFile) {
     var tasks = new FutureGroup();
-    bool isEntry = true;
+    bool isEntry = !options.componentsOnly;
 
     var processed = new Set();
     processHtmlFile(SourceFile file) {
@@ -215,7 +215,7 @@ class Compiler {
         var fileInfo = info[file.path];
         cleanHtmlNodes(fileInfo);
         _emitComponents(fileInfo);
-        if (fileInfo.isEntryPoint && fileInfo.codeAttached) {
+        if (fileInfo.isEntryPoint) {
           _emitMainDart(file);
           _emitMainHtml(file);
         }

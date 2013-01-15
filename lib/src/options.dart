@@ -22,6 +22,9 @@ class CompilerOptions {
   /** Force mangling any generated name (even when --out is provided). */
   final bool forceMangle;
 
+  /** Generate component's dart code, but not the main entry point file. */
+  final bool componentsOnly;
+
   /** File to process by the compiler. */
   String inputFile;
 
@@ -49,6 +52,7 @@ class CompilerOptions {
       outputDir = args['out'],
       forceMangle = args['unique_output_filenames'],
       jsonFormat = args['json_format'],
+      componentsOnly = args['components_only'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
@@ -70,6 +74,10 @@ class CompilerOptions {
       ..addFlag('json_format',
           help: 'Print error messsages in a json format easy to parse by tools,'
                 ' such as the Dart editor',
+          defaultsTo: false, negatable: false)
+      ..addFlag('components_only',
+          help: 'Generate only the code for component classes, do not generate '
+                'HTML files or the main bootstrap code.',
           defaultsTo: false, negatable: false)
       ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
           ' (defaults to the same directory as the source file)')

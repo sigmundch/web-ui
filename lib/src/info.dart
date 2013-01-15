@@ -203,8 +203,10 @@ class FileInfo extends LibraryInfo {
   final Path path;
 
   /**
-   * Whether this is the entry point of the web app, i.e. the file users
-   * navigate to in their browser.
+   * Whether this file should be treated as the entry point of the web app, i.e.
+   * the file users navigate to in their browser. This will be true if this file
+   * was passed in the command line to the dwc compiler, and the
+   * `--components_only` flag was omitted.
    */
   final bool isEntryPoint;
 
@@ -297,7 +299,7 @@ class ComponentInfo extends LibraryInfo {
     if (externalFile != null) return mangle(externalFile.filename, '.dart');
     var prefix = declaringFile.path.filename;
     if (declaringFile.declaredComponents.length == 1
-        && !declaringFile.codeAttached) {
+        && !declaringFile.codeAttached && !declaringFile.isEntryPoint) {
       return mangle(prefix, '.dart', true);
     }
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
