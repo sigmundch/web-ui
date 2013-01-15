@@ -4,7 +4,7 @@
 
 library messages;
 
-import 'dart:json';
+import 'dart:json' as json;
 
 import 'package:html5lib/dom_parsing.dart' show SourceSpan;
 import 'package:logging/logging.dart' show Level;
@@ -69,7 +69,7 @@ class Message {
       json['params']['charStart'] = span.start;
       json['params']['charEnd'] = span.end;
     }
-    return JSON.stringify([json]);
+    return json.stringify([json]);
   }
 }
 
@@ -123,11 +123,11 @@ class Messages {
 
   /// the list of error messages. Empty list, if there are no error messages.
   List<Message> get errors =>
-        messages.filter((m) => m.level == Level.SEVERE);
+        messages.where((m) => m.level == Level.SEVERE).toList();
 
   /// the list of warning messages. Empty list if there are no warning messages.
   List<Message> get warnings =>
-        messages.filter((m) => m.level == Level.WARNING);
+        messages.where((m) => m.level == Level.WARNING).toList();
 
   /**
    * [message] at [file] will tell the user about what the compiler

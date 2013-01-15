@@ -20,6 +20,7 @@
  */
 library build_utils;
 
+import 'dart:async';
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:web_ui/dwc.dart' as dwc;
@@ -30,11 +31,11 @@ import 'package:web_ui/dwc.dart' as dwc;
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-List<Future<CompilerResult>> build(List<String> arguments,
+List<Future<dwc.CompilerResult>> build(List<String> arguments,
     List<String> entryPoints, {String baseDir}) {
 
   var args = _processArgs(arguments);
-  var futures = new List<Future<CompilerResult>>();
+  var futures = new List<Future<dwc.CompilerResult>>();
 
   var trackDirs = <Directory>[];
   var changedFiles = args["changed"];
@@ -49,14 +50,14 @@ List<Future<CompilerResult>> build(List<String> arguments,
 
   if (cleanBuild) {
     _handleCleanCommand(trackDirs);
-  } else if (fullBuild || changedFiles.some((f) => _isInputFile(f, trackDirs))
-      || removedFiles.some((f) => _isInputFile(f, trackDirs))) {
+  } else if (fullBuild || changedFiles.any((f) => _isInputFile(f, trackDirs))
+      || removedFiles.any((f) => _isInputFile(f, trackDirs))) {
     for (var file in entryPoints) {
       var path = new Path(file);
       var outDir = path.directoryPath.append('out');
       var args = [];
       if (machineFormat) args.add('--json_format');
-      if (Platform.operatingSystem == 'windows') args.add('--no-colors');
+      if (stdioType(stdout) != StdioType.TERMINAL) args.add('--no-colors');
       if(baseDir != null) args.addAll(['--basedir', baseDir]);
       args.addAll(['-o', outDir.toString(), file]);
       futures.add(dwc.run(args));

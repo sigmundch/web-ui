@@ -9,6 +9,7 @@
  */
 library build_examples;
 
+import 'dart:async';
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:web_ui/dwc.dart' as dwc;
@@ -34,7 +35,7 @@ main() {
     listFiles(dir,
         (filename) => filename.endsWith('.html') && !filename.startsWith('_'))
         .then((inputs) {
-          buildAll(inputs.map((file) => new Path(file).filename), output);
+          buildAll(inputs.mappedBy((file) => new Path(file).filename), output);
         });
   } else {
     buildAll(args.rest, output);
@@ -56,25 +57,24 @@ Future<List<String>> listFiles(Directory dir, bool filter(String filename)) {
 
 List<String> totalTime = [];
 
-void buildAll(List<String> inputs, output) {
-  var processes = inputs.map((input) => buildSingle(input, output));
-  Futures.wait(processes)
-      .then((_) {
-        print('----- time summary -----');
-        totalTime.forEach((s) => print(s));
-      });
+void buildAll(Iterable<String> inputs, output) {
+  var processes = inputs.mappedBy((input) => buildSingle(input, output));
+  Future.wait(processes).then((_) {
+    print('----- time summary -----');
+    totalTime.forEach((s) => print(s));
+  });
 }
 
 Future buildSingle(String input, String output) {
   var timer = startTime();
-  return dwc.run(['--out', output, input]).chain((_) {
+  return dwc.run(['--out', output, input]).then((_) {
     stopTime(timer, 'dwc - compile $input');
 
     timer = startTime();
     var dartFile ='$output/${input}_bootstrap.dart';
     var res = Process.run(
         'dart2js', ['--minify', '-ppackages/', dartFile,'-o$dartFile.js']);
-    return res.transform((r) {
+    return res.then((r) {
       if (r.exitCode != 0) {
         print(r.stdout);
         print(r.stderr);

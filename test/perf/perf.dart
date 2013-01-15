@@ -8,14 +8,16 @@
  */
 library test.perf.perf;
 
+import 'dart:async';
 import 'dart:io';
-import 'dart:json';
+import 'dart:json' as json;
 import 'dart:utf' show encodeUtf8;
 import 'dart:isolate';
+
 import 'package:unittest/unittest.dart';
+import 'package:unittest/compact_vm_config.dart';
 import 'package:web_ui/dwc.dart' as dwc;
 
-import '../compact_vm_config.dart';
 
 main() {
   var args = new Options().arguments;
@@ -36,7 +38,7 @@ main() {
 
     test('drt-compile $filename', () {
       expect(dwc.run(['-o', 'output/', path], printTime: false)
-        .transform((res) {
+        .then((res) {
           expect(res.messages.length, 0,
               reason: Strings.join(res.messages, '\n'));
         }), completes);
@@ -45,7 +47,7 @@ main() {
     test('drt-run $filename', () {
       results['dart $filename'] = null;
       var outputPath = '$htmlPath.txt';
-      expect(Process.run('DumpRenderTree', [htmlPath]).transform((res) {
+      expect(Process.run('DumpRenderTree', [htmlPath]).then((res) {
         results['dart $filename'] = _extractResult(res.stdout);
         expect(res.exitCode, 0, reason:
           'DumpRenderTree exited with a non-zero exit code, when running '
@@ -54,7 +56,7 @@ main() {
     });
 
     test('dart2js-compile $filename', () {
-      expect(Process.run('dart2js', ["-o$dartPath.js", dartPath]).transform(
+      expect(Process.run('dart2js', ["-o$dartPath.js", dartPath]).then(
           (res) {
             if (res.stdout != null && res.stdout != '') print(res.stdout);
             expect(res.exitCode, 0, reason:
@@ -74,7 +76,7 @@ main() {
           .replaceAll('.html_bootstrap.dart', '.html_bootstrap.dart.js');
       new File(htmlJSPath).writeAsStringSync(html);
 
-      expect(Process.run('DumpRenderTree', [htmlJSPath]).transform((res) {
+      expect(Process.run('DumpRenderTree', [htmlJSPath]).then((res) {
         results['js   $filename'] = _extractResult(res.stdout);
         expect(res.exitCode, 0, reason:
           'DumpRenderTree exited with a non-zero exit code, when running '
@@ -88,7 +90,7 @@ main() {
         results.forEach((k, v) {
           print('  $k: $v');
         });
-        expect(_writeFile('$cwd/output/results.json', JSON.stringify(results)),
+        expect(_writeFile('$cwd/output/results.json', json.stringify(results)),
           completes);
       });
     };
@@ -105,6 +107,6 @@ _extractResult(String s) {
 
 Future _writeFile(String path, String text) {
   return new File(path).open(FileMode.WRITE)
-      .chain((file) => file.writeString(text))
-      .chain((file) => file.close());
+      .then((file) => file.writeString(text))
+      .then((file) => file.close());
 }

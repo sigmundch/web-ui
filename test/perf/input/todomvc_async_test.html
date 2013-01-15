@@ -74,6 +74,7 @@ BSD-style license that can be found in the LICENSE file.
     <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
   <script type="application/dart">
+import 'dart:async';
 import 'dart:html';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/web_ui.dart';
@@ -89,7 +90,7 @@ main() {
   todomvc_main.main();
   window.setTimeout(() {
       var bench = new TodoMvcBenchmark();
-      bench.measure().transform(perfDone);
+      bench.measure().then(perfDone);
   }, 0);
 }
 
@@ -120,7 +121,7 @@ Future step(f) {
 Future asyncSteps(List<Function> steps) {
   Future result = step(steps[0]);
   for (int i = 1; i < steps.length; i++) {
-    result = result.chain((_) => step(steps[i]));
+    result = result.then((_) => step(steps[i]));
   }
   return result;
 

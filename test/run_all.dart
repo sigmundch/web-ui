@@ -8,9 +8,11 @@
  */
 library run_impl;
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:utf' show encodeUtf8;
 import 'dart:isolate';
+import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/dwc.dart' as dwc;
 
@@ -23,7 +25,6 @@ import 'html_cleaner_test.dart' as html_cleaner_test;
 import 'path_info_test.dart' as path_info_test;
 import 'utils_test.dart' as utils_test;
 import 'watcher_test.dart' as watcher_test;
-import 'compact_vm_config.dart';
 
 // TODO(jmesserly): command line args to filter tests
 main() {
@@ -58,7 +59,7 @@ main() {
 
     test('drt-compile $filename', () {
       expect(dwc.run(['-o', 'data/output/', path], printTime: false)
-        .transform((res) {
+        .then((res) {
           expect(res.messages.length, 0,
               reason: Strings.join(res.messages, '\n'));
         }), completes);
@@ -70,10 +71,10 @@ main() {
       var outputPath = '$htmlPath.txt';
       var errorPath = outDir.append('_errors.$filename.txt').toString();
 
-      expect(_runDrt(htmlPath, outputPath, errorPath).transform((exitCode) {
+      expect(_runDrt(htmlPath, outputPath, errorPath).then((exitCode) {
         if (exitCode == 0) {
           var expectedPath = '$cwd/data/expected/$filename.txt';
-          expect(_diff(expectedPath, outputPath).transform((res) {
+          expect(_diff(expectedPath, outputPath).then((res) {
               expect(res, 0, reason: "Test output doesn't match expectation.");
             }), completes);
         } else {
@@ -88,20 +89,20 @@ main() {
 }
 
 Future<int> _runDrt(htmlPath, String outPath, String errPath) {
-  return Process.run('DumpRenderTree', [htmlPath]).chain((res) {
+  return Process.run('DumpRenderTree', [htmlPath]).then((res) {
     var f1 = _writeFile(outPath, res.stdout);
     var f2 = _writeFile(errPath, res.stderr);
-    return Futures.wait([f1, f2]).transform((_) => res.exitCode);
+    return Future.wait([f1, f2]).then((_) => res.exitCode);
   });
 }
 
 Future _writeFile(String path, String text) {
   return new File(path).open(FileMode.WRITE)
-      .chain((file) => file.writeString(text))
-      .chain((file) => file.close());
+      .then((file) => file.writeString(text))
+      .then((file) => file.close());
 }
 
 Future<int> _diff(expectedPath, outputPath) {
   return Process.run('diff', ['-q', expectedPath, outputPath])
-      .transform((res) => res.exitCode);
+      .then((res) => res.exitCode);
 }

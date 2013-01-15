@@ -4,6 +4,7 @@
 
 library console;
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:utf';
 import 'package:web_ui/src/file_system.dart';
@@ -16,17 +17,14 @@ class ConsoleFileSystem implements FileSystem {
   List<Future> _pending = <Future>[];
 
   Future flush() {
-    return Futures.wait(_pending).transform((_) {
-      // Some new work might be pending that was only queued up after the call
-      // to flush so we cannot simply clear the future list.
-      _pending = _pending.filter((f) => !f.hasValue);
-      return null;
-    });
+    var pending = _pending;
+    _pending = <Future>[];
+    return Future.wait(pending);
   }
 
   void writeString(internal.Path path, String text) {
-    var future = new File(path.toString()).open(FileMode.WRITE).chain((file) {
-      return file.writeString(text).chain((_) => file.close());
+    var future = new File(path.toString()).open(FileMode.WRITE).then((file) {
+      return file.writeString(text).then((_) => file.close());
     });
     _pending.add(future);
   }
@@ -35,18 +33,18 @@ class ConsoleFileSystem implements FileSystem {
   // to html5lib. This will require a further restructuring of FileSystem.
   // Probably it just needs "readHtml" and "readText" methods.
   Future<List<int>> readTextOrBytes(internal.Path path) {
-    return new File(path.toString()).open().chain(
-        (file) => file.length().chain((length) {
+    return new File(path.toString()).open().then(
+        (file) => file.length().then((length) {
       // TODO(jmesserly): is this guaranteed to read all of the bytes?
       var buffer = new List<int>(length);
       return file.readList(buffer, 0, length)
-          .chain((_) => file.close())
-          .transform((_) => buffer);
+          .then((_) => file.close())
+          .then((_) => buffer);
     }));
   }
 
   // TODO(jmesserly): do we support any encoding other than UTF-8 for Dart?
   Future<String> readText(internal.Path path) {
-    return readTextOrBytes(path).transform(decodeUtf8);
+    return readTextOrBytes(path).then(decodeUtf8);
   }
 }

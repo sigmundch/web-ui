@@ -5,9 +5,9 @@
 /** Tests for some of the utility helper functions used by the compiler. */
 library utils_test;
 
+import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/utils.dart';
-import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();

@@ -9,8 +9,9 @@
  */
 library test.perf.update_json;
 
+import 'dart:async';
 import 'dart:io';
-import 'dart:json';
+import 'dart:json' as json;
 import 'dart:math' as math;
 
 main() {
@@ -28,8 +29,8 @@ main() {
   var file2 = new File(path2).readAsStringSync();
 
   var results = [];
-  var map1 = JSON.parse(file1);
-  var map2 = JSON.parse(file2);
+  var map1 = json.parse(file1);
+  var map2 = json.parse(file2);
 
   for (var key in map1.keys) {
     if (map1[key] != null) {
@@ -38,11 +39,11 @@ main() {
   }
 
   print('updating $path2...');
-  _writeFile(path2, JSON.stringify(map2));
+  _writeFile(path2, json.stringify(map2));
 }
 
 Future _writeFile(String path, String text) {
   return new File(path).open(FileMode.WRITE)
-      .chain((file) => file.writeString(text))
-      .chain((file) => file.close());
+      .then((file) => file.writeString(text))
+      .then((file) => file.close());
 }

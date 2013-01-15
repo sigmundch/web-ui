@@ -136,7 +136,7 @@ class CustomElementsManager {
       var selector = '${declaration.extendz}[is=${declaration.name}]';
       var all = target.queryAll(selector);
       // templates are innert and should not be expanded.
-      var activeElements = all.filter(
+      var activeElements = all.where(
           (e) => !e.matchesSelector('template *'));
       if (root != null && root.matchesSelector(selector)) {
         activeElements.add(root);

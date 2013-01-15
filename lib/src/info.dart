@@ -55,8 +55,7 @@ class PathInfo {
    * Adds emitted error/warning messages to [messages], if [messages] is
    * supplied.
    */
-  bool checkInputPath(Path input, {Messages messages}) {
-    messages = messages == null ? new Messages.silent() : messages;
+  bool checkInputPath(Path input, Messages messages) {
     if (_mangleFilenames) return true;
     var canonicalized = input.canonicalize();
     if (!canonicalized.relativeTo(_outputDir).toString().startsWith('../')) {
@@ -109,9 +108,9 @@ class PathInfo {
    */
   Path _rewritePackages(Path outputPath) {
     if (!outputPath.toString().contains('packages')) return outputPath;
-    var segments = outputPath.segments().map(
+    var segments = outputPath.segments().mappedBy(
         (segment) => segment == 'packages' ? '_from_packages' : segment);
-    return new Path(Strings.join(segments, '/'));
+    return new Path(segments.join('/'));
   }
 
   /**

@@ -5,9 +5,9 @@
 /** Tests for the watcher library. */
 library watcher_test;
 
+import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/watcher.dart';
-import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();

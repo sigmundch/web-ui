@@ -67,7 +67,7 @@ void emitInitializations(ElementInfo info,
   printer.add(childrenPrinter);
 
   if (info.childrenCreatedInCode && !info.hasIterate && !info.hasIfCondition) {
-    var nodes = info.children.map(_createChildExpression);
+    var nodes = info.children.mappedBy(_createChildExpression);
     _emitAddNodes(printer, nodes, '$id.nodes');
   }
 }
@@ -76,11 +76,11 @@ void emitInitializations(ElementInfo info,
  * Emit statements that add 1 or more HTML nodes directly as children of
  * [target] (which can be a template or another node.
  */
-_emitAddNodes(CodePrinter printer, List<String> nodes, String target) {
+_emitAddNodes(CodePrinter printer, Iterable<String> nodes, String target) {
   if (nodes.length == 1) {
-    printer.add("$target.add(${nodes[0]});");
+    printer.add("$target.add(${nodes.single});");
   } else if (nodes.length > 0) {
-    printer.add("$target.addAll([\n${Strings.join(nodes, ',\n')}\n]);");
+    printer.add("$target.addAll([\n${nodes.join(',\n')}\n]);");
   }
 }
 
@@ -146,7 +146,7 @@ void _emitSimpleAttributeBinding(ElementInfo info,
 
 void _emitTextAttributeBinding(ElementInfo info,
     String name, AttributeInfo attr, CodePrinter printer) {
-  var textContent = attr.textContent.map(escapeDartString);
+  var textContent = attr.textContent.mappedBy(escapeDartString).toList();
   var setter = _findDomField(info, name);
   var content = new StringBuffer();
   var binding;
@@ -214,7 +214,7 @@ void emitConditional(TemplateInfo info, CodePrinter printer,
   printer.add('__t.conditional(${info.identifier}, () => ($cond), (__t) {')
          .add(childContext.declarations)
          .add(childContext.printer);
-  _emitAddNodes(printer, info.children.map(_createChildExpression), '__t');
+  _emitAddNodes(printer, info.children.mappedBy(_createChildExpression), '__t');
   printer.add('});\n');
 }
 
@@ -228,7 +228,7 @@ void emitLoop(TemplateInfo info, CodePrinter printer, Context childContext) {
   printer.add('__t.loop($id, () => ($items), (${info.loopVariable}, __t) {')
       .add(childContext.declarations)
       .add(childContext.printer);
-  _emitAddNodes(printer, info.children.map(_createChildExpression), '__t');
+  _emitAddNodes(printer, info.children.mappedBy(_createChildExpression), '__t');
   printer.add(info.isTemplateElement ? '});' : '}, isTemplateElement: false);');
 }
 
@@ -351,7 +351,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       }
 
       // Add imports only for those components used by this component.
-      var imports = info.usedComponents.keys.map(
+      var imports = info.usedComponents.keys.mappedBy(
           (c) => pathInfo.relativePath(info, c));
 
       if (hasExtends) {
@@ -421,7 +421,7 @@ class MainPageEmitter extends RecursiveEmitter {
     }
 
     // Import only those components used by the page.
-    var imports = _fileInfo.usedComponents.keys.map(
+    var imports = _fileInfo.usedComponents.keys.mappedBy(
           (c) => pathInfo.relativePath(_fileInfo, c));
     var mainCode = codegen.mainDartCode(
         codeInfo.code, _context.declarations.formatString(1),

@@ -45,15 +45,15 @@ void parse(js.Proxy sourcePagePort, String sourceUri) {
   var messages = new Messages(options: options, shouldPrint: false);
   asyncTime('Compiled $sourceUri', () {
     var compiler = new Compiler(fileSystem, options);
-    return compiler.run().chain((_) {
+    return compiler.run().then((_) {
       for (var file in compiler.output) {
         fileSystem.writeString(file.path, file.contents);
       }
       var ret = fileSystem.flush();
       js.scoped(() {
         js.context.proxyMessages(sourcePagePort,
-            js.array(messages.messages.map(
-                (m) => [m.level.name, m.toString()])));
+            js.array(messages.messages.mappedBy(
+                (m) => [m.level.name, m.toString()]).toList()));
       });
       js.release(sourcePagePort);
       return ret;

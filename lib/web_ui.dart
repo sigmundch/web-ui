@@ -13,6 +13,7 @@ export 'watcher.dart';
 export 'safe_html.dart';
 export 'templating.dart';
 
+import 'dart:async';
 import 'dart:html';
 
 // Imported for the doc comment
@@ -236,9 +237,7 @@ abstract class WebComponent implements Element {
 
   static bool _matches(Node node, String selector) {
     if (node is Text) return selector == '*';
-    // TODO(jmesserly): cannot use matchesSelector because of dartbug.com/4401
-    //return (node as Element).matchesSelector(selector);
-    return (node.parent as Element).queryAll(selector).some((n) => n == node);
+    return (node as Element).matches(selector);
   }
 
   static bool _isInsertionPoint(Element node) =>
@@ -438,7 +437,7 @@ abstract class WebComponent implements Element {
     }
   }
 
-  bool matchesSelector(String selectors) => _element.matchesSelector(selectors);
+  bool matches(String selectors) => _element.matches(selectors);
 
   void webkitRequestFullScreen(int flags) {
     _element.webkitRequestFullScreen(flags);
@@ -575,6 +574,59 @@ abstract class WebComponent implements Element {
   void appendText(String text) => _element.appendText(text);
 
   void appendHtml(String html) => _element.appendHtml(html);
+
+  Stream<Event> get onAbort => _element.onAbort;
+  Stream<Event> get onBeforeCopy => _element.onBeforeCopy;
+  Stream<Event> get onBeforeCut => _element.onBeforeCut;
+  Stream<Event> get onBeforePaste => _element.onBeforePaste;
+  Stream<Event> get onBlur => _element.onBlur;
+  Stream<Event> get onChange => _element.onChange;
+  Stream<MouseEvent> get onClick => _element.onClick;
+  Stream<MouseEvent> get onContextMenu => _element.onContextMenu;
+  Stream<Event> get onCopy => _element.onCopy;
+  Stream<Event> get onCut => _element.onCut;
+  Stream<Event> get onDoubleClick => _element.onDoubleClick;
+  Stream<MouseEvent> get onDrag => _element.onDrag;
+  Stream<MouseEvent> get onDragEnd => _element.onDragEnd;
+  Stream<MouseEvent> get onDragEnter => _element.onDragEnter;
+  Stream<MouseEvent> get onDragLeave => _element.onDragLeave;
+  Stream<MouseEvent> get onDragOver => _element.onDragOver;
+  Stream<MouseEvent> get onDragStart => _element.onDragStart;
+  Stream<MouseEvent> get onDrop => _element.onDrop;
+  Stream<Event> get onError => _element.onError;
+  Stream<Event> get onFocus => _element.onFocus;
+  Stream<Event> get onInput => _element.onInput;
+  Stream<Event> get onInvalid => _element.onInvalid;
+  Stream<KeyboardEvent> get onKeyDown => _element.onKeyDown;
+  Stream<KeyboardEvent> get onKeyPress => _element.onKeyPress;
+  Stream<KeyboardEvent> get onKeyUp => _element.onKeyUp;
+  Stream<Event> get onLoad => _element.onLoad;
+  Stream<MouseEvent> get onMouseDown => _element.onMouseDown;
+  Stream<MouseEvent> get onMouseMove => _element.onMouseMove;
+  Stream<Event> get onFullscreenChange => _element.onFullscreenChange;
+  Stream<Event> get onFullscreenError => _element.onFullscreenError;
+  Stream<Event> get onPaste => _element.onPaste;
+  Stream<Event> get onReset => _element.onReset;
+  Stream<Event> get onScroll => _element.onScroll;
+  Stream<Event> get onSearch => _element.onSearch;
+  Stream<Event> get onSelect => _element.onSelect;
+  Stream<Event> get onSelectStart => _element.onSelectStart;
+  Stream<Event> get onSubmit => _element.onSubmit;
+  Stream<MouseEvent> get onMouseOut => _element.onMouseOut;
+  Stream<MouseEvent> get onMouseOver => _element.onMouseOver;
+  Stream<MouseEvent> get onMouseUp => _element.onMouseUp;
+  Stream<TouchEvent> get onTouchCancel => _element.onTouchCancel;
+  Stream<TouchEvent> get onTouchEnd => _element.onTouchEnd;
+  Stream<TouchEvent> get onTouchEnter => _element.onTouchEnter;
+  Stream<TouchEvent> get onTouchLeave => _element.onTouchLeave;
+  Stream<TouchEvent> get onTouchMove => _element.onTouchMove;
+  Stream<TouchEvent> get onTouchStart => _element.onTouchStart;
+  Stream<TransitionEvent> get onTransitionEnd => _element.onTransitionEnd;
+
+  // TODO(sigmund): do the normal forwarding when dartbug.com/7919 is fixed.
+  Stream<WheelEvent> get onMouseWheel {
+    throw new UnsupportedError('onMouseWheel is not supported');
+  }
 }
 
 /**

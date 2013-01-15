@@ -160,7 +160,8 @@ class _Analyzer extends TreeVisitor {
     if (_needsIdentifier(info)) {
       _ensureParentHasQuery(info);
       if (info.identifier == null) {
-        var id = '__e-${_uniqueIds.next()}';
+        _uniqueIds.moveNext();
+        var id = '__e-${_uniqueIds.current}';
         info.identifier = toCamelCase(id);
         // If it's not created in code, we'll query the element by it's id.
         if (!info.createdInCode) node.attributes['id'] = id;
@@ -626,7 +627,8 @@ class _Analyzer extends TreeVisitor {
     do {
       _addRawTextContent(parser.textContent, text);
       var placeholder = new Text('');
-      var id = '__binding${_uniqueIds.next()}';
+      _uniqueIds.moveNext();
+      var id = '__binding${_uniqueIds.current}';
       new TextInfo(placeholder, _parent, parser.binding, id);
     } while (parser.moveNext());
 
@@ -641,8 +643,8 @@ class _Analyzer extends TreeVisitor {
 
   /**
    * Normalizes references in [info]. On the [analyzeDefinitions] phase, the
-   * analyzer extracted names of files and components. Here we link those names to
-   * actual info classes. In particular:
+   * analyzer extracted names of files and components. Here we link those names
+   * to actual info classes. In particular:
    *   * we initialize the [components] map in [info] by importing all
    *     [declaredComponents],
    *   * we scan all [componentLinks] and import their [declaredComponents],
@@ -667,8 +669,8 @@ class _Analyzer extends TreeVisitor {
   }
 
   /**
-   * Stores a direct reference in [info] to a dart source file that was loaded in
-   * a script tag with the 'src' attribute.
+   * Stores a direct reference in [info] to a dart source file that was loaded
+   * in a script tag with the 'src' attribute.
    */
   void _attachExtenalScript(LibraryInfo info, Map<Path, FileInfo> files) {
     var path = info.externalFile;
@@ -788,7 +790,7 @@ class _ElementLoader extends TreeVisitor {
     var tagName = node.attributes['name'];
     var extendsTag = node.attributes['extends'];
     var constructor = node.attributes['constructor'];
-    var templateNodes = node.nodes.filter((n) => n.tagName == 'template');
+    var templateNodes = node.nodes.where((n) => n.tagName == 'template');
 
     if (tagName == null) {
       _messages.error('Missing tag name of the component. Please include an '
@@ -807,9 +809,9 @@ class _ElementLoader extends TreeVisitor {
 
     var template = null;
     if (templateNodes.length == 1) {
-      template = templateNodes[0];
+      template = templateNodes.single;
     } else {
-      _messages.warning('an <element> should have exactly one <template> child.',
+      _messages.warning('an <element> should have exactly one <template> child',
           node.sourceSpan, file: _fileInfo.path);
     }
 

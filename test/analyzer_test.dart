@@ -6,6 +6,7 @@ library analyzer_test;
 
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
+import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/info.dart';
@@ -16,7 +17,6 @@ import 'package:web_ui/src/utils.dart';
 import 'package:logging/logging.dart';
 import 'testing.dart';
 import 'testing.dart' as testing show analyzeElement, analyzeDefinitionsInTree;
-import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();

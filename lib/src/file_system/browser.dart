@@ -4,6 +4,7 @@
 
 library browser;
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:html';
 import 'path.dart';

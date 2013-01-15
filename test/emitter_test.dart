@@ -9,6 +9,7 @@
 library emitter_test;
 
 import 'package:html5lib/dom.dart';
+import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/code_printer.dart';
@@ -17,7 +18,6 @@ import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'testing.dart';
-import 'compact_vm_config.dart';
 
 main() {
   useCompactVMConfiguration();

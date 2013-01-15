@@ -9,6 +9,8 @@
 // TODO(sigmund): move this to the same repo where BenchmarkBase is.
 library async_benchmark;
 
+import 'dart:async';
+
 /** The superclass from which all benchmarks inherit from. */
 class AsyncBenchmark {
   /** Benchmark name. */
@@ -27,7 +29,7 @@ class AsyncBenchmark {
     int count = 10;
     Future recurse(val) {
       if (count-- <= 0) return new Future.immediate(val);
-      return run().chain(recurse);
+      return run().then(recurse);
     }
     return recurse(null);
   }
@@ -50,7 +52,7 @@ class AsyncBenchmark {
       int elapsed = watch.elapsedMilliseconds;
       if (elapsed < timeMinimum || iter < 32) {
         iter++;
-        return f().chain(recurse);
+        return f().then(recurse);
       }
       return new Future.immediate((1000.0 * elapsed) / iter);
     }
@@ -61,9 +63,9 @@ class AsyncBenchmark {
   Future<double> measure() {
     setup();
     // Warmup for at least 1000ms. Discard result.
-    return measureFor(warmup, 1000).chain((_) {
+    return measureFor(warmup, 1000).then((_) {
       // Run the benchmark for at least 1000ms.
-      return measureFor(exercise, 2000).transform((result) {
+      return measureFor(exercise, 2000).then((result) {
         teardown();
         return result;
       });

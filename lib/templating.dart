@@ -75,7 +75,7 @@ void updateCssClass(Element elem, bool addClasses, classes) {
         elem.classes.add(classes);
       }
     } else if (classes is List<String>) {
-      elem.classes.addAll(classes.filter((e) => e != null && e != ''));
+      elem.classes.addAll(classes.where((e) => e != null && e != ''));
     } else {
       throw new ArgumentError('classes must be a String or List<String>.');
     }
@@ -88,7 +88,7 @@ void updateCssClass(Element elem, bool addClasses, classes) {
         elem.classes.remove(classes);
       }
     } else if (classes is List<String>) {
-      elem.classes.removeAll(classes.filter((e) => e != null && e != ''));
+      elem.classes.removeAll(classes.where((e) => e != null && e != ''));
     } else {
       throw new ArgumentError('classes must be a String or List<String>.');
     }

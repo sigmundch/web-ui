@@ -117,26 +117,9 @@ main() {
 }
 """;
 
-/**
- * Code generated to wrap all components defined in a single HTML into a single
- * library.
- */
-String wrapComponentsLibrary(FileInfo info, List<Path> exports) => """
-// Auto-generated from ${info.path}.
-// DO NOT EDIT.
-
-library ${info.libraryName};
-
-${exportList(exports)}
-""";
-
 /** Generate text for a list of imports. */
-String importList(List<Path> imports) =>
-  Strings.join(imports.map((url) => "import '$url';"), '\n');
-
-/** Generate text for a list of export. */
-String exportList(List<Path> exports) =>
-  Strings.join(exports.map((url) => "export '$url';"), '\n');
+String importList(Iterable<Path> imports) =>
+  imports.mappedBy((url) => "import '$url';").join('\n');
 
 /**
  * Text corresponding to a directive, fixed in case the code is in a different

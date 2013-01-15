@@ -10,7 +10,7 @@
 library test.perf.compare;
 
 import 'dart:io';
-import 'dart:json';
+import 'dart:json' as json;
 import 'dart:math' as math;
 
 main() {
@@ -27,8 +27,8 @@ main() {
   var filter = args.length > 2 ? new RegExp(args[2]) : null;
 
   var results = [];
-  var map1 = JSON.parse(file1);
-  var map2 = JSON.parse(file2);
+  var map1 = json.parse(file1);
+  var map2 = json.parse(file2);
 
   for (var key in map1.keys) {
     if (map2.containsKey(key)) {
@@ -52,7 +52,7 @@ main() {
   var times2 = [];
   var someNull = false;
   if (filter != null) {
-    results = results.filter((s) => filter.hasMatch(s.name));
+    results = results.where((s) => filter.hasMatch(s.name)).toList();
   }
   results.sort();
 

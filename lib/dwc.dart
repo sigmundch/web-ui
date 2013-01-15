@@ -5,6 +5,7 @@
 /** The entry point to the compiler. Used to implement `bin/dwc.dart`. */
 library dwc;
 
+import 'dart:async';
 import 'dart:io';
 import 'package:logging/logging.dart' show Level;
 import 'src/compiler.dart';
@@ -38,7 +39,7 @@ class CompilerResult {
                   this.bootstrapFile]);
 
   factory CompilerResult._(Messages messages, List<OutputFile> outputs) {
-    var success = !messages.messages.some((m) => m.level == Level.SEVERE);
+    var success = !messages.messages.any((m) => m.level == Level.SEVERE);
     var file;
     var outs = new Map<String, String>();
     for (var out in outputs) {
@@ -49,7 +50,7 @@ class CompilerResult {
       var outputPath = out.path.toString();
       outs[outputPath] = sourcePath;
     }
-    var msgs = messages.messages.map((m) => m.toString());
+    var msgs = messages.messages.mappedBy((m) => m.toString()).toList();
     return new CompilerResult(success, outs, msgs, file);
   }
 }
@@ -69,13 +70,14 @@ Future<CompilerResult> run(List<String> args, {bool printTime: true}) {
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
     var currentDir = new Directory.current().path;
-    var compiler = new Compiler(fileSystem, options, currentDir: currentDir, messages: messages);
+    var compiler = new Compiler(fileSystem, options, currentDir: currentDir,
+        messages: messages);
     var res;
     return compiler.run()
-      .transform((_) => (res = new CompilerResult._(messages, compiler.output)))
-      .chain((_) => symlinkPubPackages(res, options))
-      .chain((_) => emitFiles(compiler.output, options.clean))
-      .transform((_) => res);
+      .then((_) => (res = new CompilerResult._(messages, compiler.output)))
+      .then((_) => symlinkPubPackages(res, options))
+      .then((_) => emitFiles(compiler.output, options.clean))
+      .then((_) => res);
   }, printTime: printTime, useColors: options.useColors);
 }
 
@@ -110,7 +112,8 @@ void _createIfNeeded(Path outdir) {
  * returned future completes when the symlink was created (or immediately if it
  * already exists).
  */
-Future symlinkPubPackages(CompilerResult result, CompilerOptions options, {Messages messages: null}) {
+Future symlinkPubPackages(CompilerResult result, CompilerOptions options,
+    {Messages messages: null}) {
   messages = messages == null? new Messages.silent() : messages;
   if (options.outputDir == null || result.bootstrapFile == null) {
     // We don't need to copy the packages directory if the output was generated
@@ -171,7 +174,7 @@ Future createSymlink(String target, String link, {Messages messages: null}) {
     args = ['/c', 'mklink', '/j', link, target];
   }
 
-  return Process.run(command, args).transform((result) {
+  return Process.run(command, args).then((result) {
     if (result.exitCode != 0) {
       var details = 'subprocess stdout:\n${result.stdout}\n'
                     'subprocess stderr:\n${result.stderr}';

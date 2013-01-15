@@ -2,11 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// TODO(terry): Investigate common library for file I/O shared between frog and tools.
-
 /** Abstraction for file systems and utility functions to manipulate paths. */
 library file_system;
 
+import 'dart:async';
 import 'file_system/path.dart';
 
 /**

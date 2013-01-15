@@ -4,6 +4,7 @@
 
 library web_components.src.utils;
 
+import 'dart:async';
 import 'dart:isolate';
 import 'package:web_ui/src/messages.dart';
 
@@ -94,7 +95,7 @@ find(List list, bool matcher(elem)) {
 }
 
 
-/** A completer that waits until all added [Future]s complete. */
+/** A future that waits until all added [Future]s complete. */
 // TODO(sigmund): this should be part of the futures/core libraries.
 class FutureGroup {
   const _FINISHED = -1;
@@ -118,26 +119,10 @@ class FutureGroup {
    */
   void add(Future task) {
     if (_failedTask != null) return;
-    if (_pending == _FINISHED) throw new FutureAlreadyCompleteException();
+    if (_pending == _FINISHED) throw new StateError("Future already completed");
 
     _pending++;
     futures.add(task);
-    if (task.isComplete) {
-      // TODO(jmesserly): maybe Future itself should do this itself?
-      // But we'd need to fix dart:mirrors to have a sync version.
-      setImmediate(() => _watchTask(task));
-    } else {
-      _watchTask(task);
-    }
-  }
-
-  void _watchTask(Future task) {
-    task.handleException((e) {
-      if (_failedTask != null) return;
-      _failedTask = task;
-      _completer.completeException(e, task.stackTrace);
-      return true;
-    });
     task.then((_) {
       if (_failedTask != null) return;
       _pending--;
@@ -145,6 +130,10 @@ class FutureGroup {
         _pending = _FINISHED;
         _completer.complete(futures);
       }
+    }, onError: (e) {
+      if (_failedTask != null) return;
+      _failedTask = task;
+      _completer.completeError(e.error, e.stackTrace);
     });
   }
 
@@ -205,9 +194,12 @@ void setImmediate(void callback()) {
 
 /** Iterates through an infinite sequence, starting from zero. */
 class IntIterator implements Iterator<int> {
-  int _next = 0;
+  int _next = -1;
 
-  bool get hasNext => true;
+  int get current => _next < 0 ? null : _next;
 
-  int next() => _next++;
+  bool moveNext() {
+    _next++;
+    return true;
+  }
 }
