@@ -243,16 +243,15 @@ class Compiler {
   void _emitMainHtml(SourceFile file) {
     var fileInfo = info[file.path];
 
-    // Clear the body, we moved all of it
-    var document = file.document;
-    var bootstrapName =
-        _pathInfo.mangle('${file.path.filename}_bootstrap.dart','');
-    output.add(new OutputFile(
-        _pathInfo.outputDirPath(file.path).append(bootstrapName),
-        codegen.bootstrapCode(_pathInfo.relativePath(fileInfo, fileInfo))));
+    var bootstrapName = '${file.path.filename}_bootstrap.dart';
+    var bootstrapPath = file.path.directoryPath.append(bootstrapName);
+    var bootstrapOutPath = _pathInfo.outputPath(bootstrapPath, '');
+    output.add(new OutputFile(bootstrapOutPath, codegen.bootstrapCode(
+          _pathInfo.relativePath(new FileInfo(bootstrapPath), fileInfo))));
 
     // TODO(jmesserly): should we be adding the loader script?
     var dartLoader = DART_LOADER;
+    var document = file.document;
     for (var script in document.queryAll('script')) {
       var src = script.attributes['src'];
       if (src != null && src.split('/').last == 'dart.js') {
@@ -263,7 +262,8 @@ class Compiler {
 
     document.body.nodes.add(parseFragment(
       '$dartLoader'
-      '<script type="application/dart" src="$bootstrapName"></script>'
+      '<script type="application/dart" src="${bootstrapOutPath.filename}">'
+      '</script>'
     ));
 
     for (var link in document.head.queryAll('link')) {
