@@ -135,6 +135,7 @@ class _Analyzer extends TreeVisitor {
       // we skip the body of the element here.
       var name = node.attributes['name'];
       if (name == null) return;
+
       var component = _fileInfo.components[name];
       if (component == null) return;
 
@@ -201,7 +202,6 @@ class _Analyzer extends TreeVisitor {
     component.extendsComponent = _fileInfo.components[component.extendsTag];
     if (component.extendsComponent == null &&
         component.extendsTag.startsWith('x-')) {
-
       _messages.warning(
           'custom element with tag name ${component.extendsTag} not found.',
           component.element.sourceSpan, file: _fileInfo.path);
@@ -215,13 +215,16 @@ class _Analyzer extends TreeVisitor {
       // TODO(jmesserly): warn for unknown element tags?
 
       // <button is="x-fancy-button">
-      var isAttr = node.attributes['is'];
-      if (isAttr != null) {
-        component = _fileInfo.components[isAttr];
-        if (component == null) {
-          _messages.warning('custom element with tag name $isAttr not found.',
-              node.sourceSpan, file: _fileInfo.path);
-        }
+      var componentName = node.attributes['is'];
+      if (componentName != null) {
+        component = _fileInfo.components[componentName];
+      } else if (node.tagName.startsWith('x-')) {
+        componentName = node.tagName;
+      }
+      if (component == null && componentName != null) {
+        _messages.warning(
+            'custom element with tag name $componentName not found.',
+            node.sourceSpan, file: _fileInfo.path);
       }
     }
 

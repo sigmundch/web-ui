@@ -16,7 +16,7 @@ import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/utils.dart';
 import 'package:logging/logging.dart';
 import 'testing.dart';
-import 'testing.dart' as testing show analyzeElement, analyzeDefinitionsInTree;
+import 'testing.dart' as testing;
 
 main() {
   useCompactVMConfiguration();
@@ -28,6 +28,8 @@ main() {
 
   analyzeDefinitionsInTree(doc) => testing.analyzeDefinitionsInTree(
       doc, messages: messages);
+
+  analyzeFiles(files) => testing.analyzeFiles(files, messages: messages);
 
   group("", () {
     setUp(() {
@@ -466,6 +468,34 @@ main() {
       expect(info.loopItems, equals('bar'));
     });
 
+    test('component is="" not found - warning', () {
+      var elem = parseSubtree('<li is="x-todo-row"></li>');
+      var info = analyzeElement(elem);
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('x-todo-row not found'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
+    test('component custom tag not found - warning', () {
+      var elem = parseSubtree('<x-todo-row></x-todo-row>');
+      var info = analyzeElement(elem);
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('x-todo-row not found'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
+    test('extends not found - warning', () {
+      var files = parseFiles({
+        'index.html': '<body><element name="x-quux3" extends="x-foo" '
+                                     'constructor="Bar"><template>'
+      });
+      var fileInfo = analyzeFiles(files);
+      var elem = fileInfo['index.html'].bodyInfo.node.query('element');
+      expect(messages.length, 1);
+      expect(messages[0].message, contains('x-foo not found'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
     test('data-value - deprecated', () {
       var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
       var info = analyzeElement(elem);
@@ -478,6 +508,7 @@ main() {
       expect(messages[1].message, contains('data-value is deprecated'));
       expect(messages[1].span, equals(elem.sourceSpan));
     });
+
 
     test('component properties 1-way binding', () {
       var files = parseFiles({

@@ -21,13 +21,11 @@ Document parseDocument(String html) => parse(html);
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
 
 ElementInfo analyzeElement(Element elem, {Messages messages}) {
-  messages = messages == null ? new Messages.silent() : messages;
   var fileInfo = analyzeNodeForTesting(elem, messages: messages);
   return fileInfo.bodyInfo;
 }
 
 FileInfo analyzeDefinitionsInTree(Document doc, {Messages messages}) {
-  messages = messages == null ? new Messages.silent() : messages;
   return analyzeDefinitions(
       new SourceFile(new Path(''))..document = doc, messages: messages
   );
@@ -48,17 +46,19 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 }
 
 /** Analyze all files. */
-Map<String, FileInfo> analyzeFiles(List<SourceFile> files) {
+Map<String, FileInfo> analyzeFiles(List<SourceFile> files,
+      {Messages messages}) {
+
   var result = new Map<Path, FileInfo>();
   // analyze definitions
   for (var file in files) {
-    result[file.path] = analyzeDefinitions(file);
+    result[file.path] = analyzeDefinitions(file, messages: messages);
   }
 
   // analyze file contents
   var uniqueIds = new IntIterator();
   for (var file in files) {
-    analyzeFile(file, result, uniqueIds);
+    analyzeFile(file, result, uniqueIds, messages: messages);
   }
   return _toStringMap(result);
 }
