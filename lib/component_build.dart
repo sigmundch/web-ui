@@ -77,7 +77,7 @@ String _outDir(String file) =>
   new Path(file).directoryPath.append('out').toString();
 
 bool _isGeneratedFile(String filePath, List<Directory> outputDirs) {
-  var path = new Path.fromNative(filePath);
+  var path = new Path(filePath);
   var dirPrefix = path.directoryPath.toString();
   for (var dir in outputDirs) {
     if (dirPrefix.startsWith(dir.path)) return true;
@@ -101,7 +101,7 @@ void _handleCleanCommand(List<Directory> trackDirs) {
           // The bug is that DirectoryLister returns native paths, so you need
           // to use Path.fromNative to work around this. Ideally we could just
           // write: new File(path).delete();
-          new File.fromPath(new Path.fromNative(path)).delete();
+          new File.fromPath(new Path(path)).delete();
         }
       };
     });

@@ -343,6 +343,8 @@ abstract class WebComponent implements Element {
 
   Node get parentNode => _element.parentNode;
 
+  String get nodeValue => _element.nodeValue;
+
   ElementEvents get on => _element.on;
 
   String get contentEditable => _element.contentEditable;
