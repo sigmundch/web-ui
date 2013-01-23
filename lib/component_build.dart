@@ -42,7 +42,7 @@ List<Future<dwc.CompilerResult>> build(List<String> arguments,
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
   var machineFormat = args["machine"];
-  var fullBuild = changedFiles.isEmpty && removedFiles.isEmpty && !cleanBuild;
+  var fullBuild = args["full"];
 
   for (var file in entryPoints) {
     trackDirs.add(new Directory(_outDir(file)));
@@ -108,7 +108,7 @@ void _handleCleanCommand(List<Directory> trackDirs) {
   }
 }
 
-/** Handle --changed, --removed, --clean and --help command-line args. */
+/** Process the command-line arguments. */
 ArgResults _processArgs(List<String> arguments) {
   var parser = new ArgParser()
     ..addOption("changed", help: "the file has changed since the last build",
@@ -116,6 +116,7 @@ ArgResults _processArgs(List<String> arguments) {
     ..addOption("removed", help: "the file was removed since the last build",
         allowMultiple: true)
     ..addFlag("clean", negatable: false, help: "remove any build artifacts")
+    ..addFlag("full", negatable: false, help: "perform a full build")
     ..addFlag("machine", negatable: false,
         help: "produce warnings in a machine parseable format")
     ..addFlag("help", negatable: false, help: "displays this help and exit");
