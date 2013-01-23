@@ -1,5 +1,4 @@
 Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
-Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
 Content-Type: text/plain
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
@@ -133,5 +132,5 @@ layer at (126,212) size 40x58
     RenderInline (generated) at (0,0) size 18x23 [color=#D9D9D9]
       RenderText at (11,10) size 18x23
         text run at (11,10) width 18: "\x{2714}"
-caret: position 0 of child 0 {DIV} of {#shadow-root} of child 1 {INPUT} of child 3 {FORM} of child 1 {HEADER} of child 1 {SECTION} of body
+caret: position 0 of child 0 {DIV} of {#document-fragment} of child 1 {INPUT} of child 3 {FORM} of child 1 {HEADER} of child 1 {SECTION} of body
 #EOF

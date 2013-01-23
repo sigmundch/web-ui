@@ -1,5 +1,4 @@
 Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
-Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
 Content-Type: text/plain
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600

@@ -30,9 +30,6 @@ var htmlElementFields = const {
     'href': 'href',
     'target': 'target',
   },
-  'BodyElement': const {
-    'vlink': 'vLink',
-  },
   'ButtonElement': const {
     'autofocus': 'autofocus',
     'disabled': 'disabled',
@@ -170,9 +167,6 @@ var htmlElementFields = const {
   'LabelElement': const {
     'for': 'htmlFor',
   },
-  'LegendElement': const {
-    'align': 'align',
-  },
   'LinkElement': const {
     'disabled': 'disabled',
     'href': 'href',
@@ -309,9 +303,6 @@ var htmlElementFields = const {
     'caption': 'caption',
     'tfoot': 'tFoot',
     'thead': 'tHead',
-  },
-  'TableSectionElement': const {
-    'choff': 'chOff',
   },
   'TextAreaElement': const {
     'autofocus': 'autofocus',
