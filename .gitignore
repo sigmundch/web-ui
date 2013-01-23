@@ -4,6 +4,8 @@ pubspec.lock
 tags
 test/data/input/example
 test/data/output/
+test/perf/input/example
+test/perf/output/
 extension/output/
 out/
 build/compile_mirrors.dart
