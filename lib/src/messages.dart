@@ -57,7 +57,7 @@ class Message {
 
     var kind = (level == Level.SEVERE ? 'error' :
         (level == Level.WARNING ? 'warning' : 'info'));
-    var json = {
+    var value = {
       'method': kind,
       'params': {
         'file': file.toString(),
@@ -66,10 +66,10 @@ class Message {
       }
     };
     if (span != null) {
-      json['params']['charStart'] = span.start;
-      json['params']['charEnd'] = span.end;
+      value['params']['charStart'] = span.start;
+      value['params']['charEnd'] = span.end;
     }
-    return json.stringify([json]);
+    return json.stringify([value]);
   }
 }
 
