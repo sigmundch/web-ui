@@ -398,7 +398,7 @@ class _Analyzer extends TreeVisitor {
       return false;
     }
 
-    var name = value.substring(0, colonIdx);
+    var name = 'on${value[0].toUpperCase()}${value.substring(1, colonIdx)}';
     value = value.substring(colonIdx + 1);
     _addEvent(info, name, (elem) => '$value(\$event)');
     return true;
@@ -419,9 +419,7 @@ class _Analyzer extends TreeVisitor {
       return;
     }
 
-    // Strip leading "on-" and make camel case.
-    var eventName = toCamelCase(name.substring(3));
-    _addEvent(info, eventName, (elem) => value);
+    _addEvent(info, toCamelCase(name), (elem) => value);
     info.removeAttributes.add(name);
   }
 
@@ -462,7 +460,7 @@ class _Analyzer extends TreeVisitor {
     var isSelect = info.baseTagName == 'select';
     var inputType = elem.attributes['type'];
 
-    String eventName;
+    String eventStream;
 
     // Special two-way binding logic for input elements.
     if (isInput && name == 'checked') {
@@ -475,16 +473,16 @@ class _Analyzer extends TreeVisitor {
       }
 
       // Both 'click' and 'change' seem reliable on all the modern browsers.
-      eventName = 'change';
+      eventStream = 'onChange';
     } else if (isSelect && (name == 'selectedIndex' || name == 'value')) {
-      eventName = 'change';
+      eventStream = 'onChange';
     } else if (isInput && name == 'value' && inputType == 'radio') {
       return _addRadioValueBinding(info, bindingExpr);
     } else if (isTextArea && name == 'value' || isInput &&
         (name == 'value' || name == 'valueAsDate' || name == 'valueAsNumber')) {
       // Input event is fired more frequently than "change" on some browsers.
       // We want to update the value for each keystroke.
-      eventName = 'input';
+      eventStream = 'onInput';
     } else if (info.component != null) {
       // Assume we are binding a field on the component.
       // TODO(jmesserly): validate this assumption about the user's code by
@@ -505,7 +503,7 @@ class _Analyzer extends TreeVisitor {
     _checkDuplicateAttribute(info, name);
 
     info.attributes[name] = new AttributeInfo([bindingExpr]);
-    _addEvent(info, eventName, (e) => '$bindingExpr = $e.$name');
+    _addEvent(info, eventStream, (e) => '$bindingExpr = $e.$name');
     info.hasDataBinding = true;
     return true;
   }
@@ -552,7 +550,7 @@ class _Analyzer extends TreeVisitor {
     radioValue = escapeDartString(radioValue);
     info.attributes['checked'] = new AttributeInfo(
         ["$bindingExpr == '$radioValue'"]);
-    _addEvent(info, 'change', (e) => "$bindingExpr = '$radioValue'");
+    _addEvent(info, 'onChange', (e) => "$bindingExpr = '$radioValue'");
     info.hasDataBinding = true;
     return true;
   }

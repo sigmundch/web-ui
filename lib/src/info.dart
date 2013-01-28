@@ -8,7 +8,7 @@
  */
 library info;
 
-import 'dart:collection' show SplayTreeMap;
+import 'dart:collection' show SplayTreeMap, LinkedHashMap;
 import 'dart:uri';
 
 import 'package:html5lib/dom.dart';
@@ -558,8 +558,8 @@ class AttributeInfo {
 
 /** Information extracted for each declared event in an element. */
 class EventInfo {
-  /** Event name for attributes representing actions. */
-  final String eventName;
+  /** Event stream name for attributes representing actions. */
+  final String streamName;
 
   /** Action associated for event listener attributes. */
   final ActionDefinition action;
@@ -567,9 +567,9 @@ class EventInfo {
   /** Generated field name, if any, associated with this event. */
   String listenerField;
 
-  EventInfo(this.eventName, this.action);
+  EventInfo(this.streamName, this.action);
 
-  String toString() => '#<EventInfo eventName: $eventName, action: $action>';
+  String toString() => '#<EventInfo streamName: $streamName, action: $action>';
 }
 
 class TemplateInfo extends ElementInfo {

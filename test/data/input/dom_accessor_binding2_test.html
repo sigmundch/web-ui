@@ -18,7 +18,7 @@
     import 'package:web_ui/watcher.dart';
     bool boolVar = false;
     main() {
-      window.on.load.add((e) {
+      window.onLoad.listen((e) {
         var input = query('input');
         document.body.appendText('expected input.checked to be false, got '
                                  '${input.checked}');

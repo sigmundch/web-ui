@@ -18,7 +18,7 @@
     import 'package:web_ui/watcher.dart';
     String topLevelVar = "A";
     main() {
-      window.on.load.add((e) {
+      window.onLoad.listen((e) {
         var input = query('input');
         document.body.appendText('expected input.value to be "A", got '
                                  '${input.value}');

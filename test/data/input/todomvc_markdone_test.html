@@ -101,7 +101,7 @@ main() {
     expect(node.checked, isFalse, reason: 'element is unchecked');
     Element parent = node.parent;
     expect(parent.query('label').text, equals('four (checked)'));
-    node.on.click.dispatch(new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
+    node.dispatchEvent(new MouseEvent('click', detail: 1));
     expect(node.checked, isTrue, reason: 'element is checked');
 
     // Ideally the test above would work also with shadow DOM (pending that

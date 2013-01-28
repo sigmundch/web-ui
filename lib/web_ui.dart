@@ -16,6 +16,8 @@ export 'templating.dart';
 import 'dart:async';
 import 'dart:html';
 
+import 'package:meta/meta.dart';
+
 // Imported for the doc comment
 import 'watcher.dart' as watcher;
 import 'safe_html.dart' as safe_html;
@@ -345,7 +347,10 @@ abstract class WebComponent implements Element {
 
   String get nodeValue => _element.nodeValue;
 
-  ElementEvents get on => _element.on;
+  @deprecated
+  // TODO(sigmund): restore the old return type and call _element.on when
+  // dartbug.com/8131 is fixed.
+  dynamic get on { throw new UnsupportedError('on is deprecated'); }
 
   String get contentEditable => _element.contentEditable;
 
@@ -555,7 +560,7 @@ abstract class WebComponent implements Element {
 
   Node $dom_appendChild(Node newChild) => _element.$dom_appendChild(newChild);
 
-  bool $dom_dispatchEvent(Event event) => _element.$dom_dispatchEvent(event);
+  bool dispatchEvent(Event event) => _element.dispatchEvent(event);
 
   Node $dom_removeChild(Node oldChild) => _element.$dom_removeChild(oldChild);
 

@@ -1,6 +1,7 @@
 packages
 pubspec.lock
 .project
+.buildlog
 tags
 test/data/input/example
 test/data/output/

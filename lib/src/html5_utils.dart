@@ -151,7 +151,7 @@ const htmlElementNames = const {
  * If the type is not in this map, it should use `new Element.tag` instead.
  */
 final Map<String, String> htmlElementConstructors = (() {
-  var typeCount = <int>{};
+  var typeCount = <String, int>{};
   for (var type in htmlElementNames.values) {
     var value = typeCount[type];
     if (value == null) value = 0;

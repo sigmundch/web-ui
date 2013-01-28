@@ -218,9 +218,9 @@ main() {
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
       expect(info.attributes['value'].bindings, equals(['x']));
-      expect(info.events.keys, equals(['input']));
-      expect(info.events['input'].length, equals(1));
-      expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
+      expect(info.events.keys, equals(['onInput']));
+      expect(info.events['onInput'].length, equals(1));
+      expect(info.events['onInput'][0].action('foo'), equals('x = foo.value'));
     });
 
     test('attribute - 2 way binding textarea value', () {
@@ -230,9 +230,9 @@ main() {
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
       expect(info.attributes['value'].boundValue, equals('x'));
-      expect(info.events.keys, equals(['input']));
-      expect(info.events['input'].length, equals(1));
-      expect(info.events['input'][0].action('foo'), equals('x = foo.value'));
+      expect(info.events.keys, equals(['onInput']));
+      expect(info.events['onInput'].length, equals(1));
+      expect(info.events['onInput'][0].action('foo'), equals('x = foo.value'));
     });
 
     test('attribute - 2 way binding select', () {
@@ -245,11 +245,11 @@ main() {
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
       expect(info.attributes['value'].bindings, equals(['y']));
-      expect(info.events.keys, equals(['change']));
-      expect(info.events['change'].length, equals(2));
-      expect(info.events['change'][0].action('foo'),
+      expect(info.events.keys, equals(['onChange']));
+      expect(info.events['onChange'].length, equals(2));
+      expect(info.events['onChange'][0].action('foo'),
           equals('x = foo.selectedIndex'));
-      expect(info.events['change'][1].action('foo'), equals('y = foo.value'));
+      expect(info.events['onChange'][1].action('foo'), equals('y = foo.value'));
     });
 
     test('attribute - 1 way binding checkbox', () {
@@ -278,9 +278,9 @@ main() {
       expect(info.attributes['checked'], isNotNull);
       expect(info.attributes['checked'].isSimple, true);
       expect(info.attributes['checked'].boundValue, equals('x'));
-      expect(info.events.keys, equals(['change']));
-      expect(info.events['change'].length, equals(1));
-      expect(info.events['change'][0].action('foo'),
+      expect(info.events.keys, equals(['onChange']));
+      expect(info.events['onChange'].length, equals(1));
+      expect(info.events['onChange'][0].action('foo'),
           equals('x = foo.checked'));
     });
 
@@ -342,10 +342,10 @@ main() {
       var input = '<input on-double-click="foo">';
       var info = analyzeElement(parseSubtree(input));
       expect(info.attributes, isEmpty);
-      expect(info.events.keys, equals(['doubleClick']));
-      var events = info.events['doubleClick'];
+      expect(info.events.keys, equals(['onDoubleClick']));
+      var events = info.events['onDoubleClick'];
       expect(events.length, equals(1));
-      expect(events[0].eventName, 'doubleClick');
+      expect(events[0].streamName, 'onDoubleClick');
       expect(events[0].action('bar'), 'foo');
       expect(messages.length, 0);
     });
@@ -365,10 +365,10 @@ main() {
       var node = parseSubtree('<input data-action="change:foo">');
       var info = analyzeElement(node);
       expect(info.attributes, isEmpty);
-      expect(info.events.keys, equals(['change']));
-      var changeEvents = info.events['change'];
+      expect(info.events.keys, equals(['onChange']));
+      var changeEvents = info.events['onChange'];
       expect(changeEvents.length, equals(1));
-      expect(changeEvents[0].eventName, 'change');
+      expect(changeEvents[0].streamName, 'onChange');
       expect(changeEvents[0].action('bar'), r'foo($event)');
       expect(messages.length, 1);
       expect(messages[0].message, contains('data-action is deprecated'));

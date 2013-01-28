@@ -183,14 +183,14 @@ main() {
       var elem = parseSubtree('<div data-action="foo:bar"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          r'__t.listen(__e0.on.foo, ($event) { bar($event); });'));
+          r'__t.listen(__e0.onFoo, ($event) { bar($event); });'));
     });
 
     test('created for input value data bind', () {
       var elem = parseSubtree('<input data-bind="value:bar"></input>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          r'__t.listen(__e0.on.input, ($event) { bar = __e0.value; }); '
+          r'__t.listen(__e0.onInput, ($event) { bar = __e0.value; }); '
           r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
     });
   });
@@ -215,7 +215,7 @@ main() {
       var elem = parseSubtree('<input data-bind="value:bar">');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          r'__t.listen(__e0.on.input, ($event) { bar = __e0.value; }); '
+          r'__t.listen(__e0.onInput, ($event) { bar = __e0.value; }); '
           r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
     });
 

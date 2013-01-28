@@ -42,7 +42,8 @@ List<Future<dwc.CompilerResult>> build(List<String> arguments,
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
   var machineFormat = args["machine"];
-  var fullBuild = args["full"];
+  var fullBuild = args["full"] || (!machineFormat && changedFiles.isEmpty &&
+      removedFiles.isEmpty && !cleanBuild);
 
   for (var file in entryPoints) {
     trackDirs.add(new Directory(_outDir(file)));

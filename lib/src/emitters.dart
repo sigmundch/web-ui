@@ -94,7 +94,7 @@ void emitEventListeners(ElementInfo info, CodePrinter printer) {
     for (var event in events) {
       // Note: the name $event is from AngularJS and is essentially public
       // API. See issue #175.
-      printer.add('__t.listen($id.on.${event.eventName},'
+      printer.add('__t.listen($id.${event.streamName},'
           ' (\$event) { ${event.action(id)}; });');
     }
   });

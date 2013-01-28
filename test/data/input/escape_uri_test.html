@@ -29,8 +29,7 @@ BSD-style license that can be found in the LICENSE file.
   main() {
     window.setTimeout(() {
       document.queryAll('a').forEach((tag) {
-        tag.on.click.dispatch(
-          new MouseEvent('click', window, 1, 0, 0, 0, 0, 0));
+        tag.dispatchEvent(new MouseEvent('click', detail: 1));
       });
 
       window.setTimeout(() => window.postMessage('done', '*'), 0);

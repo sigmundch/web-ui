@@ -46,6 +46,8 @@
  */
 library watcher;
 
+import 'dart:async';
+
 /**
  * Watch for changes in [target].  The [callback] function will be called when
  * [dispatch] is called and the value represented by [target] had changed.  The
@@ -165,7 +167,6 @@ class _Watcher {
 
   /** Detect if any changes occurred and if so invoke [_callback]. */
   bool compareAndNotify() {
-    var oldValue = _lastValue;
     var currentValue = _safeRead();
     if (_compare(currentValue)) {
       var oldValue = _lastValue;
@@ -174,6 +175,15 @@ class _Watcher {
       return true;
     }
     return false;
+  }
+
+  bool get _hasChanged => _compare(_safeRead());
+
+  void _updateAndNotify() {
+    var currentValue = _safeRead();
+    var oldValue = _lastValue;
+    _update(currentValue);
+    _callback(new WatchEvent(oldValue, currentValue));
   }
 
   bool _compare(currentValue) => _lastValue != currentValue;
@@ -215,8 +225,16 @@ void dispatch() {
   int total = 0;
   do {
     dirty = false;
+    var toUpdate = [];
     for (var watcher in _watchers) {
-      if (watcher.compareAndNotify()) dirty = true;
+      if (watcher._hasChanged) {
+        dirty = true;
+        toUpdate.add(watcher);
+      }
+    }
+    // TODO(sigmund): this should be called asynchronously.
+    for (var watcher in toUpdate) {
+      watcher._updateAndNotify();
     }
   } while (dirty && total++ < _maxIter);
   if (total == _maxIter) {

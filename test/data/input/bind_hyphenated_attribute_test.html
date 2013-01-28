@@ -17,7 +17,7 @@
     import 'dart:html';
     String topLevelVar = "hi";
     main() {
-      window.on.load.add((e) {
+      window.onLoad.listen((e) {
         document.body.appendText('expected data-hi to be "hi", got '
                                  '"${query('div').dataAttributes['hi']}"');
         window.setTimeout(() => window.postMessage('done', '*'), 0);
