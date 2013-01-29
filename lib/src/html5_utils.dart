@@ -184,3 +184,13 @@ const urlAttributes = const [
   'src',        // in audio, embed, iframe, img, input, script, source, track,
                 //    video
 ];
+
+/**
+ * HTML attributes that are allowed on any HTML element.
+ * <http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#global-attributes>
+ */
+const globalAttributes = const [
+  'accesskey', 'class', 'contenteditable', 'contextmenu', 'dir', 'draggable',
+  'dropzone', 'hidden', 'id', 'inert', 'spellcheck', 'style', 'tabindex',
+  'title', 'translate'
+];

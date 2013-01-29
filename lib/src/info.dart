@@ -532,7 +532,7 @@ class AttributeInfo {
       this.textContent, this.customTwoWayBinding: false}) {
 
     assert(isText || isClass || bindings.length == 1);
-    assert(bindings.length > 0);
+    assert(isText || bindings.length > 0);
     assert(!isText || textContent.length == bindings.length + 1);
     assert((isText ? 1 : 0) + (isClass ? 1 : 0) + (isStyle ? 1 : 0) <= 1);
   }

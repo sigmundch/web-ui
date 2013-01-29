@@ -150,7 +150,13 @@ void _emitTextAttributeBinding(ElementInfo info,
   var setter = _findDomField(info, name);
   var content = new StringBuffer();
   var binding;
-  if (attr.bindings.length == 1) {
+  if (attr.bindings.length == 0) {
+    // Constant attribute passed to initialize a web component field. If the
+    // attribute is a normal DOM attribute, we don't need to do anything.
+    if (!setter.startsWith('xtag.')) return;
+    assert(textContent.length == 1);
+    content.add(textContent[0]);
+  } else if (attr.bindings.length == 1) {
     binding = attr.boundValue;
     content.add(textContent[0]);
     content.add('\${__e.newValue}');

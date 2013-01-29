@@ -1,0 +1,31 @@
+Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Blocked access to external URL https://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x36
+  RenderBlock {HTML} at (0,0) size 800x36
+    RenderBody {BODY} at (8,8) size 784x20
+      RenderText {#text} at (0,0) size 107x19
+        text run at (0,0) width 107: "Expect \"1 2 3 4\": "
+      RenderInline {X-FOO} at (0,0) size 8x19
+        RenderText {#text} at (107,0) size 8x19
+          text run at (107,0) width 8: "1"
+      RenderText {#text} at (115,0) size 4x19
+        text run at (115,0) width 4: " "
+      RenderInline {SPAN} at (0,0) size 8x19
+        RenderText {#text} at (119,0) size 8x19
+          text run at (119,0) width 8: "2"
+      RenderText {#text} at (127,0) size 4x19
+        text run at (127,0) width 4: " "
+      RenderInline {X-FOO} at (0,0) size 8x19
+        RenderText {#text} at (131,0) size 8x19
+          text run at (131,0) width 8: "3"
+      RenderText {#text} at (139,0) size 4x19
+        text run at (139,0) width 4: " "
+      RenderInline {X-FOO} at (0,0) size 8x19
+        RenderText {#text} at (143,0) size 8x19
+          text run at (143,0) width 8: "4"
+      RenderText {#text} at (0,0) size 0x0
+      RenderText {#text} at (0,0) size 0x0
+#EOF

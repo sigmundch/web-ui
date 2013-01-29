@@ -14,6 +14,7 @@ import 'package:html5lib/dom_parsing.dart';
 import 'directive_parser.dart' show parseDartCode;
 import 'file_system/path.dart';
 import 'files.dart';
+import 'html5_utils.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'utils.dart';
@@ -566,7 +567,13 @@ class _Analyzer extends TreeVisitor {
    */
   AttributeInfo _readAttribute(ElementInfo info, String name, String value) {
     var parser = new BindingParser(value);
-    if (!parser.moveNext()) return null;
+    if (!parser.moveNext()) {
+      if (info.component == null || globalAttributes.contains(name) ||
+          name == 'is') {
+        return null;
+      }
+      return new AttributeInfo([], textContent: [parser.textContent]);
+    }
 
     info.removeAttributes.add(name);
     var bindings = <String>[];
