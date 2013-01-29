@@ -42,6 +42,8 @@ List<Future<dwc.CompilerResult>> build(List<String> arguments,
   var removedFiles = args["removed"];
   var cleanBuild = args["clean"];
   var machineFormat = args["machine"];
+  // Also trigger a full build if the script was run from the command line with
+  // no arguments
   var fullBuild = args["full"] || (!machineFormat && changedFiles.isEmpty &&
       removedFiles.isEmpty && !cleanBuild);
 

@@ -224,15 +224,8 @@ void dispatch() {
   bool dirty = false;
   int total = 0;
   do {
-    dirty = false;
-    var toUpdate = [];
-    for (var watcher in _watchers) {
-      if (watcher._hasChanged) {
-        dirty = true;
-        toUpdate.add(watcher);
-      }
-    }
-    // TODO(sigmund): this should be called asynchronously.
+    var toUpdate = _watchers.where((w) => w._hasChanged).toList();
+    dirty = !toUpdate.isEmpty;
     for (var watcher in toUpdate) {
       watcher._updateAndNotify();
     }

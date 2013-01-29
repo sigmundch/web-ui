@@ -106,9 +106,17 @@ popd
 OUT_PATTERN="$DIR/data/output/*$TEST_PATTERN*_bootstrap.dart"
 if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
   echo -e "\n Analyzing generated code for warnings or type errors."
+  # We filter any error reported from dart:html, but also the details of all
+  # errors (only the line number is shown for errors in our code)
+  # TODO(sigmund): remove the filtering when darbug.com/8132 is fixed
+  analyzer_summary=$DIR/data/output/_analyzer
   ls $OUT_PATTERN | dart_analyzer --fatal-warnings --fatal-type-errors \
-    --work $DIR/data/output/analyzer/ -batch || \
-    echo -e "\nTemporarily ignore analyzer errors ([36mdartbug.com/8132[0m)"
+    --work $DIR/data/output/analyzer/ -batch &> $analyzer_summary || \
+    (cat $analyzer_summary | grep -v dartium | grep -v "^ *~*$" | \
+        grep -v "^ *[0-9]\+:" | grep -v "^>>>";  \
+     echo -en "\nIgnoring analyzer errors in dart:html"; \
+     echo -e " ([36mdartbug.com/8132[0m)")
+  rm $analyzer_summary
   rm -r $DIR/data/output/analyzer/
 fi
 
