@@ -25,9 +25,8 @@ import 'utils.dart';
  * Adds emitted error/warning messages to [messages], if [messages] is
  * supplied.
  */
-FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false,
-    Messages messages}) {
-  messages = messages == null ? new Messages.silent() : messages;
+FileInfo analyzeDefinitions(SourceFile file, Messages messages,
+    {bool isEntryPoint: false}) {
   var result = new FileInfo(file.path, isEntryPoint);
   var loader = new _ElementLoader(result, messages);
   loader.visit(file.document);
@@ -41,9 +40,8 @@ FileInfo analyzeDefinitions(SourceFile file, {bool isEntryPoint: false,
  * Adds emitted error/warning messages to [messages], if [messages] is
  * supplied.
  */
-FileInfo analyzeNodeForTesting(Node source,
-    {String filepath: 'mock_testing_file.html', Messages messages}) {
-  messages = messages == null ? new Messages.silent() : messages;
+FileInfo analyzeNodeForTesting(Node source, Messages messages,
+    {String filepath: 'mock_testing_file.html'}) {
   var result = new FileInfo(new Path(filepath));
   new _Analyzer(result, new IntIterator(), messages).visit(source);
   return result;
@@ -56,8 +54,7 @@ FileInfo analyzeNodeForTesting(Node source,
  *  supplied.
  */
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info,
-    Iterator<int> uniqueIds, {Messages messages}) {
-  messages = messages == null ? new Messages.silent() : messages;
+    Iterator<int> uniqueIds, Messages messages) {
   var fileInfo = info[file.path];
   var analyzer = new _Analyzer(fileInfo, uniqueIds, messages);
   analyzer._normalize(fileInfo, info);
@@ -342,8 +339,13 @@ class _Analyzer extends TreeVisitor {
 
     AttributeInfo attrInfo;
     if (name == 'data-style') {
+      _messages.warning('data-style is deprecated. Given a binding like '
+          'data-style="map", replace it with style="{{map}}".',
+          info.node.sourceSpan, file: _fileInfo.path);
       attrInfo = new AttributeInfo([value], isStyle: true);
       info.removeAttributes.add(name);
+    } else if (name == 'style') {
+      attrInfo = _readStyleAttribute(info, value);
     } else if (name == 'class') {
       attrInfo = _readClassAttribute(info, value);
     } else {
@@ -567,15 +569,9 @@ class _Analyzer extends TreeVisitor {
     if (!parser.moveNext()) return null;
 
     info.removeAttributes.add(name);
-
-    // TODO(jmesserly): this seems like a common pattern.
     var bindings = <String>[];
     var content = <String>[];
-    do {
-      bindings.add(parser.binding);
-      content.add(parser.textContent);
-    } while (parser.moveNext());
-    content.add(parser.textContent);
+    parser.readAll(bindings, content);
 
     // Use a simple attriubte binding if we can.
     // This kind of binding works for non-String values.
@@ -588,27 +584,44 @@ class _Analyzer extends TreeVisitor {
   }
 
   /**
-   * Special support to bind each css class separately.
-   *
-   *       class="{{class1}} class2 {{class3}} {{class4}}"
-   *
-   * Returns list of databound expressions (e.g, class1, class3 and class4).
+   * Special support to bind style properties of the forms:
+   *     style="{{mapValue}}"
+   *     style="property: {{value1}}; other-property: {{value2}}"
+   */
+  AttributeInfo _readStyleAttribute(ElementInfo info, String value) {
+    var parser = new BindingParser(value);
+    if (!parser.moveNext()) return null;
+
+    var bindings = <String>[];
+    var content = <String>[];
+    parser.readAll(bindings, content);
+
+    // Use a style attribute binding if we can.
+    // This kind of binding works for map values.
+    if (bindings.length == 1 && content[0] == '' && content[1] == '') {
+      return new AttributeInfo(bindings, isStyle: true);
+    }
+
+    // Otherwise do a text attribute that performs string interpolation.
+    return new AttributeInfo(bindings, textContent: content);
+  }
+
+  /**
+   * Special support to bind each css class separately in attributes of the
+   * form:
+   *     class="{{class1}} class2 {{class3}} {{class4}}"
    */
   AttributeInfo _readClassAttribute(ElementInfo info, String value) {
     var parser = new BindingParser(value);
     if (!parser.moveNext()) return null;
 
     var bindings = <String>[];
-    var content = new StringBuffer();
-    do {
-      content.add(parser.textContent);
-      bindings.add(parser.binding);
-    } while (parser.moveNext());
-    content.add(parser.textContent);
+    var content = <String>[];
+    parser.readAll(bindings, content);
 
     // Update class attributes to only have non-databound class names for
     // attributes for the HTML.
-    info.node.attributes['class'] = content.toString();
+    info.node.attributes['class'] = Strings.join(content, '');
 
     return new AttributeInfo(bindings, isClass: true);
   }
@@ -960,5 +973,19 @@ class BindingParser {
     // For consistency, start and end both include the curly braces.
     end += 2;
     return true;
+  }
+
+  /**
+   * Parses all bindings and contents and store them in the provided arguments.
+   */
+  void readAll(List<String> bindings, List<String> content) {
+    if (start == null) moveNext();
+    if (start < length) {
+      do {
+        bindings.add(binding);
+        content.add(textContent);
+      } while (moveNext());
+    }
+    content.add(textContent);
   }
 }

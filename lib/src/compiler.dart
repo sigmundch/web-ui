@@ -30,11 +30,10 @@ import 'utils.dart';
  *
  * Adds emitted error/warning to [messages], if [messages] is supplied.
  */
-Document parseHtml(contents, Path sourcePath, {Messages messages}) {
+Document parseHtml(contents, Path sourcePath, Messages messages) {
   var parser = new HtmlParser(contents, generateSpans: true);
   var document = parser.parse();
 
-  messages = messages == null ? new Messages.silent(): messages;
   // Note: errors aren't fatal in HTML (unless strict mode is on).
   // So just print them as warnings.
   for (var e in parser.errors) {
@@ -63,9 +62,7 @@ class Compiler {
   * Adds emitted error/warning messages to [messages], if [messages] is
   * supplied.
   */
-  Compiler(this.fileSystem, this.options, {String currentDir:null,
-      Messages messages}) {
-    _messages = messages == null ? new Messages.silent() : messages;
+  Compiler(this.fileSystem, this.options, this._messages, {String currentDir}) {
     _mainPath = new Path(options.inputFile);
     var mainDir = _mainPath.directoryPath;
     var basePath =
@@ -80,9 +77,9 @@ class Compiler {
         outputPath.isAbsolute;
     if (anyAbsolute && !allAbsolute) {
       if (currentDir == null)  {
-        _messages.error('internal error: could not normalize paths. Please make'
-            ' the input, base, and output paths all absolute or relative, or '
-            'specify "currentDir" to the Compiler constructor', null);
+        _messages.error('internal error: could not normalize paths. Please '
+            'make the input, base, and output paths all absolute or relative, '
+            'or specify "currentDir" to the Compiler constructor', null);
         return;
       }
       var currentPath = new Path(currentDir);
@@ -123,7 +120,7 @@ class Compiler {
       files.add(file);
 
       var fileInfo = _time('Analyzed definitions', file.path,
-          () => analyzeDefinitions(file, isEntryPoint: isEntry));
+          () => analyzeDefinitions(file, _messages, isEntryPoint: isEntry));
       isEntry = false;
       info[file.path] = fileInfo;
 
@@ -162,7 +159,7 @@ class Compiler {
     return fileSystem.readTextOrBytes(path).then((source) {
           var file = new SourceFile(path);
           file.document = _time('Parsed', path,
-            () => parseHtml(source, path, messages: _messages));
+              () => parseHtml(source, path, _messages));
           return file;
         })
         .catchError((e) => _readError(e, path));
@@ -205,7 +202,7 @@ class Compiler {
     for (var file in files) {
       if (file.isDart) continue;
       _time('Analyzed contents', file.path,
-          () => analyzeFile(file, info, uniqueIds));
+          () => analyzeFile(file, info, uniqueIds, _messages));
     }
   }
 

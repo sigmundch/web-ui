@@ -14,9 +14,10 @@ import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/code_printer.dart';
 import 'package:web_ui/src/emitters.dart';
+import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/info.dart';
-import 'package:web_ui/src/file_system/path.dart' show Path;
+import 'package:web_ui/src/messages.dart';
 import 'testing.dart';
 
 main() {
@@ -101,11 +102,6 @@ main() {
       test('no data binding', () {
         var elem = parseSubtree('<div></div>');
         expect(_created(elem), equals(''));
-      });
-
-      test('id only, no data binding', () {
-        var elem = parseSubtree('<div id="one"></div>');
-        expect(_created(elem), equals("__one = _root.query('#one');"));
       });
 
       test('id only, no data binding', () {
@@ -270,7 +266,7 @@ main() {
           '<link href="/a.css" rel="stylesheet">'
           '</head><body></body></html>';
       var doc = parseDocument(html);
-      var fileInfo = analyzeNodeForTesting(doc);
+      var fileInfo = analyzeNodeForTesting(doc, new Messages.silent());
       fileInfo.userCode = new DartCodeInfo('main', null, [], '');
       var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
@@ -287,7 +283,8 @@ main() {
 
       test('html at the top level', () {
         var doc = parseDocument(html);
-        var fileInfo = analyzeNodeForTesting(doc, filepath: 'a.html');
+        var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
+            filepath: 'a.html');
         fileInfo.userCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
@@ -300,7 +297,8 @@ main() {
 
       test('file within dir -- base dir match input file dir', () {
         var doc = parseDocument(html);
-        var fileInfo = analyzeNodeForTesting(doc, filepath: 'dir/a.html');
+        var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
+            filepath: 'dir/a.html');
         fileInfo.userCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
@@ -313,7 +311,8 @@ main() {
 
       test('file within dir, base dir at top-level', () {
         var doc = parseDocument(html);
-        var fileInfo = analyzeNodeForTesting(doc, filepath: 'dir/a.html');
+        var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
+            filepath: 'dir/a.html');
         fileInfo.userCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
@@ -328,7 +327,7 @@ main() {
 }
 
 _init(Element elem, {int child}) {
-  var info = analyzeElement(elem);
+  var info = analyzeElement(elem, new Messages.silent());
   var printer = new CodePrinter();
   if (child != null) {
     info = info.children[child];
@@ -351,7 +350,7 @@ _declarationsForElem(Element elem, {bool isClass: true, int child}) {
 }
 
 Context _recurse(Element elem, bool isClass, int child) {
-  var info = analyzeElement(elem);
+  var info = analyzeElement(elem, new Messages.silent());
   var context = new Context(isClass: isClass);
   if (child != null) {
     info = info.children[child];

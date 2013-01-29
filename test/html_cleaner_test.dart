@@ -12,6 +12,7 @@ import 'package:web_ui/src/html_cleaner.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/file_system/path.dart';
+import 'package:web_ui/src/messages.dart';
 import 'testing.dart';
 
 main() {
@@ -20,7 +21,7 @@ main() {
     // Note: we use an id in all these tests so that the analyzer will not
     // inject one for us.
     var elem = parseSubtree('<div foo="{{bar}}" id="a"></div>');
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, '<div foo="{{bar}}" id="a"></div>');
     cleanHtmlNodes(info);
     expect(elem.outerHTML, '<div id="a"></div>');
@@ -28,7 +29,7 @@ main() {
 
   test('remove attributes with data bindings (2)', () {
     var elem = parseSubtree('<div foo="{{bar}} baz" id="a"></div>');
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, '<div foo="{{bar}} baz" id="a"></div>');
     cleanHtmlNodes(info);
     expect(elem.outerHTML, '<div id="a"></div>');
@@ -36,7 +37,7 @@ main() {
 
   test('preserve attributes with no data bindings', () {
     var elem = parseSubtree('<div foo="baz" id="a"></div>');
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, '<div foo="baz" id="a"></div>');
     cleanHtmlNodes(info);
     expect(elem.outerHTML, '<div foo="baz" id="a"></div>');
@@ -45,7 +46,7 @@ main() {
   test("don't remove node for content with data bindings", () {
     var input = '<div id="a">hi {{x}} friend</div>';
     var elem = parseSubtree(input);
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, input);
     expect(elem.nodes.length, 1);
     expect(elem.nodes[0].value, 'hi {{x}} friend');
@@ -58,7 +59,7 @@ main() {
     var input = '<div><template id="a" iterate="x in y">'
       '<div></div></template></div>';
     var elem = parseSubtree(input);
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, input);
     cleanHtmlNodes(info);
     expect(elem.outerHTML,
@@ -68,7 +69,7 @@ main() {
   test('remove children of iterate nodes', () {
     var input = '<div template="" id="a" iterate="x in y"><div></div></div>';
     var elem = parseSubtree(input);
-    var info = analyzeElement(elem);
+    var info = analyzeElement(elem, new Messages.silent());
     expect(elem.outerHTML, input);
     cleanHtmlNodes(info);
     expect(elem.outerHTML, '<div id="a"></div>');

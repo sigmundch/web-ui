@@ -28,7 +28,7 @@ main() {
     var options = CompilerOptions.parse([
         '--no-colors', '-o', 'out', 'index.html']);
     var fs = new MockFileSystem(files);
-    return new Compiler(fs, options, currentDir: '.', messages: messages);
+    return new Compiler(fs, options, messages, currentDir: '.');
   }
 
   test('recursive dependencies', () {

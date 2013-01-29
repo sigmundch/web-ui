@@ -94,6 +94,7 @@ function compare_all {
         (echo "Errors printed by DumpRenderTree:"; cat $ERR; fail)
     fi
   done
+  fail
 }
 
 pushd $DIR

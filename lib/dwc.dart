@@ -70,12 +70,12 @@ Future<CompilerResult> run(List<String> args, {bool printTime: true}) {
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
     var currentDir = new Directory.current().path;
-    var compiler = new Compiler(fileSystem, options, currentDir: currentDir,
-        messages: messages);
+    var compiler = new Compiler(fileSystem, options, messages,
+        currentDir: currentDir);
     var res;
     return compiler.run()
       .then((_) => (res = new CompilerResult._(messages, compiler.output)))
-      .then((_) => symlinkPubPackages(res, options))
+      .then((_) => symlinkPubPackages(res, options, messages))
       .then((_) => emitFiles(compiler.output, options.clean))
       .then((_) => res);
   }, printTime: printTime, useColors: options.useColors);
@@ -113,8 +113,7 @@ void _createIfNeeded(Path outdir) {
  * already exists).
  */
 Future symlinkPubPackages(CompilerResult result, CompilerOptions options,
-    {Messages messages: null}) {
-  messages = messages == null? new Messages.silent() : messages;
+    Messages messages) {
   if (options.outputDir == null || result.bootstrapFile == null) {
     // We don't need to copy the packages directory if the output was generated
     // in-place where the input lives or if the compiler was called without an

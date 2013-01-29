@@ -20,15 +20,14 @@ Document parseDocument(String html) => parse(html);
 
 Element parseSubtree(String html) => parseFragment(html).nodes[0];
 
-ElementInfo analyzeElement(Element elem, {Messages messages}) {
-  var fileInfo = analyzeNodeForTesting(elem, messages: messages);
+ElementInfo analyzeElement(Element elem, Messages messages) {
+  var fileInfo = analyzeNodeForTesting(elem, messages);
   return fileInfo.bodyInfo;
 }
 
-FileInfo analyzeDefinitionsInTree(Document doc, {Messages messages}) {
+FileInfo analyzeDefinitionsInTree(Document doc, Messages messages) {
   return analyzeDefinitions(
-      new SourceFile(new Path(''))..document = doc, messages: messages
-  );
+      new SourceFile(new Path(''))..document = doc, messages);
 }
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
@@ -47,18 +46,18 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
 /** Analyze all files. */
 Map<String, FileInfo> analyzeFiles(List<SourceFile> files,
-      {Messages messages}) {
-
+    {Messages messages}) {
+  messages = messages == null ? new Messages.silent() : messages;
   var result = new Map<Path, FileInfo>();
   // analyze definitions
   for (var file in files) {
-    result[file.path] = analyzeDefinitions(file, messages: messages);
+    result[file.path] = analyzeDefinitions(file, messages);
   }
 
   // analyze file contents
   var uniqueIds = new IntIterator();
   for (var file in files) {
-    analyzeFile(file, result, uniqueIds, messages: messages);
+    analyzeFile(file, result, uniqueIds, messages);
   }
   return _toStringMap(result);
 }

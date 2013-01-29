@@ -24,10 +24,10 @@ main() {
   // the mock messages
   var messages;
 
-  analyzeElement(elem) => testing.analyzeElement(elem, messages: messages);
+  analyzeElement(elem) => testing.analyzeElement(elem, messages);
 
-  analyzeDefinitionsInTree(doc) => testing.analyzeDefinitionsInTree(
-      doc, messages: messages);
+  analyzeDefinitionsInTree(doc) =>
+      testing.analyzeDefinitionsInTree(doc, messages);
 
   analyzeFiles(files) => testing.analyzeFiles(files, messages: messages);
 
@@ -127,7 +127,7 @@ main() {
       expect(messages.length, 0);
     });
 
-    test('hasDataBinding - attribute with data, 2 way binding - deprecated', () {
+    test('hasDataBinding - 2 way binding - deprecated', () {
       var node = parseSubtree('<input data-bind="value:x">');
       var info = analyzeElement(node);
       expect(info.hasDataBinding, true);
@@ -331,11 +331,38 @@ main() {
 
     test('attribute - data style', () {
       var input = '<div data-style="x"></div>';
-      var info = analyzeElement(parseSubtree(input));
+      var elem = parseSubtree(input);
+      var info = analyzeElement(elem);
       expect(info.attributes.length, equals(1));
       expect(info.attributes['data-style'], isNotNull);
       expect(info.attributes['data-style'].isStyle, true);
       expect(info.attributes['data-style'].bindings, equals(['x']));
+      expect(messages[0].message, contains('data-style is deprecated'));
+      expect(messages[0].span, equals(elem.sourceSpan));
+    });
+
+    test('attribute - single style', () {
+      var input = '<div style="{{x}}"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['style'], isNotNull);
+      expect(info.attributes['style'].isStyle, true);
+      expect(info.attributes['style'].bindings, equals(['x']));
+      expect(messages.length, 0);
+    });
+
+    test('attribute - several style properties', () {
+      var input = '<div style="display: {{x}}"></div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.attributes.length, equals(1));
+      expect(info.attributes['style'], isNotNull);
+      // Until we can parse CSS attributes, we are not do smart binding for
+      // style properties. We use text bindings instead.
+      expect(info.attributes['style'].isStyle, false);
+      expect(info.attributes['style'].isText, true);
+      expect(info.attributes['style'].bindings, equals(['x']));
+      expect(info.attributes['style'].textContent, equals(['display: ', '']));
+      expect(messages.length, 0);
     });
 
     test('attribute - event hookup with on-', () {
@@ -445,7 +472,8 @@ main() {
     });
 
     test('template iterate (invalid)', () {
-      var elem = parseSubtree('<template iterate="bar" is="x-list"></template>');
+      var elem = parseSubtree(
+          '<template iterate="bar" is="x-list"></template>');
       var info = analyzeElement(elem);
 
       expect(elem.attributes, equals({'iterate': 'bar', 'is': 'x-list'}));
@@ -454,7 +482,8 @@ main() {
     });
 
     test('template iterate', () {
-      var elem = parseSubtree('<template iterate="foo in bar" is="x-list"><div>');
+      var elem = parseSubtree(
+          '<template iterate="foo in bar" is="x-list"><div>');
       TemplateInfo info = analyzeElement(elem);
       var div = elem.query('div');
       expect(info.createdInCode, false);
@@ -627,7 +656,7 @@ main() {
         '</body>'
       );
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile);
+      var info = analyzeDefinitions(srcFile, messages);
       expect(info.declaredComponents.length, equals(2));
 
       // no conflicts yet.
@@ -636,7 +665,8 @@ main() {
 
       var quuxElement = doc.query('element');
       expect(quuxElement, isNotNull);
-      analyzeFile(srcFile, toPathMap({'main.html': info }), new IntIterator());
+      analyzeFile(srcFile, toPathMap({'main.html': info }), new IntIterator(),
+          messages);
 
       expect(info.components.length, equals(1));
       var compInfo = info.components['x-quux'];
@@ -739,10 +769,11 @@ main() {
     test('binds components in same file', () {
       var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile);
+      var info = analyzeDefinitions(srcFile, messages);
       expect(info.declaredComponents.length, equals(1));
 
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator());
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
+          messages);
       expect(info.components.keys, equals(['x-foo']));
       expect(info.query('x-foo').component, equals(info.declaredComponents[0]));
     });
@@ -832,8 +863,9 @@ main() {
       );
 
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile);
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator());
+      var info = analyzeDefinitions(srcFile, messages);
+      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
+          messages);
     });
 
     test('components extends another component', () {
