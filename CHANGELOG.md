@@ -3,22 +3,26 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
-#### Unpublished changes (next release)
-  * Richer 'style' attributes. Deprecate 'data-style', functionality merged into 'style'.
+#### Pub version 0.3.1+1 - Jan 30 2013 (integration SDK r17657)
+  * Richer 'style' attributes. Deprecate 'data-style', functionality merged into
+    'style'.
   * Support constant attributes when passing data to web components
-  * load 'dart.js' directly from the browser package (generated code works offline!)
+  * load 'dart.js' directly from the browser package (generated code works
+    offline!)
+  * bug fix: warnings were not being printed.
 
-#### Pub version 0.3.1 - Jan 28 2013 (integration SDK r17657 - current release)
+#### Pub version 0.3.1 - Jan 28 2013 (integration SDK r17657)
   * fixes for new release of the SDK
   * bug fix: --full not required when using build.dart on a terminal
 
 #### Pub version 0.3.0+2 - Jan 24 2013
-  * support for --full option in build.dart. This is used by the editor, but it broke
-    the command-line use of build.dart, fixed in 0.3.1.
+  * support for --full option in build.dart. This is used by the editor, but it
+    broke the command-line use of build.dart, fixed in 0.3.1.
   * bug fix: runtime exception in code used to send warnings to the editor.
 
 #### Pub version 0.3.0+1 - Jan 23 2013
-  * fixes for changes in core libraries that were added after the pre-release of the new libraries.
+  * fixes for changes in core libraries that were added after the pre-release of
+  * the new libraries.
 
 #### Pub version 0.3.0 - Jan 22 2013
   * Changes to use the new libraries (lib v2)
