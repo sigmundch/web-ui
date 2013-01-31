@@ -876,7 +876,7 @@ class _ElementLoader extends TreeVisitor {
             node.sourceSpan, file: _fileInfo.path);
       }
 
-      if (node.innerHTML.trim() != '') {
+      if (node.innerHtml.trim() != '') {
         _messages.error('script tag has "src" attribute and also has script '
             'text.', node.sourceSpan, file: _fileInfo.path);
       }

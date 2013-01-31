@@ -22,36 +22,36 @@ main() {
     // inject one for us.
     var elem = parseSubtree('<div foo="{{bar}}" id="a"></div>');
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, '<div foo="{{bar}}" id="a"></div>');
+    expect(elem.outerHtml, '<div foo="{{bar}}" id="a"></div>');
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div id="a"></div>');
+    expect(elem.outerHtml, '<div id="a"></div>');
   });
 
   test('remove attributes with data bindings (2)', () {
     var elem = parseSubtree('<div foo="{{bar}} baz" id="a"></div>');
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, '<div foo="{{bar}} baz" id="a"></div>');
+    expect(elem.outerHtml, '<div foo="{{bar}} baz" id="a"></div>');
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div id="a"></div>');
+    expect(elem.outerHtml, '<div id="a"></div>');
   });
 
   test('preserve attributes with no data bindings', () {
     var elem = parseSubtree('<div foo="baz" id="a"></div>');
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, '<div foo="baz" id="a"></div>');
+    expect(elem.outerHtml, '<div foo="baz" id="a"></div>');
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div foo="baz" id="a"></div>');
+    expect(elem.outerHtml, '<div foo="baz" id="a"></div>');
   });
 
   test("don't remove node for content with data bindings", () {
     var input = '<div id="a">hi {{x}} friend</div>';
     var elem = parseSubtree(input);
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, input);
+    expect(elem.outerHtml, input);
     expect(elem.nodes.length, 1);
     expect(elem.nodes[0].value, 'hi {{x}} friend');
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div id="a"></div>');
+    expect(elem.outerHtml, '<div id="a"></div>');
     expect(elem.nodes.length, 0);
   });
 
@@ -60,9 +60,9 @@ main() {
       '<div></div></template></div>';
     var elem = parseSubtree(input);
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, input);
+    expect(elem.outerHtml, input);
     cleanHtmlNodes(info);
-    expect(elem.outerHTML,
+    expect(elem.outerHtml,
         '<div><template id="a" style="display:none"></template></div>');
   });
 
@@ -70,9 +70,9 @@ main() {
     var input = '<div template="" id="a" iterate="x in y"><div></div></div>';
     var elem = parseSubtree(input);
     var info = analyzeElement(elem, new Messages.silent());
-    expect(elem.outerHTML, input);
+    expect(elem.outerHtml, input);
     cleanHtmlNodes(info);
-    expect(elem.outerHTML, '<div id="a"></div>');
+    expect(elem.outerHtml, '<div id="a"></div>');
   });
 
   test('remove element declarations', () {
@@ -83,8 +83,8 @@ main() {
     var doc = parse(input);
     var file = new SourceFile(new Path('main.html'))..document = doc;
     var info = analyzeFiles([file])['main.html'];
-    expect(doc.outerHTML, input);
+    expect(doc.outerHtml, input);
     cleanHtmlNodes(info);
-    expect(doc.outerHTML, '<html><head></head><body></body></html>');
+    expect(doc.outerHtml, '<html><head></head><body></body></html>');
   });
 }

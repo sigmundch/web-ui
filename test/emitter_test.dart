@@ -272,7 +272,7 @@ main() {
 
       var emitter = new MainPageEmitter(fileInfo);
       emitter.run(doc, pathInfo);
-      expect(doc.outerHTML, equals(html));
+      expect(doc.outerHtml, equals(html));
     });
 
     group('transform css urls', () {
@@ -292,7 +292,7 @@ main() {
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo);
-        expect(doc.outerHTML, html.replaceAll('a.css', '../a.css'));
+        expect(doc.outerHtml, html.replaceAll('a.css', '../a.css'));
       });
 
       test('file within dir -- base dir match input file dir', () {
@@ -306,7 +306,7 @@ main() {
         var pathInfo = new PathInfo(new Path('dir/'), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo);
-        expect(doc.outerHTML, html.replaceAll('a.css', '../dir/a.css'));
+        expect(doc.outerHtml, html.replaceAll('a.css', '../dir/a.css'));
       });
 
       test('file within dir, base dir at top-level', () {
@@ -320,7 +320,7 @@ main() {
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo);
-        expect(doc.outerHTML, html.replaceAll('a.css', '../../dir/a.css'));
+        expect(doc.outerHtml, html.replaceAll('a.css', '../../dir/a.css'));
       });
     });
   });

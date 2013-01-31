@@ -26,7 +26,6 @@ import 'path_info_test.dart' as path_info_test;
 import 'utils_test.dart' as utils_test;
 import 'watcher_test.dart' as watcher_test;
 
-// TODO(jmesserly): command line args to filter tests
 main() {
   var args = new Options().arguments;
   var pattern = new RegExp(args.length > 0 ? args[0] : '.');

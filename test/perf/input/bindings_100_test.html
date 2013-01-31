@@ -157,7 +157,7 @@ class BindingBenchmark extends BenchmarkBase {
   run() {
     x++;
     dispatch();
-    expect(query('#test').innerHTML, "$x");
+    expect(query('#test').innerHtml, "$x");
   }
 }
   </script>

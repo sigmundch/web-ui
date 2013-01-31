@@ -32,7 +32,7 @@ class FancyDivElement extends DivElementImpl implements WebComponent {
   }
 
   void inserted() {
-    _root.on.click.add((e) => _root.innerHTML = '<p>${generateIdiom()}</p>');
+    _root.on.click.add((e) => _root.innerHtml = '<p>${generateIdiom()}</p>');
     print('[samhop] NotAWrapper inserted');
   }
 

@@ -3,6 +3,9 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.3.1+2 - Jan 30 2013 (integration SDK r17657)
+  * Fix bug in previous version where it did not work with html5lib 0.3.1+2.
+
 #### Pub version 0.3.1+1 - Jan 30 2013 (integration SDK r17657)
   * Richer 'style' attributes. Deprecate 'data-style', functionality merged into
     'style'.
@@ -89,7 +92,7 @@ package. This file is normally updated whenever we push a new version to pub.
 
 #### Pub version 0.2.8+1 - Nov 30 (SDK 15355)
 
-  * Accept, but ignore, the new editor flag '--machine' in build.dart 
+  * Accept, but ignore, the new editor flag '--machine' in build.dart
 
 ### Pub version 0.2.8 - Nov 30 (SDK 15355)
 
@@ -128,7 +131,7 @@ package. This file is normally updated whenever we push a new version to pub.
       * Support for querying for elements from main()
       * Recursive imports between components
       * Warnings are emitted (previously they were generated but not printed)
-  
+
 #### Pub version 0.2.6+1 - 16 Nov 2012
 
   * Name mangling turned off if --out is specified

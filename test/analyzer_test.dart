@@ -39,7 +39,7 @@ main() {
     test('parse single element', () {
       var input = '<div></div>';
       var elem = parseSubtree(input);
-      expect(elem.outerHTML, input);
+      expect(elem.outerHtml, input);
     });
 
     test('id extracted - shallow element', () {
