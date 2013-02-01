@@ -856,19 +856,46 @@ class _ElementLoader extends TreeVisitor {
 
   void visitScriptElement(Element node) {
     var scriptType = node.attributes['type'];
+    var src = node.attributes["src"];
+
     if (scriptType == null) {
       // Note: in html5 leaving off type= is fine, but it defaults to
       // text/javascript. Because this might be a common error, we warn about it
-      // and force explicit type="text/javascript".
-      // TODO(jmesserly): is this a good warning?
-      _messages.warning('ignored script tag, possibly missing '
-          'type="application/dart" or type="text/javascript":',
-          node.sourceSpan, file: _fileInfo.path);
+      // in two cases:
+      //   * an inline script tag in a web component
+      //   * a script src= if the src file ends in .dart (component or not)
+      //
+      // The hope is that neither of these cases should break existing valid
+      // code, but that they'll help component authors avoid having their Dart
+      // code accidentally interpreted as JavaScript by the browser.
+      if (src == null && _currentInfo is ComponentInfo) {
+        _messages.warning('script tag in component with no type will '
+            'be treated as JavaScript. Did you forget type="application/dart"?',
+            node.sourceSpan, file: _fileInfo.path);
+      }
+      if (src != null && src.endsWith('.dart')) {
+        _messages.warning('script tag with .dart source file but no type will '
+            'be treated as JavaScript. Did you forget type="application/dart"?',
+            node.sourceSpan, file: _fileInfo.path);
+      }
+      return;
     }
 
-    if (scriptType != 'application/dart') return;
+    if (scriptType != 'application/dart') {
+      if (_currentInfo is ComponentInfo) {
+        // TODO(jmesserly): this warning should not be here, but our compiler
+        // does the wrong thing and it could cause surprising behavior, so let
+        // the user know! See issue #340 for more info.
+        // What we should be doing: leave JS component untouched by compiler.
+        _messages.warning('our custom element implementation does not support '
+            'JavaScript components yet. If this is affecting you please let us '
+            'know at https://github.com/dart-lang/web-ui/issues/340.',
+            node.sourceSpan, file: _fileInfo.path);
+      }
 
-    var src = node.attributes["src"];
+      return;
+    }
+
     if (src != null) {
       if (!src.endsWith('.dart')) {
         _messages.warning('"application/dart" scripts should '

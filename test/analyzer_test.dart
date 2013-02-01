@@ -703,15 +703,52 @@ main() {
       expect(compInfo.hasConflict, isFalse);
     });
 
-    test('script element without type - accept with warning', () {
+    test('inline script without type - no warning', () {
+      var doc = parse('<body><script>foo</script></body>');
+      analyzeDefinitionsInTree(doc);
+      expect(messages.warnings.length, 0);
+    });
+
+    test('inline script without type in component - warning', () {
       var doc = parse(
         '<body>'
-          '<script src="a.darr"></script>'
+          '<element name="x-quux">'
+            '<template></template><script>foo</script>'
+          '</element>'
         '</body>'
       );
-      var info = analyzeDefinitionsInTree(doc);
+      analyzeDefinitionsInTree(doc);
       expect(messages.warnings.length, 1);
-      expect(messages[0].message, contains("possibly missing type"));
+      expect(messages[0].message, contains(
+          'Did you forget type="application/dart"'));
+    });
+
+    test('inline script with non-dart type in component - warning', () {
+      var doc = parse(
+        '<body>'
+          '<element name="x-quux">'
+            '<template></template><script type="text/foo">foo</script>'
+          '</element>'
+        '</body>'
+      );
+      analyzeDefinitionsInTree(doc);
+      expect(messages.warnings.length, 1);
+      expect(messages[0].message, contains(
+          'https://github.com/dart-lang/web-ui/issues/340'));
+    });
+
+    test('script src="a.darr" without type - no warning', () {
+      var doc = parse('<body><script src="a.darr"></script></body>');
+      analyzeDefinitionsInTree(doc);
+      expect(messages.length, 0);
+    });
+
+    test('script src="a.dart" without type - warning', () {
+      var doc = parse('<body><script src="a.dart"></script></body>');
+      analyzeDefinitionsInTree(doc);
+      expect(messages.warnings.length, 1);
+      expect(messages[0].message, contains(
+          'Did you forget type="application/dart"'));
     });
 
     test('script element with illegal suffix - accept with warning', () {
