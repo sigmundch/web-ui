@@ -3,6 +3,13 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.3.1+3 - Feb 1 2013 (integration SDK r17657)
+  * bug fixes in watchers library: watchers were being fired out of order at times
+    (e.g. when template-conditionals are false, watchers of child nodes should not 
+     be fired, but they were). Another bug was making watchers being checked 10
+     times, instead of 1.
+   * better warnings when missing script type.
+
 #### Pub version 0.3.1+2 - Jan 30 2013 (integration SDK r17657)
   * Fix bug in previous version where it did not work with html5lib 0.3.1+2.
 
