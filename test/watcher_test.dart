@@ -205,6 +205,41 @@ main() {
       stop();
     });
   });
+
+  test('related watchers', () {
+    var stop1, stop2;
+    int value = 0, val1 = 0, val2 = 0;
+    var callback1 = expectAsync1((e) {
+      val1 = value;
+      stop2(); // stop the other watcher
+    });
+    var callback2 = expectAsync1((e) {
+      val2 = value;
+      stop1(); // stop the other watcher
+    });
+    stop1 = watch(() => value, callback1);
+    stop2 = watch(() => value, callback2);
+    value = 1;
+    dispatch();
+
+    // Watchers are called in the order they were added: callback1 is called,
+    // but callback2 was not
+    expect(val1, 1);
+    expect(val2, 0);
+    stop1();
+
+    // Add watchers in the opposite order to check that callback2 is called
+    // first in that case.
+    stop2 = watch(() => value, callback2);
+    stop1 = watch(() => value, callback1);
+    value = 2;
+    dispatch();
+
+    // callback2 is called, but callback1 is not.
+    expect(val1, 1);
+    expect(val2, 2);
+    stop2();
+  });
 }
 
 class A {

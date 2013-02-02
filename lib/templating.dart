@@ -140,7 +140,7 @@ WatcherDisposer bindCssClasses(Element elem, dynamic exp()) {
   return watchAndInvoke(exp, (e) {
     updateCssClass(elem, false, e.oldValue);
     updateCssClass(elem, true, e.newValue);
-  });
+  }, 'css-class-bind');
 }
 
 /** Bind the result of [exp] to the style attribute in [elem]. */
@@ -161,7 +161,7 @@ WatcherDisposer bindStyle(Element elem, Map<String, String> exp()) {
         "to data-style binding.");
     }
     e.newValue.forEach(elem.style.setProperty);
-  });
+  }, 'css-style-bind');
 }
 
 /**
@@ -202,10 +202,8 @@ class DataBindingError implements Error {
  * other elements in the template.
  */
 abstract class TemplateItem {
-  TemplateItem();
-
   /** Invoked when the template contents are created. */
-  void create();
+  void create() {}
 
   /** Invoked when the template contents are inserted to the document. */
   void insert();
@@ -221,8 +219,6 @@ class Listener extends TemplateItem {
   final EventListener listener;
 
   Listener(this.eventStream, this.listener);
-
-  void create() {}
 
   void insert() {
     _subscription = eventStream.listen(listener);
@@ -242,11 +238,11 @@ class Binding extends TemplateItem {
 
   Binding(this.exp, this.action);
 
-  void create() {}
   void insert() {
     if (stopper != null) throw new StateError('binding already attached');
-    stopper = watchAndInvoke(exp, action);
+    stopper = watchAndInvoke(exp, action, 'generic-binding');
   }
+
   void remove() {
     stopper();
     stopper = null;
@@ -261,11 +257,11 @@ class StyleAttrBinding extends TemplateItem {
 
   StyleAttrBinding(this.elem, this.exp);
 
-  void create() {}
   void insert() {
     if (stopper != null) throw new StateError('style binding already attached');
     stopper = bindStyle(elem, exp);
   }
+
   void remove() {
     stopper();
     stopper = null;
@@ -280,11 +276,11 @@ class ClassAttrBinding extends TemplateItem {
 
   ClassAttrBinding(this.elem, this.exp);
 
-  void create() {}
   void insert() {
     if (stopper != null) throw new StateError('class binding already attached');
     stopper = bindCssClasses(elem, exp);
   }
+
   void remove() {
     stopper();
     stopper = null;
@@ -315,13 +311,13 @@ class DomPropertyBinding extends TemplateItem {
 
   DomPropertyBinding(this.getter, this.setter, this.isUrl);
 
-  void create() {}
   void insert() {
     if (stopper != null) throw new StateError('data binding already attached.');
     stopper = watchAndInvoke(getter, (e) {
       setter(isUrl ? sanitizeUri(e.newValue) : e.newValue);
-    });
+    }, 'dom-property-binding');
   }
+
   void remove() {
     stopper();
     stopper = null;
@@ -435,23 +431,15 @@ class Template extends TemplateItem {
   void addAll(List<Node> list) => nodes.addAll(list);
 
   /** Create this template and its children (templates are [TemplateItem]s). */
-  void create() => _visitChildren((t) => t.create());
+  void create() => children.forEach((t) => t.create());
 
   /** Insert this template and its children. */
-  void insert() => _visitChildren((t) => t.insert());
+  void insert() => children.forEach((t) => t.insert());
 
   /** Remove this template and its children. */
   void remove() {
-    _visitChildren((t) => t.remove(), reverseOrder: true);
+    children.reversed.forEach((t) => t.remove());
     children.clear();
-  }
-
-  void _visitChildren(onTemplateItem, {reverseOrder: false}) {
-    var len = children.length;
-    for (int i = 0; i < len; i++) {
-      var t = children[reverseOrder ? (len - i) - 1 : i];
-      onTemplateItem(t);
-    }
   }
 }
 
@@ -493,6 +481,7 @@ abstract class PlaceholderTemplate extends Template {
   PlaceholderTemplate(Node reference, this.exp)
       : super(reference);
 
+  // Delay creating the template body until this is inserted.
   void create() {}
 
   void insert() {
@@ -545,7 +534,7 @@ class ConditionalTemplate extends PlaceholderTemplate {
         super.remove();
         isVisible = false;
       }
-    });
+    }, 'conditional-binding');
   }
 
   void remove() {
@@ -571,7 +560,7 @@ class LoopTemplate extends PlaceholderTemplate {
         iterSetup(x, this);
       }
       super.insert();
-    });
+    }, 'loop-binding');
   }
 
   void remove() {
@@ -593,6 +582,7 @@ class LoopTemplateInAttribute extends Template {
 
   LoopTemplateInAttribute(Node node, this.exp, this.iterSetup) : super(node);
 
+  // Delay creating the template body until this is inserted.
   void create() {}
 
   void insert() {
@@ -604,7 +594,7 @@ class LoopTemplateInAttribute extends Template {
       super.create();
       node.nodes.addAll(nodes);
       super.insert();
-    });
+    }, 'loop-attribute-binding');
   }
 
   void _removeInternal() {

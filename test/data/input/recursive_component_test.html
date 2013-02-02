@@ -1,0 +1,61 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <script type='application/javascript' src="testing.js"></script>
+<style> div { padding: 10px; } </style>
+</head>
+<body>
+  Expect nested divs 0 then 1.
+  <element name='x-rec' extends="div">
+    <template>
+      {{check(pos)}}
+      <template if="pos < len">
+        <div is="x-rec" pos="{{pos + 1}}"></div>
+      </template>
+    </template>
+    <script type='application/dart'>
+      import 'package:web_ui/web_ui.dart';
+      import 'recursive_test_data.dart';
+      class Rec extends WebComponent {
+        int pos;
+      }
+    </script>
+  </element>
+  <div is="x-rec" pos="{{0}}"></div>
+
+  <script type="application/dart">
+  import 'dart:html';
+  import 'package:web_ui/watcher.dart';
+  import 'recursive_test_data.dart';
+
+  main() {
+    window.setTimeout(() {
+      dispatch();
+      window.setTimeout(() {
+        len = 1;
+        dispatch();
+        window.setTimeout(() {
+          len = 3;
+          dispatch();
+          window.setTimeout(() {
+            len = 2;
+            dispatch();
+            window.setTimeout(() {
+              len = 1;
+              dispatch();
+              window.setTimeout(() => window.postMessage('done', '*'), 0);
+            }, 0);
+          }, 0);
+        }, 0);
+      }, 0);
+    }, 0);
+  }
+  </script>
+</body>
+</html>
+

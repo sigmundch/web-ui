@@ -47,6 +47,8 @@
 library watcher;
 
 import 'dart:async';
+import 'dart:collection';
+import 'src/linked_list.dart';
 
 /**
  * Watch for changes in [target].  The [callback] function will be called when
@@ -78,7 +80,7 @@ import 'dart:async';
  */
 WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
   if (callback == null) return () {}; // no use in passing null as a callback.
-  if (_watchers == null) _watchers = [];
+  if (_watchers == null) _watchers = new LinkedList<_Watcher>();
   Function exp;
   bool isList = false;
   if (target is Handle) {
@@ -86,7 +88,13 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
   } else if (target is Function) {
     exp = target;
     try {
-      isList = (target() is List);
+      var val = target();
+      if (val is List) {
+        isList = true;
+      } else if (val is Iterable) {
+        isList = true;
+        exp = () => target().toList();
+      }
     } catch (e, trace) { // in case target() throws some error
       // TODO(sigmund): use logging instead of print when logger is in the SDK
       // and available via pub (see dartbug.com/4363)
@@ -96,12 +104,15 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
   } else if (target is List) {
     exp = () => target;
     isList = true;
+  } else if (target is Iterable) {
+    exp = () => target.toList();
+    isList = true;
   }
   var watcher = isList
       ? new _ListWatcher(exp, callback, debugName)
       : new _Watcher(exp, callback, debugName);
-  _watchers.add(watcher);
-  return () => _unregister(watcher);
+  var node = _watchers.add(watcher);
+  return node.remove;
 }
 
 /**
@@ -139,7 +150,7 @@ class WatchEvent {
 }
 
 /** Internal set of active watchers. */
-List<_Watcher> _watchers;
+LinkedList<_Watcher> _watchers;
 
 /**
  * An internal representation of a watcher. Contains the expression it watches,
@@ -177,15 +188,6 @@ class _Watcher {
     return false;
   }
 
-  bool get _hasChanged => _compare(_safeRead());
-
-  void _updateAndNotify() {
-    var currentValue = _safeRead();
-    var oldValue = _lastValue;
-    _update(currentValue);
-    _callback(new WatchEvent(oldValue, currentValue));
-  }
-
   bool _compare(currentValue) => _lastValue != currentValue;
 
   void _update(currentValue) {
@@ -203,13 +205,6 @@ class _Watcher {
   }
 }
 
-
-/** Removes a watcher. */
-void _unregister(_Watcher watcher) {
-  var index = _watchers.indexOf(watcher);
-  if (index != -1) _watchers.removeRange(index, 1);
-}
-
 /** Bound for the [dispatch] algorithm. */
 final int _maxIter = 10;
 
@@ -221,15 +216,17 @@ final int _maxIter = 10;
  */
 void dispatch() {
   if (_watchers == null) return;
-  bool dirty = false;
+  bool dirty;
   int total = 0;
   do {
-    var toUpdate = _watchers.where((w) => w._hasChanged).toList();
-    dirty = !toUpdate.isEmpty;
-    for (var watcher in toUpdate) {
-      watcher._updateAndNotify();
+    dirty = false;
+    for (var watcher in _watchers) {
+      // Get the next node just in case this node gets remove by the watcher
+      if (watcher.compareAndNotify()) {
+        dirty = true;
+      }
     }
-  } while (dirty && total++ < _maxIter);
+  } while (dirty && ++total < _maxIter);
   if (total == _maxIter) {
     print('Possible loop in watchers propagation, stopped dispatch.');
   }
