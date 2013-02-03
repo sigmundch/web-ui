@@ -16,18 +16,15 @@ class ConsoleFileSystem implements FileSystem {
   /** Pending futures for file write requests. */
   Map<String, Future> _pending = <String, Future>{};
   
-  Future flush() {
-    var pending = _pending;
-    return Future.wait(pending.values).then((_) => 
-        _pending = <String, Future>{});
-  }  
+  Future flush() => Future.wait(_pending.values.toList());
   
   void writeString(internal.Path path, String text) {
     var pathString = path.toString();
     if(!_pending.containsKey(pathString)) {
-      var future = new File(pathString).open(FileMode.WRITE).then((file) =>
-          file.writeString(text)).then((file) => file.close());
-      _pending[pathString] = future;
+      _pending[pathString] = new File(pathString).open(FileMode.WRITE)
+          .then((file) => file.writeString(text))
+          .then((file) => file.close())
+          .then((_) => _pending.remove(pathString));
     }
   }
 
