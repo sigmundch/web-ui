@@ -88,7 +88,9 @@ main() {
       test('printing-results', () {
         print('\nRESULTS');
         results.forEach((k, v) {
-          print('  $k: $v');
+          var runs = v == null ? '<unknown>'
+            : (1000000.0 / v).toStringAsFixed(2);
+          print('  $k: $v us ($runs runs per sec)');
         });
         expect(_writeFile('$cwd/output/results.json', json.stringify(results)),
           completes);
