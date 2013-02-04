@@ -334,9 +334,7 @@ abstract class WebComponent implements Element {
   Map<String, String> getNamespacedAttributes(String namespace) =>
       _element.getNamespacedAttributes(namespace);
 
-  Future<CssStyleDeclaration> get computedStyle => _element.computedStyle;
-
-  Future<CssStyleDeclaration> getComputedStyle(String pseudoElement)
+  CssStyleDeclaration getComputedStyle([String pseudoElement])
     => _element.getComputedStyle(pseudoElement);
 
   Element clone(bool deep) => _element.clone(deep);
