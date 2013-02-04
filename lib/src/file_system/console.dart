@@ -14,19 +14,18 @@ import 'path.dart' as internal;
 class ConsoleFileSystem implements FileSystem {
 
   /** Pending futures for file write requests. */
-  List<Future> _pending = <Future>[];
-
-  Future flush() {
-    var pending = _pending;
-    _pending = <Future>[];
-    return Future.wait(pending);
-  }
-
+  Map<String, Future> _pending = <String, Future>{};
+  
+  Future flush() => Future.wait(_pending.values.toList());
+  
   void writeString(internal.Path path, String text) {
-    var future = new File(path.toString()).open(FileMode.WRITE).then((file) {
-      return file.writeString(text).then((_) => file.close());
-    });
-    _pending.add(future);
+    var pathString = path.toString();
+    if(!_pending.containsKey(pathString)) {
+      _pending[pathString] = new File(pathString).open(FileMode.WRITE)
+          .then((file) => file.writeString(text))
+          .then((file) => file.close())
+          .then((_) => _pending.remove(pathString));
+    }
   }
 
   // TODO(jmesserly): even better would be to pass the RandomAccessFile directly
