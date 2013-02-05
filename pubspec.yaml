@@ -15,4 +15,4 @@ dependencies:
   js: any
   benchmark_harness: ">=1.0.2 <1.0.3"
 environment:
-  sdk: ">=0.3.4"
+  sdk: ">=0.3.4+0.r18115"
