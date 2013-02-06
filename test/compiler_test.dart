@@ -54,7 +54,7 @@ main() {
         'bar.html': 1
       }), reason: 'Actual:\n  ${fs.readCount}');
 
-      var outputs = compiler.output.mappedBy((o) => o.path.toString());
+      var outputs = compiler.output.map((o) => o.path.toString());
       expect(outputs, equals([
         'out/index.html.dart',
         'out/index.html_bootstrap.dart',

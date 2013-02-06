@@ -108,7 +108,7 @@ class PathInfo {
    */
   Path _rewritePackages(Path outputPath) {
     if (!outputPath.toString().contains('packages')) return outputPath;
-    var segments = outputPath.segments().mappedBy(
+    var segments = outputPath.segments().map(
         (segment) => segment == 'packages' ? '_from_packages' : segment);
     return new Path(segments.join('/'));
   }

@@ -119,7 +119,7 @@ main() {
 
 /** Generate text for a list of imports. */
 String importList(Iterable<Path> imports) =>
-  imports.mappedBy((url) => "import '$url';").join('\n');
+  imports.map((url) => "import '$url';").join('\n');
 
 /**
  * Text corresponding to a directive, fixed in case the code is in a different

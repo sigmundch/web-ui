@@ -67,7 +67,7 @@ void emitInitializations(ElementInfo info,
   printer.add(childrenPrinter);
 
   if (info.childrenCreatedInCode && !info.hasIterate && !info.hasIfCondition) {
-    var nodes = info.children.mappedBy(_createChildExpression);
+    var nodes = info.children.map(_createChildExpression);
     _emitAddNodes(printer, nodes, '$id.nodes');
   }
 }
@@ -146,7 +146,7 @@ void _emitSimpleAttributeBinding(ElementInfo info,
 
 void _emitTextAttributeBinding(ElementInfo info,
     String name, AttributeInfo attr, CodePrinter printer) {
-  var textContent = attr.textContent.mappedBy(escapeDartString).toList();
+  var textContent = attr.textContent.map(escapeDartString).toList();
   var setter = _findDomField(info, name);
   var content = new StringBuffer();
   var binding;
@@ -220,7 +220,7 @@ void emitConditional(TemplateInfo info, CodePrinter printer,
   printer.add('__t.conditional(${info.identifier}, () => ($cond), (__t) {')
          .add(childContext.declarations)
          .add(childContext.printer);
-  _emitAddNodes(printer, info.children.mappedBy(_createChildExpression), '__t');
+  _emitAddNodes(printer, info.children.map(_createChildExpression), '__t');
   printer.add('});\n');
 }
 
@@ -234,7 +234,7 @@ void emitLoop(TemplateInfo info, CodePrinter printer, Context childContext) {
   printer.add('__t.loop($id, () => ($items), (${info.loopVariable}, __t) {')
       .add(childContext.declarations)
       .add(childContext.printer);
-  _emitAddNodes(printer, info.children.mappedBy(_createChildExpression), '__t');
+  _emitAddNodes(printer, info.children.map(_createChildExpression), '__t');
   printer.add(info.isTemplateElement ? '});' : '}, isTemplateElement: false);');
 }
 
@@ -357,7 +357,7 @@ class WebComponentEmitter extends RecursiveEmitter {
       }
 
       // Add imports only for those components used by this component.
-      var imports = info.usedComponents.keys.mappedBy(
+      var imports = info.usedComponents.keys.map(
           (c) => pathInfo.relativePath(info, c));
 
       if (hasExtends) {
@@ -427,7 +427,7 @@ class MainPageEmitter extends RecursiveEmitter {
     }
 
     // Import only those components used by the page.
-    var imports = _fileInfo.usedComponents.keys.mappedBy(
+    var imports = _fileInfo.usedComponents.keys.map(
           (c) => pathInfo.relativePath(_fileInfo, c));
     var mainCode = codegen.mainDartCode(
         codeInfo.code, _context.declarations.formatString(1),

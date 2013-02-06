@@ -52,7 +52,7 @@ void parse(js.Proxy sourcePagePort, String sourceUri) {
       var ret = fileSystem.flush();
       js.scoped(() {
         js.context.proxyMessages(sourcePagePort,
-            js.array(messages.messages.mappedBy(
+            js.array(messages.messages.map(
                 (m) => [m.level.name, m.toString()]).toList()));
       });
       js.release(sourcePagePort);

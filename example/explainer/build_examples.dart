@@ -35,7 +35,7 @@ main() {
     listFiles(dir,
         (filename) => filename.endsWith('.html') && !filename.startsWith('_'))
         .then((inputs) {
-          buildAll(inputs.mappedBy((file) => new Path(file).filename), output);
+          buildAll(inputs.map((file) => new Path(file).filename), output);
         });
   } else {
     buildAll(args.rest, output);
@@ -58,7 +58,7 @@ Future<List<String>> listFiles(Directory dir, bool filter(String filename)) {
 List<String> totalTime = [];
 
 void buildAll(Iterable<String> inputs, output) {
-  var processes = inputs.mappedBy((input) => buildSingle(input, output));
+  var processes = inputs.map((input) => buildSingle(input, output));
   Future.wait(processes).then((_) {
     print('----- time summary -----');
     totalTime.forEach((s) => print(s));

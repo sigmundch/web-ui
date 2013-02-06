@@ -50,7 +50,7 @@ class CompilerResult {
       var outputPath = out.path.toString();
       outs[outputPath] = sourcePath;
     }
-    var msgs = messages.messages.mappedBy((m) => m.toString()).toList();
+    var msgs = messages.messages.map((m) => m.toString()).toList();
     return new CompilerResult(success, outs, msgs, file);
   }
 }
