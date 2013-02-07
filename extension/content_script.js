@@ -84,15 +84,17 @@ document.addEventListener("DOMContentLoaded", function() {
   if (document.childNodes.length > 1 &&
       document.childNodes[1] instanceof Comment &&
       document.childNodes[1].nodeValue.indexOf(
-        "This file was auto-generated from template") >= 0) {
+        "This file was auto-generated from") >= 0) {
     return;
   }
 
-  // TODO(sigmund): should we be more selective and run this only when we know
-  // the file is using dwc features?
+  // TODO(sigmund): be more selective and run this only when we know
+  // the file is using dwc features.
   // Checking for tags like element, template, etc doesn't work for simple
   // examples that only have data-bindings (such as
-  // example/explainer/helloworld.html)
+  // example/explainer/helloworld.html), but this could be fixed once we require
+  // using template tags on top-level bindings too. Alternatively we could
+  // require that you have a meta-tag that will trigger the extension.
   onRequestParse();
 });
 

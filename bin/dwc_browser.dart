@@ -44,7 +44,7 @@ void parse(js.Proxy sourcePagePort, String sourceUri) {
   var options = CompilerOptions.parse(['--no-colors', uri.path]);
   var messages = new Messages(options: options, shouldPrint: false);
   asyncTime('Compiled $sourceUri', () {
-    var compiler = new Compiler(fileSystem, options);
+    var compiler = new Compiler(fileSystem, options, messages);
     return compiler.run().then((_) {
       for (var file in compiler.output) {
         fileSystem.writeString(file.path, file.contents);

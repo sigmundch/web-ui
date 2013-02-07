@@ -24,7 +24,7 @@ class BrowserFileSystem implements fs.FileSystem {
    */
   js.Proxy sourcePagePort;
 
-  final _filesToProxy = <String>{};
+  final _filesToProxy = <String, String>{};
   final _random = new Random();
   final _uriScheme;
 
@@ -54,13 +54,27 @@ class BrowserFileSystem implements fs.FileSystem {
   Future readTextOrBytes(Path path) => readText(path);
 
   Future<String> readText(Path path) {
-    var completer = new Completer<String>();
     // We must add a random id or a timestamp to defeat proxy servers and Chrome
     // caching when accessing file urls.
     var uniqueUrl = '$_uriScheme://$path?random_id=${_random.nextDouble()}';
-    new HttpRequest.get(uniqueUrl, (HttpRequest request) {
-      completer.complete(request.responseText);
-    });
-    return completer.future;
+    return _getString(uniqueUrl);
+  }
+
+  // TODO(sigmund): switch to use HttpRequest.getString (see dartbug.com/8401)
+  Future<String> _getString(String url) {
+      var completer = new Completer<HttpRequest>();
+      var xhr = new HttpRequest();
+      xhr.open('GET', url, true);
+      xhr.withCredentials = false;
+      xhr.onLoad.listen((e) {
+        if (xhr.status == 0 ||
+          (xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 ) {
+          completer.complete(xhr.responseText);
+        } else {
+          completer.completeError(xhr.status);
+        }
+      });
+      xhr.send();
+      return completer.future;
   }
 }
