@@ -6,7 +6,7 @@ library messages;
 
 import 'dart:json' as json;
 
-import 'package:html5lib/dom_parsing.dart' show SourceSpan;
+import 'package:source_maps/span.dart' show Span;
 import 'package:logging/logging.dart' show Level;
 
 import 'file_system/path.dart';
@@ -15,7 +15,6 @@ import 'utils.dart';
 
 /** Map between error levels and their display color. */
 final Map<Level, String> _ERROR_COLORS = (() {
-  // TODO(jmesserly): the SourceSpan printer does not use our colors.
   var colorsMap = new Map<Level, String>();
   colorsMap[Level.SEVERE] = RED_COLOR;
   colorsMap[Level.WARNING] = MAGENTA_COLOR;
@@ -28,7 +27,7 @@ class Message {
   final Level level;
   final String message;
   final Path file;
-  final SourceSpan span;
+  final Span span;
   final bool useColors;
 
   Message(this.level, this.message, {this.file, this.span,
@@ -37,7 +36,8 @@ class Message {
   String toString() {
     var output = new StringBuffer();
     bool colors = useColors && _ERROR_COLORS.containsKey(level);
-    if (colors) output.add(_ERROR_COLORS[level]);
+    var levelColor =  _ERROR_COLORS[level];
+    if (colors) output.add(levelColor);
     output..add(level.name)..add(' ');
     if (colors) output.add(NO_COLOR);
 
@@ -45,8 +45,8 @@ class Message {
       if (file != null) output.add('$file: ');
       output.add(message);
     } else {
-      output.add(span.toMessageString(
-          file.toString(), message, useColors: colors));
+      output.add(span.getLocationMessage(message, useColors: colors,
+          color: levelColor));
     }
 
     return output.toString();
@@ -62,12 +62,12 @@ class Message {
       'params': {
         'file': file.toString(),
         'message': message,
-        'line': span == null ? 1 : span.line + 1,
+        'line': span == null ? 1 : span.start.line + 1,
       }
     };
     if (span != null) {
-      value['params']['charStart'] = span.start;
-      value['params']['charEnd'] = span.end;
+      value['params']['charStart'] = span.start.offset;
+      value['params']['charEnd'] = span.end.offset;
     }
     return json.stringify([value]);
   }
@@ -100,7 +100,7 @@ class Messages {
   }
 
   /** [message] is considered a static compile-time error by the Dart lang. */
-  void error(String message, SourceSpan span, {Path file}) {
+  void error(String message, Span span, {Path file}) {
     var msg = new Message(Level.SEVERE, message, file: file, span: span,
         useColors: options.useColors);
 
@@ -109,7 +109,7 @@ class Messages {
   }
 
   /** [message] is considered a type warning by the Dart lang. */
-  void warning(String message, SourceSpan span, {Path file}) {
+  void warning(String message, Span span, {Path file}) {
     if (options.warningsAsErrors) {
       error(message, span, file: file);
     } else {
@@ -133,7 +133,7 @@ class Messages {
    * [message] at [file] will tell the user about what the compiler
    * is doing.
    */
-  void info(String message, SourceSpan span, {Path file}) {
+  void info(String message, Span span, {Path file}) {
     var msg = new Message(Level.INFO, message, file: file, span: span,
         useColors: options.useColors);
 

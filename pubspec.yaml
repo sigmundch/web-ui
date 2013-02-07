@@ -5,11 +5,12 @@ description: An easy way to build web apps in Dart.
 version: 0.3.2
 dependencies:
   args: any
+  browser: any
   # Pin html5lib so we don't get unexpected API breaks.
-  html5lib: ">=0.3.1 <0.3.2"
+  html5lib: ">=0.3.2 <0.3.3"
   logging: any
   unittest: any
-  browser: any
+  source_maps: ">=0.3.0 <0.3.1"
   # The following are dev dependencies only, they are not needed by users
   # of the web_ui package.
   js: any

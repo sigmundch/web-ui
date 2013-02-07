@@ -6,24 +6,25 @@ if (navigator.webkitStartDart) {
   navigator.webkitStartDart();
 }
 
-if (window.layoutTestController) {
-  window.layoutTestController.waitUntilDone();
+// Webkit is migrating from layoutTestController to testRunner, we use
+// layoutTestController as a fallback until that settles in.
+var runner = window.testRunner || window.layoutTestController;
+
+if (runner) {
+  runner.waitUntilDone();
 }
 
 function messageHandler(e) {
-  if (e.data == 'done') {
-    // TODO(sigmund): use && in this condition, issue #41
-    if (window.layoutTestController) {
-      window.layoutTestController.notifyDone();
-    }
+  if (e.data == 'done' && runner) {
+    runner.notifyDone();
   }
 }
 
 window.addEventListener('message', messageHandler, false);
 
 function errorHandler(e) {
-  if (window.layoutTestController) {
-    window.layoutTestController.notifyDone();
+  if (runner) {
+    runner.notifyDone();
   }
   window.console.log('FAIL');
 }
