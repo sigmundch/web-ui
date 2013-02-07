@@ -3,6 +3,12 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.3.2 - Feb 5 2013 (integration SDK r18115)
+  * bug fix: allow 2 entry points to depend on a common component (we used to write files
+    asynchronously and thus the two parallel compilation processes where corrupting each
+    other's result).
+  * changes for the new SDK: API in dart:html changed for getComputedStyle (now it is sync)
+
 #### Pub version 0.3.1+3 - Feb 1 2013 (integration SDK r17657)
   * bug fixes in watchers library: watchers were being fired out of order at times
     (e.g. when template-conditionals are false, watchers of child nodes should not 
