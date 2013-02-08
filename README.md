@@ -75,6 +75,9 @@ Contacting Us
 Please file issues in our [Issue Tracker][issues] or contact us on the
 [Dart Web UI mailing list][mailinglist].
 
+We also have the [Web UI development list][devlist] for discussions about
+internals of the code, code reviews, etc.
+
 [wc]: http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html
 [mdv]: http://code.google.com/p/mdv/
 [d]: http://www.dartlang.org
@@ -91,6 +94,7 @@ Please file issues in our [Issue Tracker][issues] or contact us on the
 [changelog]:https://github.com/dart-lang/web-ui/blob/master/CHANGELOG.md
 [issues]:https://github.com/dart-lang/web-ui/issues
 [mailinglist]:https://groups.google.com/a/dartlang.org/forum/?fromgroups#!forum/web-ui
+[devlist]:https://groups.google.com/a/dartlang.org/forum/?fromgroups#!forum/web-ui-dev
 [overview]:http://www.dartlang.org/articles/dart-web-components/
 [tools]:https://www.dartlang.org/articles/dart-web-components/tools.html
 [spec]:https://www.dartlang.org/articles/dart-web-components/spec.html
