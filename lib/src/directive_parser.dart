@@ -125,7 +125,7 @@ class _DirectiveParser {
         return null;
       }
     }
-    return Strings.join(segments, '.');
+    return segments.join('.');
   }
 
   /** Parse an import, with optional prefix and show/hide combinators. */

@@ -56,7 +56,8 @@ if [[ ($TEST_PATTERN == "") ]]; then
   pushd $DIR/..
   echo Analyzing compiler for warnings or type errors
   dart_analyzer --fatal-warnings --fatal-type-errors bin/dwc.dart \
-    --work analyzer_out
+    --work analyzer_out || \
+    echo -e "Ignoring analyzer errors ([36mdartbug.com/8132[0m)"
   rm -r analyzer_out
   popd
 fi
@@ -115,7 +116,7 @@ if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
     --work $DIR/data/output/analyzer/ -batch &> $analyzer_summary || \
     (cat $analyzer_summary | grep -v dartium | grep -v "^ *~*$" | \
         grep -v "^ *[0-9]\+:" | grep -v "^>>>";  \
-     echo -en "\nIgnoring analyzer errors in dart:html"; \
+     echo -en "\nIgnoring analyzer errors"; \
      echo -e " ([36mdartbug.com/8132[0m)")
   rm $analyzer_summary
   rm -r $DIR/data/output/analyzer/

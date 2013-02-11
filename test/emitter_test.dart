@@ -328,25 +328,28 @@ main() {
 
 _init(Element elem, {int child}) {
   var info = analyzeElement(elem, new Messages.silent());
-  var printer = new CodePrinter();
+  var printer = new CodePrinter(0);
   if (child != null) {
     info = info.children[child];
   }
-  emitInitializations(info, printer, new CodePrinter());
-  return printer.toString().trim();
+  emitInitializations(info, printer, new CodePrinter(0));
+  printer.build(null);
+  return printer.text.trim();
 }
 
 _created(Element elem, {int child}) {
-  return _recurse(elem, true, child).printer.toString().trim();
+  var printer = _recurse(elem, true, child).printer;
+  printer.build(null);
+  return printer.text.trim();
 }
 
 _declarations(String tree, {bool isClass: true, int child}) {
   return _recurse(parseSubtree(tree), isClass, child)
-      .declarations.formatString().trim();
+      .declarations.toString().trim();
 }
 
 _declarationsForElem(Element elem, {bool isClass: true, int child}) {
-  return _recurse(elem, isClass, child).declarations.formatString().trim();
+  return _recurse(elem, isClass, child).declarations.toString().trim();
 }
 
 Context _recurse(Element elem, bool isClass, int child) {

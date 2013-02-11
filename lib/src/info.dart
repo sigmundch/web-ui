@@ -561,7 +561,7 @@ class AttributeInfo {
   bool get isText => textContent != null;
 
   String toString() => '#<AttributeInfo '
-      'isClass: $isClass, values: ${Strings.join(bindings, "")}>';
+      'isClass: $isClass, values: ${bindings.join("")}>';
 }
 
 /** Information extracted for each declared event in an element. */

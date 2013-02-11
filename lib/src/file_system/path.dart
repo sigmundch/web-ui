@@ -350,7 +350,7 @@ class _Path implements Path {
         segmentsToJoin.add('');
       }
     }
-    return new Path(Strings.join(segmentsToJoin, '/'));
+    return new Path(segmentsToJoin.join('/'));
   }
 
   String toNativePath() {

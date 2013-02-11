@@ -23,7 +23,7 @@ String toCamelCase(String hyphenedName, {bool startUppercase: false}) {
       segments[i] = '${segment[0].toUpperCase()}${segment.substring(1)}';
     }
   }
-  return Strings.join(segments, '');
+  return segments.join('');
 }
 
 /**
@@ -153,7 +153,7 @@ String escapeDartString(String text, {bool single: true, bool triple: false}) {
   StringBuffer result = null;
 
   for (int i = 0; i < text.length; i++) {
-    int code = text.charCodeAt(i);
+    int code = text.codeUnitAt(i);
     var replace = null;
     switch (code) {
       case 92/*'\\'*/: replace = r'\\'; break;

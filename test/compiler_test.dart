@@ -57,10 +57,13 @@ main() {
       var outputs = compiler.output.map((o) => o.path.toString());
       expect(outputs, equals([
         'out/index.html.dart',
+        'out/index.html.dart.map',
         'out/index.html_bootstrap.dart',
         'out/index.html',
         'out/foo.html.dart',
-        'out/bar.html.dart'
+        'out/foo.html.dart.map',
+        'out/bar.html.dart',
+        'out/bar.html.dart.map'
       ]));
     }));
   });

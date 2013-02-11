@@ -2,12 +2,12 @@ name: web_ui
 author: "Web UI Authors <web-ui-dev@dartlang.org>"
 homepage: https://github.com/dart-lang/web-ui
 description: An easy way to build web apps in Dart.
-version: 0.3.2
+version: 0.3.2+1
 dependencies:
   args: any
   browser: any
   # Pin html5lib so we don't get unexpected API breaks.
-  html5lib: ">=0.3.2 <0.3.3"
+  html5lib: ">=0.3.2+1 <0.3.3"
   csslib: ">=0.3.2 <0.3.3"
   logging: any
   unittest: any

@@ -33,7 +33,8 @@ import 'utils.dart';
  * Adds emitted error/warning to [messages], if [messages] is supplied.
  */
 Document parseHtml(contents, Path sourcePath, Messages messages) {
-  var parser = new HtmlParser(contents, generateSpans: true);
+  var parser = new HtmlParser(contents, generateSpans: true,
+      sourceUrl: sourcePath.toString());
   var document = parser.parse();
 
   // Note: errors aren't fatal in HTML (unless strict mode is on).
@@ -231,9 +232,8 @@ class Compiler {
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
-    var contents = new MainPageEmitter(fileInfo).run(file.document, _pathInfo);
-    output.add(new OutputFile(_pathInfo.outputLibraryPath(fileInfo), contents,
-        source: fileInfo.inputPath));
+    var printer = new MainPageEmitter(fileInfo).run(file.document, _pathInfo);
+    _emitFile(fileInfo, printer, fileInfo.inputPath);
   }
 
   /** Generate an html file with the (trimmed down) main html page. */
@@ -280,11 +280,25 @@ class Compiler {
   /** Emits the Dart code for all components in [fileInfo]. */
   void _emitComponents(FileInfo fileInfo) {
     for (var component in fileInfo.declaredComponents) {
-      var code = new WebComponentEmitter(fileInfo, _messages)
+      var printer = new WebComponentEmitter(fileInfo, _messages)
           .run(component, _pathInfo);
-      output.add(new OutputFile(_pathInfo.outputLibraryPath(component), code,
-          source: component.externalFile));
+      _emitFile(component, printer, component.externalFile);
     }
+  }
+
+  /**
+   * Emits a file that was created using [CodePrinter] and it's corresponding
+   * source map file.
+   */
+  void _emitFile(LibraryInfo lib, CodePrinter printer, Path inputPath) {
+    var path = _pathInfo.outputLibraryPath(lib);
+    printer.add('\n//@ sourceMappingURL=${path.filename}.map');
+    printer.build(path.toString());
+    output.add(new OutputFile(path, printer.text, source: inputPath));
+    // TODO(sigmund): fix up path urls in source map file? (we currently
+    // generate paths relative to base-dir.)
+    var mapPath = path.directoryPath.append('${path.filename}.map');
+    output.add(new OutputFile(mapPath, printer.map));
   }
 
   _time(String logMessage, Path path, callback(), {bool printTime: false}) {
@@ -357,4 +371,3 @@ class _ProcessCss extends InfoVisitor {
     super.visitComponentInfo(info);
   }
 }
-

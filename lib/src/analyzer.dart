@@ -643,7 +643,7 @@ class _Analyzer extends TreeVisitor {
 
     // Update class attributes to only have non-databound class names for
     // attributes for the HTML.
-    info.node.attributes['class'] = Strings.join(content, '');
+    info.node.attributes['class'] = content.join('');
 
     return new AttributeInfo(bindings, isClass: true);
   }

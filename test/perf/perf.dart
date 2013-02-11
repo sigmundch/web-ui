@@ -39,8 +39,7 @@ main() {
     test('drt-compile $filename', () {
       expect(dwc.run(['-o', 'output/', path], printTime: false)
         .then((res) {
-          expect(res.messages.length, 0,
-              reason: Strings.join(res.messages, '\n'));
+          expect(res.messages.length, 0, reason: res.messages.join('\n'));
         }), completes);
     });
 
