@@ -11,7 +11,7 @@ dependencies:
   csslib: ">=0.3.2 <0.3.3"
   logging: any
   unittest: any
-  source_maps: ">=0.3.0 <0.3.1"
+  source_maps: ">=0.3.1 <0.3.2"
   # The following are dev dependencies only, they are not needed by users
   # of the web_ui package.
   js: any
