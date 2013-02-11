@@ -23,7 +23,8 @@ library build_utils;
 import 'dart:async';
 import 'dart:io';
 import 'package:args/args.dart';
-import 'package:web_ui/dwc.dart' as dwc;
+import 'dwc.dart' as dwc;
+import 'src/utils.dart';
 
 /**
  * Set up 'build.dart' to compile with the dart web components compiler every
@@ -31,49 +32,55 @@ import 'package:web_ui/dwc.dart' as dwc;
  * live will be scanned for generated files to delete them.
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
-List<Future<dwc.CompilerResult>> build(List<String> arguments,
+Future<List<dwc.CompilerResult>> build(List<String> arguments,
     List<String> entryPoints, {String baseDir}) {
+  bool useColors = stdioType(stdout) == StdioType.TERMINAL;
+  return asyncTime('Total time', () {
+    var args = _processArgs(arguments);
+    var tasks = new FutureGroup();
+    var lastTask = new Future.immediate(null);
+    tasks.add(lastTask);
 
-  var args = _processArgs(arguments);
-  var futures = new List<Future<dwc.CompilerResult>>();
+    var trackDirs = <Directory>[];
+    var changedFiles = args["changed"];
+    var removedFiles = args["removed"];
+    var cleanBuild = args["clean"];
+    var machineFormat = args["machine"];
+    // Also trigger a full build if the script was run from the command line
+    // with no arguments
+    var fullBuild = args["full"] || (!machineFormat && changedFiles.isEmpty &&
+        removedFiles.isEmpty && !cleanBuild);
 
-  var trackDirs = <Directory>[];
-  var changedFiles = args["changed"];
-  var removedFiles = args["removed"];
-  var cleanBuild = args["clean"];
-  var machineFormat = args["machine"];
-  // Also trigger a full build if the script was run from the command line with
-  // no arguments
-  var fullBuild = args["full"] || (!machineFormat && changedFiles.isEmpty &&
-      removedFiles.isEmpty && !cleanBuild);
-
-  for (var file in entryPoints) {
-    trackDirs.add(new Directory(_outDir(file)));
-  }
-
-  if (cleanBuild) {
-    _handleCleanCommand(trackDirs);
-  } else if (fullBuild || changedFiles.any((f) => _isInputFile(f, trackDirs))
-      || removedFiles.any((f) => _isInputFile(f, trackDirs))) {
     for (var file in entryPoints) {
-      var path = new Path(file);
-      var outDir = path.directoryPath.append('out');
-      var args = [];
-      if (machineFormat) args.add('--json_format');
-      if (stdioType(stdout) != StdioType.TERMINAL) args.add('--no-colors');
-      if(baseDir != null) args.addAll(['--basedir', baseDir]);
-      args.addAll(['-o', outDir.toString(), file]);
-      futures.add(dwc.run(args));
+      trackDirs.add(new Directory(_outDir(file)));
+    }
 
-      if (machineFormat) {
-        // Print for the Dart Editor the mapping from the input entry point file
-        // and its corresponding output.
-        var out = outDir.append(path.filename);
-        print('[{"method":"mapping","params":{"from":"$file","to":"$out"}}]');
+    if (cleanBuild) {
+      _handleCleanCommand(trackDirs);
+    } else if (fullBuild || changedFiles.any((f) => _isInputFile(f, trackDirs))
+        || removedFiles.any((f) => _isInputFile(f, trackDirs))) {
+      for (var file in entryPoints) {
+        var path = new Path(file);
+        var outDir = path.directoryPath.append('out');
+        var args = [];
+        if (machineFormat) args.add('--json_format');
+        if (!useColors) args.add('--no-colors');
+        if(baseDir != null) args.addAll(['--basedir', baseDir]);
+        args.addAll(['-o', outDir.toString(), file]);
+        // Chain tasks to that we run one at a time.
+        lastTask = lastTask.then((_) => dwc.run(args));
+        tasks.add(lastTask);
+
+        if (machineFormat) {
+          // Print for the Dart Editor the mapping from the input entry point
+          // file and its corresponding output.
+          var out = outDir.append(path.filename);
+          print('[{"method":"mapping","params":{"from":"$file","to":"$out"}}]');
+        }
       }
     }
-  }
-  return futures;
+    return tasks.future.then((r) => r.where((v) => v != null));
+  }, printTime: true, useColors: useColors);
 }
 
 String _outDir(String file) =>

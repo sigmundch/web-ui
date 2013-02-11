@@ -103,7 +103,7 @@ class FutureGroup {
   int _pending = 0;
   Future _failedTask;
   final Completer<List> _completer = new Completer<List>();
-  final List<Future> futures = <Future>[];
+  final List results = [];
 
   /** Gets the task that failed, if any. */
   Future get failedTask => _failedTask;
@@ -122,13 +122,15 @@ class FutureGroup {
     if (_pending == _FINISHED) throw new StateError("Future already completed");
 
     _pending++;
-    futures.add(task);
-    task.then((_) {
+    var i = results.length;
+    results.add(null);
+    task.then((res) {
+      results[i] = res;
       if (_failedTask != null) return;
       _pending--;
       if (_pending == 0) {
         _pending = _FINISHED;
-        _completer.complete(futures);
+        _completer.complete(results);
       }
     }, onError: (e) {
       if (_failedTask != null) return;
