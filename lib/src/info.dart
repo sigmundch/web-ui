@@ -12,6 +12,8 @@ import 'dart:collection' show SplayTreeMap, LinkedHashMap;
 import 'dart:uri';
 
 import 'package:html5lib/dom.dart';
+import 'package:csslib/parser.dart' as css;
+import 'package:csslib/visitor.dart';
 
 import 'file_system/path.dart';
 import 'files.dart';
@@ -180,6 +182,12 @@ abstract class LibraryInfo {
 
   /** File where the top-level code was defined. */
   Path get inputPath;
+
+  /** Stylesheet with <style>...</style> */
+  StringBuffer cssSource = new StringBuffer();
+
+  /** Parsed cssSource. */
+  StyleSheet styleSheet;
 
   /**
    * Name of the file that will hold any generated Dart code for this library

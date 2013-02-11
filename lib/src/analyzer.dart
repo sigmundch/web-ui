@@ -44,7 +44,7 @@ FileInfo analyzeDefinitions(SourceFile file, Messages messages,
 FileInfo analyzeNodeForTesting(Node source, Messages messages,
     {String filepath: 'mock_testing_file.html'}) {
   var result = new FileInfo(new Path(filepath));
-  new _Analyzer(result, new IntIterator(), messages).visit(source);
+  new _Analyzer(result, new IntIterator(), messages, false).visit(source);
   return result;
 }
 
@@ -55,9 +55,9 @@ FileInfo analyzeNodeForTesting(Node source, Messages messages,
  *  supplied.
  */
 void analyzeFile(SourceFile file, Map<Path, FileInfo> info,
-    Iterator<int> uniqueIds, Messages messages) {
+    Iterator<int> uniqueIds, Messages messages, {cssPolyfill: false}) {
   var fileInfo = info[file.path];
-  var analyzer = new _Analyzer(fileInfo, uniqueIds, messages);
+  var analyzer = new _Analyzer(fileInfo, uniqueIds, messages, cssPolyfill);
   analyzer._normalize(fileInfo, info);
   analyzer.visit(file.document);
 }
@@ -70,12 +70,14 @@ class _Analyzer extends TreeVisitor {
   ElementInfo _parent;
   Iterator<int> _uniqueIds;
   Messages _messages;
+  final bool _cssPolyfill;
 
   /**
    * Adds emitted error/warning messages to [_messages].
    * [_messages] must not be null.
    */
-  _Analyzer(this._fileInfo, this._uniqueIds, this._messages) {
+  _Analyzer(this._fileInfo, this._uniqueIds, this._messages,
+      this._cssPolyfill) {
     assert(this._messages != null);
     _currentInfo = _fileInfo;
   }
@@ -106,6 +108,19 @@ class _Analyzer extends TreeVisitor {
       // don't need a parent.
       var parent = node.tagName == 'element' ? null : _parent;
       info = new ElementInfo(node, parent);
+    }
+
+    // TODO(terry): How to handle <link rel="stylesheet" href="...">
+    //              - What if multiple stylesheet links for a component?
+    //              - What if a stylesheet link for all component and particular
+    //                stylesheet links for each component?
+    //              - What if multiple <style> tags for the same component?
+    if (_cssPolyfill &&
+        node.tagName == 'style' && node.attributes.containsKey("scoped")) {
+      // TODO(terry): Faster to parse the CSS tags separately instead of
+      //              concatenating all styles.
+      // Get contents of style tag.
+      _currentInfo.cssSource.add(node.nodes.single.value);
     }
 
     visitElementInfo(info);

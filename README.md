@@ -69,6 +69,9 @@ which can be downloaded prebuilt for [Ubuntu Lucid][drtlucid],
 [Windows][drtwin], or [Mac][drtmac]. You can also build it from the
 [Dartium and DRT sources][drtsrc].
 
+For Linux users all the necessary fonts must be installed see
+https://code.google.com/p/chromium/wiki/LayoutTestsLinux
+
 Contacting Us
 -------------
 

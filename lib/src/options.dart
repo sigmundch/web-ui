@@ -40,6 +40,10 @@ class CompilerOptions {
    */
   final bool jsonFormat;
 
+  // TODO(terry): Make polyfill the default maybe add --no_css_polyfill. */
+  /** Emulate scoped styles using a CSS polyfill. */
+  final bool processCss;
+
   // We could make this faster, if it ever matters.
   factory CompilerOptions() => parse(['']);
 
@@ -53,12 +57,12 @@ class CompilerOptions {
       forceMangle = args['unique_output_filenames'],
       jsonFormat = args['json_format'],
       componentsOnly = args['components_only'],
+      processCss = args['process_css'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
     var parser = new ArgParser()
-      ..addFlag('verbose', abbr: 'v',
-          defaultsTo: false, negatable: false)
+      ..addFlag('verbose', abbr: 'v')
       ..addFlag('clean', help: 'Remove all generated files',
           defaultsTo: false, negatable: false)
       ..addFlag('warnings_as_errors', abbr: 'e',
@@ -78,6 +82,10 @@ class CompilerOptions {
       ..addFlag('components_only',
           help: 'Generate only the code for component classes, do not generate '
                 'HTML files or the main bootstrap code.',
+          defaultsTo: false, negatable: false)
+      ..addFlag('process_css', help: 'Emulate scoped styles with CSS polyfill',
+          defaultsTo: false, negatable: false)
+      ..addFlag('dump_css', help: 'Display CSS tree',
           defaultsTo: false, negatable: false)
       ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
           ' (defaults to the same directory as the source file)')

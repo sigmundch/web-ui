@@ -8,6 +8,7 @@ dependencies:
   browser: any
   # Pin html5lib so we don't get unexpected API breaks.
   html5lib: ">=0.3.2 <0.3.3"
+  csslib: ">=0.3.2 <0.3.3"
   logging: any
   unittest: any
   source_maps: ">=0.3.0 <0.3.1"

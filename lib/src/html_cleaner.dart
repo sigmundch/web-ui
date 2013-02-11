@@ -9,21 +9,29 @@
 library html_cleaner;
 
 import 'package:html5lib/dom.dart';
+import 'package:csslib/parser.dart' as css;
 
 import 'info.dart';
 
 /** Removes bindings and extra nodes from the HTML assciated with [info]. */
-void cleanHtmlNodes(info) {
-  new _HtmlCleaner().visit(info);
-}
+void cleanHtmlNodes(info, {processCss: false}) =>
+    new _HtmlCleaner(processCss).visit(info);
 
 /** Remove all MDV attributes; post-analysis these attributes are not needed. */
 class _HtmlCleaner extends InfoVisitor {
+  final bool _processCss;
+  ComponentInfo _component = null;
+
+  _HtmlCleaner(this._processCss);
 
   void visitComponentInfo(ComponentInfo info) {
     // Remove the <element> tag from the tree
     if (info.elemInfo != null) info.elemInfo.node.remove();
+
+    var oldComponent = _component;
+    _component = info;
     super.visitComponentInfo(info);
+    _component = oldComponent;
   }
 
   void visitElementInfo(ElementInfo info) {
@@ -41,6 +49,12 @@ class _HtmlCleaner extends InfoVisitor {
 
     if (info.childrenCreatedInCode) {
       node.nodes.clear();
+    }
+
+    if (_processCss &&
+        node.tagName == 'style' && node.attributes.containsKey("scoped") &&
+        _component != null) {
+      node.remove();      // Remove the style tag we've parsed the CSS.
     }
 
     super.visitElementInfo(info);

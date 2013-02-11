@@ -12,19 +12,15 @@ class CodePrinter {
    * Adds [object] to this printer and appends a new-line after it. Returns this
    * printer.
    */
-  CodePrinter add(object) {
+  void add(object) {
     _items.add(object);
     if (object is! CodePrinter) {
       _items.add('\n');
     }
-    return this;
   }
 
   /** Adds [object] without changing its indentation or appending a newline. */
-  CodePrinter addRaw(object) {
-    _items.add(new _Raw(object));
-    return this;
-  }
+  void addRaw(object) => _items.add(new _Raw(object));
 
   /** Returns everything on this printer without any fixes on indentation. */
   String toString() => (new StringBuffer()..addAll(_items)).toString();

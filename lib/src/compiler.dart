@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:collection' show SplayTreeMap;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
+import 'package:csslib/parser.dart' as css;
+import 'package:csslib/visitor.dart';
 
 import 'analyzer.dart';
 import 'code_printer.dart';
@@ -202,7 +204,8 @@ class Compiler {
     for (var file in files) {
       if (file.isDart) continue;
       _time('Analyzed contents', file.path,
-          () => analyzeFile(file, info, uniqueIds, _messages));
+          () => analyzeFile(file, info, uniqueIds, _messages,
+              cssPolyfill: options.processCss));
     }
   }
 
@@ -212,7 +215,10 @@ class Compiler {
       if (file.isDart) continue;
       _time('Codegen', file.path, () {
         var fileInfo = info[file.path];
-        cleanHtmlNodes(fileInfo);
+        cleanHtmlNodes(fileInfo, processCss: options.processCss);
+        if (options.processCss) {
+          _processCss(fileInfo, options: options);
+        }
         _emitComponents(fileInfo);
         if (fileInfo.isEntryPoint) {
           _emitMainDart(file);
@@ -319,4 +325,36 @@ class Compiler {
   }
 }
 
+/** Parse all stylesheet for polyfilling assciated with [info]. */
+void _processCss(info, {CompilerOptions options : null}) {
+  new _ProcessCss(options).visit(info);
+}
+
+/** Post-analysis of style sheet; parsed ready for emitting with polyfill. */
+class _ProcessCss extends InfoVisitor {
+  final CompilerOptions options;
+
+  _ProcessCss(this.options);
+
+  // TODO(terry): Add --checked when fully implemented and error handling too.
+  StyleSheet _parseCss(String cssInput, CompilerOptions option) =>
+      css.parse(cssInput, options:
+        [option.warningsAsErrors ? '--warnings_as_errors' : '', 'memory']);
+
+  void visitComponentInfo(ComponentInfo info) {
+    if (!info.cssSource.isEmpty) {
+      info.styleSheet = _parseCss(info.cssSource.toString(), options);
+      info.cssSource = null;    // Once CSS parsed original not needed.
+      // TODO(terry): Remove early development of CSS work - dev only switch.
+      if (options.verbose) {
+        print('\nComponent: ${info.tagName}');
+        print('==========\n');
+        print(treeToDebugString(info.styleSheet));
+        print(emitStyleSheet(info.styleSheet));
+      }
+    }
+
+    super.visitComponentInfo(info);
+  }
+}
 
