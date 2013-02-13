@@ -6,6 +6,8 @@ library compiler;
 
 import 'dart:async';
 import 'dart:collection' show SplayTreeMap;
+import 'dart:json' as json;
+
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 import 'package:csslib/parser.dart' as css;
@@ -233,7 +235,7 @@ class Compiler {
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
     var printer = new MainPageEmitter(fileInfo).run(file.document, _pathInfo);
-    _emitFile(fileInfo, printer, fileInfo.inputPath);
+    _emitFileAndSourceMaps(fileInfo, printer, fileInfo.inputPath);
   }
 
   /** Generate an html file with the (trimmed down) main html page. */
@@ -282,7 +284,7 @@ class Compiler {
     for (var component in fileInfo.declaredComponents) {
       var printer = new WebComponentEmitter(fileInfo, _messages)
           .run(component, _pathInfo);
-      _emitFile(component, printer, component.externalFile);
+      _emitFileAndSourceMaps(component, printer, component.externalFile);
     }
   }
 
@@ -290,15 +292,21 @@ class Compiler {
    * Emits a file that was created using [CodePrinter] and it's corresponding
    * source map file.
    */
-  void _emitFile(LibraryInfo lib, CodePrinter printer, Path inputPath) {
+  void _emitFileAndSourceMaps(
+      LibraryInfo lib, CodePrinter printer, Path inputPath) {
     var path = _pathInfo.outputLibraryPath(lib);
+    var dir = path.directoryPath;
     printer.add('\n//@ sourceMappingURL=${path.filename}.map');
     printer.build(path.toString());
     output.add(new OutputFile(path, printer.text, source: inputPath));
-    // TODO(sigmund): fix up path urls in source map file? (we currently
-    // generate paths relative to base-dir.)
-    var mapPath = path.directoryPath.append('${path.filename}.map');
-    output.add(new OutputFile(mapPath, printer.map));
+    // Fix-up the paths in the source map file
+    var sourceMap = json.parse(printer.map);
+    var urls = sourceMap['sources'];
+    for (int i = 0; i < urls.length; i++) {
+      urls[i] = new Path(urls[i]).relativeTo(dir).toString();
+    }
+    output.add(new OutputFile(dir.append('${path.filename}.map'),
+          json.stringify(sourceMap)));
   }
 
   _time(String logMessage, Path path, callback(), {bool printTime: false}) {
