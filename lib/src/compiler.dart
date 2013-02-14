@@ -439,6 +439,10 @@ class Compiler {
       }
     }
 
+    // http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html#css-additions
+    document.head.nodes.insertAt(0, parseFragment(
+        '<style>template { display: none; }</style>'));
+
     if (!dartLoaderFound) {
       document.body.nodes.add(parseFragment(
           '<script type="text/javascript" src="packages/browser/dart.js">'

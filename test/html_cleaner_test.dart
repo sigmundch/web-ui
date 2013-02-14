@@ -63,7 +63,7 @@ main() {
     expect(elem.outerHtml, input);
     cleanHtmlNodes(info);
     expect(elem.outerHtml,
-        '<div><template id="a" style="display:none"></template></div>');
+        '<div><template id="a"></template></div>');
   });
 
   test('remove children of iterate nodes', () {
