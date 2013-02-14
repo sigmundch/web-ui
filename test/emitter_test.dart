@@ -171,7 +171,13 @@ main() {
     test('created', () {
       var elem = parseSubtree('<div>{{bar}}</div>');
       expect(_created(elem, child: 0),
-          r"var __binding0 = __t.contentBind(() => (bar));");
+          r"var __binding0 = __t.contentBind(() => bar, false);");
+    });
+
+    test('created - final', () {
+      var elem = parseSubtree('<div>{{bar | final}}</div>');
+      expect(_created(elem, child: 0),
+          r"var __binding0 = __t.contentBind(() => bar, true);");
     });
   });
 
@@ -188,7 +194,7 @@ main() {
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
           r'__t.listen(__e0.onInput, ($event) { bar = __e0.value; }); '
-          r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
+          '__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false, false);'));
     });
   });
 
@@ -197,15 +203,15 @@ main() {
       var elem = parseSubtree('<div foo="{{bar}}"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => (bar), (e) { "
-              "__e0.attributes['foo'] = e; }, false);"));
+          "__t.oneWayBind(() => bar, (e) { "
+              "__e0.attributes['foo'] = e; }, false, false);"));
     });
 
     test('created for 1-way binding with dom accessor', () {
       var elem = parseSubtree('<input value="{{bar}}">');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false);"));
+          "__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false, false);"));
     });
 
     test('created for 2-way binding with dom accessor', () {
@@ -213,30 +219,80 @@ main() {
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
           r'__t.listen(__e0.onInput, ($event) { bar = __e0.value; }); '
-          r'__t.oneWayBind(() => (bar), (e) { __e0.value = e; }, false); '));
+          '__t.oneWayBind(() => bar, (e) { __e0.value = e; }, false, false);'));
     });
 
     test('created for data attribute', () {
       var elem = parseSubtree('<div data-foo="{{bar}}"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.oneWayBind(() => (bar), (e) { "
-          "__e0.attributes['data-foo'] = e; }, false);"));
+          "__t.oneWayBind(() => bar, (e) { "
+          "__e0.attributes['data-foo'] = e; }, false, false);"));
     });
 
     test('created for class', () {
       var elem = parseSubtree('<div class="{{bar}} {{foo}}" />');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          "__t.bindClass(__e0, () => (bar)); "
-          "__t.bindClass(__e0, () => (foo));"));
+          "__t.bindClass(__e0, () => bar, false); "
+          "__t.bindClass(__e0, () => foo, false);"));
     });
 
     test('created for style', () {
       var elem = parseSubtree('<div data-style="bar"></div>');
       expect(_created(elem), equalsIgnoringWhitespace(
           r"__e0 = _root.query('#__e-0'); "
-          '__t.bindStyle(__e0, () => (bar));'));
+          '__t.bindStyle(__e0, () => bar, false);'));
+    });
+
+    group('- with final field', () {
+      test('created', () {
+        var elem = parseSubtree('<div foo="{{bar | final}}"></div>');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            "__t.oneWayBind(() => bar, (e) { "
+                "__e0.attributes['foo'] = e; }, true, false);"));
+      });
+
+      test('created for 1-way binding with dom accessor', () {
+        var elem = parseSubtree('<input value="{{bar | final}}">');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            r"__t.oneWayBind(() => bar, "
+            r"(e) { __e0.value = e; }, true, false);"));
+      });
+
+      test('created for 2-way binding with dom accessor', () {
+        var elem = parseSubtree('<input bind-value="bar | final">');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            r'__t.listen(__e0.onInput, ($event) { bar = __e0.value; }); '
+            r'__t.oneWayBind(() => bar, '
+            r'(e) { __e0.value = e; }, true, false); '));
+      });
+
+      test('created for data attribute', () {
+        var elem = parseSubtree('<div data-foo="{{bar | final}}"></div>');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            "__t.oneWayBind(() => bar, (e) { "
+            "__e0.attributes['data-foo'] = e; }, true, false);"));
+      });
+
+      test('created for class', () {
+        var elem = parseSubtree('<div class="{{a | final}}{{b | final}}"/>');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            "__t.bindClass(__e0, () => a, true); "
+            "__t.bindClass(__e0, () => b, true);"));
+      });
+
+      test('created for style', () {
+        var elem = parseSubtree('<div style="{{bar | final}}"></div>');
+        expect(_created(elem), equalsIgnoringWhitespace(
+            r"__e0 = _root.query('#__e-0'); "
+            '__t.bindStyle(__e0, () => bar, true);'));
+      });
     });
   });
 
@@ -250,7 +306,13 @@ main() {
     test('created', () {
       var elem = parseSubtree('<div>fo{{bar}}o</div>');
       expect(_created(elem, child: 1),
-        r"var __binding0 = __t.contentBind(() => (bar));");
+        r"var __binding0 = __t.contentBind(() => bar, false);");
+    });
+
+    test('created - final', () {
+      var elem = parseSubtree('<div>fo{{bar | final}}o</div>');
+      expect(_created(elem, child: 1),
+        r"var __binding0 = __t.contentBind(() => bar, true);");
     });
   });
 

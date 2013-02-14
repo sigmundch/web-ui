@@ -519,7 +519,7 @@ class ElementInfo extends NodeInfo<Element> {
  */
 class TextInfo extends NodeInfo<Text> {
   /** The data-bound Dart expression. */
-  final String binding;
+  final BindingInfo binding;
 
   TextInfo(Text node, ElementInfo parent, [this.binding, String identifier])
       : super(node, parent, identifier);
@@ -540,7 +540,7 @@ class AttributeInfo {
   final bool isStyle;
 
   /** All bound values that would be monitored for changes. */
-  final List<String> bindings;
+  final List<BindingInfo> bindings;
 
   /**
    * A two-way binding that needs a watcher. This is used in cases where we
@@ -576,7 +576,10 @@ class AttributeInfo {
    * A value that will be monitored for changes. All attributes have a single
    * bound value unless [isClass] or [isText] is true.
    */
-  String get boundValue => bindings[0];
+  String get boundValue => bindings[0].exp;
+
+  /** Whether the binding should be evaluated only once. */
+  bool get isBindingFinal => bindings[0].isFinal;
 
   /** True if this attribute binding expression should be assigned directly. */
   bool get isSimple => !isClass && !isStyle && !isText;
@@ -589,6 +592,28 @@ class AttributeInfo {
 
   String toString() => '#<AttributeInfo '
       'isClass: $isClass, values: ${bindings.join("")}>';
+}
+
+/** Information associated with a binding. */
+class BindingInfo {
+  /** The expression used in the binding. */
+  final String exp;
+
+  /** Whether the expression is treated as final (evaluated a single time). */
+  final bool isFinal;
+
+  BindingInfo(this.exp, this.isFinal);
+
+  factory BindingInfo.fromText(text) {
+    var pipeIndex = text.lastIndexOf('|');
+    if (pipeIndex != -1 && text.substring(pipeIndex + 1).trim() == 'final') {
+      return new BindingInfo(text.substring(0, pipeIndex).trim(), true);
+    } else {
+      return new BindingInfo(text, false);
+    }
+  }
+
+  String toString() => '#<BindingInfo exp: $exp, isFinal: $isFinal>';
 }
 
 /** Information extracted for each declared event in an element. */

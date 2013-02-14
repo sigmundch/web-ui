@@ -142,7 +142,19 @@ main() {
       expect(info.hasDataBinding, true);
       expect(info.node.nodes.length, 1);
       var textInfo = info.children[0];
-      expect(textInfo.binding, 'x');
+      expect(textInfo.binding.exp, 'x');
+      expect(textInfo.binding.isFinal, false);
+      expect(textInfo.node.value, '');
+    });
+
+    test('hasDataBinding - content with data, one time binding', () {
+      var input = '<div>{{x | final}}</div>';
+      var info = analyzeElement(parseSubtree(input));
+      expect(info.hasDataBinding, true);
+      expect(info.node.nodes.length, 1);
+      var textInfo = info.children[0];
+      expect(textInfo.binding.exp, 'x');
+      expect(textInfo.binding.isFinal, true);
       expect(textInfo.node.value, '');
     });
 
@@ -156,7 +168,7 @@ main() {
       expect(info.children.length, 3);
       expect(info.children[0].node.value, ' a b ');
       expect(info.children[1].node.value, '');
-      expect(info.children[1].binding, 'x');
+      expect(info.children[1].binding.exp, 'x');
       expect(info.children[2].node.value, 'c');
     });
 
@@ -173,7 +185,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
-      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.attributes['value'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(info.attributes['value'].textContent, isNull);
       expect(info.events, isEmpty);
     });
@@ -184,7 +197,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['data-hi'], isNotNull);
       expect(info.attributes['data-hi'].isSimple, true);
-      expect(info.attributes['data-hi'].bindings, equals(['x']));
+      expect(info.attributes['data-hi'].bindings.map((b) => b.exp), 
+          equals(['x']));
       expect(info.attributes['data-hi'].textContent, isNull);
       expect(info.events, isEmpty);
     });
@@ -195,7 +209,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isText, true);
-      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.attributes['value'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(info.attributes['value'].textContent, equals(['foo ', ' bar']));
       expect(info.events, isEmpty);
     });
@@ -206,7 +221,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isText, true);
-      expect(info.attributes['value'].bindings, equals(['x', 'y']));
+      expect(info.attributes['value'].bindings.map((b) => b.exp),
+          equals(['x', 'y']));
       expect(info.attributes['value'].textContent, equals(['a', 'b', '']));
       expect(info.events, isEmpty);
     });
@@ -217,7 +233,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
-      expect(info.attributes['value'].bindings, equals(['x']));
+      expect(info.attributes['value'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(info.events.keys, equals(['onInput']));
       expect(info.events['onInput'].length, equals(1));
       expect(info.events['onInput'][0].action('foo'), equals('x = foo.value'));
@@ -241,10 +258,12 @@ main() {
       expect(info.attributes.keys, equals(['selectedIndex', 'value']));
       expect(info.attributes['selectedIndex'], isNotNull);
       expect(info.attributes['selectedIndex'].isSimple, true);
-      expect(info.attributes['selectedIndex'].bindings, equals(['x']));
+      expect(info.attributes['selectedIndex'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(info.attributes['value'], isNotNull);
       expect(info.attributes['value'].isSimple, true);
-      expect(info.attributes['value'].bindings, equals(['y']));
+      expect(info.attributes['value'].bindings.map((b) => b.exp),
+          equals(['y']));
       expect(info.events.keys, equals(['onChange']));
       expect(info.events['onChange'].length, equals(2));
       expect(info.events['onChange'][0].action('foo'),
@@ -299,7 +318,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['class'], isNotNull);
       expect(info.attributes['class'].isClass, true);
-      expect(info.attributes['class'].bindings, equals(['x']));
+      expect(info.attributes['class'].bindings.map((b) => b.exp),
+          equals(['x']));
     });
 
     test('attribute - many classes', () {
@@ -308,7 +328,7 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['class'], isNotNull);
       expect(info.attributes['class'].isClass, true);
-      expect(info.attributes['class'].bindings,
+      expect(info.attributes['class'].bindings.map((b) => b.exp),
           equals(['x', 'y', 'z', 'w']));
     });
 
@@ -320,7 +340,7 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['class'], isNotNull);
       expect(info.attributes['class'].isClass, true);
-      expect(info.attributes['class'].bindings,
+      expect(info.attributes['class'].bindings.map((b) => b.exp),
           equals(['x', 'y', 'z', 'w']));
       expect(info.node.attributes['class'].length, 30);
       expect(info.node.attributes['class'].contains('class1'), true);
@@ -336,7 +356,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['data-style'], isNotNull);
       expect(info.attributes['data-style'].isStyle, true);
-      expect(info.attributes['data-style'].bindings, equals(['x']));
+      expect(info.attributes['data-style'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(messages[0].message, contains('data-style is deprecated'));
       expect(messages[0].span, equals(elem.sourceSpan));
     });
@@ -347,7 +368,8 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['style'], isNotNull);
       expect(info.attributes['style'].isStyle, true);
-      expect(info.attributes['style'].bindings, equals(['x']));
+      expect(info.attributes['style'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(messages.length, 0);
     });
 
@@ -360,7 +382,8 @@ main() {
       // style properties. We use text bindings instead.
       expect(info.attributes['style'].isStyle, false);
       expect(info.attributes['style'].isText, true);
-      expect(info.attributes['style'].bindings, equals(['x']));
+      expect(info.attributes['style'].bindings.map((b) => b.exp),
+          equals(['x']));
       expect(info.attributes['style'].textContent, equals(['display: ', '']));
       expect(messages.length, 0);
     });

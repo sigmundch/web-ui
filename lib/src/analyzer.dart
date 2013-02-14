@@ -358,7 +358,8 @@ class _Analyzer extends TreeVisitor {
       _messages.warning('data-style is deprecated. Given a binding like '
           'data-style="map", replace it with style="{{map}}".',
           info.node.sourceSpan, file: _fileInfo.path);
-      attrInfo = new AttributeInfo([value], isStyle: true);
+      attrInfo = new AttributeInfo(
+          [new BindingInfo.fromText(value)], isStyle: true);
       info.removeAttributes.add(name);
     } else if (name == 'style') {
       attrInfo = _readStyleAttribute(info, value);
@@ -469,8 +470,9 @@ class _Analyzer extends TreeVisitor {
 
   // http://dev.w3.org/html5/spec/the-input-element.html#the-input-element
   /** Support for two-way bindings. */
-  bool _readTwoWayBinding(ElementInfo info, String name, String bindingExpr) {
+  bool _readTwoWayBinding(ElementInfo info, String name, String value) {
     var elem = info.node;
+    var binding = new BindingInfo.fromText(value);
 
     // Find the HTML tag name.
     var isInput = info.baseTagName == 'input';
@@ -495,7 +497,7 @@ class _Analyzer extends TreeVisitor {
     } else if (isSelect && (name == 'selectedIndex' || name == 'value')) {
       eventStream = 'onChange';
     } else if (isInput && name == 'value' && inputType == 'radio') {
-      return _addRadioValueBinding(info, bindingExpr);
+      return _addRadioValueBinding(info, binding);
     } else if (isTextArea && name == 'value' || isInput &&
         (name == 'value' || name == 'valueAsDate' || name == 'valueAsNumber')) {
       // Input event is fired more frequently than "change" on some browsers.
@@ -507,7 +509,7 @@ class _Analyzer extends TreeVisitor {
       // using compile time mirrors.
 
       _checkDuplicateAttribute(info, name);
-      info.attributes[name] = new AttributeInfo([bindingExpr],
+      info.attributes[name] = new AttributeInfo([binding],
           customTwoWayBinding: true);
       info.hasDataBinding = true;
       return true;
@@ -520,8 +522,8 @@ class _Analyzer extends TreeVisitor {
 
     _checkDuplicateAttribute(info, name);
 
-    info.attributes[name] = new AttributeInfo([bindingExpr]);
-    _addEvent(info, eventStream, (e) => '$bindingExpr = $e.$name');
+    info.attributes[name] = new AttributeInfo([binding]);
+    _addEvent(info, eventStream, (e) => '${binding.exp} = $e.$name');
     info.hasDataBinding = true;
     return true;
   }
@@ -549,10 +551,10 @@ class _Analyzer extends TreeVisitor {
 
   /**
    * Radio buttons use the "value" and "bind-value" fields.
-   * The "value" attribute is assigned to the bindingExpr when checked, and
-   * the checked field is updated if "value" matches bindingExpr.
+   * The "value" attribute is assigned to the binding expression when checked,
+   * and the checked field is updated if "value" matches the binding expression.
    */
-  bool _addRadioValueBinding(ElementInfo info, String bindingExpr) {
+  bool _addRadioValueBinding(ElementInfo info, BindingInfo binding) {
     if (!_isValidRadioButton(info)) return false;
 
     // TODO(jmesserly): should we read the element's "value" at runtime?
@@ -567,8 +569,8 @@ class _Analyzer extends TreeVisitor {
 
     radioValue = escapeDartString(radioValue);
     info.attributes['checked'] = new AttributeInfo(
-        ["$bindingExpr == '$radioValue'"]);
-    _addEvent(info, 'onChange', (e) => "$bindingExpr = '$radioValue'");
+        [new BindingInfo("${binding.exp} == '$radioValue'", false)]);
+    _addEvent(info, 'onChange', (e) => "${binding.exp} = '$radioValue'");
     info.hasDataBinding = true;
     return true;
   }
@@ -591,7 +593,7 @@ class _Analyzer extends TreeVisitor {
     }
 
     info.removeAttributes.add(name);
-    var bindings = <String>[];
+    var bindings = <BindingInfo>[];
     var content = <String>[];
     parser.readAll(bindings, content);
 
@@ -614,7 +616,7 @@ class _Analyzer extends TreeVisitor {
     var parser = new BindingParser(value);
     if (!parser.moveNext()) return null;
 
-    var bindings = <String>[];
+    var bindings = <BindingInfo>[];
     var content = <String>[];
     parser.readAll(bindings, content);
 
@@ -637,7 +639,7 @@ class _Analyzer extends TreeVisitor {
     var parser = new BindingParser(value);
     if (!parser.moveNext()) return null;
 
-    var bindings = <String>[];
+    var bindings = <BindingInfo>[];
     var content = <String>[];
     parser.readAll(bindings, content);
 
@@ -996,10 +998,10 @@ class BindingParser {
     return text.substring(previousEnd, start);
   }
 
-  String get binding {
+  BindingInfo get binding {
     if (start == null) throw new StateError('iteration not started');
     if (end < 0) throw new StateError('no more bindings');
-    return text.substring(start + 2, end - 2);
+    return new BindingInfo.fromText(text.substring(start + 2, end - 2));
   }
 
   bool moveNext() {
@@ -1026,7 +1028,7 @@ class BindingParser {
   /**
    * Parses all bindings and contents and store them in the provided arguments.
    */
-  void readAll(List<String> bindings, List<String> content) {
+  void readAll(List<BindingInfo> bindings, List<String> content) {
     if (start == null) moveNext();
     if (start < length) {
       do {

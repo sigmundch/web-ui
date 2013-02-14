@@ -147,23 +147,29 @@ ChangeUnobserver bindCssClasses(Element elem, dynamic exp()) {
 
 /** Bind the result of [exp] to the style attribute in [elem]. */
 ChangeUnobserver bindStyle(Element elem, Map<String, String> exp()) {
-  return watchAndInvoke(_observeMap(exp), (e) {
-    if (e.oldValue is Map<String, String>) {
-      var props = e.newValue;
-      if (props is! Map<String, String>) props = const {};
-      for (var property in e.oldValue.keys) {
-        if (!props.containsKey(property)) {
-          // Value will not be overwritten with new setting. Remove.
-          elem.style.removeProperty(property);
-        }
+  return watchAndInvoke(_observeMap(exp),
+      (e) => updateStyle(elem, e.oldValue, e.newValue), 'css-style-bind');
+}
+
+/**
+ * Changes the style properties from [oldValue] to [newValue]. A runtime error
+ * is reported if [newValue] is not a `Map<String, String>`.
+ */
+void updateStyle(Element elem, oldValue, newValue) {
+  if (oldValue is Map<String, String>) {
+    var props = newValue is Map<String, String> ? newValue : const {};
+    for (var property in oldValue.keys) {
+      if (!props.containsKey(property)) {
+        // Value will not be overwritten with new setting. Remove.
+        elem.style.removeProperty(property);
       }
     }
-    if (e.newValue is! Map<String, String>) {
-      throw new DataBindingError("Expected Map<String, String> value "
-        "to data-style binding.");
-    }
-    e.newValue.forEach(elem.style.setProperty);
-  }, 'css-style-bind');
+  }
+  if (newValue is! Map<String, String>) {
+    throw new DataBindingError("Expected Map<String, String> value "
+      "to data-style binding.");
+  }
+  newValue.forEach(elem.style.setProperty);
 }
 
 /**
@@ -236,18 +242,26 @@ class Listener extends TemplateItem {
 class Binding extends TemplateItem {
   final exp;
   final ChangeObserver action;
+  final bool isFinal;
   ChangeUnobserver stopper;
 
-  Binding(this.exp, this.action);
+  Binding(this.exp, this.action, this.isFinal);
 
   void insert() {
-    if (stopper != null) throw new StateError('binding already attached');
-    stopper = watchAndInvoke(exp, action, 'generic-binding');
+    if (isFinal) {
+      action(new ChangeNotification(null, exp()));
+    } else if (stopper != null) {
+      throw new StateError('binding already attached');
+    } else {
+      stopper = watchAndInvoke(exp, action, 'generic-binding');
+    }
   }
 
   void remove() {
-    stopper();
-    stopper = null;
+    if (!isFinal) {
+      stopper();
+      stopper = null;
+    }
   }
 }
 
@@ -255,18 +269,26 @@ class Binding extends TemplateItem {
 class StyleAttrBinding extends TemplateItem {
   final exp;
   final Element elem;
+  final bool isFinal;
   ChangeUnobserver stopper;
 
-  StyleAttrBinding(this.elem, this.exp);
+  StyleAttrBinding(this.elem, this.exp, this.isFinal);
 
   void insert() {
-    if (stopper != null) throw new StateError('style binding already attached');
-    stopper = bindStyle(elem, exp);
+    if (isFinal) {
+      _updateStyle(elem, null, exp());
+    } else if (stopper != null) {
+      throw new StateError('style binding already attached');
+    } else {
+      stopper = bindStyle(elem, exp);
+    }
   }
 
   void remove() {
-    stopper();
-    stopper = null;
+    if (!isFinal) {
+      stopper();
+      stopper = null;
+    }
   }
 }
 
@@ -274,18 +296,26 @@ class StyleAttrBinding extends TemplateItem {
 class ClassAttrBinding extends TemplateItem {
   final Element elem;
   final exp;
+  final bool isFinal;
   ChangeUnobserver stopper;
 
-  ClassAttrBinding(this.elem, this.exp);
+  ClassAttrBinding(this.elem, this.exp, this.isFinal);
 
   void insert() {
-    if (stopper != null) throw new StateError('class binding already attached');
-    stopper = bindCssClasses(elem, exp);
+    if (isFinal) {
+      updateCssClass(elem, true, exp());
+    } else if (stopper != null) {
+      throw new StateError('class binding already attached');
+    } else {
+      stopper = bindCssClasses(elem, exp);
+    }
   }
 
   void remove() {
-    stopper();
-    stopper = null;
+    if (!isFinal) {
+      stopper();
+      stopper = null;
+    }
   }
 }
 
@@ -309,20 +339,32 @@ class DomPropertyBinding extends TemplateItem {
    */
   final bool isUrl;
 
+  final bool isFinal;
+
   ChangeUnobserver stopper;
 
-  DomPropertyBinding(this.getter, this.setter, this.isUrl);
+  DomPropertyBinding(this.getter, this.setter, this.isUrl, this.isFinal);
+
+  void _safeSetter(value) {
+    setter(isUrl ? sanitizeUri(value) : value);
+  }
 
   void insert() {
-    if (stopper != null) throw new StateError('data binding already attached.');
-    stopper = watchAndInvoke(getter, (e) {
-      setter(isUrl ? sanitizeUri(e.newValue) : e.newValue);
-    }, 'dom-property-binding');
+    if (isFinal) {
+      _safeSetter(getter());
+    } else if (stopper != null) {
+      throw new StateError('data binding already attached.');
+    } else {
+      stopper = watchAndInvoke(getter, (e) => _safeSetter(e.newValue),
+          'dom-property-binding');
+    }
   }
 
   void remove() {
-    stopper();
-    stopper = null;
+    if (!isFinal) {
+      stopper();
+      stopper = null;
+    }
   }
 }
 
@@ -373,32 +415,32 @@ class Template extends TemplateItem {
   }
 
   /** Run [action] when [exp] changes (while this template is visible).  */
-  void bind(exp, ChangeObserver action) {
-    children.add(new Binding(exp, action));
+  void bind(exp, ChangeObserver action, bool isFinal) {
+    children.add(new Binding(exp, action, isFinal));
   }
 
   /** Create and bind a [Node] to [exp] while this template is visible. */
-  Node contentBind(Function exp) {
+  Node contentBind(Function exp, isFinal) {
     var bindNode = new Text('');
     children.add(new Binding(() => '${exp()}', (e) {
       bindNode = updateBinding(exp(), bindNode, e.newValue);
-    }));
+    }, isFinal));
     return bindNode;
   }
 
   /** Bind [exp] to `elem.class` while this template is visible.  */
-  void bindClass(elem, exp) {
-    children.add(new ClassAttrBinding(elem, exp));
+  void bindClass(elem, exp, isFinal) {
+    children.add(new ClassAttrBinding(elem, exp, isFinal));
   }
 
   /** Bind [exp] to `elem.style` while this template is visible.  */
-  void bindStyle(elem, exp) {
-    children.add(new StyleAttrBinding(elem, exp));
+  void bindStyle(elem, exp, isFinal) {
+    children.add(new StyleAttrBinding(elem, exp, isFinal));
   }
 
   /** Bind [exp] to [setter] while this template is visible.  */
-  void oneWayBind(exp, setter, [isUrl = false]) {
-    children.add(new DomPropertyBinding(exp, setter, isUrl));
+  void oneWayBind(exp, setter, isFinal, [isUrl = false]) {
+    children.add(new DomPropertyBinding(exp, setter, isUrl, isFinal));
   }
 
   /** Watch [exp] and render a conditional while this template is visible. */
@@ -598,7 +640,7 @@ class LoopTemplate extends PlaceholderTemplate {
 }
 
 /**
- * A template loop of the form `<td template iterate="x in list ">`. Unlike
+ * A template loop of the form `<td template iterate="x in list">`. Unlike
  * [LoopTemplate], here we insert children directly then node annotated with the
  * template attribute.
  */
