@@ -19,17 +19,15 @@
   </template>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
+    import 'package:web_ui/observe.dart';
     import 'common.dart';
     main() {
       window.setTimeout(() {
         cond = true;
-        dispatch();
         window.setTimeout(() {
           cond = false;
-          dispatch();
           // in the end, we should see 'no' again
-          window.setTimeout(() => window.postMessage('done', '*'), 0);
+          window.setImmediate(() => window.postMessage('done', '*'));
         }, 0);
       }, 0);
     }

@@ -21,6 +21,7 @@
     <script type='application/dart'>
       import 'package:web_ui/web_ui.dart';
       import 'recursive_test_data.dart';
+      @observable
       class Rec extends WebComponent {
         int pos;
       }
@@ -30,25 +31,20 @@
 
   <script type="application/dart">
   import 'dart:html';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
   import 'recursive_test_data.dart';
 
   main() {
     window.setTimeout(() {
-      dispatch();
       window.setTimeout(() {
         len = 1;
-        dispatch();
         window.setTimeout(() {
           len = 3;
-          dispatch();
           window.setTimeout(() {
             len = 2;
-            dispatch();
             window.setTimeout(() {
               len = 1;
-              dispatch();
-              window.setTimeout(() => window.postMessage('done', '*'), 0);
+              window.setImmediate(() => window.postMessage('done', '*'));
             }, 0);
           }, 0);
         }, 0);

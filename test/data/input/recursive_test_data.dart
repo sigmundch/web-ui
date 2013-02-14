@@ -5,8 +5,9 @@
 library recursive_test_data;
 
 import 'package:unittest/unittest.dart';
+import 'package:web_ui/observe.dart';
 
-int len = 0;
+@observable int len = 0;
 
 String check(pos) {
   expect(pos, lessThanOrEqualTo(len));

@@ -37,10 +37,17 @@
   <script type="application/dart">
     import 'dart:html';
     import 'package:unittest/unittest.dart';
+    import 'package:web_ui/observe.dart';
 
-    var greetings = ['hello', 'hi'];
-    var names = ['world', 'universe'];
-    var endings = ['??', '!!'];
+    @observable
+    var greetings = toObservable(['hello', 'hi']);
+
+    @observable
+    var names = toObservable(['world', 'universe']);
+
+    @observable
+    var endings = toObservable(['??', '!!']);
+
     main() {
       window.setTimeout(() {
         expect(query('x-greeter').attributes, { 'title': 'world' });

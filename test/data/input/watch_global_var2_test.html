@@ -8,21 +8,19 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>watch_global_var_test</title>
   <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
   <div>{{topLevelVar}}</div>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
-    String topLevelVar = "hi";
+    import 'package:web_ui/observe.dart';
+    @observable String topLevelVar = "hi";
     main() {
       // test for making a change on topLevelVar
       window.setTimeout(() {
         topLevelVar = "hello";
-        dispatch();
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }
   </script>

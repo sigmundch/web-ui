@@ -18,19 +18,18 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
 
-  var list = <String>['a', 'b', 'c', 'e'];
+  @observable var list = toObservable(['a', 'b', 'c', 'e']);
   main() {
     window.setTimeout(() {
       expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
           '<span>a</span> <span>b</span> <span>c</span> <span>e</span>'));
       list[3] = 'd';
-      dispatch();
       window.setTimeout(() {
         expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
             '<span>a</span> <span>b</span> <span>c</span> <span>d</span>'));
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }, 0);
   }

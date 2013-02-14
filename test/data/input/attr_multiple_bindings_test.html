@@ -8,7 +8,6 @@ BSD-style license that can be found in the LICENSE file.
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>watch_global_var_test</title>
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
@@ -23,16 +22,13 @@ BSD-style license that can be found in the LICENSE file.
   <pre>{{tryQuery('a', 1, (e) => e.hash)}}</pre>
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
+    import 'package:web_ui/observe.dart';
 
-    final j1 = 'jumps';
-    final j2 = 'the';
-    final fox = 'Your escaping is bad and you should feel bad!';
+    @observable var j1 = 'jumps';
+    @observable var j2 = 'the';
+    @observable var fox = 'Your escaping is bad and you should feel bad!';
     main() {
-      window.setTimeout(() {
-        dispatch();
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
-      }, 0);
+      window.setTimeout(() => window.postMessage('done', '*'), 0);
     }
 
     tryQuery(String selector, int i, void callback(elem)) {

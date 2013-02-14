@@ -74,7 +74,7 @@ final addTodo = todomvc_main.addTodo;
 
 main() {
   todomvc_main.main();
-  window.setTimeout(() => window.postMessage('done', '*'), 0);
+  window.setImmediate(() => window.postMessage('done', '*'));
 }
   </script>
 </body>

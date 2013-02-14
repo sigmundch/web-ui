@@ -20,21 +20,20 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
   import 'package:web_ui/safe_html.dart';
 
-  var w = '<span>text0</span>';
-  var x = '<span>text0</span>';
-  var y = new SafeHtml.unsafe('<span>html0</span>');
-  var z = new SafeHtml.unsafe('<span>html0</span>');
+  @observable var w = '<span>text0</span>';
+  @observable var x = '<span>text0</span>';
+  @observable var y = new SafeHtml.unsafe('<span>html0</span>');
+  @observable var z = new SafeHtml.unsafe('<span>html0</span>');
   main() {
     window.setTimeout(() {
       w = '<span>text1</span>';
       x = new SafeHtml.unsafe('<div>html1</div>');
       y = '<span>text2</span>';
       z = new SafeHtml.unsafe('<div>html2</div>');
-      dispatch();
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      window.setImmediate(() => window.postMessage('done', '*'));
     }, 0);
   }
   </script>

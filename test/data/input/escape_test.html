@@ -17,13 +17,13 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
   import 'package:web_ui/safe_html.dart';
 
-  var text = '<span>hello</span>';
-  var html = new SafeHtml.unsafe('<span>hello</span>');
+  @observable var text = '<span>hello</span>';
+  @observable var html = new SafeHtml.unsafe('<span>hello</span>');
   main() {
-    window.setTimeout(() => window.postMessage('done', '*'), 0);
+    window.setImmediate(() => window.postMessage('done', '*'));
   }
   </script>
 </body>

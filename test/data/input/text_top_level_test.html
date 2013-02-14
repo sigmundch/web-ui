@@ -14,14 +14,14 @@ BSD-style license that can be found in the LICENSE file.
   expect to see 'two': {{topLevelVar}}
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
+    import 'package:web_ui/observe.dart';
     import 'common.dart';
 
     main() {
       window.setTimeout(() {
         topLevelVar = 'two';
-        dispatch();
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        deliverChangesSync();
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }
   </script>

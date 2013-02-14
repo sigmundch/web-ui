@@ -8,15 +8,14 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>dom_accessor_binding_test</title>
   <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
   <input value="{{topLevelVar}}">
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
-    String topLevelVar = "A";
+    import 'package:web_ui/observe.dart';
+    @observable String topLevelVar = "A";
     main() {
       window.onLoad.listen((e) {
         var input = query('input');
@@ -24,10 +23,10 @@
                                  '${input.value}');
         input.value = "B";
         topLevelVar = "C";
-        dispatch();
+        deliverChangesSync();
         document.body.appendText('expected input.value to be "C", got '
                                  '${input.value}');
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.postMessage('done', '*');
       });
     }
   </script>

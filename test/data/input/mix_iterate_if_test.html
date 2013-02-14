@@ -21,13 +21,18 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
 
-  List<List> table = [[1, 2, 3], [4, 0, 5], [0, 2, 4]];
+  @observable
+  List<List> table = toObservable([
+    toObservable([1, 2, 3]),
+    toObservable([4, 0, 5]),
+    toObservable([0, 2, 4])
+  ]);
+
   main() {
     window.setTimeout(() {
       table[1][1] = 9;
-      dispatch();
       window.setTimeout(() {
         var test = document.query('#test');
         expect(test.children.length, table.length);
@@ -47,7 +52,7 @@ BSD-style license that can be found in the LICENSE file.
             expect(td.innerHtml, value.toString());
           }
         }
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }, 0);
   }

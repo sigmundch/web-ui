@@ -18,6 +18,7 @@ BSD-style license that can be found in the LICENSE file.
   <a href="javascript:{{m3}}"></a>
   <a href="javascript:{{m4}}"></a>
   <script type="application/dart">
+  @observable library main;
   import 'dart:html';
   import 'package:web_ui/safe_html.dart';
 
@@ -32,7 +33,7 @@ BSD-style license that can be found in the LICENSE file.
         tag.dispatchEvent(new MouseEvent('click', detail: 1));
       });
 
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      window.setImmediate(() => window.postMessage('done', '*'));
     }, 0);
   }
   </script>

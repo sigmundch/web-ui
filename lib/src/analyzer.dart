@@ -11,7 +11,7 @@ library analyzer;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 
-import 'directive_parser.dart' show parseDartCode;
+import 'dart_parser.dart';
 import 'file_system/path.dart';
 import 'files.dart';
 import 'html5_utils.dart';
@@ -712,7 +712,7 @@ class _Analyzer extends TreeVisitor {
     var path = info.externalFile;
     if (path != null) {
       info.externalCode = files[path];
-      info.userCode = info.externalCode.userCode;
+      info.externalCode.htmlFile = info;
     }
   }
 
@@ -953,9 +953,8 @@ class _ElementLoader extends TreeVisitor {
           ' HTML pages that define components, but are not the entry HTML '
           'file.', node.sourceSpan, file: _fileInfo.path);
     } else {
-      _currentInfo.inlinedCode = text.value;
-      _currentInfo.userCode = parseDartCode(text.value,
-          _currentInfo.inputPath, messages:_messages);
+      var path = _currentInfo.inputPath;
+      _currentInfo.inlinedCode = parseDartCode(path, text.value, _messages);
       if (_currentInfo.userCode.partOf != null) {
         _messages.error('expected a library, not a part.',
             node.sourceSpan, file: _fileInfo.path);

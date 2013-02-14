@@ -83,7 +83,7 @@ main() {
     app.todos.add(new Todo('two (unchecked)'));
     app.todos.add(new Todo('three (checked)')..done = true);
     app.todos.add(new Todo('four (checked)'));
-    dispatch();
+    deliverChangesSync();
 
     // To ensure we click in the correct place, we calculate x, y offset where
     // we want to click based on the coordinates given by DumpRenderTree, and
@@ -109,7 +109,7 @@ main() {
     // The next extra check is only valid when polyfilling the shadow DOM:
     expect(node, same(document.queryAll('input[type=checkbox]')[4]));
 
-    window.setTimeout(() => window.postMessage('done', '*'), 0);
+    window.setImmediate(() => window.postMessage('done', '*'));
   }, 0);
 }
   </script>

@@ -77,8 +77,8 @@ main() {
   todomvc_main.main();
   window.setTimeout(() {
     app.todos.add(new Todo('hola'));
-    dispatch();
-    window.setTimeout(() => window.postMessage('done', '*'), 0);
+    deliverChangesSync();
+    window.setImmediate(() => window.postMessage('done', '*'));
   }, 0);
 }
   </script>

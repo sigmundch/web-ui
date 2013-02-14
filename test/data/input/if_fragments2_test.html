@@ -22,14 +22,13 @@ BSD-style license that can be found in the LICENSE file.
   </template>
   <script type="application/dart">
   import 'dart:html';
-  import 'package:web_ui/watcher.dart';
-  var value = '-';
-  bool cond = true;
+  import 'package:web_ui/observe.dart';
+  @observable var value = '-';
+  @observable bool cond = true;
   main() {
     window.setTimeout(() {
       cond = false;
-      dispatch();
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      window.setImmediate(() => window.postMessage('done', '*'));
     }, 0);
   }
   </script>

@@ -8,25 +8,24 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>dom_accessor_binding_test</title>
   <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
   <input type="checkbox" checked="{{boolVar}}">
   <script type="application/dart">
     import 'dart:html';
-    import 'package:web_ui/watcher.dart';
-    bool boolVar = false;
+    import 'package:web_ui/observe.dart';
+    @observable bool boolVar = false;
     main() {
       window.onLoad.listen((e) {
         var input = query('input');
         document.body.appendText('expected input.checked to be false, got '
                                  '${input.checked}');
         boolVar = true;
-        dispatch();
+        deliverChangesSync();
         document.body.appendText('expected input.checked to be true, got '
                                  '${input.checked}');
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.postMessage('done', '*');
       });
     }
   </script>

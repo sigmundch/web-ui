@@ -18,11 +18,11 @@ import 'package:web_ui/dwc.dart' as dwc;
 
 import 'analyzer_test.dart' as analyzer_test;
 import 'compiler_test.dart' as compiler_test;
-import 'directive_parser_test.dart' as directive_test;
 import 'emitter_test.dart' as emitter_test;
 import 'html5_utils_test.dart' as html5_utils_test;
 import 'html_cleaner_test.dart' as html_cleaner_test;
 import 'linked_list_test.dart' as linked_list_test;
+import 'observe_test.dart' as observe_test;
 import 'path_info_test.dart' as path_info_test;
 import 'utils_test.dart' as utils_test;
 import 'watcher_test.dart' as watcher_test;
@@ -41,11 +41,11 @@ main() {
 
   addGroup('analyzer_test.dart', analyzer_test.main);
   addGroup('compiler_test.dart', compiler_test.main);
-  addGroup('directive_parser_test.dart', directive_test.main);
   addGroup('emitter_test.dart', emitter_test.main);
   addGroup('html5_utils_test.dart', html5_utils_test.main);
   addGroup('html_cleaner_test.dart', html_cleaner_test.main);
   addGroup('linked_list_test.dart', linked_list_test.main);
+  addGroup('observe_test.dart', observe_test.main);
   addGroup('path_info_test.dart', path_info_test.main);
   addGroup('utils_test.dart', utils_test.main);
   addGroup('watcher_test.dart', watcher_test.main);

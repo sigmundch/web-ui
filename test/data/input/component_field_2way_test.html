@@ -16,11 +16,18 @@
     <template></template>
     <script type='application/dart'>
       import 'package:web_ui/web_ui.dart';
+      @observable
       class Greeter extends WebComponent {
         String greetIng;
+
+        // TODO(jmesserly): original test was testing for the "title" DOM
+        // property. Unfortunately it can't be observed, so we'll use
+        // a different property.
+        String title2;
+
         changeStuff() {
           greetIng = 'Yo dawg';
-          title = 'I heard you like $title so we put $title in yo $title.';
+          title2 = 'I heard you like $title2 so we put $title2 in yo $title2.';
         }
       }
     </script>
@@ -30,7 +37,7 @@
   </p>
   <!-- Note: "title" is a DOM field on all elements.
        Also this element has no rendering. -->
-  <x-greeter id="greet" bind-title="data[1]" bind-greet-ing="data[0]">
+  <x-greeter id="greet" bind-title2="data[1]" bind-greet-ing="data[0]">
   </x-greeter>
   <p id="actual">{{data[0]}} {{data[1]}}</p>
   <script type="application/dart">
@@ -38,14 +45,15 @@
     import 'package:unittest/unittest.dart';
     import 'package:web_ui/web_ui.dart';
 
-    var data = ['hello', 'world'];
+    final data = toObservable(['hello', 'world']);
+
     main() {
       window.setTimeout(() {
         var actual = query('#actual');
         var greet = query('#greet');
         expect(actual.innerHtml, 'hello world');
         greet.xtag.changeStuff();
-        dispatch();
+        deliverChangesSync();
         expect(actual.innerHtml, contains('Yo dawg I heard'));
         window.postMessage('done', '*');
       }, 0);

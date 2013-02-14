@@ -12,9 +12,11 @@ import 'dart:collection' show SplayTreeMap, LinkedHashMap;
 import 'dart:uri';
 
 import 'package:html5lib/dom.dart';
+import 'package:analyzer_experimental/src/generated/ast.dart';
 import 'package:csslib/parser.dart' as css;
 import 'package:csslib/visitor.dart';
 
+import 'dart_parser.dart' show DartCodeInfo;
 import 'file_system/path.dart';
 import 'files.dart';
 import 'messages.dart';
@@ -112,7 +114,13 @@ class PathInfo {
     if (!outputPath.toString().contains('packages')) return outputPath;
     var segments = outputPath.segments().map(
         (segment) => segment == 'packages' ? '_from_packages' : segment);
-    return new Path(segments.join('/'));
+    var rewrittenPath = segments.join('/');
+    if (outputPath.isAbsolute) {
+      // TODO(jmesserly): this is probably broken on Windows
+      // We need to switch to package:pathos
+      rewrittenPath = '/$rewrittenPath';
+    }
+    return new Path(rewrittenPath);
   }
 
   /**
@@ -166,19 +174,22 @@ abstract class LibraryInfo {
   bool get codeAttached => inlinedCode != null || externalFile != null;
 
   /**
-   * The actual code, either inlined or from an external file, or `null` if none
-   * was defined.
+   * The actual inlined code. Use [userCode] if you want the code from this file
+   * or from an external file.
    */
-  DartCodeInfo userCode;
-
-  /** The inlined code, if any. */
-  String inlinedCode;
+  DartCodeInfo inlinedCode;
 
   /** The name of the file sourced in a script tag, if any. */
   Path externalFile;
 
   /** Info asscociated with [externalFile], if any. */
   FileInfo externalCode;
+
+  /**
+   * The inverse of [externalCode]. If this .dart file was imported via a script
+   * tag, this refers to the HTML file that imported it.
+   */
+  LibraryInfo htmlFile;
 
   /** File where the top-level code was defined. */
   Path get inputPath;
@@ -195,6 +206,15 @@ abstract class LibraryInfo {
    */
   String _getOutputFilename(NameMangler mangle);
 
+  /** This is used in transforming Dart code to track modified files. */
+  bool modified = false;
+
+  /**
+   * This is used in transforming Dart code to compute files that reference
+   * [modified] files.
+   */
+  List<FileInfo> referencedBy = [];
+
   /**
    * Components used within this library unit. For [FileInfo] these are
    * components used directly in the page. For [ComponentInfo] these are
@@ -202,6 +222,13 @@ abstract class LibraryInfo {
    */
   final Map<ComponentInfo, bool> usedComponents =
       new LinkedHashMap<ComponentInfo, bool>();
+
+  /**
+   * The actual code, either inlined or from an external file, or `null` if none
+   * was defined.
+   */
+  DartCodeInfo get userCode =>
+      externalCode != null ? externalCode.inlinedCode : inlinedCode;
 }
 
 /** Information extracted at the file-level. */
@@ -631,43 +658,6 @@ class TemplateInfo extends ElementInfo {
  * here as an argument.
  */
 typedef String ActionDefinition(String elemVarName);
-
-/** Information extracted from a source Dart file. */
-class DartCodeInfo {
-  /** Library qualified identifier, if any. */
-  final String libraryName;
-
-  /** Library which the code is part-of, if any. */
-  final String partOf;
-
-  /** Declared imports, exports, and parts. */
-  final List<DartDirectiveInfo> directives;
-
-  /** The rest of the code. */
-  final String code;
-
-  DartCodeInfo(this.libraryName, this.partOf, this.directives, this.code);
-}
-
-/** Information about a single import/export/part directive. */
-class DartDirectiveInfo {
-  /** Directive's label: import, export, or part. */
-  String label;
-
-  /** Referenced uri being imported, exported, or included by a part. */
-  String uri;
-
-  /** Prefix used for imports, if any. */
-  String prefix;
-
-  /** Hidden identifiers. */
-  List<String> hide;
-
-  /** Shown identifiers. */
-  List<String> show;
-
-  DartDirectiveInfo(this.label, this.uri, [this.prefix, this.hide, this.show]);
-}
 
 
 /**

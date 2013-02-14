@@ -7,16 +7,16 @@ library compiler;
 import 'dart:async';
 import 'dart:collection' show SplayTreeMap;
 import 'dart:json' as json;
-
+import 'package:analyzer_experimental/src/generated/ast.dart' show Directive;
+import 'package:csslib/parser.dart' as css;
+import 'package:csslib/visitor.dart' show InfoVisitor, StyleSheet;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
-import 'package:csslib/parser.dart' as css;
-import 'package:csslib/visitor.dart';
 
 import 'analyzer.dart';
 import 'code_printer.dart';
 import 'codegen.dart' as codegen;
-import 'directive_parser.dart' show parseDartCode;
+import 'dart_parser.dart';
 import 'emitters.dart';
 import 'file_system.dart';
 import 'file_system/path.dart';
@@ -24,6 +24,7 @@ import 'files.dart';
 import 'html_cleaner.dart';
 import 'info.dart';
 import 'messages.dart';
+import 'observable_transform.dart' show transformObservables;
 import 'options.dart';
 import 'utils.dart';
 
@@ -57,6 +58,11 @@ class Compiler {
   Path _mainPath;
   PathInfo _pathInfo;
   Messages _messages;
+
+  FutureGroup _tasks;
+  Set _processed;
+
+  bool _useObservers = false;
 
   /** Information about source [files] given their href. */
   final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
@@ -104,6 +110,7 @@ class Compiler {
     }
     return _parseAndDiscover(_mainPath).then((_) {
       _analyze();
+      _transformDart();
       _emit();
     });
   }
@@ -114,49 +121,54 @@ class Compiler {
    * processed.
    */
   Future _parseAndDiscover(Path inputFile) {
-    var tasks = new FutureGroup();
-    bool isEntry = !options.componentsOnly;
+    _tasks = new FutureGroup();
+    _processed = new Set();
+    _processed.add(inputFile);
+    _tasks.add(_parseHtmlFile(inputFile).then(_processHtmlFile));
+    return _tasks.future;
+  }
 
-    var processed = new Set();
-    processHtmlFile(SourceFile file) {
-      if (file == null) return;
-      if (!_pathInfo.checkInputPath(file.path, _messages)) return;
+  bool _shouldProcessFile(SourceFile file) =>
+      file != null && _pathInfo.checkInputPath(file.path, _messages);
 
-      files.add(file);
+  void _processHtmlFile(SourceFile file) {
+    if (!_shouldProcessFile(file)) return;
 
-      var fileInfo = _time('Analyzed definitions', file.path,
-          () => analyzeDefinitions(file, _messages, isEntryPoint: isEntry));
-      isEntry = false;
-      info[file.path] = fileInfo;
+    bool isEntryPoint = _processed.length == 1;
 
-      // Load component files referenced by [file].
-      for (var href in fileInfo.componentLinks) {
-        if (!processed.contains(href)) {
-          processed.add(href);
-          tasks.add(_parseHtmlFile(href).then(processHtmlFile));
-        }
-      }
+    files.add(file);
 
-      // Load .dart files being referenced in the page.
-      var src = fileInfo.externalFile;
-      if (src != null && !processed.contains(src)) {
-        processed.add(src);
-        tasks.add(_parseDartFile(src).then(_addDartFile));
-      }
+    var fileInfo = _time('Analyzed definitions', file.path,
+        () => analyzeDefinitions(file, _messages, isEntryPoint: isEntryPoint));
+    info[file.path] = fileInfo;
 
-      // Load .dart files being referenced in components.
-      for (var component in fileInfo.declaredComponents) {
-        var src = component.externalFile;
-        if (src != null && !processed.contains(src)) {
-          processed.add(src);
-          tasks.add(_parseDartFile(src).then(_addDartFile));
-        }
+    _processImports(fileInfo);
+
+    // Load component files referenced by [file].
+    for (var href in fileInfo.componentLinks) {
+      if (!_processed.contains(href)) {
+        _processed.add(href);
+        _tasks.add(_parseHtmlFile(href).then(_processHtmlFile));
       }
     }
 
-    processed.add(inputFile);
-    tasks.add(_parseHtmlFile(inputFile).then(processHtmlFile));
-    return tasks.future;
+    // Load .dart files being referenced in the page.
+    var src = fileInfo.externalFile;
+    if (src != null && !_processed.contains(src)) {
+      _processed.add(src);
+      _tasks.add(_parseDartFile(src).then(_processDartFile));
+    }
+
+    // Load .dart files being referenced in components.
+    for (var component in fileInfo.declaredComponents) {
+      var src = component.externalFile;
+      if (src != null && !_processed.contains(src)) {
+        _processed.add(src);
+        _tasks.add(_parseDartFile(src).then(_processDartFile));
+      } else if (component.userCode != null) {
+        _processImports(component);
+      }
+    }
   }
 
   /** Asynchronously parse [path] as an .html file. */
@@ -184,20 +196,188 @@ class Compiler {
     return null;
   }
 
-  void _addDartFile(SourceFile dartFile) {
-    if (dartFile == null) return;
-    if (!_pathInfo.checkInputPath(dartFile.path, _messages)) return;
+  void _processDartFile(SourceFile dartFile) {
+    if (!_shouldProcessFile(dartFile)) return;
 
     files.add(dartFile);
 
     var fileInfo = new FileInfo(dartFile.path);
     info[dartFile.path] = fileInfo;
-    fileInfo.inlinedCode = dartFile.code;
-    fileInfo.userCode = parseDartCode(fileInfo.inlinedCode,
-        fileInfo.path, messages:_messages);
-    if (fileInfo.userCode.partOf != null) {
-      _messages.error('expected a library, not a part.', null,
-          file: dartFile.path);
+    fileInfo.inlinedCode =
+        parseDartCode(fileInfo.path, dartFile.code, _messages);
+
+    _processImports(fileInfo);
+  }
+
+  void _processImports(LibraryInfo library) {
+    if (library.userCode == null) return;
+
+    for (var directive in library.userCode.directives) {
+      var src = _getDirectivePath(library, directive);
+      if (src == null) {
+        var uri = getDirectiveUri(directive).value;
+        if (uri.startsWith('package:web_ui/observe')) {
+          _useObservers = true;
+        }
+      } else if (!_processed.contains(src)) {
+        _processed.add(src);
+        _tasks.add(_parseDartFile(src).then(_processDartFile));
+      }
+    }
+  }
+
+  Path _getDirectivePath(LibraryInfo libInfo, Directive directive) {
+    var uri = getDirectiveUri(directive).value;
+    if (uri.startsWith('dart:')) return null;
+
+    if (uri.startsWith('package:')) {
+      // Don't process our own package -- we'll implement @observable manually.
+      if (uri.startsWith('package:web_ui/')) return null;
+
+      return _mainPath.directoryPath.join(new Path('packages'))
+          .join(new Path(uri.substring(8)));
+    } else {
+      return libInfo.inputPath.directoryPath.join(new Path(uri));
+    }
+  }
+
+  /**
+   * Transform Dart source code.
+   * Currently, the only transformation is [transformObservables].
+   * Calls _emitModifiedDartFiles to write the transformed files.
+   */
+  void _transformDart() {
+    var libraries = _findAllDartLibraries();
+
+    var transformed = [];
+    for (var library in libraries) {
+      if (transformObservables(library.userCode, _messages)) {
+        // TODO(jmesserly): what about ObservableList/Map/Set?
+        _useObservers = true;
+        transformed.add(library);
+      }
+    }
+
+    _findModifiedDartFiles(libraries, transformed);
+
+    libraries.forEach(_fixImports);
+
+    _emitModifiedDartFiles(libraries);
+  }
+
+  /**
+   * Finds all Dart code libraries.
+   * Each library will have [LibraryInfo.inlinedCode] that is non-null.
+   * Also each inlinedCode will be unique.
+   */
+  List<LibraryInfo> _findAllDartLibraries() {
+    var libs = <LibraryInfo>[];
+    void _addLibrary(LibraryInfo lib) {
+      if (lib.inlinedCode != null) libs.add(lib);
+    }
+
+    for (var sourceFile in files) {
+      var file = info[sourceFile.path];
+      _addLibrary(file);
+      file.declaredComponents.forEach(_addLibrary);
+    }
+
+    // Assert that each file path is unique.
+    assert(_uniquePaths(libs));
+    return libs;
+  }
+
+  bool _uniquePaths(List<LibraryInfo> libs) {
+    var seen = new Set();
+    for (var lib in libs) {
+      if (seen.contains(lib.inlinedCode)) {
+        throw new StateError('internal error: '
+            'duplicate user code for ${lib.inputPath}. Files were: $files');
+      }
+      seen.add(lib.inlinedCode);
+    }
+    return true;
+  }
+
+  /**
+   * Queue modified Dart files to be written.
+   * This will not write files that are handled by [WebComponentEmitter] and
+   * [MainPageEmitter].
+   */
+  void _emitModifiedDartFiles(List<LibraryInfo> libraries) {
+    for (var lib in libraries) {
+      // Components will get emitted by WebComponentEmitter, and the
+      // entry point will get emitted by MainPageEmitter.
+      // So we only need to worry about other .dart files.
+      if (lib.modified && lib is FileInfo &&
+          lib.htmlFile == null && !lib.isEntryPoint) {
+
+        var printer = emitDartFile(lib, _pathInfo);
+        _emitFileAndSourceMaps(lib, printer, lib.inputPath);
+      }
+    }
+  }
+
+  /**
+   * This method computes which Dart files have been modified, starting
+   * from [transformed] and marking recursively through all files that import
+   * the modified files.
+   */
+  void _findModifiedDartFiles(List<LibraryInfo> libraries,
+      List<FileInfo> transformed) {
+
+    if (transformed.length == 0) return;
+
+    // Compute files that reference each file, then use this information to
+    // flip the modified bit transitively. This is a lot simpler than trying
+    // to compute it the other way because of circular references.
+    for (var library in libraries) {
+      for (var directive in library.userCode.directives) {
+        var importPath = _getDirectivePath(library, directive);
+        if (importPath == null) continue;
+
+        var importInfo = info[importPath];
+        if (importInfo != null) {
+          importInfo.referencedBy.add(library);
+        }
+      }
+    }
+
+    // Propegate the modified bit to anything that references a modified file.
+    void setModified(LibraryInfo library) {
+      if (library.modified) return;
+      library.modified = true;
+      library.referencedBy.forEach(setModified);
+    }
+    transformed.forEach(setModified);
+
+    for (var library in libraries) {
+      // We don't need this anymore, so free it.
+      library.referencedBy = null;
+    }
+  }
+
+  void _fixImports(LibraryInfo library) {
+    var fileOutputPath = _pathInfo.outputLibraryPath(library);
+
+    // Fix imports. Modified files must use the generated path, otherwise
+    // we need to make the path relative to the input.
+    for (var directive in library.userCode.directives) {
+      var importPath = _getDirectivePath(library, directive);
+      if (importPath == null) continue;
+      var importInfo = info[importPath];
+      if (importInfo == null) continue;
+
+      String newUri;
+      if (importInfo.modified) {
+        // Use the generated URI for this file.
+        newUri = _pathInfo.relativePath(library, importInfo).toString();
+      } else {
+        // Get the relative path to the input file.
+        newUri = _pathInfo.transformUrl(library.inputPath,
+            getDirectiveUri(directive).value);
+      }
+      setDirectiveUri(directive, createStringLiteral(newUri));
     }
   }
 
@@ -246,7 +426,8 @@ class Compiler {
     var bootstrapPath = file.path.directoryPath.append(bootstrapName);
     var bootstrapOutPath = _pathInfo.outputPath(bootstrapPath, '');
     output.add(new OutputFile(bootstrapOutPath, codegen.bootstrapCode(
-          _pathInfo.relativePath(new FileInfo(bootstrapPath), fileInfo))));
+          _pathInfo.relativePath(new FileInfo(bootstrapPath), fileInfo),
+          _useObservers)));
 
     var document = file.document;
     bool dartLoaderFound = false;

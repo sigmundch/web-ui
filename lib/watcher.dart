@@ -48,7 +48,21 @@ library watcher;
 
 import 'dart:async';
 import 'dart:collection';
+import 'observe.dart';
 import 'src/linked_list.dart';
+
+/**
+ * True to use the [observe] library instead of watchers.
+ *
+ * Observers require the [observable] annotation on objects and for collection
+ * types to be observable, such as [ObservableList]. But in return they offer
+ * better performance and more precise change tracking. [dispatch] is not
+ * required with observers, and changes to observable objects are always
+ * detected.
+ *
+ * Currently this flag is experimental, but it may be the default in the future.
+ */
+bool useObservers = false;
 
 /**
  * Watch for changes in [target].  The [callback] function will be called when
@@ -78,7 +92,9 @@ import 'src/linked_list.dart';
  *   This is syntactic sugar for using the getter portion of a [Handle].
  *         watch(handle, ...)  // equivalent to `watch(handle._getter, ...)`
  */
-WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
+ChangeUnobserver watch(target, ChangeObserver callback, [String debugName]) {
+  if (useObservers) return observe(target, callback);
+
   if (callback == null) return () {}; // no use in passing null as a callback.
   if (_watchers == null) _watchers = new LinkedList<_Watcher>();
   Function exp;
@@ -120,33 +136,15 @@ WatcherDisposer watch(var target, ValueWatcher callback, [String debugName]) {
  * passed to [callback] will have `null` as the old value, and the current
  * evaluation of [exp] as the new value.
  */
-WatcherDisposer watchAndInvoke(exp, callback, [debugName]) {
+ChangeUnobserver watchAndInvoke(exp, callback, [debugName]) {
   var res = watch(exp, callback, debugName);
   // TODO(jmesserly): this should be "is Getter" once dart2js bug is fixed.
   if (exp is Function) {
-    callback(new WatchEvent(null, exp()));
+    callback(new ChangeNotification(null, exp()));
   } else {
-    callback(new WatchEvent(null, exp));
+    callback(new ChangeNotification(null, exp));
   }
   return res;
-}
-
-/** Callback fired when an expression changes. */
-typedef void ValueWatcher(WatchEvent e);
-
-/** A function that unregisters a watcher. */
-typedef void WatcherDisposer();
-
-/** Event passed to [ValueMatcher] showing what changed. */
-class WatchEvent {
-
-  /** Previous value seen on the watched expression. */
-  final oldValue;
-
-  /** New value seen on the watched expression. */
-  final newValue;
-
-  WatchEvent(this.oldValue, this.newValue);
 }
 
 /** Internal set of active watchers. */
@@ -165,7 +163,7 @@ class _Watcher {
   final Getter _getter;
 
   /** Callback to invoke when the value changes. */
-  final ValueWatcher _callback;
+  final ChangeObserver _callback;
 
   /** Last value observed on the matched expression. */
   var _lastValue;
@@ -182,7 +180,7 @@ class _Watcher {
     if (_compare(currentValue)) {
       var oldValue = _lastValue;
       _update(currentValue);
-      _callback(new WatchEvent(oldValue, currentValue));
+      _callback(new ChangeNotification(oldValue, currentValue));
       return true;
     }
     return false;
@@ -284,13 +282,13 @@ class Handle<T> {
   }
 }
 
-/** 
+/**
  * A watcher for list objects. It stores as the last value a shallow copy of the
  * list as it was when we last detected any changes.
  */
 class _ListWatcher<T> extends _Watcher {
 
-  _ListWatcher(getter, ValueWatcher callback, String debugName)
+  _ListWatcher(getter, ChangeObserver callback, String debugName)
       : super(getter, callback, debugName) {
     _update(_safeRead());
   }

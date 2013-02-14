@@ -6,9 +6,11 @@
 library templating;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:html';
 import 'dart:uri';
 import 'package:web_ui/safe_html.dart';
+import 'package:web_ui/observe.dart';
 import 'package:web_ui/watcher.dart';
 
 /**
@@ -136,16 +138,16 @@ void updateCssClass(Element elem, bool addClasses, classes) {
  *         bindCssClasses(e, () => class1);
  *         bindCssClasses(e, () => class2);
  */
-WatcherDisposer bindCssClasses(Element elem, dynamic exp()) {
-  return watchAndInvoke(exp, (e) {
+ChangeUnobserver bindCssClasses(Element elem, dynamic exp()) {
+  return watchAndInvoke(_observeList(exp), (e) {
     updateCssClass(elem, false, e.oldValue);
     updateCssClass(elem, true, e.newValue);
   }, 'css-class-bind');
 }
 
 /** Bind the result of [exp] to the style attribute in [elem]. */
-WatcherDisposer bindStyle(Element elem, Map<String, String> exp()) {
-  return watchAndInvoke(exp, (e) {
+ChangeUnobserver bindStyle(Element elem, Map<String, String> exp()) {
+  return watchAndInvoke(_observeMap(exp), (e) {
     if (e.oldValue is Map<String, String>) {
       var props = e.newValue;
       if (props is! Map<String, String>) props = const {};
@@ -233,8 +235,8 @@ class Listener extends TemplateItem {
 /** Represents a generic data binding and a corresponding action. */
 class Binding extends TemplateItem {
   final exp;
-  final ValueWatcher action;
-  WatcherDisposer stopper;
+  final ChangeObserver action;
+  ChangeUnobserver stopper;
 
   Binding(this.exp, this.action);
 
@@ -253,7 +255,7 @@ class Binding extends TemplateItem {
 class StyleAttrBinding extends TemplateItem {
   final exp;
   final Element elem;
-  WatcherDisposer stopper;
+  ChangeUnobserver stopper;
 
   StyleAttrBinding(this.elem, this.exp);
 
@@ -272,7 +274,7 @@ class StyleAttrBinding extends TemplateItem {
 class ClassAttrBinding extends TemplateItem {
   final Element elem;
   final exp;
-  WatcherDisposer stopper;
+  ChangeUnobserver stopper;
 
   ClassAttrBinding(this.elem, this.exp);
 
@@ -307,7 +309,7 @@ class DomPropertyBinding extends TemplateItem {
    */
   final bool isUrl;
 
-  WatcherDisposer stopper;
+  ChangeUnobserver stopper;
 
   DomPropertyBinding(this.getter, this.setter, this.isUrl);
 
@@ -371,7 +373,7 @@ class Template extends TemplateItem {
   }
 
   /** Run [action] when [exp] changes (while this template is visible).  */
-  void bind(exp, ValueWatcher action) {
+  void bind(exp, ChangeObserver action) {
     children.add(new Binding(exp, action));
   }
 
@@ -476,7 +478,7 @@ abstract class PlaceholderTemplate extends Template {
   /** Expression watch by this template (condition or loop expression). */
   final exp;
 
-  WatcherDisposer stopper;
+  ChangeUnobserver stopper;
 
   PlaceholderTemplate(Node reference, this.exp)
       : super(reference);
@@ -544,6 +546,31 @@ class ConditionalTemplate extends PlaceholderTemplate {
   }
 }
 
+_observeList(exp) {
+  if (!useObservers) return exp;
+
+  // TODO(jmesserly): implement detailed change records in Observable* types,
+  // so we can observe the list itself and react to all changes.
+  // For now we call .toList which causes us to depend on all items. This
+  // also works for Iterables.
+  return () {
+    var x = exp();
+    return x is Iterable ? x.toList() : x;
+  };
+}
+
+_observeMap(exp) {
+  if (!useObservers) return exp;
+
+  // TODO(jmesserly): this has similar issues as _observeList. Ideally
+  // observers can observe all changes to the resulting map, so we don't need a
+  // copy here.
+  return () {
+    var x = exp();
+    return x is Map ? new LinkedHashMap.from(x) : x;
+  };
+}
+
 /** Function to set up the contents of a loop template. */
 typedef void LoopIterationSetup(loopVariable, Template template);
 
@@ -554,7 +581,7 @@ class LoopTemplate extends PlaceholderTemplate {
   LoopTemplate(Node reference, exp, this.iterSetup) : super(reference, exp);
 
   void insert() {
-    stopper = watchAndInvoke(exp, (e) {
+    stopper = watchAndInvoke(_observeList(exp), (e) {
       super.remove();
       for (var x in e.newValue) {
         iterSetup(x, this);
@@ -578,7 +605,7 @@ class LoopTemplate extends PlaceholderTemplate {
 class LoopTemplateInAttribute extends Template {
   final LoopIterationSetup iterSetup;
   final exp;
-  WatcherDisposer stopper;
+  ChangeUnobserver stopper;
 
   LoopTemplateInAttribute(Node node, this.exp, this.iterSetup) : super(node);
 
@@ -586,7 +613,7 @@ class LoopTemplateInAttribute extends Template {
   void create() {}
 
   void insert() {
-    stopper = watchAndInvoke(exp, (e) {
+    stopper = watchAndInvoke(_observeList(exp), (e) {
       _removeInternal();
       for (var x in e.newValue) {
         iterSetup(x, this);

@@ -1,9 +1,9 @@
 Content-Type: text/plain
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
-layer at (0,0) size 800x163
-  RenderBlock {HTML} at (0,0) size 800x163
-    RenderBody {BODY} at (8,16) size 784x139
+layer at (0,0) size 800x217
+  RenderBlock {HTML} at (0,0) size 800x218
+    RenderBody {BODY} at (8,16) size 784x180
       RenderBlock {P} at (0,0) size 784x20
         RenderText {#text} at (0,0) size 203x19
           text run at (0,0) width 203: "This tests data binding of heading."
@@ -19,4 +19,7 @@ layer at (0,0) size 800x163
             text run at (0,0) width 38: "PASS"
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
+      RenderBlock {H4} at (0,159) size 784x21
+        RenderText {#text} at (0,0) size 235x19
+          text run at (0,0) width 235: "You should see two \"PASS\" above."
 #EOF

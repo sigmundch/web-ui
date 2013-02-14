@@ -19,8 +19,9 @@
   <script type="application/dart">
     import 'dart:html';
     import 'package:unittest/unittest.dart';
+    import 'package:web_ui/observe.dart';
 
-    String name = 'world';
+    @observable String name = 'world';
     main() {
       expect(query('#intro').text, equals('Hello world from Dart!'),
           reason: 'query in main works');

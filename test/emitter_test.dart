@@ -13,6 +13,7 @@ import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/code_printer.dart';
+import 'package:web_ui/src/dart_parser.dart';
 import 'package:web_ui/src/emitters.dart';
 import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'package:web_ui/src/html5_utils.dart';
@@ -267,7 +268,7 @@ main() {
           '</head><body></body></html>';
       var doc = parseDocument(html);
       var fileInfo = analyzeNodeForTesting(doc, new Messages.silent());
-      fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+      fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
       var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
       var emitter = new MainPageEmitter(fileInfo);
@@ -285,7 +286,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'a.html');
-        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
@@ -299,7 +300,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
@@ -313,7 +314,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.userCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');

@@ -8,7 +8,6 @@ BSD-style license that can be found in the LICENSE file.
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>data_style_binding_test</title>
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
@@ -20,20 +19,31 @@ BSD-style license that can be found in the LICENSE file.
 
     // Note: use const maps to ensure that the system doesn't mutate the map.
     // (this would cause a runtime error).
-    var styles = const { 'font-size': '16px' };
+    @observable var styles = const { 'font-size': '16px' };
     main() {
       window.setTimeout(() {
         expect(query('#test').style.cssText, 'font-size: 16px;');
         var oldStyles = styles;
 
         styles = "Intentionally invalid style!";
-        expect(dispatch, throwsA(predicate((x) => x is DataBindingError)));
+
+        var error = null;
+        onObserveUnhandledError = (e, trace, callback) {
+          error = e;
+        };
+        try {
+          deliverChangesSync();
+          expect(error, new isInstanceOf<DataBindingError>());
+        } finally {
+          onObserveUnhandledError = defaultObserveUnhandledError;
+        }
+
         window.setTimeout(() {
           // Our invalid style was ignored.
           expect(query('#test').style.cssText, '');
 
           styles = const { 'font-size': '24px', 'font-family': 'monospace' };
-          dispatch();
+          deliverChangesSync();
           window.setTimeout(() {
             // This is also verified through the render tree.
             expect(query('#test').style.cssText,

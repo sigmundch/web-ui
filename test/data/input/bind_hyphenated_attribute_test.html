@@ -8,19 +8,18 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>bind_hyphenated_attribute_test</title>
   <script type="application/javascript" src="testing.js"></script>
 </head>
 <body>
   <div data-hi="{{topLevelVar}}"></div>
   <script type="application/dart">
     import 'dart:html';
-    String topLevelVar = "hi";
+    @observable String topLevelVar = "hi";
     main() {
       window.onLoad.listen((e) {
         document.body.appendText('expected data-hi to be "hi", got '
                                  '"${query('div').dataAttributes['hi']}"');
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       });
     }
   </script>

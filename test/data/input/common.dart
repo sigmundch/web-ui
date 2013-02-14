@@ -4,7 +4,9 @@
 
 /** Common definitions used across several tests. */
 
+@observable
 library common;
+import 'package:web_ui/observe.dart';
 
 String topLevelVar = "hi";
 
@@ -12,6 +14,6 @@ bool cond = false;
 
 bool get notCond => !cond;
 
-List<String> loopItemList = ["a", "b"];
+List<String> loopItemList = toObservable(["a", "b"]);
 
 List<String> initNullLoopItemList = null;

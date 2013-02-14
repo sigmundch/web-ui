@@ -22,11 +22,17 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
+  import 'package:web_ui/observe.dart';
 
-  List<List> table = [[1, 2, 3], ['a', 'b', 'c'], ['A', 'B', 'C']];
+  @observable
+  List<List> table = toObservable([
+    toObservable([1, 2, 3]),
+    toObservable(['a', 'b', 'c']),
+    toObservable(['A', 'B', 'C'])
+  ]);
+
   main() {
-    window.setTimeout(() {
+    window.setImmediate(() {
       expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
           '<tr> <td>1</td> <td>2</td> <td>3</td> </tr> '
           '<tr> <td>a</td> <td>b</td> <td>c</td> </tr> '
@@ -34,16 +40,14 @@ BSD-style license that can be found in the LICENSE file.
       table[0][2] = 'X';
       table[1][1] = 'Y';
       table.add(['_', '__', '___']);
-      dispatch();
-      window.setTimeout(() {
-        expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
-            '<tr> <td>1</td> <td>2</td> <td>X</td> </tr> '
-            '<tr> <td>a</td> <td>Y</td> <td>c</td> </tr> '
-            '<tr> <td>A</td> <td>B</td> <td>C</td> </tr> '
-            '<tr> <td>_</td> <td>__</td> <td>___</td> </tr>'));
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
-      }, 0);
-    }, 0);
+      deliverChangesSync();
+      expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
+          '<tr> <td>1</td> <td>2</td> <td>X</td> </tr> '
+          '<tr> <td>a</td> <td>Y</td> <td>c</td> </tr> '
+          '<tr> <td>A</td> <td>B</td> <td>C</td> </tr> '
+          '<tr> <td>_</td> <td>__</td> <td>___</td> </tr>'));
+      window.postMessage('done', '*');
+    });
   }
   </script>
 </body>

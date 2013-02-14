@@ -16,8 +16,8 @@ BSD-style license that can be found in the LICENSE file.
   <script type="application/dart">
   import 'dart:html';
   import 'package:unittest/unittest.dart';
-  import 'package:web_ui/watcher.dart';
-  var x = 2;
+  import 'package:web_ui/observe.dart';
+  @observable var x = 2;
 
   main() {
     window.setTimeout(() {
@@ -26,13 +26,12 @@ BSD-style license that can be found in the LICENSE file.
       expect(placeholder, isNotNull);
       expect(placeholder.style.display, equals('none'));
       x = 3;
-      dispatch();
       window.setTimeout(() {
         var div = document.query('#test');
         expect(div, isNotNull);
         expect(div.innerHtml, equals('3'));
         expect(div.previousNode, same(placeholder));
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }, 0);
   }

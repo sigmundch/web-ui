@@ -8,7 +8,6 @@ BSD-style license that can be found in the LICENSE file.
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>watch_global_var_test</title>
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
@@ -40,9 +39,9 @@ BSD-style license that can be found in the LICENSE file.
     import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
 
-    var name = 'Bar';
-    var foo = queryAll('input')[0];
-    var bar = queryAll('input')[1];
+    @observable var name = 'Bar';
+    final foo = queryAll('input')[0];
+    final bar = queryAll('input')[1];
 
     main() {
       useShadowDom = false;
@@ -56,13 +55,13 @@ BSD-style license that can be found in the LICENSE file.
         expect(name, 'Bar');
 
         name = 'Nothing';
-        dispatch();
+        deliverChangesSync();
         expect(foo.checked, false, reason: 'nothing picked.');
         expect(bar.checked, false, reason: 'nothing picked.');
         expect(name, 'Nothing');
 
         name = 'Foo';
-        dispatch();
+        deliverChangesSync();
         expect(foo.checked, true, reason: 'foo picked.');
         expect(bar.checked, false, reason: 'foo picked.');
         expect(name, 'Foo');
@@ -82,7 +81,7 @@ BSD-style license that can be found in the LICENSE file.
         // It would be nice if this was "Foo".
         expect(name, 'Bar', reason: 'DOM checked does not fire event.');
 
-        window.setTimeout(() => window.postMessage('done', '*'), 0);
+        window.setImmediate(() => window.postMessage('done', '*'));
       }, 0);
     }
   </script>

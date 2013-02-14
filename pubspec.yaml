@@ -5,6 +5,7 @@ description: An easy way to build web apps in Dart.
 version: 0.3.2+1
 dependencies:
   args: any
+  analyzer_experimental: any
   browser: any
   # Pin html5lib so we don't get unexpected API breaks.
   html5lib: ">=0.3.2+1 <0.3.3"

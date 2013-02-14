@@ -22,7 +22,7 @@ https://github.com/dglazkov/Web-Components-Polyfill/blob/master/samples/news
 <script type="application/dart">
 import 'dart:html';
 main() {
-  window.setTimeout(() => window.postMessage('done', '*'), 0);
+  window.setImmediate(() => window.postMessage('done', '*'));
 }
 </script>
 </body>
