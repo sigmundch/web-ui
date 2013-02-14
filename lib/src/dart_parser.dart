@@ -80,7 +80,7 @@ class DartCodeInfo {
 
 // TODO(jmesserly): I think Part and Import will have a common base class soon,
 // which will make this easier.
-StringLiteral getDirectiveUri(Directive directive) {
+SimpleStringLiteral getDirectiveUri(Directive directive) {
   if (directive is NamespaceDirective) {
     return (directive as NamespaceDirective).libraryUri;
   } else {
@@ -88,7 +88,7 @@ StringLiteral getDirectiveUri(Directive directive) {
   }
 }
 
-void setDirectiveUri(Directive directive, StringLiteral uri) {
+void setDirectiveUri(Directive directive, SimpleStringLiteral uri) {
   if (directive is NamespaceDirective) {
     (directive as NamespaceDirective).libraryUri2 = uri;
   } else {

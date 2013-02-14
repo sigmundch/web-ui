@@ -453,29 +453,12 @@ class WebComponentEmitter extends RecursiveEmitter {
           ? codeInfo.libraryName
           : info.tagName.replaceAll(new RegExp('[-./]'), '_');
       var declaringPath = info.declaringFile.path;
-      printer.addLine(codegen.header(declaringPath, libraryName));
-
-      // Add existing import, export, and part directives.
-      for (var directive in codeInfo.directives) {
-        // TODO(jmesserly): add span here
-        printer.addLine(directive.toString());
-      }
-
-      // Add imports only for those components used by this component.
-      var imports = info.usedComponents.keys.map(
-          (c) => pathInfo.relativePath(info, c));
-
-      if (hasExtends) {
-        // Inject an import to the base component.
-        printer.addLine(codegen.importList(
-            [pathInfo.relativePath(info, info.extendsComponent)]));
-      }
-
+      printer.addLine(codegen.header(declaringPath, libraryName),
+          location: new FixedLocation(0, declaringPath.toString(), 0, 0));
+      emitImports(codeInfo, info, pathInfo, printer);
       var cssClasses = json.stringify(
           computeCssClasses(info, scopedStyles: cssPolyfill));
       return printer
-          ..add(codegen.importList(imports),
-                location: new FixedLocation(0, declaringPath.toString(), 0, 0))
           ..addLine('')
           // TODO(jmesserly): add span here
           ..add(code.substring(codeInfo.directivesEnd, match.leftBracket.end))
@@ -571,18 +554,8 @@ class MainPageEmitter extends RecursiveEmitter {
     var libraryName = codeInfo.libraryName != null
         ? codeInfo.libraryName : _fileInfo.libraryName;
     printer.add(codegen.header(_fileInfo.path, libraryName));
-
-    // Add existing import, export, and part directives.
-    for (var directive in codeInfo.directives) {
-      // TODO(jmesserly): add span here
-      printer.addLine(directive.toString());
-    }
-
-    // Import only those components used by the page.
-    var imports = _fileInfo.usedComponents.keys.map(
-          (c) => pathInfo.relativePath(_fileInfo, c));
-    return printer..add(codegen.importList(imports))
-        ..addLine('')
+    emitImports(codeInfo, _fileInfo, pathInfo, printer);
+    return printer..addLine('')
         ..addLine('')
         ..addLine('// Original code')
         // TODO(jmesserly): add span here
@@ -599,6 +572,34 @@ class MainPageEmitter extends RecursiveEmitter {
         ..addLine('__t..insert();')
         ..indent -= 1
         ..addLine('}');
+  }
+}
+
+void emitImports(DartCodeInfo codeInfo, LibraryInfo info, PathInfo pathInfo,
+    CodePrinter printer) {
+  var seenImports = new Set();
+  // TODO(sigmund): add span argument here
+  addUnique(String importString) {
+    if (!seenImports.contains(importString)) {
+      printer.addLine(importString);
+      seenImports.add(importString);
+    }
+  }
+
+  // Add existing import, export, and part directives.
+  codeInfo.directives.forEach((d) => addUnique(d.toString()));
+
+  // Add imports only for those components used by this component.
+  info.usedComponents.keys.forEach(
+      (c) => addUnique("import '${pathInfo.relativePath(info, c)}';"));
+
+  if (info is ComponentInfo) {
+    // Inject an import to the base component.
+    ComponentInfo component = info;
+    var base = info.extendsComponent;
+    if (base != null) {
+      addUnique("import '${pathInfo.relativePath(info, base)}';");
+    }
   }
 }
 

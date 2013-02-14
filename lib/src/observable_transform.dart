@@ -92,7 +92,7 @@ void transformClass(ClassDeclaration cls, TextEditTransaction code,
 }
 
 bool hasKeyword(Token token, Keyword keyword) =>
-    token is KeywordToken && token.keyword == keyword;
+    token is KeywordToken && (token as KeywordToken).keyword == keyword;
 
 String getOriginalCode(TextEditTransaction code, ASTNode node) =>
     code.original.substring(node.offset, node.end);
