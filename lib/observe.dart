@@ -435,7 +435,7 @@ class _ExpressionObserver {
       equal = oldValue == _value;
     } catch (e, trace) {
       onObserveUnhandledError(e, trace, null);
-      return;
+      return null;
     }
 
     if (equal || _dead) return null;

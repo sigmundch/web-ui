@@ -103,7 +103,7 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   // See http://code.google.com/p/dart/issues/detail?id=5375
   void insertAt(int index, E item) => insertRange(index, 1, item);
 
-  bool contains(E item) => Collections.contains(_list, item);
+  bool contains(E item) => IterableMixinWorkaround.contains(_list, item);
 
   E get first => this[0];
 

@@ -144,7 +144,7 @@ class PathInfo {
    * [target] is not under [_baseDir].
    */
   String transformUrl(Path src, String target) {
-    if (new Uri.fromString(target).isAbsolute()) return target;
+    if (new Uri.fromString(target).isAbsolute) return target;
     var path = new Path(target);
     if (path.isAbsolute) return target;
     var pathToTarget = src.directoryPath.join(path);

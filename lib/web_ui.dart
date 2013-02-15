@@ -390,7 +390,7 @@ abstract class WebComponent implements Element {
 
   bool get translate => _element.translate;
 
-  String get webkitdropzone => _element.webkitdropzone;
+  String get dropzone => _element.dropzone;
 
   void click() { _element.click(); }
 
@@ -417,13 +417,13 @@ abstract class WebComponent implements Element {
 
   String get tagName => _element.tagName;
 
-  String get webkitPseudo => _element.webkitPseudo;
+  String get pseudo => _element.pseudo;
 
-  void set webkitPseudo(String value) {
-    _element.webkitPseudo = value;
+  void set pseudo(String value) {
+    _element.pseudo = value;
   }
 
-  ShadowRoot get webkitShadowRoot => _element.webkitShadowRoot;
+  ShadowRoot get shadowRoot => _element.shadowRoot;
 
   void blur() { _element.blur(); }
 
@@ -437,23 +437,19 @@ abstract class WebComponent implements Element {
     _element.scrollByPages(pages);
   }
 
-  void scrollIntoView([bool centerIfNeeded]) {
-    if (centerIfNeeded == null) {
-      _element.scrollIntoView();
-    } else {
-      _element.scrollIntoView(centerIfNeeded);
-    }
+  void scrollIntoView([ScrollAlignment alignment]) {
+    _element.scrollIntoView(alignment);
   }
 
   bool matches(String selectors) => _element.matches(selectors);
 
-  void webkitRequestFullScreen(int flags) {
-    _element.webkitRequestFullScreen(flags);
+  void requestFullScreen(int flags) {
+    _element.requestFullScreen(flags);
   }
 
-  void webkitRequestFullscreen() { _element.webkitRequestFullscreen(); }
+  void requestFullscreen() { _element.requestFullscreen(); }
 
-  void webkitRequestPointerLock() { _element.webkitRequestPointerLock(); }
+  void requestPointerLock() { _element.requestPointerLock(); }
 
   Element query(String selectors) => _element.query(selectors);
 
@@ -540,7 +536,7 @@ abstract class WebComponent implements Element {
   void $dom_setAttribute(String name, String value) =>
       _element.$dom_setAttribute(name, value);
 
-  NamedNodeMap get $dom_attributes => _element.$dom_attributes;
+  get $dom_attributes => _element.$dom_attributes;
 
   List<Node> get $dom_childNodes => _element.$dom_childNodes;
 
@@ -582,6 +578,25 @@ abstract class WebComponent implements Element {
   void appendText(String text) => _element.appendText(text);
 
   void appendHtml(String html) => _element.appendHtml(html);
+
+  void $dom_scrollIntoView([bool alignWithTop]) {
+    if (alignWithTop == null) {
+      _element.$dom_scrollIntoView();
+    } else {
+      _element.$dom_scrollIntoView(alignWithTop);
+    }
+  }
+
+  void $dom_scrollIntoViewIfNeeded([bool centerIfNeeded]) {
+    if (centerIfNeeded == null) {
+      _element.$dom_scrollIntoViewIfNeeded();
+    } else {
+      _element.$dom_scrollIntoViewIfNeeded(centerIfNeeded);
+    }
+  }
+
+  // TODO(jmesserly): rename "created" to "onCreated".
+  void onCreated() => created();
 
   Stream<Event> get onAbort => _element.onAbort;
   Stream<Event> get onBeforeCopy => _element.onBeforeCopy;
