@@ -180,6 +180,66 @@ String escapeDartString(String text, {bool single: true, bool triple: false}) {
   return result == null ? text : result.toString();
 }
 
+const _LF = 10;
+bool _isWhitespace(int charCode) {
+  switch (charCode) {
+    case 9:  // '\t'
+    case _LF: // '\n'
+    case 12: // '\f'
+    case 13: // '\r'
+    case 32: // ' '
+      return true;
+  }
+  return false;
+}
+
+
+/**
+ * Trims or compacts the leading/trailing white spaces of [text]. If the leading
+ * spaces contain no line breaks, then all spaces are merged into a single
+ * space. Similarly, for trailing spaces. These are examples of what this
+ * function would return on a given input:
+ *
+ *       trimOrCompact('  x  ')          => ' x '
+ *       trimOrCompact('\n\n  x  \n')    => 'x'
+ *       trimOrCompact('\n\n  x       ') => 'x '
+ *       trimOrCompact('\n\n  ')         => ''
+ *       trimOrCompact('      ')         => ' '
+ *       trimOrCompact(' \nx ')          => ' x '
+ *       trimOrCompact('  x\n ')         => ' x'
+ */
+String trimOrCompact(String text) {
+  int first = 0;
+  int len = text.length;
+  int last = len - 1;
+  bool hasLineBreak = false;
+
+  while (first < len) {
+    var ch = text.charCodeAt(first);
+    if (!_isWhitespace(ch)) break;
+    if (ch == _LF) hasLineBreak = true;
+    first++;
+  }
+
+  // If we just have spaces, return either an empty string or a single space
+  if (first > last) return hasLineBreak || text.isEmpty ? '' : ' ';
+
+  // Include a space in the output if there was a line break.
+  if (first > 0 && !hasLineBreak) first--;
+
+  hasLineBreak = false;
+  while (last > 0) {
+    var ch = text.charCodeAt(last);
+    if (!_isWhitespace(ch)) break;
+    if (ch == _LF) hasLineBreak = true;
+    last--;
+  }
+
+  if (last < len - 1 && !hasLineBreak) last++;
+  if (first == 0 && last == len - 1) return text;
+  return text.substring(first, last + 1);
+}
+
 // TODO(jmesserly): this should exist in dart:isolates
 /**
  * Adds an event to call [callback], so the event loop will call this after the

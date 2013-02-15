@@ -1,0 +1,105 @@
+Content-Type: text/plain
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x96
+  RenderBlock {HTML} at (0,0) size 800x96
+    RenderBody {BODY} at (8,8) size 784x80
+      RenderBlock {DIV} at (0,0) size 784x20 [bgcolor=#FFFFFF]
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 8x19
+            text run at (0,0) width 8: "1"
+          RenderText {#text} at (8,0) size 7x19
+            text run at (8,0) width 7: "x"
+          RenderText {#text} at (15,0) size 7x19
+            text run at (15,0) width 7: "x"
+          RenderText {#text} at (22,0) size 20x19
+            text run at (22,0) width 20: "2 3"
+          RenderText {#text} at (42,0) size 7x19
+            text run at (42,0) width 7: "x"
+          RenderText {#text} at (49,0) size 8x19
+            text run at (49,0) width 8: "4"
+          RenderInline {SPAN} at (0,0) size 8x19
+            RenderText {#text} at (57,0) size 8x19
+              text run at (57,0) width 8: "5"
+          RenderInline {SPAN} at (0,0) size 7x19
+            RenderText {#text} at (65,0) size 7x19
+              text run at (65,0) width 7: "x"
+          RenderText {#text} at (72,0) size 8x19
+            text run at (72,0) width 8: "6"
+      RenderBlock {DIV} at (0,20) size 784x20 [bgcolor=#FF0000]
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 12x19
+            text run at (0,0) width 12: "1 "
+          RenderText {#text} at (12,0) size 7x19
+            text run at (12,0) width 7: "x"
+          RenderText {#text} at (19,0) size 4x19
+            text run at (19,0) width 4: " "
+          RenderText {#text} at (23,0) size 7x19
+            text run at (23,0) width 7: "x"
+          RenderText {#text} at (30,0) size 28x19
+            text run at (30,0) width 4: " "
+            text run at (34,0) width 12: "2 "
+            text run at (46,0) width 12: "3 "
+          RenderText {#text} at (58,0) size 7x19
+            text run at (58,0) width 7: "x"
+          RenderText {#text} at (65,0) size 16x19
+            text run at (65,0) width 4: " "
+            text run at (69,0) width 12: "4 "
+          RenderInline {SPAN} at (0,0) size 12x19
+            RenderText {#text} at (81,0) size 12x19
+              text run at (81,0) width 12: "5 "
+          RenderText {#text} at (0,0) size 0x0
+          RenderInline {SPAN} at (0,0) size 11x19
+            RenderText {#text} at (0,0) size 0x0
+            RenderText {#text} at (93,0) size 7x19
+              text run at (93,0) width 7: "x"
+            RenderText {#text} at (100,0) size 4x19
+              text run at (100,0) width 4: " "
+          RenderText {#text} at (104,0) size 8x19
+            text run at (104,0) width 8: "6"
+      RenderBlock {DIV} at (0,40) size 784x20 [bgcolor=#00FF00]
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 8x19
+            text run at (0,0) width 8: "1"
+          RenderText {#text} at (8,0) size 7x19
+            text run at (8,0) width 7: "x"
+          RenderText {#text} at (15,0) size 7x19
+            text run at (15,0) width 7: "x"
+          RenderText {#text} at (22,0) size 20x19
+            text run at (22,0) width 20: "2 3"
+          RenderText {#text} at (42,0) size 7x19
+            text run at (42,0) width 7: "x"
+          RenderText {#text} at (49,0) size 8x19
+            text run at (49,0) width 8: "4"
+          RenderInline {SPAN} at (0,0) size 8x19
+            RenderText {#text} at (57,0) size 8x19
+              text run at (57,0) width 8: "5"
+          RenderInline {SPAN} at (0,0) size 7x19
+            RenderText {#text} at (65,0) size 7x19
+              text run at (65,0) width 7: "x"
+          RenderText {#text} at (72,0) size 8x19
+            text run at (72,0) width 8: "6"
+      RenderBlock {DIV} at (0,60) size 784x20 [bgcolor=#0000FF]
+        RenderBlock {DIV} at (0,0) size 784x20
+          RenderText {#text} at (0,0) size 8x19
+            text run at (0,0) width 8: "1"
+          RenderText {#text} at (8,0) size 7x19
+            text run at (8,0) width 7: "x"
+          RenderText {#text} at (15,0) size 7x19
+            text run at (15,0) width 7: "x"
+          RenderText {#text} at (22,0) size 20x19
+            text run at (22,0) width 12: "2 "
+            text run at (34,0) width 8: "3"
+          RenderText {#text} at (42,0) size 7x19
+            text run at (42,0) width 7: "x"
+          RenderText {#text} at (49,0) size 8x19
+            text run at (49,0) width 8: "4"
+          RenderInline {SPAN} at (0,0) size 8x19
+            RenderText {#text} at (57,0) size 8x19
+              text run at (57,0) width 8: "5"
+          RenderInline {SPAN} at (0,0) size 7x19
+            RenderText {#text} at (65,0) size 7x19
+              text run at (65,0) width 7: "x"
+          RenderText {#text} at (72,0) size 8x19
+            text run at (72,0) width 8: "6"
+#EOF

@@ -653,6 +653,9 @@ class _Analyzer extends TreeVisitor {
   void visitText(Text text) {
     var parser = new BindingParser(text.value);
     if (!parser.moveNext()) {
+      if (_shouldTrim) {
+        text.value = trimOrCompact(text.value);
+      }
       new TextInfo(text, _parent);
       return;
     }
@@ -663,21 +666,27 @@ class _Analyzer extends TreeVisitor {
     // We split [text] so that each binding has its own text node.
     var node = text.parent;
     do {
-      _addRawTextContent(parser.textContent, text);
+      _addRawTextContent(parser.textContent);
       var placeholder = new Text('');
       _uniqueIds.moveNext();
       var id = '__binding${_uniqueIds.current}';
       new TextInfo(placeholder, _parent, parser.binding, id);
     } while (parser.moveNext());
 
-    _addRawTextContent(parser.textContent, text);
+    _addRawTextContent(parser.textContent);
   }
 
-  void _addRawTextContent(String content, Text location) {
+  void _addRawTextContent(String content) {
+    if (_shouldTrim) {
+      content = trimOrCompact(content);
+    }
     if (content != '') {
       new TextInfo(new Text(content), _parent);
     }
   }
+
+  bool get _shouldTrim => _currentInfo is ComponentInfo &&
+      (_currentInfo as ComponentInfo).trimIndentationSpaces;
 
   /**
    * Normalizes references in [info]. On the [analyzeDefinitions] phase, the

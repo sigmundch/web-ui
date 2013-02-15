@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <element name="x-a" extends="div">
+    <template><div>1{{value}}{{value}}2 3{{value}}4<span>5</span><span>{{value}}</span>6</div></template>
+    <script type='application/dart'>
+    import 'package:web_ui/web_ui.dart';
+    class A extends WebComponent {
+      String value = 'x';
+    }
+    </script>
+  </element>
+  <element name="x-b" extends="div">
+    <template>
+      <div>
+      1
+      {{value}}
+
+      {{value}}
+      2
+      3
+      {{value}}
+      4
+      <span>
+        5
+      </span>
+      <span>
+        {{value}}
+      </span>
+      6
+      </div>
+    </template>
+    <script type='application/dart'>
+    import 'package:web_ui/web_ui.dart';
+    class B extends WebComponent {
+      String value = 'x';
+    }
+    </script>
+  </element>
+  <element name="x-c" extends="div">
+    <template trim-indentation-spaces>
+      <div>1{{value}}{{value}}2 3{{value}}4
+        <span>5</span><span>{{value}}</span>6
+      </div>
+    </template>
+    <script type='application/dart'>
+    import 'package:web_ui/web_ui.dart';
+    class C extends WebComponent {
+      String value = 'x';
+    }
+    </script>
+  </element>
+  <!-- there is a trailing space after 2 below -->
+  <element name="x-d" extends="div">
+    <template trim-indentation-spaces>
+      <div>
+      1
+      {{value}}
+
+      {{value}}
+      2
+      3
+      {{value}}
+      4
+      <span>
+        5
+      </span>
+      <span>
+        {{value}}
+      </span>
+      6
+      </div>
+    </template>
+    <script type='application/dart'>
+    import 'package:web_ui/web_ui.dart';
+    class D extends WebComponent {
+      String value = 'x';
+    }
+    </script>
+  </element>
+  <div id="a" is="x-a" style="background-color:#fff"></div>
+  <div id="b" is="x-b" style="background-color:#f00"></div>
+  <div id="c" is="x-c" style="background-color:#0f0"></div>
+  <div id="d" is="x-d" style="background-color:#00f"></div>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    String value = 'x';
+
+    main() {
+      window.setImmediate(() {
+        var a = query('#a');
+        var b = query('#b');
+        var c = query('#c');
+        var d = query('#d');
+
+        expect(a.nodes.length, 1);
+        expect(b.nodes.length, 3);
+        expect(c.nodes.length, 1);
+        expect(d.nodes.length, 1);
+
+        a = a.nodes[0];
+        b = b.nodes[1]; // first and last are spaces
+        c = c.nodes[0];
+        d = d.nodes[0];
+
+        expect(a.text, '1xx2 3x45x6');
+        expect(b.text, equalsIgnoringWhitespace('1 x x 2 3 x 4 5 x 6'));
+        expect(c.text, '1xx2 3x45x6');
+        expect(d.text, equalsIgnoringWhitespace('1xx2 3x45x6'));
+
+        expect(a.innerHtml, '1xx2 3x4<span>5</span><span>x</span>6');
+        expect(b.innerHtml, equalsIgnoringWhitespace(
+              '1 x x 2 3 x 4 <span> 5 </span> <span> x </span> 6'));
+        expect(c.innerHtml, '1xx2 3x4<span>5</span><span>x</span>6');
+        expect(d.innerHtml, equalsIgnoringWhitespace(
+              '1xx2 3x4<span>5</span><span>x</span>6'));
+
+        window.postMessage('done', '*');
+      });
+    }
+  </script>
+</body>
+</html>
+
