@@ -330,7 +330,7 @@ main() {
           '</head><body></body></html>';
       var doc = parseDocument(html);
       var fileInfo = analyzeNodeForTesting(doc, new Messages.silent());
-      fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
+      fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
       var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
       var emitter = new MainPageEmitter(fileInfo);
@@ -348,7 +348,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
@@ -362,7 +362,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
@@ -376,7 +376,7 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');

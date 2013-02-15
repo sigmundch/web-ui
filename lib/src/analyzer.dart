@@ -10,6 +10,7 @@ library analyzer;
 
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
+import 'package:source_maps/span.dart';
 
 import 'dart_parser.dart';
 import 'file_system/path.dart';
@@ -965,7 +966,8 @@ class _ElementLoader extends TreeVisitor {
           'file.', node.sourceSpan, file: _fileInfo.path);
     } else {
       var path = _currentInfo.inputPath;
-      _currentInfo.inlinedCode = parseDartCode(path, text.value, _messages);
+      _currentInfo.inlinedCode = parseDartCode(path, text.value, _messages,
+          text.sourceSpan.start);
       if (_currentInfo.userCode.partOf != null) {
         _messages.error('expected a library, not a part.',
             node.sourceSpan, file: _fileInfo.path);

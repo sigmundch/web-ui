@@ -14,7 +14,7 @@ import 'package:analyzer_experimental/src/generated/error.dart';
 import 'package:analyzer_experimental/src/generated/java_core.dart';
 import 'package:analyzer_experimental/src/generated/parser.dart';
 import 'package:analyzer_experimental/src/generated/scanner.dart';
-import 'package:source_maps/span.dart' show File, FileSpan;
+import 'package:source_maps/span.dart' show File, FileSegment, Location;
 import 'file_system/path.dart';
 import 'info.dart';
 import 'messages.dart';
@@ -36,8 +36,8 @@ class DartCodeInfo {
   /** Declared imports, exports, and parts. */
   final List<Directive> directives;
 
-  /** Source map information associated with this file. */
-  final File sourceMapFile;
+  /** Source file representation used to compute source map information. */
+  final File sourceFile;
 
   /** The parsed code. */
   final CompilationUnit compilationUnit;
@@ -45,15 +45,11 @@ class DartCodeInfo {
   /** The full source code. */
   final String code;
 
-  DartCodeInfo(this.libraryName, this.partOf, this.directives, code, url,
-      [compilationUnit])
+  DartCodeInfo(this.libraryName, this.partOf, this.directives, code,
+      this.sourceFile, [compilationUnit])
       : this.code = code,
         this.compilationUnit = compilationUnit == null
-          ? parseCompilationUnit(code) : compilationUnit,
-        // TODO(sigmund): this works great for stand-alone dart files,
-        // we need to fix this to handle inlined code (offsets need to be
-        // adjusted based on the start of the html file)
-        sourceMapFile = new File.text(url, code);
+          ? parseCompilationUnit(code) : compilationUnit;
 
   int get directivesEnd {
     if (compilationUnit.directives.length == 0) return 0;
@@ -104,7 +100,8 @@ SimpleStringLiteral createStringLiteral(String contents) {
  * Adds emitted error/warning messages to [messages], if [messages] is
  * supplied.
  */
-DartCodeInfo parseDartCode(Path path, String code, Messages messages) {
+DartCodeInfo parseDartCode(Path path, String code, Messages messages,
+    [Location offset]) {
   var unit = parseCompilationUnit(code, path: path, messages: messages);
 
   // Extract some information from the compilation unit.
@@ -127,8 +124,12 @@ DartCodeInfo parseDartCode(Path path, String code, Messages messages) {
     }
   }
 
+  var sourceFile = offset == null
+      ? new File.text(path.toString(), code)
+      : new FileSegment(path.toString(), code, offset);
+
   return new DartCodeInfo(libraryName, partName, directives, code,
-      path.toString(), unit);
+      sourceFile, unit);
 }
 
 CompilationUnit parseCompilationUnit(String code, {Path path,
@@ -149,7 +150,7 @@ CompilationUnit parseCompilationUnit(String code, {Path path,
   if (false) {
     var file = new File.text(path.toString(), code);
     for (var e in errorListener.errors) {
-      var span = new FileSpan(file, e.offset, e.offset + e.length);
+      var span = file.span(e.offset, e.offset + e.length);
 
       var severity = e.errorCode.errorSeverity;
       if (severity == ErrorSeverity.ERROR) {

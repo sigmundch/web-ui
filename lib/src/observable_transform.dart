@@ -30,8 +30,7 @@ import 'refactor.dart';
  */
 TextEditTransaction transformObservables(DartCodeInfo userCode) {
   if (userCode == null || userCode.compilationUnit == null) return null;
-  var transaction = new TextEditTransaction(userCode.code,
-      userCode.sourceMapFile);
+  var transaction = new TextEditTransaction(userCode.code, userCode.sourceFile);
   transformCompilationUnit(userCode.compilationUnit, transaction);
   return transaction;
 }

@@ -42,7 +42,7 @@ class TextEditTransaction {
 
   /** Create a source map [Location] for [offset]. */
   Location _loc(int offset) =>
-      file != null ? new FileLocation(file, offset) : null;
+      file != null ? file.location(offset) : null;
 
   /**
    * Applies all pending [edit]s and returns the rewritten string.
