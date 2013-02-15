@@ -28,19 +28,12 @@ import 'refactor.dart';
  * handle it appropriately. We do not want to violate reference equality of
  * any fields that are set into the object.
  */
-bool transformObservables(DartCodeInfo userCode, Messages messages) {
-  if (userCode == null || userCode.compilationUnit == null) return false;
-
-  var oldCode = userCode.code;
-  var transaction = new TextEditTransaction(oldCode);
+TextEditTransaction transformObservables(DartCodeInfo userCode) {
+  if (userCode == null || userCode.compilationUnit == null) return null;
+  var transaction = new TextEditTransaction(userCode.code,
+      userCode.sourceMapFile);
   transformCompilationUnit(userCode.compilationUnit, transaction);
-
-  var newCode = transaction.commit();
-  if (identical(oldCode, newCode)) return false;
-
-  // Replace the code
-  userCode.code = newCode;
-  return true;
+  return transaction;
 }
 
 void transformCompilationUnit(CompilationUnit unit, TextEditTransaction code) {

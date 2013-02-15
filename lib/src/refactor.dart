@@ -10,6 +10,9 @@
  */
 library refactor;
 
+import 'code_printer.dart';
+import 'package:source_maps/span.dart';
+
 const $CR = 13;
 const $LF = 10;
 const $TAB = 9;
@@ -20,33 +23,42 @@ const $SPACE = 32;
  * information, and composes them into the edited string.
  */
 class TextEditTransaction {
+  final File file;
   final String original;
   final _edits = <_TextEdit>[];
 
-  TextEditTransaction(this.original);
+  TextEditTransaction(this.original, this.file);
 
   bool get hasEdits => _edits.length > 0;
 
   /**
    * Edit the original text, replacing text on the range [begin] and [end]
-   * with the [replace] text.
+   * with the [replacement]. [replacement] can be either a string or a
+   * [CodePrinter].
    */
-  void edit(int begin, int end, String replace) {
-    _edits.add(new _TextEdit(begin, end, replace));
+  void edit(int begin, int end, replacement) {
+    _edits.add(new _TextEdit(begin, end, replacement));
   }
+
+  /** Create a source map [Location] for [offset]. */
+  Location _loc(int offset) =>
+      file != null ? new FileLocation(file, offset) : null;
 
   /**
    * Applies all pending [edit]s and returns the rewritten string.
    * If no edits were made, returns the [original] string.
    * Throws [UnsupportedError] if the edits were overlapping.
    */
-  String commit() {
-    if (_edits.length == 0) return original;
+  CodePrinter commit() {
+    var printer = new CodePrinter(0);
+    if (_edits.length == 0) {
+      printer.add(original, location: _loc(0), isOriginal: true);
+      return printer;
+    }
 
     // Sort edits by start location.
     _edits.sort((x, y) => x.begin - y.begin);
 
-    var result = new StringBuffer();
     int consumed = 0;
     for (var edit in _edits) {
       if (consumed > edit.begin) {
@@ -57,20 +69,22 @@ class TextEditTransaction {
       // Add characters from the original string between this edit and the last
       // one, if any.
       var betweenEdits = original.substring(consumed, edit.begin);
-      result..add(betweenEdits)..add(edit.replace);
+      printer..add(betweenEdits, location: _loc(consumed), isOriginal: true)
+             ..add(edit.replace, location: _loc(edit.begin));
       consumed = edit.end;
     }
 
     // Add any text from the end of the original string that was not replaced.
-    result.add(original.substring(consumed));
-    return result.toString();
+    printer.add(original.substring(consumed),
+        location: _loc(consumed), isOriginal: true);
+    return printer;
   }
 }
 
 class _TextEdit {
   final int begin;
   final int end;
-  final String replace;
+  final dynamic replace;
 
   _TextEdit(this.begin, this.end, this.replace);
 
@@ -84,7 +98,7 @@ String guessIndent(String code, int charOffset) {
   // Find the beginning of the line
   int lineStart = 0;
   for (int i = charOffset - 1; i >= 0; i--) {
-    var c = code.charCodeAt(i);
+    var c = code.codeUnitAt(i);
     if (c == $LF || c == $CR) {
       lineStart = i + 1;
       break;
@@ -94,7 +108,7 @@ String guessIndent(String code, int charOffset) {
   // Grab all the whitespace
   int whitespaceEnd = code.length;
   for (int i = lineStart; i < code.length; i++) {
-    var c = code.charCodeAt(i);
+    var c = code.codeUnitAt(i);
     if (c != $SPACE && c != $TAB) {
       whitespaceEnd = i;
       break;

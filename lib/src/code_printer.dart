@@ -26,6 +26,12 @@ class CodePrinter {
   /** Current indentation, which can be updated from outside this class. */
   int indent = 0;
 
+  /**
+   * Item used to indicate that the following item is copied from the original
+   * source code, and hence we should preserve source-maps on every new line.
+   */
+  static final _ORIGINAL = new Object();
+
   CodePrinter(this.indent);
 
   /**
@@ -40,13 +46,18 @@ class CodePrinter {
    * The [location] and [span] parameters indicate the corresponding source map
    * location of [object] in the original input. Only one, [location] or
    * [span], should be provided at a time.
+   *
+   * Indicate [isOriginal] when [object] is copied directly from the user code.
+   * Setting [isOriginal] will make this printer propagate source map locations
+   * on every line-break.
    */
-  void add(object, {Location location, Span span}) {
-    if (object is! String || location != null || span != null) {
+  void add(object, {Location location, Span span, bool isOriginal: false}) {
+    if (object is! String || location != null || span != null || isOriginal) {
       _flush();
       assert(location == null || span == null);
       if (location != null) _items.add(location);
       if (span != null) _items.add(span);
+      if (isOriginal) _items.add(_ORIGINAL);
     }
 
     if (object is String) {
@@ -134,15 +145,22 @@ class CodePrinter {
 
   void _build(Printer printer) {
     _flush();
+    bool propagate = false;
     for (var item in _items) {
       if (item is Declarations) {
         item._build(printer);
       } else if (item is CodePrinter) {
         item._build(printer);
       } else if (item is String) {
-        printer.add(item, projectMarks: true);
+        printer.add(item, projectMarks: propagate);
+        propagate = false;
       } else if (item is Location || item is Span) {
         printer.mark(item);
+      } else if (item == _ORIGINAL) {
+        // we insert booleans when we are about to quote text that was copied
+        // from the original source. In such case, we will propagate marks on
+        // every new-line.
+        propagate = true;
       } else {
         throw new UnsupportedError('Unknown item type: $item');
       }

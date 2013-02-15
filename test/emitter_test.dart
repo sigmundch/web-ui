@@ -330,11 +330,11 @@ main() {
           '</head><body></body></html>';
       var doc = parseDocument(html);
       var fileInfo = analyzeNodeForTesting(doc, new Messages.silent());
-      fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
+      fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
       var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
       var emitter = new MainPageEmitter(fileInfo);
-      emitter.run(doc, pathInfo);
+      emitter.run(doc, pathInfo, null);
       expect(doc.outerHtml, equals(html));
     });
 
@@ -348,13 +348,13 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo);
+        emitter.run(doc, pathInfo, null);
         expect(doc.outerHtml, html.replaceAll('a.css', '../a.css'));
       });
 
@@ -362,13 +362,13 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path('dir/'), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo);
+        emitter.run(doc, pathInfo, null);
         expect(doc.outerHtml, html.replaceAll('a.css', '../dir/a.css'));
       });
 
@@ -376,13 +376,13 @@ main() {
         var doc = parseDocument(html);
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'dir/a.html');
-        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', 'foo');
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo);
+        emitter.run(doc, pathInfo, null);
         expect(doc.outerHtml, html.replaceAll('a.css', '../../dir/a.css'));
       });
     });

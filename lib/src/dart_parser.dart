@@ -36,29 +36,24 @@ class DartCodeInfo {
   /** Declared imports, exports, and parts. */
   final List<Directive> directives;
 
+  /** Source map information associated with this file. */
+  final File sourceMapFile;
+
   /** The parsed code. */
-  CompilationUnit _compilationUnit;
+  final CompilationUnit compilationUnit;
 
   /** The full source code. */
-  String _code;
+  final String code;
 
-  DartCodeInfo(this.libraryName, this.partOf, this.directives, code,
-      [compilationUnit]) : _code = code, _compilationUnit = compilationUnit;
-
-  String get code => _code;
-
-  set code(String value) {
-    // TODO(jmesserly): invalidate libraryName, partOf, and directives as well?
-    // In general we should move this to querying from the CompilationUnit.
-    _code = value;
-    _compilationUnit = null;
-  }
-
-  CompilationUnit get compilationUnit {
-    // If this has been invalidated, reparse the code
-    if (_compilationUnit == null) _compilationUnit = parseCompilationUnit(code);
-    return _compilationUnit;
-  }
+  DartCodeInfo(this.libraryName, this.partOf, this.directives, code, url,
+      [compilationUnit])
+      : this.code = code,
+        this.compilationUnit = compilationUnit == null
+          ? parseCompilationUnit(code) : compilationUnit,
+        // TODO(sigmund): this works great for stand-alone dart files,
+        // we need to fix this to handle inlined code (offsets need to be
+        // adjusted based on the start of the html file)
+        sourceMapFile = new File.text(url, code);
 
   int get directivesEnd {
     if (compilationUnit.directives.length == 0) return 0;
@@ -132,7 +127,8 @@ DartCodeInfo parseDartCode(Path path, String code, Messages messages) {
     }
   }
 
-  return new DartCodeInfo(libraryName, partName, directives, code, unit);
+  return new DartCodeInfo(libraryName, partName, directives, code,
+      path.toString(), unit);
 }
 
 CompilationUnit parseCompilationUnit(String code, {Path path,

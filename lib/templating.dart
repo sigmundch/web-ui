@@ -276,7 +276,7 @@ class StyleAttrBinding extends TemplateItem {
 
   void insert() {
     if (isFinal) {
-      _updateStyle(elem, null, exp());
+      updateStyle(elem, null, exp());
     } else if (stopper != null) {
       throw new StateError('style binding already attached');
     } else {

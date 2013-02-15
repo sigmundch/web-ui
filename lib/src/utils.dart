@@ -215,7 +215,7 @@ String trimOrCompact(String text) {
   bool hasLineBreak = false;
 
   while (first < len) {
-    var ch = text.charCodeAt(first);
+    var ch = text.codeUnitAt(first);
     if (!_isWhitespace(ch)) break;
     if (ch == _LF) hasLineBreak = true;
     first++;
@@ -229,7 +229,7 @@ String trimOrCompact(String text) {
 
   hasLineBreak = false;
   while (last > 0) {
-    var ch = text.charCodeAt(last);
+    var ch = text.codeUnitAt(last);
     if (!_isWhitespace(ch)) break;
     if (ch == _LF) hasLineBreak = true;
     last--;
