@@ -9,4 +9,4 @@ test/perf/input/example
 test/perf/output/
 extension/output/
 out/
-build/compile_mirrors.dart
+tool/compile_mirrors.dart
