@@ -32,6 +32,7 @@ spaces. -->
   <script type="application/dart">
     @observable
     library main;
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
@@ -42,20 +43,20 @@ spaces. -->
     var asString = 'uno dos tres';
     var asList = toObservable(['uno', 'dos', 'tres']);
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         expect(query('#test1').classes, unorderedEquals(asList));
         expect(query('#test2').classes, unorderedEquals(asList));
         expect(query('#test3').classes, unorderedEquals(asList));
         one = null;
         asList[1] = null;
         asString = 'cuatro cinco';
-        window.setTimeout(() {
+        Timer.run(() {
           expect(query('#test1').classes, unorderedEquals(['dos', 'tres']));
           expect(query('#test2').classes, unorderedEquals(['uno', 'tres']));
           expect(query('#test3').classes, unorderedEquals(['cuatro', 'cinco']));
-          window.setImmediate(() => window.postMessage('done', '*'));
-        }, 0);
-      }, 0);
+          Timer.run(() => window.postMessage('done', '*'));
+        });
+      });
     }
   </script>
 </body>

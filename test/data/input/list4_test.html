@@ -16,15 +16,16 @@
     (-{{x}}-)
   </div>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
     @observable var list = toObservable(['a', 'b', 'c']);
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         list[1] = '?';
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

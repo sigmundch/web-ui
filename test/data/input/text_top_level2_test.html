@@ -21,16 +21,17 @@ BSD-style license that can be found in the LICENSE file.
   </element>
   expect to see 'two': <x-var></x-var>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
     import 'common.dart';
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         topLevelVar = 'two';
         deliverChangesSync();
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

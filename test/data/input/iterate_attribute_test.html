@@ -16,22 +16,23 @@ BSD-style license that can be found in the LICENSE file.
     <span>{{x}}</span>
   </div>
   <script type="application/dart">
+  import 'dart:async';
   import 'dart:html';
   import 'package:unittest/unittest.dart';
   import 'package:web_ui/observe.dart';
 
   @observable var list = toObservable(['a', 'b', 'c', 'e']);
   main() {
-    window.setTimeout(() {
+    Timer.run(() {
       expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
           '<span>a</span> <span>b</span> <span>c</span> <span>e</span>'));
       list[3] = 'd';
-      window.setTimeout(() {
+      Timer.run(() {
         expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
             '<span>a</span> <span>b</span> <span>c</span> <span>d</span>'));
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
-    }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
+    });
   }
   </script>
 </body>

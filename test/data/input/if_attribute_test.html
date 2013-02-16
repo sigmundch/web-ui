@@ -14,26 +14,27 @@ BSD-style license that can be found in the LICENSE file.
   <!-- Tests the iterate attribute on a node. -->
   <div id='test' template if="x == 3">{{x}}</div>
   <script type="application/dart">
+  import 'dart:async';
   import 'dart:html';
   import 'package:unittest/unittest.dart';
   import 'package:web_ui/observe.dart';
   @observable var x = 2;
 
   main() {
-    window.setTimeout(() {
+    Timer.run(() {
       expect(document.query('#test'), isNull);
       var placeholder = document.body.query('div#__e-1');
       expect(placeholder, isNotNull);
       expect(placeholder.style.display, equals('none'));
       x = 3;
-      window.setTimeout(() {
+      Timer.run(() {
         var div = document.query('#test');
         expect(div, isNotNull);
         expect(div.innerHtml, equals('3'));
         expect(div.previousNode, same(placeholder));
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
-    }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
+    });
   }
   </script>
 </body>

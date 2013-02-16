@@ -17,6 +17,7 @@ BSD-style license that can be found in the LICENSE file.
 <body>
   <span id='test'>{{x}}</span>
   <script type="application/dart">
+import 'dart:async';
 import 'dart:html';
 import 'package:web_ui/web_ui.dart';
 import 'package:unittest/unittest.dart';
@@ -24,10 +25,10 @@ import 'perf_common.dart';
 
 main() {
   useShadowDom = false;
-  window.setTimeout(() {
+  Timer.run(() {
     var bench = new BindingBenchmark();
     perfDone(bench.measure());
-  }, 0);
+  });
 }
 
 int x = 0;

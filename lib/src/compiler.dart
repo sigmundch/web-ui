@@ -568,7 +568,6 @@ class _ProcessCss extends InfoVisitor {
       if (options.verbose) {
         print('\nComponent: ${info.tagName}');
         print('==========\n');
-        print(treeToDebugString(info.styleSheet));
         print(emitStyleSheet(info.styleSheet));
       }
     }

@@ -21,15 +21,16 @@ BSD-style license that can be found in the LICENSE file.
     f {{value}} f
   </template>
   <script type="application/dart">
+  import 'dart:async';
   import 'dart:html';
   import 'package:web_ui/observe.dart';
   @observable var value = '-';
   @observable bool cond = true;
   main() {
-    window.setTimeout(() {
+    Timer.run(() {
       cond = false;
-      window.setImmediate(() => window.postMessage('done', '*'));
-    }, 0);
+      Timer.run(() => window.postMessage('done', '*'));
+    });
   }
   </script>
 </body>

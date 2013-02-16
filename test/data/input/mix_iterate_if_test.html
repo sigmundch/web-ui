@@ -19,6 +19,7 @@ BSD-style license that can be found in the LICENSE file.
     </tr>
   </tbody></table>
   <script type="application/dart">
+  import 'dart:async';
   import 'dart:html';
   import 'package:unittest/unittest.dart';
   import 'package:web_ui/observe.dart';
@@ -31,9 +32,9 @@ BSD-style license that can be found in the LICENSE file.
   ]);
 
   main() {
-    window.setTimeout(() {
+    Timer.run(() {
       table[1][1] = 9;
-      window.setTimeout(() {
+      Timer.run(() {
         var test = document.query('#test');
         expect(test.children.length, table.length);
         for (int row = 0; row < table.length; row++) {
@@ -52,9 +53,9 @@ BSD-style license that can be found in the LICENSE file.
             expect(td.innerHtml, value.toString());
           }
         }
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
-    }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
+    });
   }
   </script>
 </body>

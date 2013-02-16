@@ -66,6 +66,7 @@ BSD-style license that can be found in the LICENSE file.
     <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
   <script type="application/dart">
+import 'dart:async';
 import 'dart:html';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/web_ui.dart';
@@ -77,7 +78,7 @@ final addTodo = todomvc_main.addTodo;
 main() {
   todomvc_main.main();
 
-  window.setTimeout(() {
+  Timer.run(() {
     useShadowDom = false;
     app.todos.add(new Todo('one (unchecked)'));
     app.todos.add(new Todo('two (unchecked)'));
@@ -109,8 +110,8 @@ main() {
     // The next extra check is only valid when polyfilling the shadow DOM:
     expect(node, same(document.queryAll('input[type=checkbox]')[4]));
 
-    window.setImmediate(() => window.postMessage('done', '*'));
-  }, 0);
+    Timer.run(() => window.postMessage('done', '*'));
+  });
 }
   </script>
 </body>

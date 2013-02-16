@@ -17,6 +17,7 @@
   <span id="text">Hello {{name}}</span>
   <x-empty></x-empty>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:unittest/unittest.dart';
     import 'package:web_ui/observe.dart';
@@ -27,11 +28,11 @@
           reason: 'query in main works');
       expect(query('#text').text, equals(''),
           reason: 'text with bindings have been removed from HTML text.');
-      window.setTimeout(() {
+      Timer.run(() {
         expect(query('#text').text, equals('Hello world'),
             reason: 'bindings up to date after setTimeout 0');
         window.postMessage('done', '*');
-      }, 0);
+      });
     }
   </script>
 </body>

@@ -21,18 +21,19 @@ BSD-style license that can be found in the LICENSE file.
   </element>
   <x-component-a></x-component-a>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
     main() {
       useShadowDom = false; // need to query inside components
-      window.setTimeout(() {
+      Timer.run(() {
         // Make sure we don't get confused and data-bind the wrong thing.
         expect(query('.a').title, 'TitleA');
         expect(query('.b').title, 'TitleB');
 
         window.postMessage('done', '*');
-      }, 0);
+      });
     }
   </script>
 </body>

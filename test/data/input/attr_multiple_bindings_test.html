@@ -21,6 +21,7 @@ BSD-style license that can be found in the LICENSE file.
   <pre>{{tryQuery('a', 0, (e) => e.hash)}}</pre>
   <pre>{{tryQuery('a', 1, (e) => e.hash)}}</pre>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
 
@@ -28,7 +29,7 @@ BSD-style license that can be found in the LICENSE file.
     @observable var j2 = 'the';
     @observable var fox = 'Your escaping is bad and you should feel bad!';
     main() {
-      window.setTimeout(() => window.postMessage('done', '*'), 0);
+      Timer.run(() => window.postMessage('done', '*'));
     }
 
     tryQuery(String selector, int i, void callback(elem)) {

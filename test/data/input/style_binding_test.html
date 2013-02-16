@@ -13,6 +13,7 @@ BSD-style license that can be found in the LICENSE file.
 <body>
   <p id="test" style="{{styles}}">This text should be 24px monospace</p>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
@@ -21,7 +22,7 @@ BSD-style license that can be found in the LICENSE file.
     // (this would cause a runtime error).
     @observable var styles = const { 'font-size': '16px' };
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         expect(query('#test').style.cssText, 'font-size: 16px;');
         var oldStyles = styles;
 
@@ -38,20 +39,20 @@ BSD-style license that can be found in the LICENSE file.
           onObserveUnhandledError = defaultObserveUnhandledError;
         }
 
-        window.setTimeout(() {
+        Timer.run(() {
           // Our invalid style was ignored.
           expect(query('#test').style.cssText, '');
 
           styles = const { 'font-size': '24px', 'font-family': 'monospace' };
           deliverChangesSync();
-          window.setTimeout(() {
+          Timer.run(() {
             // This is also verified through the render tree.
             expect(query('#test').style.cssText,
                 'font-size: 24px; font-family: monospace;');
             window.postMessage('done', '*');
-          }, 0);
-        }, 0);
-      }, 0);
+          });
+        });
+      });
     }
   </script>
 </body>

@@ -18,7 +18,7 @@
     main() {
       window.onLoad.listen((e) {
         document.body.appendText('expected data-hi to be "hi", got '
-                                 '"${query('div').dataAttributes['hi']}"');
+                                 '"${query('div').dataset['hi']}"');
         window.setImmediate(() => window.postMessage('done', '*'));
       });
     }

@@ -18,16 +18,17 @@
     <span>error: test failed</span>
   </template>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
     import 'common.dart';
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         cond = true;
         // in the end, we should see 'yes'
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

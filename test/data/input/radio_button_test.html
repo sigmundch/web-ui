@@ -17,6 +17,7 @@ BSD-style license that can be found in the LICENSE file.
   </form>
   <pre>You picked {{name}}. Final value should be 'Bar'</pre>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/web_ui.dart';
     import 'package:unittest/unittest.dart';
@@ -31,7 +32,7 @@ BSD-style license that can be found in the LICENSE file.
       expect(foo.checked, false, reason: 'watchers not run yet.');
       expect(bar.checked, false, reason: 'watchers not run yet.');
 
-      window.setTimeout(() {
+      Timer.run(() {
         expect(foo.checked, false, reason: 'bar picked.');
         expect(bar.checked, true, reason: 'bar picked.');
         expect(name, 'Bar');
@@ -59,8 +60,8 @@ BSD-style license that can be found in the LICENSE file.
         // It would be nice if this was "Foo".
         expect(name, 'Bar', reason: 'DOM checked does not fire event.');
 
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

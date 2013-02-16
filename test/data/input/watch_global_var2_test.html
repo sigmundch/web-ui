@@ -13,15 +13,16 @@
 <body>
   <div>{{topLevelVar}}</div>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
     @observable String topLevelVar = "hi";
     main() {
       // test for making a change on topLevelVar
-      window.setTimeout(() {
+      Timer.run(() {
         topLevelVar = "hello";
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

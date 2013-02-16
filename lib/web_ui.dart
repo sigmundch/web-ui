@@ -329,11 +329,6 @@ abstract class WebComponent implements Element {
     _element.classes = value;
   }
 
-  Map<String, String> get dataAttributes => _element.dataAttributes;
-  set dataAttributes(Map<String, String> value) {
-    _element.dataAttributes = value;
-  }
-
   Map<String, String> getNamespacedAttributes(String namespace) =>
       _element.getNamespacedAttributes(namespace);
 
@@ -406,6 +401,10 @@ abstract class WebComponent implements Element {
   }
 
   Map<String, String> get dataset => _element.dataset;
+
+  set dataset(Map<String, String> value) {
+    _element.dataset = value;
+  }
 
   Element get nextElementSibling => _element.nextElementSibling;
 

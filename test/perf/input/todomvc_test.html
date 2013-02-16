@@ -71,6 +71,7 @@ BSD-style license that can be found in the LICENSE file.
     <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
   <script type="application/dart">
+import 'dart:async';
 import 'dart:html';
 import 'package:web_ui/web_ui.dart';
 import 'example/todomvc/main.dart' as todomvc_main;
@@ -83,10 +84,10 @@ final addTodo = todomvc_main.addTodo;
 main() {
   useShadowDom = false;
   todomvc_main.main();
-  window.setTimeout(() {
+  Timer.run(() {
     var bench = new TodoMvcBenchmark();
     perfDone(bench.measure());
-  }, 0);
+  });
 }
 
 class TodoMvcBenchmark extends BenchmarkBase {

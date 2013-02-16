@@ -88,10 +88,10 @@ final addTodo = todomvc_main.addTodo;
 main() {
   useShadowDom = false;
   todomvc_main.main();
-  window.setTimeout(() {
+  Timer.run(() {
       var bench = new TodoMvcBenchmark();
       bench.measure().then(perfDone);
-  }, 0);
+  });
 }
 
 class TodoMvcBenchmark extends AsyncBenchmark {

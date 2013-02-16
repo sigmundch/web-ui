@@ -18,6 +18,7 @@ BSD-style license that can be found in the LICENSE file.
   <div>html to text (expect &lt;span&gt;text2&lt;/span&gt;): {{y}}</div>
   <div>html to html (expect html2 in a real span): {{z}}</div>
   <script type="application/dart">
+  import 'dart:async';
   import 'dart:html';
   import 'package:unittest/unittest.dart';
   import 'package:web_ui/observe.dart';
@@ -28,13 +29,13 @@ BSD-style license that can be found in the LICENSE file.
   @observable var y = new SafeHtml.unsafe('<span>html0</span>');
   @observable var z = new SafeHtml.unsafe('<span>html0</span>');
   main() {
-    window.setTimeout(() {
+    Timer.run(() {
       w = '<span>text1</span>';
       x = new SafeHtml.unsafe('<div>html1</div>');
       y = '<span>text2</span>';
       z = new SafeHtml.unsafe('<div>html2</div>');
-      window.setImmediate(() => window.postMessage('done', '*'));
-    }, 0);
+      Timer.run(() => window.postMessage('done', '*'));
+    });
   }
   </script>
 </body>

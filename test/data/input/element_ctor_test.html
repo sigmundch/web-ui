@@ -26,6 +26,7 @@ BSD-style license that can be found in the LICENSE file.
   </template>
   <h4>You should see two "PASS" above.</h4>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:unittest/unittest.dart';
     import 'package:web_ui/observe.dart';
@@ -33,10 +34,10 @@ BSD-style license that can be found in the LICENSE file.
     @observable var result = 'FAIL';
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         result = 'PASS';
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

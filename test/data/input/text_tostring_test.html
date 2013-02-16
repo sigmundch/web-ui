@@ -15,6 +15,7 @@ BSD-style license that can be found in the LICENSE file.
   <pre id="expected">The quick brown [fox, jumps] over the {lazy: dog}.</pre>
   <pre id="actual">The quick brown {{list}} over the {{map}}.</pre>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:unittest/unittest.dart';
     import 'package:web_ui/observe.dart';
@@ -29,7 +30,7 @@ BSD-style license that can be found in the LICENSE file.
     final actual = query('#actual');
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         expect(actual.innerHtml, 'The quick brown [initial, list state] over '
           'the {initial: map, state: !}.');
 
@@ -42,8 +43,8 @@ BSD-style license that can be found in the LICENSE file.
 
         expect(actual.innerHtml, expected.innerHtml);
 
-        window.setImmediate(() => window.postMessage('done', '*'));
-      }, 0);
+        Timer.run(() => window.postMessage('done', '*'));
+      });
     }
   </script>
 </body>

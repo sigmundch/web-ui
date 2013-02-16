@@ -20,18 +20,19 @@
     <x-pass></x-pass>
   </template>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:web_ui/observe.dart';
     import 'common.dart';
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         cond = true;
-        window.setTimeout(() {
+        Timer.run(() {
           cond = false;
           // in the end, we should see <x-pass> and not <x-error>
-          window.setImmediate(() => window.postMessage('done', '*'));
-        }, 0);
-      }, 0);
+          Timer.run(() => window.postMessage('done', '*'));
+        });
+      });
     }
   </script>
 </body>

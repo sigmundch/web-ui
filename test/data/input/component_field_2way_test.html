@@ -41,6 +41,7 @@
   </x-greeter>
   <p id="actual">{{data[0]}} {{data[1]}}</p>
   <script type="application/dart">
+    import 'dart:async';
     import 'dart:html';
     import 'package:unittest/unittest.dart';
     import 'package:web_ui/web_ui.dart';
@@ -48,7 +49,7 @@
     final data = toObservable(['hello', 'world']);
 
     main() {
-      window.setTimeout(() {
+      Timer.run(() {
         var actual = query('#actual');
         var greet = query('#greet');
         expect(actual.innerHtml, 'hello world');
@@ -56,7 +57,7 @@
         deliverChangesSync();
         expect(actual.innerHtml, contains('Yo dawg I heard'));
         window.postMessage('done', '*');
-      }, 0);
+      });
     }
   </script>
 </body>
