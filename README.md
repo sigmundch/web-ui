@@ -26,7 +26,7 @@ that works with your version of the SDK. For example:
 
 ```yaml
 dependencies:
-  web_ui: ">=0.2.8 <0.2.9"    # works with SDK 15595
+  web_ui: ">=0.3.2 <0.3.3"    # works with SDK 18115
 ```
 
 Versions change within the range when we release small bug fixes, but it
