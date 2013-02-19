@@ -3,6 +3,27 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.3.3 - Feb 19 2013 (integration SDK 0.3.7+5 r18669)
+  * New features:
+    * Observables: a scalable and efficient replacement for watchers.
+      Watchers dirty checks to see if anything had changed. Observables track
+      modifications directly. They are not on by default, you can switch by
+      adding the `@observable` annotation on your model fields.
+    * Source-maps in Dartium: enable source maps in the debugging options of
+      Dartium, and see the web inspector step through your original code when
+      you debug.
+    * One-time final bindings: use '{{ binding | final }}' to initialize a value
+      in your template when it is first rendered. This binding ignores any
+      updates to the model afterwards.
+    * Use spaces freely inside a component: indentation spaces (e.g. line breaks
+      after a tag, or a binding) are ignored when adding the attribute
+      'trim-indentation-spaces' to the `<template>` tag on an element
+      declaration.
+    * experimental css processing (hidden under a flag)
+  * Bug fix: dwc avoids generating imports that duplicate existing
+    imports from the user
+  * API changes: updates for the lastest changes in the SDK
+
 #### Pub version 0.3.2 - Feb 5 2013 (integration SDK r18115)
   * bug fix: allow 2 entry points to depend on a common component (we used to write files
     asynchronously and thus the two parallel compilation processes where corrupting each
