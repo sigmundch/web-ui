@@ -101,7 +101,7 @@ class CodePrinter {
   /** Appends a string merging it with any previous strings, if possible. */
   void _appendString(String s) {
     if (_buff == null) _buff = new StringBuffer();
-    _buff.add(s);
+    _buff.write(s);
   }
 
   /** Adds all of the current [_buff] contents as a string item. */
@@ -122,7 +122,7 @@ class CodePrinter {
    */
   String toString() {
     _flush();
-    return (new StringBuffer()..addAll(_items)).toString();
+    return (new StringBuffer()..writeAll(_items)).toString();
   }
 
   /** [Printer] used during the last call to [build], if any. */

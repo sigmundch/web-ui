@@ -508,11 +508,11 @@ class Compiler {
 
   _time(String logMessage, Path path, callback(), {bool printTime: false}) {
     var message = new StringBuffer();
-    message.add(logMessage);
+    message.write(logMessage);
     for (int i = (60 - logMessage.length - path.filename.length); i > 0 ; i--) {
-      message.add(' ');
+      message.write(' ');
     }
-    message.add(path.filename);
+    message.write(path.filename);
     return time(message.toString(), callback,
         printTime: options.verbose || printTime);
   }

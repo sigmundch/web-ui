@@ -179,8 +179,8 @@ void transformFields(VariableDeclarationList fields, TextEditTransaction code,
 
     var name = field.name.name;
 
-    if (replace.length > 0) replace.add('\n\n$indent');
-    replace.add('''
+    if (replace.length > 0) replace.write('\n\n$indent');
+    replace.write('''
 ${mod}$type __\$$name$initializer;
 ${mod}Object __obs\$$name;
 ${mod}$type get $name {

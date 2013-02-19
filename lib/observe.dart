@@ -314,8 +314,8 @@ void _diagnoseCircularLimit(Map<int, _ExpressionObserver> pendingObservers) {
     var change = obs._deliver();
     if (change == null || i < 10) return;
 
-    if (i != 0) trace.add(', ');
-    trace.add('$obs $change');
+    if (i != 0) trace.write(', ');
+    trace.write('$obs $change');
     i++;
   });
 

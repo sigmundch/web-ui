@@ -65,17 +65,17 @@ Future asyncTime(String logMessage, Future callback(),
 
 void _printMessage(String logMessage, int duration, bool useColors) {
   var buf = new StringBuffer();
-  buf.add(logMessage);
-  for (int i = logMessage.length; i < 60; i++) buf.add(' ');
-  buf.add(' -- ');
+  buf.write(logMessage);
+  for (int i = logMessage.length; i < 60; i++) buf.write(' ');
+  buf.write(' -- ');
   if (useColors) {
-    buf.add(GREEN_COLOR);
+    buf.write(GREEN_COLOR);
   }
-  if (duration < 10) buf.add(' ');
-  if (duration < 100) buf.add(' ');
-  buf..add(duration)..add(' ms');
+  if (duration < 10) buf.write(' ');
+  if (duration < 100) buf.write(' ');
+  buf..write(duration)..write(' ms');
   if (useColors) {
-    buf.add(NO_COLOR);
+    buf.write(NO_COLOR);
   }
   print(buf.toString());
 }
@@ -174,7 +174,7 @@ String escapeDartString(String text, {bool single: true, bool triple: false}) {
       result = new StringBuffer(text.substring(0, i));
     }
 
-    if (result != null) result.add(replace != null ? replace : text[i]);
+    if (result != null) result.write(replace != null ? replace : text[i]);
   }
 
   return result == null ? text : result.toString();

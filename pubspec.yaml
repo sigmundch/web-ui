@@ -2,20 +2,20 @@ name: web_ui
 author: "Web UI Authors <web-ui-dev@dartlang.org>"
 homepage: https://github.com/dart-lang/web-ui
 description: An easy way to build web apps in Dart.
-version: 0.3.2+1
+version: 0.3.3
 dependencies:
   args: any
   analyzer_experimental: any
   browser: any
   # Pin html5lib so we don't get unexpected API breaks.
-  html5lib: ">=0.3.2+1 <0.3.3"
-  csslib: ">=0.3.3 <0.3.4"
+  html5lib: ">=0.3.3 <0.3.4"
+  csslib: ">=0.3.4 <0.3.5"
   logging: any
   unittest: any
-  source_maps: ">=0.3.1+2 <0.3.2"
+  source_maps: ">=0.3.2 <0.3.3"
   # The following are dev dependencies only, they are not needed by users
   # of the web_ui package.
   js: any
   benchmark_harness: ">=1.0.2 <1.0.3"
 environment:
-  sdk: ">=0.3.7+1.r18593"
+  sdk: ">=0.3.7+5.r18669"

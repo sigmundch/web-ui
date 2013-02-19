@@ -143,7 +143,7 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   void sort([compare = Comparable.compare]) =>
       IterableMixinWorkaround.sortList(this, compare);
 
-  List<E> get reversed => IterableMixinWorkaround.reversedList(this);
+  Iterable<E> get reversed => IterableMixinWorkaround.reversedList(this);
 
   void clear() {
     this.length = 0;

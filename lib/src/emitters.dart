@@ -180,14 +180,14 @@ void _emitTextAttributeBinding(ElementInfo info,
     // attribute is a normal DOM attribute, we don't need to do anything.
     if (!setter.startsWith('xtag.')) return;
     assert(textContent.length == 1);
-    content.add(textContent[0]);
+    content.write(textContent[0]);
     isFinal = true;
   } else if (attr.bindings.length == 1) {
     binding = attr.boundValue;
     isFinal = attr.isBindingFinal;
-    content..add(textContent[0])
-        ..add('\${__e.newValue}')
-        ..add(textContent[1]);
+    content..write(textContent[0])
+        ..write('\${__e.newValue}')
+        ..write(textContent[1]);
   } else {
     // TODO(jmesserly): we could probably do something faster than a list
     // for watching on multiple bindings.
@@ -195,9 +195,9 @@ void _emitTextAttributeBinding(ElementInfo info,
     isFinal = attr.bindings.every((b) => b.isFinal);
 
     for (int i = 0; i < attr.bindings.length; i++) {
-      content..add(textContent[i])..add("\${__e.newValue[$i]}");
+      content..write(textContent[i])..write("\${__e.newValue[$i]}");
     }
-    content.add(textContent.last);
+    content.write(textContent.last);
   }
 
   var exp = "'$content'";
@@ -624,9 +624,9 @@ String _clearFields(Declarations declarations) {
   if (declarations.declarations.isEmpty) return '';
   var buff = new StringBuffer();
   for (var d in declarations.declarations) {
-    buff.add('${d.name} = ');
+    buff.write('${d.name} = ');
   }
-  buff.add('null;');
+  buff.write('null;');
   return buff.toString();
 }
 

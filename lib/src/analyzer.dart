@@ -121,7 +121,7 @@ class _Analyzer extends TreeVisitor {
       // TODO(terry): Faster to parse the CSS tags separately instead of
       //              concatenating all styles.
       // Get contents of style tag.
-      _currentInfo.cssSource.add(node.nodes.single.value);
+      _currentInfo.cssSource.write(node.nodes.single.value);
     }
 
     visitElementInfo(info);
