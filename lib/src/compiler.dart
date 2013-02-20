@@ -318,6 +318,12 @@ class Compiler {
       if (lib.modified && lib is FileInfo &&
           lib.htmlFile == null && !lib.isEntryPoint) {
         var transaction = _edits[lib];
+
+        // Save imports that were modified by _fixImports.
+        for (var d in lib.userCode.directives) {
+          transaction.edit(d.offset, d.end, d.toString());
+        }
+
         var pos = lib.userCode.directivesEnd;
         // TODO(sigmund): maybe don't generate this new import? the user already
         // had to import @observable, so we could take advantage of that to add
