@@ -5,13 +5,16 @@ this project are:
 TodoMVC - in example/todomvc/
           (MIT license)
 
-sanitizeUri - in lib/templating.dart
-              (adapted from GWT code under Apache Licence 2.0)
-
-
 The libraries may have their own licenses; we recommend you read them,
 as their terms may differ from the terms below.
 
+The functionality under:
+
+  sanitizeUri - in lib/templating.dart
+
+was adapted from the GWT source code. The original code is distributed under
+the Apache Licence 2.0. With the authors' permission, it is redistributed here
+under the new licence below.
 
 Copyright 2012, the Dart project authors. All rights reserved.
 Redistribution and use in source and binary forms, with or without
