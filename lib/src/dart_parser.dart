@@ -11,7 +11,6 @@ import 'dart:utf';
 import 'dart:math' as math;
 import 'package:analyzer_experimental/src/generated/ast.dart';
 import 'package:analyzer_experimental/src/generated/error.dart';
-import 'package:analyzer_experimental/src/generated/java_core.dart';
 import 'package:analyzer_experimental/src/generated/parser.dart';
 import 'package:analyzer_experimental/src/generated/scanner.dart';
 import 'package:source_maps/span.dart' show File, FileSegment, Location;
