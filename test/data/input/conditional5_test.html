@@ -21,7 +21,7 @@
     main() {
       Timer.run(() {
         cond = true;
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     }
   </script>

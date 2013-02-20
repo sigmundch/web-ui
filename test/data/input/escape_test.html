@@ -23,7 +23,7 @@ BSD-style license that can be found in the LICENSE file.
   @observable var text = '<span>hello</span>';
   @observable var html = new SafeHtml.unsafe('<span>hello</span>');
   main() {
-    window.setImmediate(() => window.postMessage('done', '*'));
+    window.postMessage('done', '*');
   }
   </script>
 </body>

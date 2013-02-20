@@ -21,7 +21,7 @@
       // test for making a change on topLevelVar
       Timer.run(() {
         topLevelVar = "hello";
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     }
   </script>

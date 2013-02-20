@@ -25,7 +25,7 @@
       //              Moved out of setTimeout to top of main see #130.
       initNullLoopItemList = toObservable(["a", "b"]);
       Timer.run(() {
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     }
   </script>

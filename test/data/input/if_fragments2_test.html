@@ -29,7 +29,7 @@ BSD-style license that can be found in the LICENSE file.
   main() {
     Timer.run(() {
       cond = false;
-      Timer.run(() => window.postMessage('done', '*'));
+      window.postMessage('done', '*');
     });
   }
   </script>

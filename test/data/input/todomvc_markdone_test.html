@@ -110,7 +110,7 @@ main() {
     // The next extra check is only valid when polyfilling the shadow DOM:
     expect(node, same(document.queryAll('input[type=checkbox]')[4]));
 
-    Timer.run(() => window.postMessage('done', '*'));
+    window.postMessage('done', '*');
   });
 }
   </script>

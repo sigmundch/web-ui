@@ -34,7 +34,7 @@ BSD-style license that can be found in the LICENSE file.
     main() {
       // This is a regression test for our emulated Shadow DOM.
       useShadowDom = false;
-      window.setImmediate(() => window.postMessage('done', '*'));
+      window.postMessage('done', '*');
     }
   </script>
 </body>

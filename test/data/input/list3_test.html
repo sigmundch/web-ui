@@ -24,7 +24,7 @@
     main() {
       Timer.run(() {
         list[1] = '?';
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     }
   </script>

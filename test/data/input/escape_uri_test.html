@@ -34,7 +34,7 @@ BSD-style license that can be found in the LICENSE file.
         tag.dispatchEvent(new MouseEvent('click', detail: 1));
       });
 
-      Timer.run(() => window.postMessage('done', '*'));
+      window.postMessage('done', '*');
     });
   }
   </script>

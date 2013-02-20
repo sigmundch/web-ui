@@ -82,7 +82,7 @@ BSD-style license that can be found in the LICENSE file.
         // It would be nice if this was "Foo".
         expect(name, 'Bar', reason: 'DOM checked does not fire event.');
 
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     }
   </script>

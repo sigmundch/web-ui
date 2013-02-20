@@ -6,6 +6,6 @@ import 'common.dart';
 
 main() {
   topLevelVar = "hello";
-  window.setImmediate(() => window.postMessage('done', '*'));
+  window.postMessage('done', '*');
 }
 

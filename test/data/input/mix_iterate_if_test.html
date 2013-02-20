@@ -53,7 +53,7 @@ BSD-style license that can be found in the LICENSE file.
             expect(td.innerHtml, value.toString());
           }
         }
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     });
   }

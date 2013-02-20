@@ -54,7 +54,7 @@ spaces. -->
           expect(query('#test1').classes, unorderedEquals(['dos', 'tres']));
           expect(query('#test2').classes, unorderedEquals(['uno', 'tres']));
           expect(query('#test3').classes, unorderedEquals(['cuatro', 'cinco']));
-          Timer.run(() => window.postMessage('done', '*'));
+          window.postMessage('done', '*');
         });
       });
     }

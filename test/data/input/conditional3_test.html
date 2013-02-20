@@ -28,7 +28,7 @@
         Timer.run(() {
           cond = false;
           // in the end, we should see 'no' again
-          Timer.run(() => window.postMessage('done', '*'));
+          window.postMessage('done', '*');
         });
       });
     }

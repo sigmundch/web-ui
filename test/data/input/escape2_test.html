@@ -34,7 +34,7 @@ BSD-style license that can be found in the LICENSE file.
       x = new SafeHtml.unsafe('<div>html1</div>');
       y = '<span>text2</span>';
       z = new SafeHtml.unsafe('<div>html2</div>');
-      Timer.run(() => window.postMessage('done', '*'));
+      window.postMessage('done', '*');
     });
   }
   </script>

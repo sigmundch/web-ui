@@ -32,7 +32,7 @@ BSD-style license that can be found in the LICENSE file.
         expect(div, isNotNull);
         expect(div.innerHtml, equals('3'));
         expect(div.previousNode, same(placeholder));
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     });
   }

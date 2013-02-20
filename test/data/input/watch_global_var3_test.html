@@ -17,7 +17,7 @@
     @observable String topLevelVar = "hi";
     main() {
       // test for no change on topLevelVar
-      window.setImmediate(() => window.postMessage('done', '*'));
+      window.postMessage('done', '*');
     }
   </script>
 </body>

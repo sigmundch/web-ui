@@ -34,7 +34,7 @@
           expect(query('#two').classes, unorderedEquals(['foo']));
           expect(query('#three').text, 'bar');
           expect(query('#four').text, 'foo');
-          window.setImmediate(() => window.postMessage('done', '*'));
+          window.postMessage('done', '*');
         });
       });
     }

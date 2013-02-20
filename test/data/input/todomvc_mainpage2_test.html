@@ -79,7 +79,7 @@ main() {
   Timer.run(() {
     app.todos.add(new Todo('hola'));
     deliverChangesSync();
-    Timer.run(() => window.postMessage('done', '*'));
+    window.postMessage('done', '*');
   });
 }
   </script>

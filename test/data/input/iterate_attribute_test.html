@@ -30,7 +30,7 @@ BSD-style license that can be found in the LICENSE file.
       Timer.run(() {
         expect(document.query("#test").innerHtml, equalsIgnoringWhitespace(
             '<span>a</span> <span>b</span> <span>c</span> <span>d</span>'));
-        Timer.run(() => window.postMessage('done', '*'));
+        window.postMessage('done', '*');
       });
     });
   }
