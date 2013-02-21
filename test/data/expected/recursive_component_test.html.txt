@@ -21,4 +21,3 @@ layer at (0,0) size 800x116
         RenderBlock (anonymous) at (10,70) size 764x0
           RenderText {#text} at (0,0) size 0x0
           RenderText {#text} at (0,0) size 0x0
-#EOF

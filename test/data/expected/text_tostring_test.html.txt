@@ -21,4 +21,3 @@ layer at (0,0) size 800x110
           text run at (304,0) width 88: "{lazy: dog}"
         RenderText {#text} at (392,0) size 8x16
           text run at (392,0) width 8: "."
-#EOF

@@ -14,4 +14,3 @@ layer at (0,0) size 800x56
           text run at (26,0) width 26: "(--) "
         RenderText {#text} at (52,0) size 22x19
           text run at (52,0) width 22: "(--)"
-#EOF

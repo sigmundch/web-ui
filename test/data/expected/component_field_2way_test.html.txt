@@ -15,4 +15,3 @@ layer at (0,0) size 800x88
           text run at (56,0) width 4: " "
         RenderText {#text} at (60,0) size 311x19
           text run at (60,0) width 311: "I heard you like world so we put world in yo world."
-#EOF

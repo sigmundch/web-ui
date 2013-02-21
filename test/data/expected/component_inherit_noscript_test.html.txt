@@ -23,4 +23,3 @@ layer at (0,0) size 800x224
         RenderBlock {P} at (0,172) size 784x20
           RenderText {#text} at (0,0) size 292x19
             text run at (0,0) width 292: "Hello, I am a Derived element with no script tag!"
-#EOF

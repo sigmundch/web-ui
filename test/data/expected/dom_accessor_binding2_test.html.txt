@@ -12,4 +12,3 @@ layer at (0,0) size 800x37
         text run at (24,1) width 267: "expected input.checked to be false, got false"
       RenderText {#text} at (291,1) size 259x19
         text run at (291,1) width 259: "expected input.checked to be true, got true"
-#EOF

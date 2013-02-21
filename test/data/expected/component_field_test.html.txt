@@ -80,4 +80,3 @@ layer at (0,0) size 800x220
           text run at (18,0) width 49: "universe"
         RenderText {#text} at (67,0) size 10x19
           text run at (67,0) width 10: "!!"
-#EOF

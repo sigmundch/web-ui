@@ -16,4 +16,3 @@ layer at (0,0) size 800x36
       RenderInline {A} at (0,0) size 0x0 [color=#0000EE]
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
-#EOF

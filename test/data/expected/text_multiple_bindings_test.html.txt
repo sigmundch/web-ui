@@ -28,4 +28,3 @@ layer at (0,0) size 800x142
           text run at (144,16) width 24: "dog"
         RenderText {#text} at (168,16) size 8x16
           text run at (168,16) width 8: "."
-#EOF

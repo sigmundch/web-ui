@@ -16,4 +16,3 @@ layer at (12,13) size 149x16
   RenderBlock {DIV} at (2,3) size 149x16
     RenderText {#text} at (0,0) size 9x16
       text run at (0,0) width 9: "C"
-#EOF

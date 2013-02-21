@@ -7,4 +7,3 @@ layer at (0,0) size 800x52
       RenderBlock {P} at (0,0) size 784x20
         RenderText {#text} at (0,0) size 186x19
           text run at (0,0) width 186: "Something whose answer is 42"
-#EOF

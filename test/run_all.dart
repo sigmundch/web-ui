@@ -10,8 +10,9 @@ library run_impl;
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:utf' show encodeUtf8;
 import 'dart:isolate';
+import 'dart:math' show min;
+import 'dart:utf' show encodeUtf8;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/dwc.dart' as dwc;
@@ -50,59 +51,129 @@ main() {
   addGroup('utils_test.dart', utils_test.main);
   addGroup('watcher_test.dart', watcher_test.main);
 
-  // TODO(jmesserly): should have listSync for scripting...
-  var lister = new Directory.fromPath(new Path('data/input')).list();
+  var paths = new Directory.fromPath(new Path('data/input')).listSync()
+      .where((f) => f is File).map((f) => f.name)
+      .where((p) => p.endsWith('_test.html') && pattern.hasMatch(p));
   var cwd = new Path(new Directory.current().path);
-  var inputDir = cwd.append('data/input');
-  lister.onFile = (path) {
-    if (!path.endsWith('_test.html') || !pattern.hasMatch(path)) return;
+  for (var path in paths) {
     var filename = new Path(path).filename;
-
     test('drt-compile $filename', () {
       expect(dwc.run(['-o', 'data/output/', path], printTime: false)
         .then((res) {
           expect(res.messages.length, 0, reason: res.messages.join('\n'));
         }), completes);
     });
+  }
 
-    test('drt-run $filename', () {
-      var outDir = cwd.append('data').append('output');
-      var htmlPath = outDir.append(filename).toString();
-      var outputPath = '$htmlPath.txt';
-      var errorPath = outDir.append('_errors.$filename.txt').toString();
+  test('drt-run', () {
+    var outDir = cwd.append('data').append('output');
+    var expectedDir = cwd.append('data').append('expected');
+    var filenames = paths.map((p) => new Path(p).filename).toList();
+    var inputPaths = filenames.map((n) => '${outDir.append(n)}').toList();
+    var outPaths = inputPaths.map((t) => '$t.txt').toList();
+    var expectedPaths = filenames
+        .map((n) => '${expectedDir.append(n)}.txt').toList();
 
-      expect(_runDrt(htmlPath, outputPath, errorPath).then((exitCode) {
-        if (exitCode == 0) {
-          var expectedPath = '$cwd/data/expected/$filename.txt';
-          expect(_diff(expectedPath, outputPath).then((res) {
-              expect(res, 0, reason: "Test output doesn't match expectation.");
-            }), completes);
-        } else {
-          var stderr = new File(errorPath).readAsStringSync();
-          expect(exitCode, 0, reason:
-              'DumpRenderTree exited with a non-zero exit code, when running '
-              'on $filename. Contents of stderr: \n$stderr');
-        }
-      }), completes);
-    });
-  };
-}
+    expect(Process.run('DumpRenderTree', inputPaths).then((res) {
+      expect(res.exitCode, 0, reason: 'DumpRenderTree exit code: $res.exitCode.'
+        ' Contents of stderr: \n${res.stderr}');
+      var outs = res.stdout.split('#EOF\n#EOF\n');
+      expect(outs.length, outPaths.length + 1);
+      expect(outs[outs.length - 1], isEmpty);
 
-Future<int> _runDrt(htmlPath, String outPath, String errPath) {
-  return Process.run('DumpRenderTree', [htmlPath]).then((res) {
-    var f1 = _writeFile(outPath, res.stdout);
-    var f2 = _writeFile(errPath, res.stderr);
-    return Future.wait([f1, f2]).then((_) => res.exitCode);
+      // Write out all outputs before we start comparing them.
+      for (int i = 0; i < outs.length - 1; i++) {
+        new File(outPaths[i]).writeAsStringSync(outs[i]);
+      }
+
+      for (int i = 0; i < outs.length - 1; i++) {
+        var expected = new File(expectedPaths[i]).readAsStringSync();
+        expect(expected, new SmartStringMatcher(outs[i]),
+            reason: 'unexpected output for ${filenames[i]}');
+      }
+    }), completes);
   });
 }
 
-Future _writeFile(String path, String text) {
-  return new File(path).open(FileMode.WRITE)
-      .then((file) => file.writeString(text))
-      .then((file) => file.close());
-}
+// TODO(sigmund): consider moving this matcher to unittest
+class SmartStringMatcher extends BaseMatcher {
+  final String _value;
 
-Future<int> _diff(expectedPath, outputPath) {
-  return Process.run('diff', ['-q', expectedPath, outputPath])
-      .then((res) => res.exitCode);
+  SmartStringMatcher(this._value);
+
+  bool matches(item, MatchState mismatchState) => _value == item;
+
+  Description describe(Description description) =>
+      description.addDescriptionOf(_value);
+
+  Description describeMismatch(item, Description mismatchDescription,
+      MatchState matchState, bool verbose) {
+    if (item is! String) {
+      return mismatchDescription.addDescriptionOf(item).add(' not a string');
+    } else {
+      var buff = new StringBuffer();
+      buff.write('Strings are not equal.');
+      var escapedItem = _escape(item);
+      var escapedValue = _escape(_value);
+      int minLength = min(escapedItem.length, escapedValue.length);
+      int start;
+      for (start = 0; start < minLength; start++) {
+        if (escapedValue.codeUnitAt(start) != escapedItem.codeUnitAt(start)) {
+          break;
+        }
+      }
+      if (start == minLength) {
+        if (escapedValue.length < escapedItem.length) {
+          buff.write(' Both strings start the same, but the given value also'
+              ' has the following trailing characters: ');
+          _writeTrailing(buff, escapedItem, escapedValue.length);
+        } else {
+          buff.write(' Both strings start the same, but the given value is'
+              ' missing the following trailing characters: ');
+          _writeTrailing(buff, escapedValue, escapedItem.length);
+        }
+      } else {
+        buff.write('\nExpected: ');
+        _writeLeading(buff, escapedValue, start);
+        buff.write('[32m');
+        buff.write(escapedValue[start]);
+        buff.write('[0m');
+        _writeTrailing(buff, escapedValue, start + 1);
+        buff.write('\n But was: ');
+        _writeLeading(buff, escapedItem, start);
+        buff.write('[31m');
+        buff.write(escapedItem[start]);
+        buff.write('[0m');
+        _writeTrailing(buff, escapedItem, start + 1);
+        buff.write('[32;1m');
+        buff.write('\n          ');
+        for (int i = (start > 10 ? 14 : start); i > 0; i--) buff.write(' ');
+        buff.write('^  [0m');
+      }
+
+      return mismatchDescription.replace(buff.toString());
+    }
+  }
+
+  static String _escape(String s) =>
+      s.replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
+
+  static String _writeLeading(StringBuffer buff, String s, int start) {
+    if (start > 10) {
+      buff.write('... ');
+      buff.write(s.substring(start - 10, start));
+    } else {
+      buff.write(s.substring(0, start));
+    }
+  }
+
+  static String _writeTrailing(StringBuffer buff, String s, int start) {
+    if (start + 10 > s.length) {
+      buff.write(s.substring(start));
+    } else {
+      buff.write(s.substring(start, start + 10));
+      buff.write(' ...');
+    }
+  }
+
 }

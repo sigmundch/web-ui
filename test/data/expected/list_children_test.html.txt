@@ -66,4 +66,3 @@ layer at (0,0) size 800x100
             text run at (26,20) width 19: "def"
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
-#EOF

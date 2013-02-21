@@ -20,4 +20,3 @@ layer at (0,0) size 800x71
           text run at (88,0) width 24: "Bar"
         RenderText {#text} at (112,0) size 232x16
           text run at (112,0) width 232: ". Final value should be 'Bar'"
-#EOF

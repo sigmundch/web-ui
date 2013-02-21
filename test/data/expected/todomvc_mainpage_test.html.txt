@@ -70,4 +70,3 @@ layer at (115,159) size 65x41
       RenderText at (25,0) size 16x32
         text run at (25,0) width 16: "\x{BB}"
 caret: position 0 of child 0 {DIV} of {#document-fragment} of child 1 {INPUT} of child 3 {FORM} of child 1 {HEADER} of child 1 {SECTION} of body
-#EOF

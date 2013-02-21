@@ -14,4 +14,3 @@ layer at (0,0) size 800x36
       RenderText {#text} at (155,0) size 30x19
         text run at (155,0) width 30: "there"
       RenderText {#text} at (0,0) size 0x0
-#EOF

@@ -132,4 +132,3 @@ layer at (126,212) size 40x58
       RenderText at (11,10) size 18x23
         text run at (11,10) width 18: "\x{2714}"
 caret: position 0 of child 0 {DIV} of {#document-fragment} of child 1 {INPUT} of child 3 {FORM} of child 1 {HEADER} of child 1 {SECTION} of body
-#EOF

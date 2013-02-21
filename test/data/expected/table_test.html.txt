@@ -46,4 +46,3 @@ layer at (0,0) size 800x114
             RenderTableCell {TD} at (37,74) size 26x22 [r=3 c=2 rs=1 cs=1]
               RenderText {#text} at (1,1) size 24x19
                 text run at (1,1) width 24: "___"
-#EOF

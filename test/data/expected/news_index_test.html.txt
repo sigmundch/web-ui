@@ -48,4 +48,3 @@ layer at (0,0) size 800x380
               RenderInline {A} at (0,0) size 95x19 [color=#0000EE]
                 RenderText {#text} at (0,0) size 95x19
                   text run at (0,0) width 95: "Awesome story"
-#EOF

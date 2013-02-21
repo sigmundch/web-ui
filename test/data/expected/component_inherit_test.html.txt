@@ -22,4 +22,3 @@ layer at (0,0) size 800x162
           RenderText {#text} at (0,0) size 477x19
             text run at (0,0) width 289: "You should see Base created, Derived created, "
             text run at (289,0) width 188: "Base inserted, Derived inserted"
-#EOF

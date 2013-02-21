@@ -19,4 +19,3 @@ layer at (0,0) size 800x100
           RenderInline {SPAN} at (0,0) size 20x19 [color=#FF0000]
             RenderText {#text} at (0,0) size 20x19
               text run at (0,0) width 20: "red"
-#EOF
