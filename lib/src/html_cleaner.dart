@@ -14,15 +14,11 @@ import 'package:csslib/parser.dart' as css;
 import 'info.dart';
 
 /** Removes bindings and extra nodes from the HTML assciated with [info]. */
-void cleanHtmlNodes(info, {processCss: false}) =>
-    new _HtmlCleaner(processCss).visit(info);
+void cleanHtmlNodes(info) => new _HtmlCleaner().visit(info);
 
 /** Remove all MDV attributes; post-analysis these attributes are not needed. */
 class _HtmlCleaner extends InfoVisitor {
-  final bool _processCss;
   ComponentInfo _component = null;
-
-  _HtmlCleaner(this._processCss);
 
   void visitComponentInfo(ComponentInfo info) {
     // Remove the <element> tag from the tree
@@ -49,10 +45,10 @@ class _HtmlCleaner extends InfoVisitor {
       node.nodes.clear();
     }
 
-    if (_processCss &&
-        node.tagName == 'style' && node.attributes.containsKey("scoped") &&
+    if (node.tagName == 'style' && node.attributes.containsKey("scoped") &&
         _component != null) {
-      node.remove();      // Remove the style tag we've parsed the CSS.
+      // Remove the style tag we've parsed the CSS.
+      node.remove();
     }
 
     super.visitElementInfo(info);

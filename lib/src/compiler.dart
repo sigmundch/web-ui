@@ -22,6 +22,7 @@ import 'file_system.dart';
 import 'file_system/path.dart';
 import 'files.dart';
 import 'html_cleaner.dart';
+import 'html_css_fixup.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'observable_transform.dart' show transformObservables;
@@ -403,9 +404,8 @@ class Compiler {
     var uniqueIds = new IntIterator();
     for (var file in files) {
       if (file.isDart) continue;
-      _time('Analyzed contents', file.path,
-          () => analyzeFile(file, info, uniqueIds, _messages,
-              cssPolyfill: options.processCss));
+      _time('Analyzed contents', file.path, () =>
+          analyzeFile(file, info, uniqueIds, _messages));
     }
   }
 
@@ -415,10 +415,9 @@ class Compiler {
       if (file.isDart) continue;
       _time('Codegen', file.path, () {
         var fileInfo = info[file.path];
-        cleanHtmlNodes(fileInfo, processCss: options.processCss);
-        if (options.processCss) {
-          _processCss(fileInfo, options: options);
-        }
+        cleanHtmlNodes(fileInfo);
+        _processStylesheet(fileInfo, options: options);
+        fixupHtmlCss(fileInfo, options);
         _emitComponents(fileInfo);
         if (fileInfo.isEntryPoint) {
           _emitMainDart(file);
@@ -551,7 +550,7 @@ class Compiler {
 }
 
 /** Parse all stylesheet for polyfilling assciated with [info]. */
-void _processCss(info, {CompilerOptions options : null}) {
+void _processStylesheet(info, {CompilerOptions options : null}) {
   new _ProcessCss(options).visit(info);
 }
 
@@ -570,12 +569,6 @@ class _ProcessCss extends InfoVisitor {
     if (!info.cssSource.isEmpty) {
       info.styleSheet = _parseCss(info.cssSource.toString(), options);
       info.cssSource = null;    // Once CSS parsed original not needed.
-      // TODO(terry): Remove early development of CSS work - dev only switch.
-      if (options.verbose) {
-        print('\nComponent: ${info.tagName}');
-        print('==========\n');
-        print(emitStyleSheet(info.styleSheet));
-      }
     }
 
     super.visitComponentInfo(info);
