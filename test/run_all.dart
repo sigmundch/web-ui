@@ -51,48 +51,60 @@ main() {
   addGroup('utils_test.dart', utils_test.main);
   addGroup('watcher_test.dart', watcher_test.main);
 
-  var paths = new Directory.fromPath(new Path('data/input')).listSync()
+  var cwd = new Path(new Directory.current().path);
+  var scriptDir = cwd.join(new Path(new Options().script).directoryPath);
+  var dataDir = scriptDir.append('data');
+  var inputDir = dataDir.append('input');
+  var expectedDir = dataDir.append('expected');
+  var outDir = dataDir.append('output');
+
+  var paths = new Directory.fromPath(inputDir).listSync()
       .where((f) => f is File).map((f) => f.name)
       .where((p) => p.endsWith('_test.html') && pattern.hasMatch(p));
-  var cwd = new Path(new Directory.current().path);
+
   for (var path in paths) {
     var filename = new Path(path).filename;
     test('drt-compile $filename', () {
-      expect(dwc.run(['-o', 'data/output/', path], printTime: false)
+      expect(dwc.run(['-o', '$outDir', path], printTime: false)
         .then((res) {
           expect(res.messages.length, 0, reason: res.messages.join('\n'));
         }), completes);
     });
   }
 
-  test('drt-run', () {
-    var outDir = cwd.append('data').append('output');
-    var expectedDir = cwd.append('data').append('expected');
+  if (!paths.isEmpty) {
     var filenames = paths.map((p) => new Path(p).filename).toList();
-    var inputPaths = filenames.map((n) => '${outDir.append(n)}').toList();
-    var outPaths = inputPaths.map((t) => '$t.txt').toList();
-    var expectedPaths = filenames
-        .map((n) => '${expectedDir.append(n)}.txt').toList();
+    // Sort files to match the order in which run.sh runs diff.
+    filenames.sort();
+    var outs;
 
-    expect(Process.run('DumpRenderTree', inputPaths).then((res) {
-      expect(res.exitCode, 0, reason: 'DumpRenderTree exit code: $res.exitCode.'
-        ' Contents of stderr: \n${res.stderr}');
-      var outs = res.stdout.split('#EOF\n#EOF\n');
-      expect(outs.length, outPaths.length + 1);
-      expect(outs[outs.length - 1], isEmpty);
+    test('drt-run', () {
+      var inputUrls = filenames.map(
+          (name) => 'file://${outDir.append(name)}').toList();
+      expect(Process.run('DumpRenderTree', inputUrls).then((res) {
+        expect(res.exitCode, 0, reason: 'DumpRenderTree exit code: '
+          '${res.exitCode}. Contents of stderr: \n${res.stderr}');
+        outs = res.stdout.split('#EOF\n')
+          .where((s) => !s.trim().isEmpty).toList();
+        expect(outs.length, filenames.length);
+      }), completes);
+    });
 
-      // Write out all outputs before we start comparing them.
-      for (int i = 0; i < outs.length - 1; i++) {
-        new File(outPaths[i]).writeAsStringSync(outs[i]);
-      }
-
-      for (int i = 0; i < outs.length - 1; i++) {
-        var expected = new File(expectedPaths[i]).readAsStringSync();
-        expect(expected, new SmartStringMatcher(outs[i]),
-            reason: 'unexpected output for ${filenames[i]}');
-      }
-    }), completes);
-  });
+    for (int i = 0; i < filenames.length; i++) {
+      var filename = filenames[i];
+      // TODO(sigmund): remove this extra variable dartbug.com/8698
+      int j = i;
+      test('verify $filename', () {
+        var output = outs[j];
+        var outPath = outDir.append('$filename.txt').toString();
+        var expectedPath = expectedDir.append('$filename.txt').toString();
+        new File(outPath).writeAsStringSync(output);
+        var expected = new File(expectedPath).readAsStringSync();
+        expect(output, new SmartStringMatcher(expected),
+          reason: 'unexpected output for <$filename>');
+      });
+    }
+  }
 }
 
 // TODO(sigmund): consider moving this matcher to unittest

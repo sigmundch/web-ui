@@ -218,7 +218,7 @@ class Compiler {
     for (var directive in library.userCode.directives) {
       var src = _getDirectivePath(library, directive);
       if (src == null) {
-        var uri = getDirectiveUri(directive).value;
+        var uri = directive.uri.value;
         if (uri.startsWith('package:web_ui/observe')) {
           _useObservers = true;
         }
@@ -230,7 +230,7 @@ class Compiler {
   }
 
   Path _getDirectivePath(LibraryInfo libInfo, Directive directive) {
-    var uri = getDirectiveUri(directive).value;
+    var uri = directive.uri.value;
     if (uri.startsWith('dart:')) return null;
 
     if (uri.startsWith('package:')) {
@@ -392,10 +392,9 @@ class Compiler {
         newUri = _pathInfo.relativePath(library, importInfo).toString();
       } else {
         // Get the relative path to the input file.
-        newUri = _pathInfo.transformUrl(library.inputPath,
-            getDirectiveUri(directive).value);
+        newUri = _pathInfo.transformUrl(library.inputPath, directive.uri.value);
       }
-      setDirectiveUri(directive, createStringLiteral(newUri));
+      directive.uri = createStringLiteral(newUri);
     }
   }
 

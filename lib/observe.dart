@@ -270,7 +270,7 @@ void deliverChangesSync() {
     // TODO(jmesserly): this is here to help our template system, which relies
     // on earlier observers removing later ones to prevent them from firing.
     // See if we can find a better solution at the template level.
-    var pendingObservers = new SplayTreeMap<int, _ExpressionObserver>();
+    var pendingObservers = new SplayTreeMap<num, _ExpressionObserver>();
     for (var pending in pendingWrites) {
       if (pending is _ExpressionObserver) {
         pendingObservers[pending._id] = pending;

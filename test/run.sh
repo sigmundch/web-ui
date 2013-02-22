@@ -88,19 +88,15 @@ function compare_all {
       FILENAME=`basename $input`
       echo -e -n "Checking diff for $FILENAME "
       DUMP="$DIR/data/output/$FILENAME.txt"
-      ERR="$DIR/data/output/_errors.$FILENAME.txt"
       EXPECTATION="$DIR/data/expected/$FILENAME.txt"
 
-      compare $EXPECTATION $DUMP || \
-        (echo "Errors printed by DumpRenderTree:"; cat $ERR; fail)
+      compare $EXPECTATION $DUMP
     fi
   done
   fail
 }
 
-pushd $DIR
-dart $DART_FLAGS run_all.dart $TEST_PATTERN || compare_all
-popd
+dart $DART_FLAGS test/run_all.dart $TEST_PATTERN || compare_all
 
 
 

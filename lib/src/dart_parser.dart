@@ -68,28 +68,10 @@ class DartCodeInfo {
   }
 }
 
-// TODO(jmesserly): I think Part and Import will have a common base class soon,
-// which will make this easier.
-SimpleStringLiteral getDirectiveUri(Directive directive) {
-  if (directive is NamespaceDirective) {
-    return (directive as NamespaceDirective).libraryUri;
-  } else {
-    return (directive as PartDirective).partUri;
-  }
-}
-
-void setDirectiveUri(Directive directive, SimpleStringLiteral uri) {
-  if (directive is NamespaceDirective) {
-    (directive as NamespaceDirective).libraryUri2 = uri;
-  } else {
-    (directive as PartDirective).partUri2 = uri;
-  }
-}
-
 SimpleStringLiteral createStringLiteral(String contents) {
   var lexeme = "'${escapeDartString(contents)}'";
   var token = new StringToken(TokenType.STRING, lexeme, null);
-  return new SimpleStringLiteral(token, contents);
+  return new SimpleStringLiteral.full(token, contents);
 }
 
 
@@ -113,11 +95,12 @@ DartCodeInfo parseDartCode(Path path, String code, Messages messages,
     } else if (directive is PartOfDirective) {
       partName = directive.libraryName.name;
     } else {
+      assert(directive is UriBasedDirective);
       // Normalize the library URI.
-      var uriNode = getDirectiveUri(directive);
+      var uriNode = directive.uri;
       if (uriNode is! SimpleStringLiteral) {
         String uri = uriNode.accept(new ConstantEvaluator());
-        setDirectiveUri(directive, createStringLiteral(uri));
+        directive.uri = createStringLiteral(uri);
       }
       directives.add(directive);
     }
