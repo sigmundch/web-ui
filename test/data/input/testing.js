@@ -24,7 +24,7 @@ window.addEventListener('message', messageHandler, false);
 
 function errorHandler(e) {
   if (runner) {
-    runner.notifyDone();
+    window.setTimeout(function() { runner.notifyDone(); }, 0);
   }
   window.console.log('FAIL');
 }
