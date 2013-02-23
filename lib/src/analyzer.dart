@@ -73,6 +73,16 @@ class _Analyzer extends TreeVisitor {
   Messages _messages;
 
   /**
+   * Whether to keep indentation spaces. Break lines and indentation spaces
+   * within templates are preserved in HTML. When users specify the attribute
+   * 'indentation="remove"' on a template tag, we'll trim those indentation
+   * spaces that occur within that tag and its decendants. If any decendant
+   * specifies 'indentation="preserve"', then we'll switch back to the normal
+   * behavior.
+   */
+  bool _keepIndentationSpaces = true;
+
+  /**
    * Adds emitted error/warning messages to [_messages].
    * [_messages] must not be null.
    */
@@ -162,11 +172,24 @@ class _Analyzer extends TreeVisitor {
 
     var savedParent = _parent;
     _parent = info;
+    var keepSpaces = _keepIndentationSpaces;
+    if (node.tagName == 'template' &&
+        node.attributes.containsKey('indentation')) {
+      var value = node.attributes['indentation'];
+      if (value != 'remove' && value != 'preserve') {
+        _messages.warning(
+            "Invalid value for 'indentation' ($value). By default we preserve "
+            "the indentation. Valid values are either 'remove' or 'preserve'.",
+            node.sourceSpan, file: _fileInfo.path);
+      }
+      _keepIndentationSpaces = value != 'remove';
+    }
 
     // Invoke super to visit children.
     super.visitElement(node);
-    _currentInfo = lastInfo;
 
+    _keepIndentationSpaces = keepSpaces;
+    _currentInfo = lastInfo;
     _parent = savedParent;
 
     if (_needsIdentifier(info)) {
@@ -651,10 +674,10 @@ class _Analyzer extends TreeVisitor {
   void visitText(Text text) {
     var parser = new BindingParser(text.value);
     if (!parser.moveNext()) {
-      if (_shouldTrim) {
+      if (!_keepIndentationSpaces) {
         text.value = trimOrCompact(text.value);
       }
-      new TextInfo(text, _parent);
+      if (!text.value.isEmpty) new TextInfo(text, _parent);
       return;
     }
 
@@ -675,16 +698,13 @@ class _Analyzer extends TreeVisitor {
   }
 
   void _addRawTextContent(String content) {
-    if (_shouldTrim) {
+    if (!_keepIndentationSpaces) {
       content = trimOrCompact(content);
     }
     if (content != '') {
       new TextInfo(new Text(content), _parent);
     }
   }
-
-  bool get _shouldTrim => _currentInfo is ComponentInfo &&
-      (_currentInfo as ComponentInfo).trimIndentationSpaces;
 
   /**
    * Normalizes references in [info]. On the [analyzeDefinitions] phase, the

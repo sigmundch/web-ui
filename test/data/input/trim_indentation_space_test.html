@@ -48,7 +48,7 @@ BSD-style license that can be found in the LICENSE file.
     </script>
   </element>
   <element name="x-c" extends="div">
-    <template trim-indentation-spaces>
+    <template indentation="remove">
       <div>1{{value}}{{value}}2 3{{value}}4
         <span>5</span><span>{{value}}</span>6
       </div>
@@ -62,7 +62,7 @@ BSD-style license that can be found in the LICENSE file.
   </element>
   <!-- there is a trailing space after 2 below -->
   <element name="x-d" extends="div">
-    <template trim-indentation-spaces>
+    <template indentation="remove">
       <div>
       1
       {{value}}

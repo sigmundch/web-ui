@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <div>expect: a b c</div>
+  <div id='t1'>
+    <template iterate="i in list1">
+      {{i}}
+    </template>
+  </div>
+  <div>expect: abc</div>
+  <div id='t2'>
+  <template iterate="i in list1" indentation="remove">
+    {{i}}
+  </template>
+  </div>
+  <div>expect: a [_( -) ( -) ][_( -) ( -) ] b [_( -) ( -) ][_( -) ( -) ] c [_( -) ( -) ][_( -) ( -) ]</div>
+  <div id='t3'>
+  <template iterate="i in list1">
+    {{i}}
+    <template iterate="j in list2" indentation="remove">
+      [
+      {{j}}
+      <template iterate="k in list3" indentation="preserve">(
+        {{k}})
+      </template>
+      ]
+    </template>
+  </template>
+  </div>
+  <script type="application/dart">
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    var list1 = ['a', 'b', 'c'];
+    var list2 = ['_', '_'];
+    var list3 = ['-', '-'];
+
+    main() {
+      window.setImmediate(() {
+        var t1 = query('#t1').text;
+        var t2 = query('#t2').text;
+        var t3 = query('#t3').text;
+        expect(t1, equalsIgnoringWhitespace('a b c'));
+        expect(t2, equalsIgnoringWhitespace('abc'));
+        expect(t3, equalsIgnoringWhitespace(
+            'a [_( -) ( -) ][_( -) ( -) ] b [_( -) ( -) ][_( -) ( -) ] '
+            'c [_( -) ( -) ][_( -) ( -) ]'));
+        window.postMessage('done', '*');
+      });
+    }
+  </script>
+</body>
+</html>
+

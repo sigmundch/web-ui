@@ -318,14 +318,6 @@ class ComponentInfo extends LibraryInfo {
   /** The component's `<template>` tag, if any. */
   final Node template;
 
-  /**
-   * Whether break lines and indentation spaces within a component's template
-   * should be ignored. This is true if the template tag constains the attribute
-   * 'trim-indentation-spaces'.
-   */
-  bool get trimIndentationSpaces => template != null &&
-      template.attributes.containsKey('trim-indentation-spaces');
-
   /** File where this component was defined. */
   Path get inputPath =>
       externalFile != null ? externalFile : declaringFile.path;
