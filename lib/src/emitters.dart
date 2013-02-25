@@ -352,6 +352,14 @@ class StyleSheetEmitter extends CssPrinter {
       emit('.${_prefix}_${node.name}');
     }
   }
+
+  void visitIdSelector(IdSelector node) {
+    if (_prefix == null) {
+      super.visitIdSelector(node);
+    } else {
+      emit('#${_prefix}_${node.name}');
+    }
+  }
 }
 
 /** Helper function to emit the contents of the style tag. */

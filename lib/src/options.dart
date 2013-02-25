@@ -44,6 +44,9 @@ class CompilerOptions {
   /** Emulate scoped styles using a CSS polyfill. */
   final bool processCss;
 
+  /** Emit debugging information for CSS processing. */
+  final bool debugCss;
+
   // We could make this faster, if it ever matters.
   factory CompilerOptions() => parse(['']);
 
@@ -58,6 +61,7 @@ class CompilerOptions {
       jsonFormat = args['json_format'],
       componentsOnly = args['components_only'],
       processCss = args['process_css'],
+      debugCss = args['debug_css'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
   static CompilerOptions parse(List<String> arguments) {
@@ -84,6 +88,8 @@ class CompilerOptions {
                 'HTML files or the main bootstrap code.',
           defaultsTo: false, negatable: false)
       ..addFlag('process_css', help: 'Emulate scoped styles with CSS polyfill',
+          defaultsTo: false, negatable: false)
+      ..addFlag('debug_css', help: 'Debug information for CSS polyfill',
           defaultsTo: false, negatable: false)
       ..addFlag('dump_css', help: 'Display CSS tree',
           defaultsTo: false, negatable: false)
