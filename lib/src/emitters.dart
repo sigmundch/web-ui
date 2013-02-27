@@ -28,16 +28,19 @@ import 'utils.dart';
  */
 class Context {
   final Declarations declarations;
+  final Declarations statics;
   final CodePrinter printer;
   final bool isClass;
 
-  Context({Declarations declarations, CodePrinter printer,
-           bool isClass: false, int indent: 0})
+  Context({Declarations declarations, Declarations statics,
+           CodePrinter printer, bool isClass: false, int indent: 0})
       : this.declarations = declarations != null
-            ? declarations : new Declarations(!isClass, indent),
+            ? declarations : new Declarations(indent, isLocal: !isClass),
+        this.statics = statics != null
+            ? statics : new Declarations(indent, staticKeyword: isClass),
         this.isClass = isClass,
         this.printer = printer != null
-             ? printer : new CodePrinter(isClass ? indent + 1 : indent);
+            ? printer : new CodePrinter(isClass ? indent + 1 : indent);
 }
 
 /**
@@ -55,10 +58,11 @@ void emitDeclarations(ElementInfo info, Declarations declarations) {
 
 /** Initializes fields and variables pointing to a HTML element.  */
 void emitInitializations(ElementInfo info,
-    CodePrinter printer, CodePrinter childrenPrinter) {
+    Context context, CodePrinter childrenPrinter) {
+  var printer = context.printer;
   var id = info.identifier;
   if (info.createdInCode) {
-    printer.addLine("$id = ${_emitCreateHtml(info.node)};",
+    printer.addLine("$id = ${_emitCreateHtml(info.node, context.statics)};",
         span: info.node.sourceSpan);
   } else if (!info.isRoot) {
     var parentId = '_root';
@@ -75,7 +79,7 @@ void emitInitializations(ElementInfo info,
   printer.add(childrenPrinter);
 
   if (info.childrenCreatedInCode && !info.hasIterate && !info.hasIfCondition) {
-    _emitAddNodes(printer, info.children, '$id.nodes');
+    _emitAddNodes(printer, context.statics, info.children, '$id.nodes');
   }
 }
 
@@ -83,15 +87,22 @@ void emitInitializations(ElementInfo info,
  * Emit statements that add 1 or more HTML nodes directly as children of
  * [target] (which can be a template or another node.
  */
-_emitAddNodes(CodePrinter printer, List<NodeInfo> nodes, String target) {
+_emitAddNodes(CodePrinter printer, Declarations statics, List<NodeInfo> nodes,
+    String target) {
+
+  String createChildExpression(NodeInfo info) {
+    if (info.identifier != null) return info.identifier;
+    return _emitCreateHtml(info.node, statics);
+  }
+
   if (nodes.length == 1) {
-    printer.addLine("$target.add(${_createChildExpression(nodes.single)});");
+    printer.addLine("$target.add(${createChildExpression(nodes.single)});");
   } else if (nodes.length > 0) {
     printer..insertIndent()
         ..add("$target.addAll([")
         ..indent += 2;
     for (int i = 0; i < nodes.length; i++) {
-      var exp = _createChildExpression(nodes[i]);
+      var exp = createChildExpression(nodes[i]);
       if (i > 0) printer.insertIndent();
       printer..add(exp, span: nodes[i].node.sourceSpan)
           ..add(i == nodes.length - 1 ? ']);\n' : ',\n');
@@ -255,7 +266,7 @@ void emitConditional(TemplateInfo info, CodePrinter printer,
       ..add(childContext.declarations)
       ..add(childContext.printer)
       ..indent -= 1;
-  _emitAddNodes(printer, info.children, '__t');
+  _emitAddNodes(printer, childContext.statics, info.children, '__t');
   printer..addLine('});\n');
 }
 
@@ -273,7 +284,7 @@ void emitLoop(TemplateInfo info, CodePrinter printer, Context childContext) {
       ..add(childContext.declarations)
       ..add(childContext.printer)
       ..indent -= 1;
-  _emitAddNodes(printer, info.children, '__t');
+  _emitAddNodes(printer, childContext.statics, info.children, '__t');
   printer..addLine(info.isTemplateElement
       ? '});' : '}, isTemplateElement: false);');
 }
@@ -304,21 +315,22 @@ class RecursiveEmitter extends InfoVisitor {
     var indent = _context.printer.indent;
     var childPrinter = new CodePrinter(indent);
     emitDeclarations(info, _context.declarations);
-    emitInitializations(info, _context.printer, childPrinter);
+    emitInitializations(info, _context, childPrinter);
     emitEventListeners(info, _context.printer);
     emitAttributeBindings(info, _context.printer);
     emitComponentCreation(info, _context.printer);
 
     var childContext = null;
     if (info.hasIfCondition) {
-      childContext = new Context(indent: indent + 1);
+      childContext = new Context(statics: _context.statics, indent: indent + 1);
       emitConditional(info, _context.printer, childContext);
     } else if (info.hasIterate) {
-      childContext = new Context(indent: indent + 1);
+      childContext = new Context(statics: _context.statics, indent: indent + 1);
       emitLoop(info, _context.printer, childContext);
     } else {
       childContext = new Context(declarations: _context.declarations,
-          printer: childPrinter, isClass: _context.isClass);
+          statics: _context.statics, printer: childPrinter,
+          isClass: _context.isClass);
     }
 
     // Invoke super to visit children.
@@ -399,7 +411,10 @@ class WebComponentEmitter extends RecursiveEmitter {
       // and we don't have Shadow DOM support? In that case, styles won't have
       // proper encapsulation.
     }
+
     if (info.template != null && !elemInfo.childrenCreatedInCode) {
+      // TODO(jmesserly): scoped styles probably don't work when
+      // childrenCreatedInCode is true.
       if (info.styleSheet != null) {
         var tag = cssPolyfill ? info.tagName : null;
         // TODO(jmesserly): csslib+html5lib should work together.  We shouldn't
@@ -419,13 +434,13 @@ class WebComponentEmitter extends RecursiveEmitter {
             template.children[0]);
       }
 
-      // TODO(jmesserly): we need to emit code to run the <content> distribution
-      // algorithm for browsers without ShadowRoot support.
-      _context.printer
-          ..insertIndent()
-          ..add("_root.innerHtml = '''")
-          ..add(escapeDartString(elemInfo.node.innerHtml, triple: true))
-          ..add("''';\n");
+      _context.statics.add('final', '__shadowTemplate',
+          elemInfo.node.sourceSpan,
+          "new autogenerated.DocumentFragment.html('''"
+          "${escapeDartString(elemInfo.node.innerHtml, triple: true)}"
+          "''')");
+      _context.printer.addLine(
+          "_root.nodes.add(__shadowTemplate.clone(true));");
     }
 
     visit(elemInfo);
@@ -473,6 +488,7 @@ class WebComponentEmitter extends RecursiveEmitter {
           ..addLine(' */')
           // TODO(sigmund): omit [_root] if the user already defined it.
           ..addLine('var _root;')
+          ..add(_context.statics)
           ..add(_context.declarations)
           ..addLine('')
           ..addLine('${info.constructor}.forElement(e) : super.forElement(e);')
@@ -569,6 +585,7 @@ class MainPageEmitter extends RecursiveEmitter {
         ..addLine('void init_autogenerated() {')
         ..indent += 1
         ..addLine('var _root = autogenerated.document.body;')
+        ..add(_context.statics)
         ..add(_context.declarations)
         ..addLine('var __t = new autogenerated.Template(_root);')
         ..add(_context.printer)
@@ -620,16 +637,11 @@ String _clearFields(Declarations declarations) {
   return buff.toString();
 }
 
-String _createChildExpression(NodeInfo info) {
-  if (info.identifier != null) return info.identifier;
-  return _emitCreateHtml(info.node);
-}
-
 /**
  * An (runtime) expression to create the [node]. It always includes the node's
  * attributes, but only includes children nodes if [includeChildren] is true.
  */
-String _emitCreateHtml(Node node) {
+String _emitCreateHtml(Node node, Declarations statics) {
   if (node is Text) {
     return "new autogenerated.Text('${escapeDartString(node.value)}')";
   }
@@ -656,7 +668,11 @@ String _emitCreateHtml(Node node) {
     var target = isSvg ? '_svg.SvgElement.svg' : 'Element.html';
     constructor = "$target('${escapeDartString(node.outerHtml)}')";
   }
-  return 'new autogenerated.$constructor';
+
+  var expr = 'new autogenerated.$constructor';
+  var varName = '__html${statics.declarations.length}';
+  statics.add('final', varName, node.sourceSpan, expr);
+  return '${varName}.clone(true)';
 }
 
 /**

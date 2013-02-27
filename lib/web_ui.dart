@@ -77,7 +77,7 @@ abstract class WebComponent implements Element {
       return _element.createShadowRoot();
     }
     if (_shadowRoots == null) _shadowRoots = [];
-    _shadowRoots.add(new Element.html('<div class="shadowroot"></div>'));
+    _shadowRoots.add(new DivElement());
     return _shadowRoots.last;
   }
 

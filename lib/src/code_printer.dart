@@ -173,7 +173,9 @@ class Declaration implements Comparable {
   final String type;
   final String name;
   final Span sourceSpan;
-  Declaration(this.type, this.name, this.sourceSpan);
+  final String initializer;
+
+  Declaration(this.type, this.name, this.sourceSpan, [this.initializer]);
 
   /**
    * Sort declarations by type, so they can be merged together in a declaration
@@ -197,12 +199,15 @@ class Declarations {
   /** Whether these declarations are local variables or fields in a class. */
   final bool isLocal;
 
-  Declarations(this.isLocal, this.indent);
+  /** Whether types should be prefixed with the "static" keyword. */
+  final bool staticKeyword;
+
+  Declarations(this.indent, {this.isLocal: false, this.staticKeyword: false});
 
   /** Add a declaration to this group. */
-  void add(String type, String identifier, Span sourceSpan) {
+  void add(String type, String identifier, Span sourceSpan, [String init]) {
     declarations.add(
-        new Declaration(isLocal ? 'var' : type, identifier, sourceSpan));
+        new Declaration(isLocal ? 'var' : type, identifier, sourceSpan, init));
   }
 
   String toString() {
@@ -222,6 +227,7 @@ class Declarations {
           printer.add(';\n');
           printer.addSpaces(2 * indent);
         }
+        if (staticKeyword) printer.add('static ');
         printer.add(d.type);
         lastType = d.type;
       } else {
@@ -230,6 +236,9 @@ class Declarations {
       printer.add(' ');
       if (d.sourceSpan != null) printer.mark(d.sourceSpan);
       printer.add(d.name);
+      if (d.initializer != null) {
+        printer..add(' = ')..add(d.initializer);
+      }
     }
     printer.add(';\n');
   }
