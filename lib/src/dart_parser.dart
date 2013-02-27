@@ -21,10 +21,7 @@ import 'refactor.dart' show $CR, $LF;
 import 'utils.dart';
 
 /** Information extracted from a source Dart file. */
-class DartCodeInfo {
-  // TODO(jmesserly): VM hashCode performance workaround ...
-  static int _nextHash = 0;
-  final int hashCode = ++_nextHash;
+class DartCodeInfo extends Hashable {
 
   /** Library qualified identifier, if any. */
   final String libraryName;

@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+   Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+   for details. All rights reserved. Use of this source code is governed by a
+   BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <element name="x-foo">
+    <template>Test status: {{status}}</template>
+    <script type="application/dart" src="observable_in_component.dart"></script>
+  </element>
+  <x-foo></x-foo>
+  <script type="application/dart">
+    import 'dart:async';
+    import 'dart:html';
+    import 'package:unittest/unittest.dart';
+    import 'observable_in_component.dart';
+
+    main() {
+      Timer.run(() {
+        expect(status, 'FAIL');
+        status = 'PASS';
+        window.postMessage('done', '*');
+      });
+    }
+  </script>
+</body>
+</html>

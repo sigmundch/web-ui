@@ -168,7 +168,7 @@ typedef String NameMangler(String name, String suffix, [bool forceSuffix]);
  * component-level behavior code. This code can either be inlined in the HTML
  * file or included in a script tag with the "src" attribute.
  */
-abstract class LibraryInfo {
+abstract class LibraryInfo extends Hashable {
 
   /** Whether there is any code associated with the page/component. */
   bool get codeAttached => inlinedCode != null || externalFile != null;

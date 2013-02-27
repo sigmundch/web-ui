@@ -96,8 +96,10 @@ function compare_all {
   fail
 }
 
-dart $DART_FLAGS test/run_all.dart $TEST_PATTERN || compare_all
-
+pushd $DIR
+# TODO(jmesserly): dart:io fails if we run_all with an absolute path.
+dart $DART_FLAGS run_all.dart $TEST_PATTERN || compare_all
+popd
 
 
 # Run Dart analyzer to check that we're generating warning clean code.

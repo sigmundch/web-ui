@@ -240,7 +240,8 @@ String trimOrCompact(String text) {
   return text.substring(first, last + 1);
 }
 
-// TODO(jmesserly): this should exist in dart:isolates
+// TODO(jmesserly): replace with something in dart:async, as long as it is based
+// on window.setImmediate/mutation observers/postMessage and not setTimeout(0)
 /**
  * Adds an event to call [callback], so the event loop will call this after the
  * current stack has unwound.
@@ -264,4 +265,12 @@ class IntIterator implements Iterator<int> {
     _next++;
     return true;
   }
+}
+
+
+// TODO(jmesserly): VM hashCode performance workaround.
+// https://code.google.com/p/dart/issues/detail?id=5746
+class Hashable {
+  static int _nextHash = 0;
+  final int hashCode = ++_nextHash;
 }

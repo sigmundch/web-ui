@@ -68,7 +68,7 @@ class Compiler {
 
   /** Information about source [files] given their href. */
   final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
-  final _edits = new Map<LibraryInfo, TextEditTransaction>();
+  final _edits = new Map<DartCodeInfo, TextEditTransaction>();
 
  /**
   * Creates a compiler with [options] using [fileSystem].
@@ -256,7 +256,7 @@ class Compiler {
     for (var library in libraries) {
       var transaction = transformObservables(library.userCode);
       if (transaction != null) {
-        _edits[library] = transaction;
+        _edits[library.userCode] = transaction;
         if (transaction.hasEdits) {
           // TODO(jmesserly): what about ObservableList/Map/Set?
           _useObservers = true;
@@ -318,7 +318,7 @@ class Compiler {
       // So we only need to worry about other .dart files.
       if (lib.modified && lib is FileInfo &&
           lib.htmlFile == null && !lib.isEntryPoint) {
-        var transaction = _edits[lib];
+        var transaction = _edits[lib.userCode];
 
         // Save imports that were modified by _fixImports.
         for (var d in lib.userCode.directives) {
@@ -430,7 +430,7 @@ class Compiler {
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
     var printer = new MainPageEmitter(fileInfo)
-        .run(file.document, _pathInfo, _edits[fileInfo]);
+        .run(file.document, _pathInfo, _edits[fileInfo.userCode]);
     _emitFileAndSourceMaps(fileInfo, printer, fileInfo.inputPath);
   }
 
@@ -484,7 +484,7 @@ class Compiler {
   void _emitComponents(FileInfo fileInfo) {
     for (var component in fileInfo.declaredComponents) {
       var printer = new WebComponentEmitter(fileInfo, _messages)
-          .run(component, _pathInfo, _edits[component]);
+          .run(component, _pathInfo, _edits[component.userCode]);
       _emitFileAndSourceMaps(component, printer, component.externalFile);
     }
   }
