@@ -80,4 +80,23 @@ main() {
     }
     expect(res, orderedEquals([1, 3, 4, 6]));
   });
+
+  test('head/tail are null after removing all items', () {
+    list = new LinkedList<int>();
+    var item1 = list.add(1);
+    var item2 = list.add(2);
+    expect(list.length, 2);
+    expect(list.head, item1);
+    expect(list.tail, item2);
+
+    item1.remove();
+    expect(list.length, 1);
+    expect(list.head, item2);
+    expect(list.tail, item2);
+
+    item2.remove();
+    expect(list.length, 0);
+    expect(list.head, null);
+    expect(list.tail, null);
+  });
 }
