@@ -127,15 +127,6 @@ main() {
       expect(messages.length, 0);
     });
 
-    test('hasDataBinding - 2 way binding - deprecated', () {
-      var node = parseSubtree('<input data-bind="value:x">');
-      var info = analyzeElement(node);
-      expect(info.hasDataBinding, true);
-      expect(messages.length, 1);
-      expect(messages[0].message, contains('data-bind is deprecated'));
-      expect(messages[0].span, equals(node.sourceSpan));
-    });
-
     test('hasDataBinding - content with data', () {
       var input = '<div>{{x}}</div>';
       var info = analyzeElement(parseSubtree(input));
@@ -197,7 +188,7 @@ main() {
       expect(info.attributes.length, equals(1));
       expect(info.attributes['data-hi'], isNotNull);
       expect(info.attributes['data-hi'].isSimple, true);
-      expect(info.attributes['data-hi'].bindings.map((b) => b.exp), 
+      expect(info.attributes['data-hi'].bindings.map((b) => b.exp),
           equals(['x']));
       expect(info.attributes['data-hi'].textContent, isNull);
       expect(info.events, isEmpty);
@@ -228,7 +219,7 @@ main() {
     });
 
     test('attribute - 2 way binding input value', () {
-      var input = '<input data-bind="value:x">';
+      var input = '<input bind-value="x">';
       var info = analyzeElement(parseSubtree(input));
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
@@ -241,7 +232,7 @@ main() {
     });
 
     test('attribute - 2 way binding textarea value', () {
-      var input = '<textarea data-bind="value:x">';
+      var input = '<textarea bind-value="x">';
       var info = analyzeElement(parseSubtree(input));
       expect(info.attributes.length, equals(1));
       expect(info.attributes['value'], isNotNull);
@@ -253,7 +244,7 @@ main() {
     });
 
     test('attribute - 2 way binding select', () {
-      var input = '<select data-bind="selectedIndex:x,value:y">';
+      var input = '<select bind-selected-index="x" bind-value="y">';
       var info = analyzeElement(parseSubtree(input));
       expect(info.attributes.keys, equals(['selectedIndex', 'value']));
       expect(info.attributes['selectedIndex'], isNotNull);
@@ -291,7 +282,7 @@ main() {
     });
 
     test('attribute - 2 way binding checkbox', () {
-      var input = '<input type="checkbox" data-bind="checked:x">';
+      var input = '<input type="checkbox" bind-checked="x">';
       var info = analyzeElement(parseSubtree(input));
       expect(info.attributes.length, equals(1));
       expect(info.attributes['checked'], isNotNull);
@@ -349,19 +340,6 @@ main() {
       expect(info.node.attributes['class'].contains('class4'), true);
     });
 
-    test('attribute - data style', () {
-      var input = '<div data-style="x"></div>';
-      var elem = parseSubtree(input);
-      var info = analyzeElement(elem);
-      expect(info.attributes.length, equals(1));
-      expect(info.attributes['data-style'], isNotNull);
-      expect(info.attributes['data-style'].isStyle, true);
-      expect(info.attributes['data-style'].bindings.map((b) => b.exp),
-          equals(['x']));
-      expect(messages[0].message, contains('data-style is deprecated'));
-      expect(messages[0].span, equals(elem.sourceSpan));
-    });
-
     test('attribute - single style', () {
       var input = '<div style="{{x}}"></div>';
       var info = analyzeElement(parseSubtree(input));
@@ -408,20 +386,6 @@ main() {
       expect(messages.length, 1);
       expect(messages[0].message,
           contains('inline JavaScript event handler'));
-      expect(messages[0].span, equals(node.sourceSpan));
-    });
-
-    test('attribute - deprecated data-action', () {
-      var node = parseSubtree('<input data-action="change:foo">');
-      var info = analyzeElement(node);
-      expect(info.attributes, isEmpty);
-      expect(info.events.keys, equals(['onChange']));
-      var changeEvents = info.events['onChange'];
-      expect(changeEvents.length, equals(1));
-      expect(changeEvents[0].streamName, 'onChange');
-      expect(changeEvents[0].action('bar'), r'foo($event)');
-      expect(messages.length, 1);
-      expect(messages[0].message, contains('data-action is deprecated'));
       expect(messages[0].span, equals(node.sourceSpan));
     });
 
@@ -547,20 +511,6 @@ main() {
       expect(messages[0].message, contains('x-foo not found'));
       expect(messages[0].span, equals(elem.sourceSpan));
     });
-
-    test('data-value - deprecated', () {
-      var elem = parseSubtree('<li is="x-todo-row" data-value="todo:x"></li>');
-      var info = analyzeElement(elem);
-      expect(info.attributes, isEmpty);
-      expect(info.events, isEmpty);
-      expect(info.values, equals({'todo': 'x'}));
-      expect(messages.length, 2);
-      expect(messages[0].message, contains('x-todo-row not found'));
-      expect(messages[0].span, equals(elem.sourceSpan));
-      expect(messages[1].message, contains('data-value is deprecated'));
-      expect(messages[1].span, equals(elem.sourceSpan));
-    });
-
 
     test('component properties 1-way binding', () {
       var files = parseFiles({

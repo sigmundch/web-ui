@@ -344,25 +344,7 @@ class _Analyzer extends TreeVisitor {
   }
 
   void visitAttribute(ElementInfo info, String name, String value) {
-    if (name == 'data-value') {
-      for (var item in value.split(',')) {
-        if (!_readDataValue(info, item)) break;
-      }
-      info.removeAttributes.add(name);
-      return;
-    } else if (name == 'data-action') {
-      for (var item in value.split(',')) {
-        if (!_readDataAction(info, item)) break;
-      }
-      info.removeAttributes.add(name);
-      return;
-    } else if (name == 'data-bind') {
-      for (var item in value.split(',')) {
-        if (!_readDataBind(info, item)) break;
-      }
-      info.removeAttributes.add(name);
-      return;
-    } else if (name.startsWith('on')) {
+    if (name.startsWith('on')) {
       _readEventHandler(info, name, value);
       return;
     } else if (name.startsWith('bind-')) {
@@ -375,14 +357,7 @@ class _Analyzer extends TreeVisitor {
     }
 
     AttributeInfo attrInfo;
-    if (name == 'data-style') {
-      _messages.warning('data-style is deprecated. Given a binding like '
-          'data-style="map", replace it with style="{{map}}".',
-          info.node.sourceSpan, file: _fileInfo.path);
-      attrInfo = new AttributeInfo(
-          [new BindingInfo.fromText(value)], isStyle: true);
-      info.removeAttributes.add(name);
-    } else if (name == 'style') {
+    if (name == 'style') {
       attrInfo = _readStyleAttribute(info, value);
     } else if (name == 'class') {
       attrInfo = _readClassAttribute(info, value);
@@ -394,54 +369,6 @@ class _Analyzer extends TreeVisitor {
       info.attributes[name] = attrInfo;
       info.hasDataBinding = true;
     }
-  }
-
-  bool _readDataValue(ElementInfo info, String value) {
-    _messages.warning('data-value is deprecated. '
-        'Given data-value="fieldName:expr", replace it with '
-        'field-name="{{expr}}". Unlike data-value, "expr" will be watched and '
-        'fieldName will automatically update. You may also use '
-        'bind-field-name="dartAssignableValue" to get two-way data binding.',
-        info.node.sourceSpan, file: _fileInfo.path);
-
-    var colonIdx = value.indexOf(':');
-    if (colonIdx <= 0) {
-      _messages.error('data-value attribute should be of the form '
-          'data-value="name:value" or data-value='
-          '"name1:value1,name2:value2,..." for multiple assigments.',
-          info.node.sourceSpan, file: _fileInfo.path);
-      return false;
-    }
-    var name = value.substring(0, colonIdx);
-    value = value.substring(colonIdx + 1);
-
-    info.values[name] = value;
-    return true;
-  }
-
-  // TODO(jmesserly): remove this after a grace period.
-  // TODO(jmesserly): would be neat to have an automated refactoring.
-  bool _readDataAction(ElementInfo info, String value) {
-    _messages.warning('data-action is deprecated. '
-        'Given a handler like data-action="eventName:handlerName", replace it '
-        'with on-event-name="handlerName(\$event)". You may optionally remove '
-        'the \$event or pass in more arguments if desired.',
-        info.node.sourceSpan, file: _fileInfo.path);
-
-    // Special data-attribute specifying an event listener.
-    var colonIdx = value.indexOf(':');
-    if (colonIdx <= 0) {
-      _messages.error('data-action attribute should be of the form '
-          'data-action="eventName:action", or data-action='
-          '"eventName1:action1,eventName2:action2,..." for multiple events.',
-          info.node.sourceSpan, file: _fileInfo.path);
-      return false;
-    }
-
-    var name = 'on${value[0].toUpperCase()}${value.substring(1, colonIdx)}';
-    value = value.substring(colonIdx + 1);
-    _addEvent(info, name, (elem) => '$value(\$event)');
-    return true;
   }
 
   /**
@@ -468,25 +395,6 @@ class _Analyzer extends TreeVisitor {
     var eventInfo = new EventInfo(name, action);
     events.add(eventInfo);
     return eventInfo;
-  }
-
-  bool _readDataBind(ElementInfo info, String value) {
-    _messages.warning('data-bind is deprecated. '
-        'Given a binding like data-bind="attribute:dartAssignableValue" replace'
-        ' it with bind-attribute="dartAssignableValue".',
-        info.node.sourceSpan, file: _fileInfo.path);
-
-    var colonIdx = value.indexOf(':');
-    if (colonIdx <= 0) {
-      _messages.error('data-bind attribute should be of the form '
-          'data-bind="attribute:dartAssignableValue"',
-          info.node.sourceSpan, file: _fileInfo.path);
-      return false;
-    }
-    var name = value.substring(0, colonIdx);
-    value = value.substring(colonIdx + 1);
-
-    return _readTwoWayBinding(info, name, value);
   }
 
   // http://dev.w3.org/html5/spec/the-input-element.html#the-input-element
