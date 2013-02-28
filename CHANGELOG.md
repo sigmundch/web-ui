@@ -3,6 +3,32 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+
+#### Pub version 0.4.0 - Feb 27 2013 (integration SDK 0.3.7+5 r18669)
+  * Performance improvements: cache HTML fragments and use .clone in templates
+  * BREAKING CHANGE: removed deprecated attributes (data-value, data-action,
+    data-bind). Detailed announcement at web-ui@dartlang.org.
+  * New flags in dwc to specify package root and disable rewrites of urls (for
+    deployment)
+  * Bug fixes: using @observables in component files with external sources
+    indentation="remove" on template elements to remove any indentation spaces,
+    use indentation="preserve" to switch back to the original behavior.
+
+#### Pub version 0.3.3+4 - Feb 25 2013 (integration SDK 0.3.7+5 r18669)
+  * Changes to the trim-indentation feature: use
+    indentation="remove" on template elements to remove any indentation spaces,
+    use indentation="preserve" to switch back to the original behavior.
+
+#### Pub version 0.3.3+3 - Feb 22 2013 (integration SDK 0.3.7+5 r18669)
+  * Backward compatible changes needed to make web-ui run correctly in the newer
+    SDK (0.4.0)
+
+#### Pub version 0.3.3+2 - Feb 19 2013 (integration SDK 0.3.7+5 r18669)
+  * Minor cleanup
+
+#### Pub version 0.3.3+1 - Feb 19 2013 (integration SDK 0.3.7+5 r18669)
+  * Bug fixes on observables: tracing dependencies correctly.
+
 #### Pub version 0.3.3 - Feb 19 2013 (integration SDK 0.3.7+5 r18669)
   * New features:
     * Observables: a scalable and efficient replacement for watchers.
