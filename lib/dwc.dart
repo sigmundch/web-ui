@@ -114,10 +114,12 @@ void _createIfNeeded(Path outdir) {
  */
 Future symlinkPubPackages(CompilerResult result, CompilerOptions options,
     Messages messages) {
-  if (options.outputDir == null || result.bootstrapFile == null) {
+  if (options.outputDir == null || result.bootstrapFile == null
+      || options.packageRoot != null) {
     // We don't need to copy the packages directory if the output was generated
-    // in-place where the input lives or if the compiler was called without an
-    // entry-point file.
+    // in-place where the input lives, if the compiler was called without an
+    // entry-point file, or if the compiler was called with a package-root
+    // option.
     return new Future.immediate(null);
   }
 

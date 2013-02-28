@@ -537,7 +537,7 @@ class MainPageEmitter extends RecursiveEmitter {
   MainPageEmitter(FileInfo fileInfo) : super(fileInfo, new Context(indent: 1));
 
   CodePrinter run(Document document, PathInfo pathInfo,
-      TextEditTransaction transaction) {
+      TextEditTransaction transaction, bool rewriteUrls) {
     visit(_fileInfo.bodyInfo);
 
     // fix up the URLs to content that is not modified by the compiler
@@ -545,7 +545,7 @@ class MainPageEmitter extends RecursiveEmitter {
       var src = tag.attributes["src"];
       if (tag.attributes['type'] == 'application/dart') {
         tag.remove();
-      } else if (src != null) {
+      } else if (src != null && rewriteUrls) {
         tag.attributes["src"] = pathInfo.transformUrl(_fileInfo.path, src);
       }
     });
@@ -553,7 +553,7 @@ class MainPageEmitter extends RecursiveEmitter {
       var href = tag.attributes['href'];
       if (tag.attributes['rel'] == 'components') {
        tag.remove();
-      } else if (href != null) {
+      } else if (href != null && rewriteUrls) {
        tag.attributes['href'] = pathInfo.transformUrl(_fileInfo.path, href);
       }
     });

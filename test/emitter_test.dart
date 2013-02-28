@@ -333,7 +333,7 @@ main() {
       var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
 
       var emitter = new MainPageEmitter(fileInfo);
-      emitter.run(doc, pathInfo, null);
+      emitter.run(doc, pathInfo, null, true);
       expect(doc.outerHtml, equals(html));
     });
 
@@ -353,7 +353,7 @@ main() {
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo, null);
+        emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../a.css'));
       });
 
@@ -367,7 +367,7 @@ main() {
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path('dir/'), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo, null);
+        emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../dir/a.css'));
       });
 
@@ -381,8 +381,20 @@ main() {
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
         var emitter = new MainPageEmitter(fileInfo);
-        emitter.run(doc, pathInfo, null);
+        emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../../dir/a.css'));
+      });
+
+      test('no changes when feature is disabled', () {
+        var doc = parseDocument(html);
+        var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
+            filepath: 'a.html');
+        fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
+        fileInfo.externalFile = new Path('dir/a.dart');
+        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var emitter = new MainPageEmitter(fileInfo);
+        emitter.run(doc, pathInfo, null, false);
+        expect(doc.outerHtml, html);
       });
     });
   });

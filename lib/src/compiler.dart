@@ -58,6 +58,7 @@ class Compiler {
   final List<OutputFile> output = <OutputFile>[];
 
   Path _mainPath;
+  Path _packageRoot;
   PathInfo _pathInfo;
   Messages _messages;
 
@@ -83,12 +84,14 @@ class Compiler {
         options.baseDir != null ? new Path(options.baseDir) : mainDir;
     var outputPath =
         options.outputDir != null ? new Path(options.outputDir) : mainDir;
+    _packageRoot = options.packageRoot != null ? new Path(options.packageRoot)
+        : _mainPath.directoryPath.join(new Path('packages'));
 
     // Normalize paths - all should be relative or absolute paths.
     bool anyAbsolute = _mainPath.isAbsolute || basePath.isAbsolute ||
-        outputPath.isAbsolute;
+        outputPath.isAbsolute || _packageRoot.isAbsolute;
     bool allAbsolute = _mainPath.isAbsolute && basePath.isAbsolute &&
-        outputPath.isAbsolute;
+        outputPath.isAbsolute || _packageRoot.isAbsolute;
     if (anyAbsolute && !allAbsolute) {
       if (currentDir == null)  {
         _messages.error('internal error: could not normalize paths. Please '
@@ -100,6 +103,9 @@ class Compiler {
       if (!_mainPath.isAbsolute) _mainPath = currentPath.join(_mainPath);
       if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
       if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
+      if (!_packageRoot.isAbsolute) {
+        _packageRoot = currentPath.join(_packageRoot);
+      }
     }
     _pathInfo = new PathInfo(basePath, outputPath, options.forceMangle);
   }
@@ -237,8 +243,8 @@ class Compiler {
       // Don't process our own package -- we'll implement @observable manually.
       if (uri.startsWith('package:web_ui/')) return null;
 
-      return _mainPath.directoryPath.join(new Path('packages'))
-          .join(new Path(uri.substring(8)));
+
+      return _packageRoot.join(new Path(uri.substring(8)));
     } else {
       return libInfo.inputPath.directoryPath.join(new Path(uri));
     }
@@ -390,7 +396,7 @@ class Compiler {
       if (importInfo.modified) {
         // Use the generated URI for this file.
         newUri = _pathInfo.relativePath(library, importInfo).toString();
-      } else {
+      } else if (options.rewriteUrls) {
         // Get the relative path to the input file.
         newUri = _pathInfo.transformUrl(library.inputPath, directive.uri.value);
       }
@@ -430,7 +436,8 @@ class Compiler {
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
     var printer = new MainPageEmitter(fileInfo)
-        .run(file.document, _pathInfo, _edits[fileInfo.userCode]);
+        .run(file.document, _pathInfo, _edits[fileInfo.userCode],
+            options.rewriteUrls);
     _emitFileAndSourceMaps(fileInfo, printer, fileInfo.inputPath);
   }
 
