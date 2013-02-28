@@ -7,9 +7,9 @@ library compiler;
 import 'dart:async';
 import 'dart:collection' show SplayTreeMap;
 import 'dart:json' as json;
-import 'package:analyzer_experimental/src/generated/ast.dart' show Directive;
+import 'package:analyzer_experimental/src/generated/ast.dart' show Directive, UriBasedDirective;
 import 'package:csslib/parser.dart' as css;
-import 'package:csslib/visitor.dart' show InfoVisitor, StyleSheet;
+import 'package:csslib/visitor.dart' show InfoVisitor, StyleSheet, treeToDebugString;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
 
@@ -236,7 +236,8 @@ class Compiler {
   }
 
   Path _getDirectivePath(LibraryInfo libInfo, Directive directive) {
-    var uri = directive.uri.value;
+    var uriDirective = (directive as UriBasedDirective).uri;
+    var uri = uriDirective.value;
     if (uri.startsWith('dart:')) return null;
 
     if (uri.startsWith('package:')) {
@@ -575,6 +576,12 @@ class _ProcessCss extends InfoVisitor {
     if (!info.cssSource.isEmpty) {
       info.styleSheet = _parseCss(info.cssSource.toString(), options);
       info.cssSource = null;    // Once CSS parsed original not needed.
+
+      if (options.debugCss) {
+        print('\nComponent: ${info.tagName}');
+        print('==========\n');
+        print(treeToDebugString(info.styleSheet));
+      }
     }
 
     super.visitComponentInfo(info);

@@ -124,11 +124,11 @@ class _ScopedStyleRenamer extends InfoVisitor {
 
       bool changed = false;
       var len = refClasses.length;
-      for (var idx = 0; idx < len; idx++) {
-        var refClass = refClasses[idx];
+      for (var i = 0; i < len; i++) {
+        var refClass = refClasses[i];
         if (classes.contains(refClass)) {
           if (prefix != null) {
-            refClasses[idx] = "${prefix}_$refClass";
+            refClasses[i] = "${prefix}_$refClass";
             changed = true;
           }
         }

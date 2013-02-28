@@ -72,7 +72,7 @@ class CompilerOptions {
       forceMangle = args['unique_output_filenames'],
       jsonFormat = args['json_format'],
       componentsOnly = args['components_only'],
-      processCss = args['process_css'],
+      processCss = args['css'],
       debugCss = args['debug_css'],
       inputFile = args.rest.length > 0 ? args.rest[0] : null;
 
@@ -105,11 +105,9 @@ class CompilerOptions {
           help: 'Generate only the code for component classes, do not generate '
                 'HTML files or the main bootstrap code.',
           defaultsTo: false, negatable: false)
-      ..addFlag('process_css', help: 'Emulate scoped styles with CSS polyfill',
-          defaultsTo: false, negatable: false)
+      ..addFlag('css', help: 'Emulate scoped styles with CSS polyfill',
+          defaultsTo: true)
       ..addFlag('debug_css', help: 'Debug information for CSS polyfill',
-          defaultsTo: false, negatable: false)
-      ..addFlag('dump_css', help: 'Display CSS tree',
           defaultsTo: false, negatable: false)
       ..addOption('out', abbr: 'o', help: 'Directory where to generate files'
           ' (defaults to the same directory as the source file)')
