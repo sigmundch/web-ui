@@ -2,13 +2,32 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-/** Collects functions to processes html files modularly. */
+/**
+ * Collects functions to modularly translate the template and web component
+ * declarations in a single HTML file.
+ * 
+ * A Web UI application consistes of multiple HTML and Dart files. A single HTML
+ * file can define the top-level page and/or a list of custom elements. Both the
+ * page and each custom element can have a Dart library attached to it using a
+ * script tag. The code could be inlined in the page or on inlcluded via the
+ * 'src' attribute from a separate file.
+ *
+ * A modular compilation unit of an HTML file consist of a single HTML file and
+ * all the Dart libraries that are used directly in the script tags. Any other
+ * components that are included via `<link rel="components">` tags or libraries
+ * imported from the Dart code can be processed separately.
+ */
 library web_ui.src.html_compiler;
 
 import 'analyzer.dart';
 import 'info.dart';
 
-List<String> readDependencies(
+List<String> readCompilationDependencies(
+    SourceFile file, Path sourcePath, Messages messages) {
+
+}
+
+List<String> readRuntimeDependencies(
     SourceFile file, Path sourcePath, Messages messages) {
 
 }
