@@ -21,7 +21,7 @@ main() {
     group('outputPath', () {
       test('mangle automatic', () {
         var paths = _newPathInfo('a', 'a', false);
-        var file = _mockFile('a/b.dart');
+        var file = _mockFile('a/b.dart', paths);
         expect(file.inputPath.toString(), 'a/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'a/_b.dart.dart');
@@ -29,7 +29,7 @@ main() {
 
       test('within packages/', () {
         var paths = _newPathInfo('a', 'a', false);
-        var file = _mockFile('a/packages/b.dart');
+        var file = _mockFile('a/packages/b.dart', paths);
         expect(file.inputPath.toString(), 'a/packages/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'a/_from_packages/_b.dart.dart');
@@ -39,9 +39,9 @@ main() {
     group('relativePath', () {
       test('simple paths', () {
         var paths = _newPathInfo('a', 'a', false);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/e/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/e/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/_d.dart.dart');
         expect(paths.relativePath(file1, file3).toString(), 'e/_f.dart.dart');
         expect(paths.relativePath(file2, file1).toString(), '../_b.dart.dart');
@@ -54,9 +54,9 @@ main() {
 
       test('include packages/', () {
         var paths = _newPathInfo('a', 'a', false);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/packages/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/packages/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/_d.dart.dart');
         expect(paths.relativePath(file1, file3).toString(),
             '_from_packages/_f.dart.dart');
@@ -104,7 +104,7 @@ main() {
     group('outputPath', (){
       test('no force mangle', () {
         var paths = _newPathInfo('a', 'out', false);
-        var file = _mockFile('a/b.dart');
+        var file = _mockFile('a/b.dart', paths);
         expect(file.inputPath.toString(), 'a/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'out/b.dart');
@@ -112,7 +112,7 @@ main() {
 
       test('force mangling', () {
         var paths = _newPathInfo('a', 'out', true);
-        var file = _mockFile('a/b.dart');
+        var file = _mockFile('a/b.dart', paths);
         expect(file.inputPath.toString(), 'a/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'out/_b.dart.dart');
@@ -120,7 +120,7 @@ main() {
 
       test('within packages/, no mangle', () {
         var paths = _newPathInfo('a', 'out', false);
-        var file = _mockFile('a/packages/b.dart');
+        var file = _mockFile('a/packages/b.dart', paths);
         expect(file.inputPath.toString(), 'a/packages/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'out/_from_packages/b.dart');
@@ -128,7 +128,7 @@ main() {
 
       test('within packages/, mangle', () {
         var paths = _newPathInfo('a', 'out', true);
-        var file = _mockFile('a/packages/b.dart');
+        var file = _mockFile('a/packages/b.dart', paths);
         expect(file.inputPath.toString(), 'a/packages/b.dart');
         expect(paths.outputPath(file.inputPath, '.dart').toString(),
             'out/_from_packages/_b.dart.dart');
@@ -138,9 +138,9 @@ main() {
     group('relativePath', (){
       test('simple paths, no mangle', () {
         var paths = _newPathInfo('a', 'out', false);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/e/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/e/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/d.dart');
         expect(paths.relativePath(file1, file3).toString(), 'e/f.dart');
         expect(paths.relativePath(file2, file1).toString(), '../b.dart');
@@ -151,9 +151,9 @@ main() {
 
       test('simple paths, mangle', () {
         var paths = _newPathInfo('a', 'out', true);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/e/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/e/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/_d.dart.dart');
         expect(paths.relativePath(file1, file3).toString(), 'e/_f.dart.dart');
         expect(paths.relativePath(file2, file1).toString(), '../_b.dart.dart');
@@ -166,9 +166,9 @@ main() {
 
       test('include packages/, no mangle', () {
         var paths = _newPathInfo('a', 'out', false);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/packages/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/packages/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/d.dart');
         expect(paths.relativePath(file1, file3).toString(),
             '_from_packages/f.dart');
@@ -181,9 +181,9 @@ main() {
 
       test('include packages/, mangle', () {
         var paths = _newPathInfo('a', 'out', true);
-        var file1 = _mockFile('a/b.dart');
-        var file2 = _mockFile('a/c/d.dart');
-        var file3 = _mockFile('a/packages/f.dart');
+        var file1 = _mockFile('a/b.dart', paths);
+        var file2 = _mockFile('a/c/d.dart', paths);
+        var file3 = _mockFile('a/packages/f.dart', paths);
         expect(paths.relativePath(file1, file2).toString(), 'c/_d.dart.dart');
         expect(paths.relativePath(file1, file3).toString(),
             '_from_packages/_f.dart.dart');
@@ -244,7 +244,12 @@ main() {
 _newPathInfo(String baseDir, String outDir, bool forceMangle) =>
   new PathInfo(new Path(baseDir), new Path(outDir), forceMangle);
 
-_mockFile(String path) => new FileInfo(new Path(path));
+_mockFile(String path, PathInfo paths) {
+  var filePath = new Path(path);
+  var file = new FileInfo(filePath);
+  file.outputFilename = paths.mangle(filePath.filename, '.dart', false);
+  return file;
+}
 
 _checkPath(String path, String expected) {
   expect(new Path(path).canonicalize().toString(), expected);

@@ -18,6 +18,7 @@ import 'files.dart';
 import 'html5_utils.dart';
 import 'info.dart';
 import 'messages.dart';
+import 'summary.dart';
 import 'utils.dart';
 
 /**
@@ -159,6 +160,7 @@ class _Analyzer extends TreeVisitor {
 
       var component = _fileInfo.components[name];
       if (component == null) return;
+      assert(component is ComponentInfo);
 
       // Associate ElementInfo of the <element> tag with its component.
       component.elemInfo = info;
@@ -637,8 +639,20 @@ class _Analyzer extends TreeVisitor {
       var file = files[link];
       // We already issued an error for missing files.
       if (file == null) continue;
-      file.declaredComponents.forEach((c) => _addComponent(info, c));
+      file.declaredComponents.forEach(
+          (c) => _addComponent(info, _summaryOf(c)));
     }
+  }
+
+  // TODO(sigmund): delete, this is an unnecessary copy as we migrate to do
+  // modular compilation. This is used basically to ensure that our compiler is
+  // not relying on building the whole app at once.
+  ComponentSummary _summaryOf(ComponentInfo c) {
+    if (c == null) return null;
+    return new ComponentSummary(
+        c.inputPath, c.outputFilename,
+        c.tagName, c.extendsTag, c.className, _summaryOf(c.extendsComponent),
+        c.sourceSpan, c.hasConflict);
   }
 
   /**
@@ -654,18 +668,17 @@ class _Analyzer extends TreeVisitor {
   }
 
   /** Adds a component's tag name to the names in scope for [fileInfo]. */
-  void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
-    var existing = fileInfo.components[componentInfo.tagName];
+  void _addComponent(FileInfo fileInfo, ComponentSummary component) {
+    var existing = fileInfo.components[component.tagName];
     if (existing != null) {
-      if (existing == componentInfo) {
+      if (existing == component) {
         // This is the same exact component as the existing one.
         return;
       }
 
-      if (existing.declaringFile == fileInfo &&
-          componentInfo.declaringFile != fileInfo) {
-        // Components declared in [fileInfo] are allowed to shadow component
-        // names declared in imported files.
+      if (existing is ComponentInfo && component is! ComponentInfo) {
+        // Components declared in [fileInfo] shadow component names declared in
+        // imported files.
         return;
       }
 
@@ -676,25 +689,20 @@ class _Analyzer extends TreeVisitor {
 
       existing.hasConflict = true;
 
-      if (componentInfo.declaringFile == fileInfo) {
+      if (component is ComponentInfo) {
         _messages.error('duplicate custom element definition for '
-            '"${componentInfo.tagName}".',
-            existing.element.sourceSpan, file: fileInfo.path);
+            '"${component.tagName}".', existing.sourceSpan);
         _messages.error('duplicate custom element definition for '
-            '"${componentInfo.tagName}" (second location).',
-            componentInfo.element.sourceSpan, file: fileInfo.path);
+            '"${component.tagName}" (second location).', component.sourceSpan);
       } else {
         _messages.error('imported duplicate custom element definitions '
-            'for "${componentInfo.tagName}".',
-            existing.element.sourceSpan,
-            file: existing.declaringFile.path);
+            'for "${component.tagName}".', existing.sourceSpan);
         _messages.error('imported duplicate custom element definitions '
-            'for "${componentInfo.tagName}" (second location).',
-            componentInfo.element.sourceSpan,
-            file: componentInfo.declaringFile.path);
+            'for "${component.tagName}" (second location).',
+            component.sourceSpan);
       }
     } else {
-      fileInfo.components[componentInfo.tagName] = componentInfo;
+      fileInfo.components[component.tagName] = component;
     }
   }
 }
@@ -762,7 +770,7 @@ class _ElementLoader extends TreeVisitor {
 
     var tagName = node.attributes['name'];
     var extendsTag = node.attributes['extends'];
-    var constructor = node.attributes['constructor'];
+    var className = node.attributes['constructor'];
     var templateNodes = node.nodes.where((n) => n.tagName == 'template');
 
     if (tagName == null) {
@@ -788,14 +796,14 @@ class _ElementLoader extends TreeVisitor {
           node.sourceSpan, file: _fileInfo.path);
     }
 
-    if (constructor == null) {
+    if (className == null) {
       var name = tagName;
       if (name.startsWith('x-')) name = name.substring(2);
-      constructor = toCamelCase(name, startUppercase: true);
+      className = toCamelCase(name, startUppercase: true);
     }
 
     var component = new ComponentInfo(node, _fileInfo, tagName, extendsTag,
-        constructor, template);
+        className, template);
 
     _fileInfo.declaredComponents.add(component);
 

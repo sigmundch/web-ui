@@ -6,15 +6,16 @@ library analyzer_test;
 
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
+import 'package:logging/logging.dart';
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
-import 'package:web_ui/src/info.dart';
-import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/file_system/path.dart';
+import 'package:web_ui/src/files.dart';
+import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/messages.dart';
+import 'package:web_ui/src/summary.dart';
 import 'package:web_ui/src/utils.dart';
-import 'package:logging/logging.dart';
 import 'testing.dart';
 import 'testing.dart' as testing;
 
@@ -582,13 +583,13 @@ main() {
 
       var compInfo = info.declaredComponents[0];
       expect(compInfo.tagName, equals('x-foo'));
-      expect(compInfo.constructor, equals('Foo'));
+      expect(compInfo.className, equals('Foo'));
       expect(compInfo.element, equals(foo));
       expect(compInfo.hasConflict, isFalse);
 
       compInfo = info.declaredComponents[1];
       expect(compInfo.tagName, equals('x-bar'));
-      expect(compInfo.constructor, equals('Bar42'));
+      expect(compInfo.className, equals('Bar42'));
       expect(compInfo.element, equals(bar));
       expect(compInfo.hasConflict, isFalse);
     });
@@ -610,8 +611,8 @@ main() {
       );
       var info = analyzeDefinitionsInTree(doc);
       expect(info.declaredComponents.length, equals(2));
-      expect(info.declaredComponents[0].constructor, equals('Baz'));
-      expect(info.declaredComponents[1].constructor, equals('MyQuux'));
+      expect(info.declaredComponents[0].className, equals('Baz'));
+      expect(info.declaredComponents[1].className, equals('MyQuux'));
     });
 
     test('invalid element without tag name', () {
@@ -645,7 +646,7 @@ main() {
       var compInfo = info.components['x-quux'];
       expect(compInfo.hasConflict, true);
       expect(compInfo.tagName, equals('x-quux'));
-      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.className, equals('Quux'));
       expect(compInfo.element, equals(quuxElement));
     });
 
@@ -665,13 +666,13 @@ main() {
 
       var compInfo = info.declaredComponents[0];
       expect(compInfo.tagName, equals('x-quux'));
-      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.className, equals('Quux'));
       expect(compInfo.element, equals(quux));
       expect(compInfo.hasConflict, isFalse);
 
       compInfo = info.declaredComponents[1];
       expect(compInfo.tagName, equals('x-quux2'));
-      expect(compInfo.constructor, equals('Quux'));
+      expect(compInfo.className, equals('Quux'));
       expect(compInfo.element, equals(quux2));
       expect(compInfo.hasConflict, isFalse);
     });
@@ -801,7 +802,7 @@ main() {
       expect(info.declaredComponents.length, isZero);
       expect(info.components.keys, equals(['x-foo']));
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(info.query('x-foo').component, equals(compInfo));
+      _compareSummary(info.query('x-foo').component, compInfo);
     });
 
     test('ignores elements with multiple definitions', () {
@@ -820,7 +821,10 @@ main() {
       expect(info.components.keys, equals(['x-foo']));
 
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(compInfo.hasConflict, true);
+      // Now that each file is analyzed separately, hasConflict is tracked on a
+      // ComponentSummary that represents compInfo, but it's not the same
+      // object.
+      expect(compInfo.hasConflict, false);
       expect(info.query('x-foo').component, isNull);
     });
 
@@ -839,7 +843,7 @@ main() {
       expect(info.components.keys, equals(['x-foo']));
 
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(info.query('x-foo').component, equals(compInfo));
+      _compareSummary(info.query('x-foo').component, compInfo);
     });
 
     test('element imports are not transitive', () {
@@ -911,9 +915,22 @@ main() {
       expect(info.components.keys, equals(['x-bar', 'x-foo']));
 
       var compInfo = fileInfo['foo.html'].declaredComponents[0];
-      expect(info.query('x-foo').component, equals(compInfo));
+      _compareSummary(info.query('x-foo').component, compInfo);
       compInfo = fileInfo['bar.html'].declaredComponents[0];
-      expect(info.query('x-bar').component, equals(compInfo));
+      _compareSummary(info.query('x-bar').component, compInfo);
     });
   });
+}
+
+_compareSummary(ComponentSummary summary, ComponentSummary other) {
+  if (summary == null) {
+    expect(other, isNull);
+    return;
+  }
+  expect(summary.inputPath, equals(other.inputPath));
+  expect(summary.outputFilename, equals(other.outputFilename));
+  expect(summary.tagName, equals(other.tagName));
+  expect(summary.extendsTag, equals(other.extendsTag));
+  _compareSummary(summary.extendsComponent, other.extendsComponent);
+  expect(summary.className, equals(other.className));
 }
