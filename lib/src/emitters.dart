@@ -248,9 +248,9 @@ void emitComponentCreation(ElementInfo info, CodePrinter printer) {
   var component = info.component;
   if (component == null) return;
   var id = info.identifier;
-  printer..addLine('new ${component.constructor}.forElement($id);',
-                   span: info.node.sourceSpan)
-         ..addLine('__t.component($id);');
+  printer..addLine(
+      '__t.component(new ${component.constructor}.forElement($id));',
+      span: info.node.sourceSpan);
 }
 
 /**
