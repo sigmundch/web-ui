@@ -16,10 +16,18 @@ library web_ui.src.summary;
 import 'file_system/path.dart';
 import 'package:source_maps/span.dart' show Span;
 
+/** */
 class LibrarySummary {
   final Path inputPath;
   final String outputFilename;
   LibrarySummary(this.inputPath, this.outputFilename);
+}
+
+/** */
+class HtmlFileSummary extends LibrarySummary {
+  final Map<String, ComponentSummary> components;
+  HtmlFileSummary(Path inputPath, String outputFilename, this.components)
+      : super(inputPath, outputFilename);
 }
 
 /** Information about a web component definition. */

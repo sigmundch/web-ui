@@ -32,7 +32,12 @@ List<String> readRuntimeDependencies(
 
 }
 
-String compile(contents) {
+class HtmlTranslationInput {
+  String htmlFile;
+
+}
+
+String compile(contents, Map<String, String> ) {
 }
 
 

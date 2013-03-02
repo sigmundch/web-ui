@@ -234,7 +234,7 @@ abstract class LibraryInfo extends Hashable implements LibrarySummary {
 }
 
 /** Information extracted at the file-level. */
-class FileInfo extends LibraryInfo {
+class FileInfo extends LibraryInfo implements HtmlFileSummary {
   /** Relative path to this file from the compiler's base directory. */
   final Path path;
 
