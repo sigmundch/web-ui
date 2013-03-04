@@ -6,6 +6,7 @@ library web_ui.observe.list;
 
 import 'dart:collection';
 import 'package:web_ui/observe.dart';
+import 'package:web_ui/src/utils.dart' show Arrays;
 
 // TODO(jmesserly): this should extend the real list implementation.
 // See http://dartbug.com/2600. The workaround was to copy+paste lots of code
@@ -31,9 +32,9 @@ class ObservableList<E> extends Collection<E> implements List<E> {
    * If a [length] argument is supplied, a fixed size list of that
    * length is created.
    */
-  ObservableList([int length = 0])
-      : _list = new List<E>(length),
-        _observeIndex = new List<Object>(length);
+  ObservableList([int length])
+      : _list = length != null ? new List<E>(length) : <E>[],
+        _observeIndex = length != null ? new List<Object>(length) : <Object>[];
 
   /**
    * Creates an observable list with the elements of [other]. The order in
@@ -115,10 +116,10 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   }
 
   int indexOf(E element, [int start = 0]) =>
-      Arrays.indexOf(this, element, start, length);
+      IterableMixinWorkaround.indexOfList(this, element, start);
 
   int lastIndexOf(E element, [int start]) =>
-      Arrays.lastIndexOf(this, element, start);
+      IterableMixinWorkaround.lastIndexOfList(this, element, start);
 
   ObservableList<E> getRange(int start, int length)  {
     if (length == 0) return [];
@@ -163,7 +164,7 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   }
 
   void setRange(int start, int length, List<E> from, [int startFrom = 0]) {
-    Arrays.copy(from, startFrom, this, start, length);
+    IterableMixinWorkaround.setRangeList(this, start, length, from, startFrom);
   }
 
   void removeRange(int start, int length) {
@@ -200,6 +201,8 @@ class ObservableList<E> extends Collection<E> implements List<E> {
       this[i] = initialValue;
     }
   }
+
+  Map<int, E> asMap() => IterableMixinWorkaround.asMapList(this);
 
   String toString() => Collections.collectionToString(this);
 }

@@ -59,7 +59,7 @@ main() {
   var outDir = dataDir.append('output');
 
   var paths = new Directory.fromPath(inputDir).listSync()
-      .where((f) => f is File).map((f) => f.name)
+      .where((f) => f is File).map((f) => f.path)
       .where((p) => p.endsWith('_test.html') && pattern.hasMatch(p));
 
   for (var path in paths) {
