@@ -241,7 +241,7 @@ abstract class WebComponent implements Element {
   }
 
   static bool _matches(Node node, String selector) {
-    if (node is Text) return selector == '*';
+    if (node is! Element) return selector == '*';
     return (node as Element).matches(selector);
   }
 
