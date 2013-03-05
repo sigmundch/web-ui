@@ -393,7 +393,7 @@ class Compiler {
       var importInfo = info[importPath];
       if (importInfo == null) continue;
 
-      String newUri;
+      String newUri = null;
       if (importInfo.modified) {
         // Use the generated URI for this file.
         newUri = _pathInfo.relativePath(library, importInfo).toString();
@@ -401,7 +401,9 @@ class Compiler {
         // Get the relative path to the input file.
         newUri = _pathInfo.transformUrl(library.inputPath, directive.uri.value);
       }
-      directive.uri = createStringLiteral(newUri);
+      if (newUri != null) {
+        directive.uri = createStringLiteral(newUri);
+      }
     }
   }
 
