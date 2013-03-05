@@ -260,14 +260,14 @@ class Compiler {
     var libraries = _findAllDartLibraries();
 
     var transformed = [];
-    for (var library in libraries) {
-      var transaction = transformObservables(library.userCode);
+    for (var lib in libraries) {
+      var transaction = transformObservables(lib.userCode);
       if (transaction != null) {
-        _edits[library.userCode] = transaction;
+        _edits[lib.userCode] = transaction;
         if (transaction.hasEdits) {
           // TODO(jmesserly): what about ObservableList/Map/Set?
           _useObservers = true;
-          transformed.add(library);
+          transformed.add(lib);
         }
       }
     }
@@ -356,14 +356,14 @@ class Compiler {
     // Compute files that reference each file, then use this information to
     // flip the modified bit transitively. This is a lot simpler than trying
     // to compute it the other way because of circular references.
-    for (var library in libraries) {
-      for (var directive in library.userCode.directives) {
-        var importPath = _getDirectivePath(library, directive);
+    for (var lib in libraries) {
+      for (var directive in lib.userCode.directives) {
+        var importPath = _getDirectivePath(lib, directive);
         if (importPath == null) continue;
 
         var importInfo = info[importPath];
         if (importInfo != null) {
-          importInfo.referencedBy.add(library);
+          importInfo.referencedBy.add(lib);
         }
       }
     }
@@ -376,9 +376,9 @@ class Compiler {
     }
     transformed.forEach(setModified);
 
-    for (var library in libraries) {
+    for (var lib in libraries) {
       // We don't need this anymore, so free it.
-      library.referencedBy = null;
+      lib.referencedBy = null;
     }
   }
 
