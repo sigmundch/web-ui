@@ -4,7 +4,7 @@
 
 library web_ui.observe.reference;
 
-import 'package:web_ui/observe.dart';
+import 'observable.dart';
 
 /**
  * An observable reference to an value. Use this if you want to store a single
@@ -12,21 +12,22 @@ import 'package:web_ui/observe.dart';
  * your observable class. This class is provided for demonstration purposes, or
  * if you happen to need a single unnamed observable reference.
  */
-class ObservableReference<T> {
-  Object _observers;
+class ObservableReference<T> extends Observable {
   T _value;
 
   ObservableReference([T initialValue]) : _value = initialValue;
 
   T get value {
-    if (observeReads) _observers = notifyRead(_observers);
+    if (observeReads) notifyRead(this, ChangeRecord.FIELD, 'value');
     return _value;
   }
 
   void set value(T newValue) {
-    if (_observers != null && _value != newValue) {
-      _observers = notifyWrite(_observers);
+    if (hasObservers(this)) {
+      notifyChange(this, ChangeRecord.FIELD, 'value', _value, newValue);
     }
     _value = newValue;
   }
+
+  String toString() => '#<$runtimeType value: $value>';
 }

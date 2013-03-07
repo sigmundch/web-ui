@@ -9,24 +9,23 @@ import 'dart:collection' show LinkedHashMap;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/observe.dart';
+import 'package:web_ui/observe/observable.dart' show hasObservers;
 import 'package:web_ui/src/utils.dart' show setImmediate;
 
 main() {
   useCompactVMConfiguration();
 
-  group('TestObservable', () {
+  group('ObservableReference', () {
     test('no observers', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       expect(t.value, 123);
-      expect(t.rawValue, 123);
       t.value = 42;
       expect(t.value, 42);
-      expect(t.rawValue, 42);
-      expect(t.observers, null);
+      expect(hasObservers(t), false);
     });
 
     test('observe', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       int called = 0;
       observe(() => t.value, expectAsync1((ChangeNotification n) {
         called++;
@@ -39,7 +38,7 @@ main() {
     });
 
     test('observe multiple changes', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       observe(() => t.value, expectAsync1((ChangeNotification n) {
         if (n.oldValue == 123) {
           expect(n.newValue, 42);
@@ -54,7 +53,7 @@ main() {
     });
 
     test('multiple observers', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       observe(() => t.value, expectAsync1((ChangeNotification n) {
         expect(n.oldValue, 123);
         expect(n.newValue, 42);
@@ -68,7 +67,7 @@ main() {
     });
 
     test('deliverChangesSync', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       var notifications = [];
       observe(() => t.value, notifications.add);
       t.value = 41;
@@ -89,7 +88,7 @@ main() {
     });
 
     test('unobserve', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       ChangeUnobserver unobserve;
       unobserve = observe(() => t.value, expectAsync1((n) {
         expect(n.oldValue, 123);
@@ -101,7 +100,7 @@ main() {
     });
 
     test('observers fired in order', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       int expectOldValue = 123;
       int expectNewValue = 42;
       observe(() => t.value, expectAsync1((n) {
@@ -125,7 +124,7 @@ main() {
     });
 
     test('unobserve one of two observers', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
       ChangeUnobserver unobserve;
       unobserve = observe(() => t.value, expectAsync1((n) {
         expect(n.oldValue, 123);
@@ -151,37 +150,42 @@ main() {
     });
 
     test('notifyRead in getter', () {
-      var t = new TestObservable<int>(123);
+      var t = new ObservableReference<int>(123);
 
       observe(() {
+        expect(hasObservers(t), false);
         expect(observeReads, true);
-        expect(t.observers, null);
         return t.value;
       }, (n) {});
 
       expect(observeReads, false);
-      expect(t.observers, isNotNull);
+      expect(hasObservers(t), true);
     });
 
-    test('notifyWrite in setter', () {
-      var t = new TestObservable<int>(123);
-      observe(() => t.value, (n) {});
+    test('notifyChange in setter', () {
+      var t = new ObservableReference<int>(123);
+      expect(hasObservers(t), false);
+
+      observe(() {
+        expect(observeReads, true);
+        return t.value;
+      }, (n) {});
 
       t.value = 42;
       expect(observeReads, false);
-      expect(t.observers, null);
+      expect(hasObservers(t), true);
 
       // This will re-observe the expression.
       deliverChangesSync();
 
       expect(observeReads, false);
-      expect(t.observers, isNotNull);
+      expect(hasObservers(t), true);
     });
 
     test('observe conditional async', () {
-      var t = new TestObservable<bool>(false);
-      var a = new TestObservable<int>(123);
-      var b = new TestObservable<String>('hi');
+      var t = new ObservableReference<bool>(false);
+      var a = new ObservableReference<int>(123);
+      var b = new ObservableReference<String>('hi');
 
       int count = 0;
       var oldValue = 'hi';
@@ -189,6 +193,10 @@ main() {
         expect(n.oldValue, oldValue);
         oldValue = t.value ? a.value : b.value;
         expect(n.newValue, oldValue);
+
+        expect(hasObservers(t), true);
+        expect(hasObservers(a), t.value);
+        expect(hasObservers(b), !t.value);
 
         switch (++count) {
           case 1:
@@ -203,8 +211,6 @@ main() {
             // Change "a", this should have no effect and will not fire a 4th
             // change event.
             a.value = 777;
-            expect(a.observers, null);
-            expect(b.observers, isNotNull);
             break;
           default:
             // Should not be able to reach this because of the "count" argument
@@ -213,9 +219,9 @@ main() {
         }
       }, count: 3));
 
-      expect(t.observers, isNotNull);
-      expect(a.observers, null);
-      expect(b.observers, isNotNull);
+      expect(hasObservers(t), true);
+      expect(hasObservers(a), false);
+      expect(hasObservers(b), true);
 
       // Start off by changing "t" to true.
       t.value = true;
@@ -228,16 +234,15 @@ main() {
       int oldLimit = circularNotifyLimit;
       circularNotifyLimit = null;
       try {
-        var x = new TestObservable(false);
-        var y = new TestObservable(false);
+        var x = new ObservableReference(false);
+        var y = new ObservableReference(false);
 
         int xCount = 0, yCount = 0;
-        int limit = BIG_LIMIT;
         observe(() => x.value, (n) {
-          if (++xCount < limit) y.value = x.value;
+          if (++xCount < BIG_LIMIT) y.value = x.value;
         });
         observe(() => y.value, (n) {
-          if (++yCount < limit) x.value = !y.value;
+          if (++yCount < BIG_LIMIT) x.value = !y.value;
         });
 
         // Kick off the cascading changes
@@ -245,15 +250,61 @@ main() {
 
         deliverChangesSync();
 
-        expect(xCount, limit);
-        expect(yCount, limit - 1);
+        expect(xCount, BIG_LIMIT);
+        expect(yCount, BIG_LIMIT - 1);
       } finally {
         circularNotifyLimit = oldLimit;
       }
     });
-  });
 
-  group('ObservableReference', () {
+    test('change limit calls handler', () {
+      const BIG_LIMIT = 1000;
+      expect(circularNotifyLimit, lessThan(BIG_LIMIT));
+
+      var savedOnCircularNotifyLimit = onCircularNotifyLimit;
+      onCircularNotifyLimit = expectAsync1((message) {
+        expect(message, contains('circular reference in observer callbacks'));
+      });
+      try {
+        var x = new ObservableReference(false);
+        var y = new ObservableReference(false);
+
+        int xCount = 0, yCount = 0;
+        observe(() => x.value, (n) {
+          xCount++;
+          y.value = x.value;
+        });
+        observe(() => y.value, (n) {
+          yCount++;
+          x.value = !y.value;
+        });
+
+        // Kick off the cascading changes
+        x.value = true;
+
+        deliverChangesSync();
+
+        // The reason these are divided by 4:
+        //
+        // One factor of 2 is because the fact we update only one of the two
+        // couters each iteration. The other factor of 2 is because the
+        // expression observers add 1 cycle of lag:
+        //
+        // start: mutate x
+        // 1: x changed -> runs x expression observer
+        // 2: x expression observer -> ++xCount, mutate y
+        // 3: y changed -> run y expression observer
+        // 4: y expression observer -> ++yCount, mutate x
+        //
+        // So for 4 cycles in deliverChangesSync, we only got 1 change to
+        // xCount and one change to yCount.
+        expect(xCount, circularNotifyLimit ~/ 4);
+        expect(yCount, circularNotifyLimit ~/ 4);
+      } finally {
+        onCircularNotifyLimit = savedOnCircularNotifyLimit;
+      }
+    });
+
     test('observe conditional sync', () {
       var t = new ObservableReference<bool>(false);
       var a = new ObservableReference<int>(123);
@@ -331,7 +382,7 @@ main() {
     });
 
     test('observe index', () {
-      var list = new ObservableList.from([1, 2, 3]);
+      var list = toObservable([1, 2, 3]);
       var notification = null;
       observe(() => list[1], (n) { notification = n; });
 
@@ -384,12 +435,148 @@ main() {
     });
 
     test('toString', () {
-      var list = new ObservableList.from([1, 2, 3]);
+      var list = toObservable([1, 2, 3]);
       var notification = null;
       observe(() => list.toString(), (n) { notification = n; });
       list[2] = 4;
       deliverChangesSync();
       expect(notification, _change('[1, 2, 3]', '[1, 2, 4]'));
+    });
+
+    test('iterator', () {
+      var list = toObservable([0, 1, 2]);
+      var notification = null;
+      observe(() => list.where((x) => x % 2 == 0).toList(),
+          (n) { notification = n; });
+
+      list[2] = 4;
+      deliverChangesSync();
+      expect('$notification', '#<ChangeNotification from [0, 2] to [0, 4]>');
+
+      notification = null;
+      list[1] = 7;
+      deliverChangesSync();
+
+      // TODO(jmesserly): this seems like a bug. Even though Dart doesn't
+      // implement equality for List/Map, maybe we should? Has interesting
+      // performance implications, though.
+      //
+      // Or should ObservableList return an ObservableIterator that correctly
+      // tracks changes relative to the original collection?
+      expect('$notification', '#<ChangeNotification from [0, 4] to [0, 4]>');
+    });
+
+    group('change records', () {
+
+      List<ChangeRecord> records;
+      List list;
+
+      setUp(() {
+        list = toObservable([1, 2, 3, 1, 3, 4]);
+        records = null;
+        observeChanges(list, (r) { records = r; });
+      });
+
+      test('read operations', () {
+        expect(list.length, 6);
+        expect(list[0], 1);
+        expect(list.indexOf(4), 5);
+        expect(list.indexOf(1), 0);
+        expect(list.indexOf(1, 1), 3);
+        expect(list.lastIndexOf(1), 3);
+        expect(list.last, 4);
+        var copy = new List<int>();
+        list.forEach((i) { copy.add(i); });
+        expect(copy, orderedEquals([1, 2, 3, 1, 3, 4]));
+        deliverChangesSync();
+
+        // no change from read-only operators
+        expect(records, null);
+      });
+
+      test('add', () {
+        list.add(5);
+        list.add(6);
+        expect(list, orderedEquals([1, 2, 3, 1, 3, 4, 5, 6]));
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.FIELD, 'length', 6, 7),
+          _record(ChangeRecord.INSERT, 6, null, 5),
+          _record(ChangeRecord.FIELD, 'length', 7, 8),
+          _record(ChangeRecord.INSERT, 7, null, 6),
+        ]);
+      });
+
+      test('[]=', () {
+        list[1] = list.last;
+        expect(list, orderedEquals([1, 4, 3, 1, 3, 4]));
+
+        deliverChangesSync();
+        expect(records, [ _record(ChangeRecord.INDEX, 1, 2, 4) ]);
+      });
+
+      test('removeLast', () {
+        expect(list.removeLast(), 4);
+        expect(list, orderedEquals([1, 2, 3, 1, 3]));
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.REMOVE, 5,  4, null),
+          _record(ChangeRecord.FIELD, 'length', 6, 5),
+        ]);
+      });
+
+      test('removeRange', () {
+        list.removeRange(1, 3);
+        expect(list, orderedEquals([1, 3, 4]));
+
+        deliverChangesSync();
+        // TODO(jmesserly): ideally we'd have a better way to express the moves.
+        expect(records, [
+          _record(ChangeRecord.REMOVE, 1, 2, null),
+          _record(ChangeRecord.REMOVE, 2, 3, null),
+          _record(ChangeRecord.INDEX, 1, 2, 3),
+          _record(ChangeRecord.INDEX, 2, 3, 4),
+          _record(ChangeRecord.REMOVE, 5, 4, null),
+          _record(ChangeRecord.REMOVE, 4, 3, null),
+          _record(ChangeRecord.REMOVE, 3, 1, null),
+          _record(ChangeRecord.FIELD, 'length', 6, 3)
+        ]);
+      });
+
+      test('sort', () {
+        list.sort((x, y) => x - y);
+        expect(list, orderedEquals([1, 1, 2, 3, 3, 4]));
+
+        deliverChangesSync();
+        // TODO(jmesserly): this depends on implementation details of sort.
+        expect(records, [
+          _record(ChangeRecord.INDEX, 1, 2, 2),
+          _record(ChangeRecord.INDEX, 2, 3, 3),
+          _record(ChangeRecord.INDEX, 3, 1, 3),
+          _record(ChangeRecord.INDEX, 2, 3, 2),
+          _record(ChangeRecord.INDEX, 1, 2, 1),
+          _record(ChangeRecord.INDEX, 4, 3, 3),
+          _record(ChangeRecord.INDEX, 5, 4, 4)
+        ]);
+      });
+
+      test('clear', () {
+        list.clear();
+        expect(list, []);
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.REMOVE, 5, 4, null),
+          _record(ChangeRecord.REMOVE, 4, 3, null),
+          _record(ChangeRecord.REMOVE, 3, 1, null),
+          _record(ChangeRecord.REMOVE, 2, 3, null),
+          _record(ChangeRecord.REMOVE, 1, 2, null),
+          _record(ChangeRecord.REMOVE, 0, 1, null),
+          _record(ChangeRecord.FIELD, 'length', 6, 0),
+        ]);
+      });
     });
   });
 
@@ -521,7 +708,7 @@ main() {
     });
 
     test('observe index', () {
-      var map = new ObservableMap.from({'a': 1, 'b': 2, 'c': 3});
+      var map = toObservable({'a': 1, 'b': 2, 'c': 3});
       var notification = null;
       observe(() => map['b'], (n) { notification = n; });
 
@@ -573,8 +760,7 @@ main() {
     });
 
     test('toString', () {
-      var map = new ObservableMap.from({'a': 1, 'b': 2},
-          createMap: () => new LinkedHashMap());
+      var map = toObservable({'a': 1, 'b': 2});
 
       var notification = null;
       observe(() => map.toString(), (n) { notification = n; });
@@ -584,28 +770,92 @@ main() {
 
       expect(notification, _change('{a: 1, b: 2}', '{a: 1, c: 3}'));
     });
-  });
 
+
+    group('change records', () {
+      List<ChangeRecord> records;
+      Map map;
+
+      setUp(() {
+        map = toObservable({'a': 1, 'b': 2});
+        records = null;
+        observeChanges(map, (r) { records = r; });
+      });
+
+      test('read operations', () {
+        expect(map.length, 2);
+        expect(map.isEmpty, false);
+        expect(map['a'], 1);
+        expect(map.containsKey(2), false);
+        expect(map.containsValue(2), true);
+        expect(map.containsKey('b'), true);
+        expect(map.keys.toList(), ['a', 'b']);
+        expect(map.values.toList(), [1, 2]);
+        var copy = {};
+        map.forEach((k, v) { copy[k] = v; });
+        expect(copy, {'a': 1, 'b': 2});
+        deliverChangesSync();
+
+        // no change from read-only operators
+        expect(records, null);
+      });
+
+      test('putIfAbsent', () {
+        map.putIfAbsent('a', () => 42);
+        expect(map, {'a': 1, 'b': 2});
+
+        map.putIfAbsent('c', () => 3);
+        expect(map, {'a': 1, 'b': 2, 'c': 3});
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.FIELD, 'length', 2, 3),
+          _record(ChangeRecord.INSERT, 'c', null, 3),
+        ]);
+      });
+
+      test('[]=', () {
+        map['a'] = 42;
+        expect(map, {'a': 42, 'b': 2});
+
+        map['c'] = 3;
+        expect(map, {'a': 42, 'b': 2, 'c': 3});
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.INDEX, 'a', 1, 42),
+          _record(ChangeRecord.FIELD, 'length', 2, 3),
+          _record(ChangeRecord.INSERT, 'c', null, 3)
+        ]);
+      });
+
+      test('remove', () {
+        map.remove('b');
+        expect(map, {'a': 1});
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.REMOVE, 'b',  2, null),
+          _record(ChangeRecord.FIELD, 'length', 2, 1),
+        ]);
+      });
+
+      test('clear', () {
+        map.clear();
+        expect(map, {});
+
+        deliverChangesSync();
+        expect(records, [
+          _record(ChangeRecord.REMOVE, 'a',  1, null),
+          _record(ChangeRecord.REMOVE, 'b',  2, null),
+          _record(ChangeRecord.FIELD, 'length', 2, 0),
+        ]);
+      });
+    });
+  });
 }
 
 _change(oldValue, newValue) => new ChangeNotification(oldValue, newValue);
 
-/**
- * This is similar to ObservableReference, but with fields public for testing.
- */
-class TestObservable<T> {
-  var observers;
-  T rawValue;
-
-  TestObservable([T initialValue]) : rawValue = initialValue;
-
-  T get value {
-    if (observeReads) observers = notifyRead(observers);
-    return rawValue;
-  }
-
-  void set value(T newValue) {
-    if (observers != null) observers = notifyWrite(observers);
-    rawValue = newValue;
-  }
-}
+_record(type, key, oldValue, newValue) =>
+    new ChangeRecord(type, key, oldValue, newValue);

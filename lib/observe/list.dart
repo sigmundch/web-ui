@@ -5,7 +5,7 @@
 library web_ui.observe.list;
 
 import 'dart:collection';
-import 'package:web_ui/observe.dart';
+import 'observable.dart';
 import 'package:web_ui/src/utils.dart' show Arrays;
 
 // TODO(jmesserly): this should extend the real list implementation.
@@ -16,12 +16,14 @@ import 'package:web_ui/src/utils.dart' show Arrays;
  * removed, or replaced, then observers that are registered with
  * [observe] will be notified.
  */
-class ObservableList<E> extends Collection<E> implements List<E> {
+class ObservableList<E> extends Collection<E> implements List<E>, Observable {
+  // TODO(jmesserly): replace with mixin!
+  final int hashCode = ++Observable.$_nextHashCode;
+  var $_observers;
+  List $_changes;
+
   /** The inner [List<E>] with the actual storage. */
   final List<E> _list;
-
-  final List<Object> _observeIndex;
-  Object _observeLength;
 
   /**
    * Creates an observable list of the given [length].
@@ -33,8 +35,7 @@ class ObservableList<E> extends Collection<E> implements List<E> {
    * length is created.
    */
   ObservableList([int length])
-      : _list = length != null ? new List<E>(length) : <E>[],
-        _observeIndex = length != null ? new List<Object>(length) : <Object>[];
+      : _list = length != null ? new List<E>(length) : <E>[];
 
   /**
    * Creates an observable list with the elements of [other]. The order in
@@ -46,42 +47,99 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   Iterator<E> get iterator => new ListIterator<E>(this);
 
   int get length {
-    if (observeReads) _observeLength = notifyRead(_observeLength);
+    if (observeReads) notifyRead(this, ChangeRecord.FIELD, 'length');
     return _list.length;
   }
 
   set length(int value) {
-    if (length == value) return;
+    int len = _list.length;
+    if (len == value) return;
 
-    if (_observeLength != null) _observeLength = notifyWrite(_observeLength);
-
-    // If we are shrinking the list, explicitly null out items so we track
-    // the change to those items.
-    for (int i = value; i < _list.length; i++) {
-      this[i] = null;
+    // Produce notifications if needed
+    if (hasObservers(this)) {
+      if (value < len) {
+        // Remove items, then adjust length. Note the reverse order.
+        for (int i = len - 1; i >= value; i--) {
+          notifyChange(this, ChangeRecord.REMOVE, i, _list[i], null);
+        }
+        notifyChange(this, ChangeRecord.FIELD, 'length', len, value);
+      } else {
+        // Adjust length then add items
+        notifyChange(this, ChangeRecord.FIELD, 'length', len, value);
+        for (int i = len; i < value; i++) {
+          notifyChange(this, ChangeRecord.INSERT, i, null, null);
+        }
+      }
     }
-    _observeIndex.length = value;
+
     _list.length = value;
   }
 
   E operator [](int index) {
-    if (observeReads) _observeIndex[index] = notifyRead(_observeIndex[index]);
+    if (observeReads) notifyRead(this, ChangeRecord.INDEX, index);
     return _list[index];
   }
 
   operator []=(int index, E value) {
-    var observer = _observeIndex[index];
     var oldValue = _list[index];
-    if (observer != null && oldValue != value) {
-      _observeIndex[index] = notifyWrite(observer);
+    if (hasObservers(this)) {
+      notifyChange(this, ChangeRecord.INDEX, index, oldValue, value);
     }
     _list[index] = value;
   }
 
   void add(E value) {
-    if (_observeLength != null) _observeLength = notifyWrite(_observeLength);
+    int len = _list.length;
+    if (hasObservers(this)) {
+      notifyChange(this, ChangeRecord.FIELD, 'length', len, len + 1);
+      notifyChange(this, ChangeRecord.INSERT, len, null, value);
+    }
+
     _list.add(value);
-    _observeIndex.add(null);
+  }
+
+  // TODO(jmesserly): removeRange and insertRange will cause duplicate
+  // notifcations for insert/remove in the middle. The first will be for the
+  // insert/remove and the second will be for the array move. Also, setting
+  // length happens after the insert/remove notifcation. I think this is
+  // probably unavoidable because of how arrays work: if you insert/remove in
+  // the middle you effectively change elements throughout the array.
+  // Maybe we need a ChangeRecord.MOVE?
+
+  void removeRange(int start, int length) {
+    if (length == 0) return;
+
+    Arrays.rangeCheck(this, start, length);
+    if (hasObservers(this)) {
+      for (int i = start; i < length; i++) {
+        notifyChange(this, ChangeRecord.REMOVE, i, this[i], null);
+      }
+    }
+    Arrays.copy(this, start + length, this, start,
+        this.length - length - start);
+
+    this.length = this.length - length;
+  }
+
+  void insertRange(int start, int length, [E initialValue]) {
+    if (length == 0) return;
+    if (length < 0) {
+      throw new ArgumentError("invalid length specified $length");
+    }
+    if (start < 0 || start > this.length) throw new RangeError.value(start);
+
+    if (hasObservers(this)) {
+      for (int i = start; i < length; i++) {
+        notifyChange(this, ChangeRecord.INSERT, i, null, initialValue);
+      }
+    }
+
+    var oldLength = this.length;
+    this.length = oldLength + length;  // Will expand if needed.
+    Arrays.copy(this, start, this, start + length, oldLength - start);
+    for (int i = start; i < start + length; i++) {
+      this[i] = initialValue;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -135,12 +193,6 @@ class ObservableList<E> extends Collection<E> implements List<E> {
 
   void addLast(E value) => add(value);
 
-  void addAll(Iterable<E> collection) {
-    for (E elem in collection) {
-      add(elem);
-    }
-  }
-
   void sort([compare = Comparable.compare]) =>
       IterableMixinWorkaround.sortList(this, compare);
 
@@ -151,55 +203,13 @@ class ObservableList<E> extends Collection<E> implements List<E> {
   }
 
   E removeAt(int index) {
-    if (index is! int) throw new ArgumentError(index);
     E result = this[index];
-    int newLength = this.length - 1;
-    Arrays.copy(this,
-                index + 1,
-                this,
-                index,
-                newLength - index);
-    this.length = newLength;
+    removeRange(index, 1);
     return result;
   }
 
   void setRange(int start, int length, List<E> from, [int startFrom = 0]) {
     IterableMixinWorkaround.setRangeList(this, start, length, from, startFrom);
-  }
-
-  void removeRange(int start, int length) {
-    if (length == 0) {
-      return;
-    }
-    Arrays.rangeCheck(this, start, length);
-    Arrays.copy(this,
-                start + length,
-                this,
-                start,
-                this.length - length - start);
-    this.length = this.length - length;
-  }
-
-  void insertRange(int start, int length, [E initialValue]) {
-    if (length == 0) {
-      return;
-    }
-    if ((length < 0) || (length is! int)) {
-      throw new ArgumentError("invalid length specified $length");
-    }
-    if (start < 0 || start > this.length) {
-      throw new RangeError.value(start);
-    }
-    var oldLength = this.length;
-    this.length = oldLength + length;  // Will expand if needed.
-    Arrays.copy(this,
-                start,
-                this,
-                start + length,
-                oldLength - start);
-    for (int i = start; i < start + length; i++) {
-      this[i] = initialValue;
-    }
   }
 
   Map<int, E> asMap() => IterableMixinWorkaround.asMapList(this);

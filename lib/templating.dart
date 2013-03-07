@@ -100,6 +100,15 @@ void updateCssClass(Element elem, bool addClasses, classes) {
 }
 
 /**
+ * Updates the CSS classes based on the [changes] that were made to an
+ * [ObservableList].
+ */
+void changeCssClasses(elem, ChangeRecord change) {
+  if (change.oldValue != null) elem.classes.remove(change.oldValue);
+  if (change.newValue != null) elem.classes.add(change.newValue);
+}
+
+/**
  * Bind the result of [exp] to the class attribute in [elem]. [exp] is a closure
  * that can return a string, a list of strings, an string with spaces, or null.
  *
@@ -140,16 +149,20 @@ void updateCssClass(Element elem, bool addClasses, classes) {
  *         bindCssClasses(e, () => class2);
  */
 ChangeUnobserver bindCssClasses(Element elem, dynamic exp()) {
-  return watchAndInvoke(_observeList(exp), (e) {
-    updateCssClass(elem, false, e.oldValue);
-    updateCssClass(elem, true, e.newValue);
+  return watchAndInvoke(exp, (e) {
+    if (e.changes != null) {
+      for (var change in e.changes) changeCssClasses(elem, change);
+    } else {
+      updateCssClass(elem, false, e.oldValue);
+      updateCssClass(elem, true, e.newValue);
+    }
   }, 'css-class-bind');
 }
 
 /** Bind the result of [exp] to the style attribute in [elem]. */
 ChangeUnobserver bindStyle(Element elem, Map<String, String> exp()) {
-  return watchAndInvoke(_observeMap(exp),
-      (e) => updateStyle(elem, e.oldValue, e.newValue), 'css-style-bind');
+  return watchAndInvoke(exp, (e) => updateStyle(elem, e.oldValue, e.newValue),
+      'css-style-bind');
 }
 
 /**
@@ -579,31 +592,6 @@ class ConditionalTemplate extends PlaceholderTemplate {
   }
 }
 
-_observeList(exp) {
-  if (!useObservers) return exp;
-
-  // TODO(jmesserly): implement detailed change records in Observable* types,
-  // so we can observe the list itself and react to all changes.
-  // For now we call .toList which causes us to depend on all items. This
-  // also works for Iterables.
-  return () {
-    var x = exp();
-    return x is Iterable ? x.toList() : x;
-  };
-}
-
-_observeMap(exp) {
-  if (!useObservers) return exp;
-
-  // TODO(jmesserly): this has similar issues as _observeList. Ideally
-  // observers can observe all changes to the resulting map, so we don't need a
-  // copy here.
-  return () {
-    var x = exp();
-    return x is Map ? new LinkedHashMap.from(x) : x;
-  };
-}
-
 /** Function to set up the contents of a loop template. */
 typedef void LoopIterationSetup(loopVariable, Template template);
 
@@ -614,7 +602,7 @@ class LoopTemplate extends PlaceholderTemplate {
   LoopTemplate(Node reference, exp, this.iterSetup) : super(reference, exp);
 
   void insert() {
-    stopper = watchAndInvoke(_observeList(exp), (e) {
+    stopper = watchAndInvoke(exp, (e) {
       super.remove();
       for (var x in e.newValue) {
         iterSetup(x, this);
@@ -646,7 +634,7 @@ class LoopTemplateInAttribute extends Template {
   void create() {}
 
   void insert() {
-    stopper = watchAndInvoke(_observeList(exp), (e) {
+    stopper = watchAndInvoke(exp, (e) {
       _removeInternal();
       for (var x in e.newValue) {
         iterSetup(x, this);

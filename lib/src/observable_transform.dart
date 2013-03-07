@@ -29,6 +29,7 @@ import 'refactor.dart';
  * any fields that are set into the object.
  */
 TextEditTransaction transformObservables(DartCodeInfo userCode) {
+
   if (userCode == null || userCode.compilationUnit == null) return null;
   var transaction = new TextEditTransaction(userCode.code, userCode.sourceFile);
   transformCompilationUnit(userCode.compilationUnit, transaction);
@@ -36,26 +37,30 @@ TextEditTransaction transformObservables(DartCodeInfo userCode) {
 }
 
 void transformCompilationUnit(CompilationUnit unit, TextEditTransaction code) {
+
   bool observeAll = unit.directives.any(
       (d) => d is LibraryDirective && hasObservable(d));
 
+  var topLevelVars = new Set<String>();
   for (var declaration in unit.declarations) {
     if (declaration is ClassDeclaration) {
       transformClass(declaration, code, observeAll);
     } else if (declaration is TopLevelVariableDeclaration) {
       if (observeAll || hasObservable(declaration)) {
-        transformTopLevelField(declaration, code);
+        transformTopLevelField(declaration, code, topLevelVars);
       }
     }
   }
 }
 
-/** True if the code has the `@observable` annotation. */
-bool hasObservable(AnnotatedNode node) {
-  // TODO(jmesserly): this isn't correct if observable has been imported
+/** True if the node has the `@observable` annotation. */
+bool hasObservable(AnnotatedNode node) => hasAnnotation(node, 'observable');
+
+bool hasAnnotation(AnnotatedNode node, String name) {
+  // TODO(jmesserly): this isn't correct if the annotation has been imported
   // with a prefix, or cases like that. We should technically be resolving, but
   // that is expensive.
-  return node.metadata.any((m) => m.name.name == 'observable' &&
+  return node.metadata.any((m) => m.name.name == name &&
       m.constructorName == null && m.arguments == null);
 }
 
@@ -64,23 +69,50 @@ void transformClass(ClassDeclaration cls, TextEditTransaction code,
 
   observeAll = observeAll || hasObservable(cls);
 
-  var changedFields = new Set<String>();
+  // Track fields that were transformed.
+  var instanceFields = new Set<String>();
+  var staticFields = new Set<String>();
   for (var member in cls.members) {
     if (member is FieldDeclaration) {
       if (observeAll || hasObservable(member)) {
-        transformClassFields(member, code, changedFields);
+        transformClassFields(member, code, instanceFields, staticFields);
       }
     }
   }
 
-  if (changedFields.length == 0) return;
+  if (instanceFields.length == 0) return;
+
+  implementObservable(cls, code);
 
   // Fix initializers, because they aren't allowed to call the setter.
   for (var member in cls.members) {
     if (member is ConstructorDeclaration) {
-      fixConstructor(member, code, changedFields);
+      fixConstructor(member, code, instanceFields);
     }
   }
+}
+
+
+/** Adds "implements Observable" and associated implementation. */
+// TODO(jmesserly): this should be "with Observable" once mixins work on VM.
+void implementObservable(ClassDeclaration cls, TextEditTransaction code) {
+  if (cls.implementsClause != null) {
+    var pos = cls.implementsClause.end;
+    code.edit(pos, pos, ', Observable');
+  } else {
+    var pos = cls.leftBracket.offset;
+    code.edit(pos, pos, ' implements Observable');
+  }
+
+  // TODO(jmesserly): remove this once we have mixins!
+  var pos = cls.rightBracket.offset;
+  var indent = guessIndent(code.original, pos - 1); // -1 to get previous line
+
+  code.edit(pos, pos, r'''
+final int hashCode = ++__observe.Observable.$_nextHashCode;
+var $_observers;
+List $_changes;
+'''.replaceAll('\n', '\n$indent'));
 }
 
 bool hasKeyword(Token token, Keyword keyword) =>
@@ -90,16 +122,19 @@ String getOriginalCode(TextEditTransaction code, ASTNode node) =>
     code.original.substring(node.offset, node.end);
 
 void transformTopLevelField(TopLevelVariableDeclaration field,
-    TextEditTransaction code) {
-  transformFields(field.variables, code, field.offset, field.end);
+    TextEditTransaction code, Set<String> changedFields) {
+
+  transformFields(field.variables, code, field.offset, field.end,
+      isTopLevel: true, changedFields: changedFields);
 }
 
 void transformClassFields(FieldDeclaration member, TextEditTransaction code,
-    Set<String> changedFields) {
+    Set<String> instanceFields, Set<String> staticFields) {
 
+  bool isStatic = hasKeyword(member.keyword, Keyword.STATIC);
   transformFields(member.fields, code, member.offset, member.end,
-      isStatic: hasKeyword(member.keyword, Keyword.STATIC),
-      changedFields: changedFields);
+      isStatic: isStatic,
+      changedFields: isStatic ? staticFields : instanceFields);
 }
 
 
@@ -152,7 +187,8 @@ void fixConstructor(ConstructorDeclaration ctor, TextEditTransaction code,
 }
 
 void transformFields(VariableDeclarationList fields, TextEditTransaction code,
-    int begin, int end, {bool isStatic: false, Set<String> changedFields}) {
+    int begin, int end, {bool isStatic: false, bool isTopLevel: false,
+    Set<String> changedFields}) {
 
   if (hasKeyword(fields.keyword, Keyword.CONST) ||
       hasKeyword(fields.keyword, Keyword.FINAL)) {
@@ -162,14 +198,29 @@ void transformFields(VariableDeclarationList fields, TextEditTransaction code,
   var indent = guessIndent(code.original, begin);
   var replace = new StringBuffer();
 
+  var mod = isStatic ? 'static ' : '';
+
+  var self = 'this';
+  if (isStatic || isTopLevel) {
+    // TODO(jmesserly): eventually we should make this user configurable.
+    // Alternatively: perhaps we can hook into the mirror system, so you can
+    // call "observe" on a class/library mirror? We don't need full mirrors,
+    // just a handle for those objects.
+    self = '__changes';
+
+    if (changedFields.length == 0) {
+      // For the first field in a file or first static field of a class, create
+      // the Observable object that will be used to track changes.
+      replace.write('${mod}final $self = new __observe.Observable();');
+    }
+  }
+
   // Unfortunately "var" doesn't work in all positions where type annotations
   // are allowed, such as "var get name". So we use "dynamic" instead.
   var type = 'dynamic';
   if (fields.type != null) {
     type = getOriginalCode(code, fields.type);
   }
-
-  var mod = isStatic ? 'static ' : '';
 
   for (var field in fields.variables) {
     var initializer = '';
@@ -182,16 +233,16 @@ void transformFields(VariableDeclarationList fields, TextEditTransaction code,
     if (replace.length > 0) replace.write('\n\n$indent');
     replace.write('''
 ${mod}$type __\$$name$initializer;
-${mod}Object __obs\$$name;
 ${mod}$type get $name {
-  if (autogenerated.observeReads) {
-    __obs\$$name = autogenerated.notifyRead(__obs\$$name);
+  if (__observe.observeReads) {
+    __observe.notifyRead($self, __observe.ChangeRecord.FIELD, '$name');
   }
   return __\$$name;
 }
 ${mod}set $name($type value) {
-  if (__obs\$$name != null && __\$$name != value) {
-    __obs\$$name = autogenerated.notifyWrite(__obs\$$name);
+  if (__observe.hasObservers($self)) {
+    __observe.notifyChange($self, __observe.ChangeRecord.FIELD, '$name',
+        __\$$name, value);
   }
   __\$$name = value;
 }'''.replaceAll('\n', '\n$indent'));

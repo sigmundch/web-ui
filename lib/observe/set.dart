@@ -5,7 +5,8 @@
 library web_ui.observe.set;
 
 import 'dart:collection';
-import 'package:web_ui/observe.dart';
+import 'observable.dart';
+import 'map.dart' show MapFactory;
 
 /**
  * Represents an observable set of model values. If any items are added,
@@ -15,61 +16,38 @@ import 'package:web_ui/observe.dart';
 // TODO(jmesserly): ideally this could be based ObservableMap, or Dart
 // would have a built in Set<->Map adapter as suggested in
 // https://code.google.com/p/dart/issues/detail?id=5603
-class ObservableSet<E> extends Collection<E> implements Set<E> {
-  final Map<E, Object> _map;
-  final Map<E, Object> _observeKey;
-  Object _observeLength;
+class ObservableSet<E> extends Collection<E> implements Set<E>, Observable {
+  // TODO(jmesserly): replace with mixin!
+  final int hashCode = ++Observable.$_nextHashCode;
+  var $_observers;
+  List $_changes;
 
-  final MapFactory<E> _createMap;
+  final Map<E, Object> _map;
+
+  final MapFactory<E, Object> _createMap;
 
   /**
    * Creates an observable set, optionally using the provided [createMap]
    * factory to construct a custom map type.
    */
-  ObservableSet({MapFactory<E> createMap})
+  ObservableSet({MapFactory<E, Object> createMap})
       : _map = createMap != null ? createMap() : new Map<E, Object>(),
-        _observeKey = createMap != null ? createMap() : new Map<E, Object>(),
         _createMap = createMap;
 
   /**
    * Creates an observable set that contains all elements of [other].
    */
-  factory ObservableSet.from(Iterable<E> other, {MapFactory<E> createMap}) {
+  factory ObservableSet.from(Iterable<E> other,
+      {MapFactory<E, Object> createMap}) {
+
     return new ObservableSet<E>(createMap: createMap)..addAll(other);
-  }
-
-  void _notifyReadKey(E key) {
-    if (observeReads) _observeKey[key] = notifyRead(_observeKey[key]);
-  }
-
-  void _notifyReadAll() {
-    if (!observeReads) return;
-    _observeLength = notifyRead(_observeLength);
-    for (E key in _map.keys) {
-      _observeKey[key] = notifyRead(_observeKey[key]);
-    }
-  }
-
-  void _notifyReadLength() {
-    if (observeReads) _observeLength = notifyRead(_observeLength);
-  }
-
-  void _notifyWriteLength(int originalLength) {
-    if (_observeLength != null && originalLength != _map.length) {
-      _observeLength = notifyWrite(_observeLength);
-    }
-  }
-
-  void _notifyWriteKey(E key) {
-    var observer = _observeKey.remove(key);
-    if (observer != null) notifyWrite(observer);
   }
 
   /**
    * Returns true if [value] is in the set.
    */
   bool contains(E value) {
-    _notifyReadKey(value);
+    if (observeReads) notifyRead(this, ChangeRecord.INDEX, value);
     return _map.containsKey(value);
   }
 
@@ -80,8 +58,10 @@ class ObservableSet<E> extends Collection<E> implements Set<E> {
   void add(E value) {
     int len = _map.length;
     _map[value] = const Object();
-    if (len != _map.length) _notifyWriteKey(value);
-    _notifyWriteLength(len);
+    if (len != _map.length) {
+      notifyChange(this, ChangeRecord.FIELD, 'length', len, _map.length);
+      notifyChange(this, ChangeRecord.INSERT, value, null, value);
+    }
   }
 
   /**
@@ -91,28 +71,35 @@ class ObservableSet<E> extends Collection<E> implements Set<E> {
    */
   bool remove(E value) {
     // notifyRead because result depends on if the key already exists
-    _notifyReadKey(value);
+    if (observeReads) notifyRead(this, ChangeRecord.INDEX, value);
 
     int len = _map.length;
-    bool result =  _map.remove(value) != null;
-    if (len != _map.length) _notifyWriteKey(value);
-    _notifyWriteLength(len);
-    return result;
+    _map.remove(value);
+    if (len != _map.length) {
+      if (hasObservers(this)) {
+        notifyChange(this, ChangeRecord.REMOVE, value, value, null);
+        notifyChange(this, ChangeRecord.FIELD, 'length', len, _map.length);
+      }
+      return true;
+    }
+    return false;
   }
 
   /**
    * Removes all elements in the set.
    */
   void clear() {
-    int len = _map.length;
+    if (hasObservers(this)) {
+      for (var value in _map.keys) {
+        notifyChange(this, ChangeRecord.REMOVE, value, value, null);
+      }
+      notifyChange(this, ChangeRecord.FIELD, 'length', _map.length, 0);
+    }
     _map.clear();
-    _notifyWriteLength(len);
-    _observeKey.values.forEach(notifyWrite);
-    _observeKey.clear();
   }
 
   int get length {
-    _notifyReadLength();
+    if (observeReads) notifyRead(this, ChangeRecord.FIELD, 'length');
     return _map.length;
   }
 
@@ -162,18 +149,20 @@ class ObservableSet<E> extends Collection<E> implements Set<E> {
 class _ObservableSetIterator<E> implements Iterator<E> {
   final ObservableSet<E> _set;
   final Iterator<E> _iterator;
+  bool _hasNext = false;
 
   _ObservableSetIterator(ObservableSet<E> set)
       : _set = set, _iterator = set._map.keys.iterator;
 
   bool moveNext() {
-    _set._notifyReadLength();
-    return _iterator.moveNext();
+    // The result of this function depends on the set's length.
+    _set.length;
+    return _hasNext = _iterator.moveNext();
   }
 
   E get current {
     var result = _iterator.current;
-    if (result != null) _set._notifyReadKey(result);
+    if (observeReads && _hasNext) notifyRead(_set, ChangeRecord.INDEX, result);
     return result;
   }
 }
