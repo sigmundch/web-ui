@@ -242,7 +242,8 @@ main() {
 }
 
 _newPathInfo(String baseDir, String outDir, bool forceMangle) =>
-  new PathInfo(new Path(baseDir), new Path(outDir), forceMangle);
+    new PathInfo(new Path(baseDir), new Path(outDir), new Path('packages'),
+        forceMangle);
 
 _mockFile(String path) => new FileInfo(new Path(path));
 

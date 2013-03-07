@@ -25,9 +25,11 @@ ElementInfo analyzeElement(Element elem, Messages messages) {
   return fileInfo.bodyInfo;
 }
 
-FileInfo analyzeDefinitionsInTree(Document doc, Messages messages) {
-  return analyzeDefinitions(
-      new SourceFile(new Path(''))..document = doc, messages);
+FileInfo analyzeDefinitionsInTree(Document doc, Messages messages,
+    {String packageRoot: 'packages'}) {
+
+  return analyzeDefinitions(new SourceFile(new Path(''))..document = doc,
+      new Path(packageRoot), messages);
 }
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
@@ -46,12 +48,14 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
 /** Analyze all files. */
 Map<String, FileInfo> analyzeFiles(List<SourceFile> files,
-    {Messages messages}) {
+    {Messages messages, String packageRoot: 'packages'}) {
   messages = messages == null ? new Messages.silent() : messages;
   var result = new Map<Path, FileInfo>();
+  var pkgRoot = new Path(packageRoot);
+
   // analyze definitions
   for (var file in files) {
-    result[file.path] = analyzeDefinitions(file, messages);
+    result[file.path] = analyzeDefinitions(file, pkgRoot, messages);
   }
 
   // analyze file contents

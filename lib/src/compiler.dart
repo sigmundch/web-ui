@@ -58,7 +58,6 @@ class Compiler {
   final List<OutputFile> output = <OutputFile>[];
 
   Path _mainPath;
-  Path _packageRoot;
   PathInfo _pathInfo;
   Messages _messages;
 
@@ -84,14 +83,15 @@ class Compiler {
         options.baseDir != null ? new Path(options.baseDir) : mainDir;
     var outputPath =
         options.outputDir != null ? new Path(options.outputDir) : mainDir;
-    _packageRoot = options.packageRoot != null ? new Path(options.packageRoot)
+    var packageRoot = options.packageRoot != null
+        ? new Path(options.packageRoot)
         : _mainPath.directoryPath.join(new Path('packages'));
 
     // Normalize paths - all should be relative or absolute paths.
     bool anyAbsolute = _mainPath.isAbsolute || basePath.isAbsolute ||
-        outputPath.isAbsolute || _packageRoot.isAbsolute;
+        outputPath.isAbsolute || packageRoot.isAbsolute;
     bool allAbsolute = _mainPath.isAbsolute && basePath.isAbsolute &&
-        outputPath.isAbsolute || _packageRoot.isAbsolute;
+        outputPath.isAbsolute || packageRoot.isAbsolute;
     if (anyAbsolute && !allAbsolute) {
       if (currentDir == null)  {
         _messages.error('internal error: could not normalize paths. Please '
@@ -103,11 +103,12 @@ class Compiler {
       if (!_mainPath.isAbsolute) _mainPath = currentPath.join(_mainPath);
       if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
       if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
-      if (!_packageRoot.isAbsolute) {
-        _packageRoot = currentPath.join(_packageRoot);
+      if (!packageRoot.isAbsolute) {
+        packageRoot = currentPath.join(packageRoot);
       }
     }
-    _pathInfo = new PathInfo(basePath, outputPath, options.forceMangle);
+    _pathInfo = new PathInfo(basePath, outputPath, packageRoot,
+        options.forceMangle);
   }
 
   /** Compile the application starting from the given [mainFile]. */
@@ -148,7 +149,8 @@ class Compiler {
     files.add(file);
 
     var fileInfo = _time('Analyzed definitions', file.path,
-        () => analyzeDefinitions(file, _messages, isEntryPoint: isEntryPoint));
+        () => analyzeDefinitions(file, _pathInfo.packageRoot, _messages,
+            isEntryPoint: isEntryPoint));
     info[file.path] = fileInfo;
 
     _processImports(fileInfo);
@@ -244,8 +246,7 @@ class Compiler {
       // Don't process our own package -- we'll implement @observable manually.
       if (uri.startsWith('package:web_ui/')) return null;
 
-
-      return _packageRoot.join(new Path(uri.substring(8)));
+      return _pathInfo.packageRoot.join(new Path(uri.substring(8)));
     } else {
       return libInfo.inputPath.directoryPath.join(new Path(uri));
     }

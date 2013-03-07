@@ -27,10 +27,10 @@ import 'utils.dart';
  * Adds emitted error/warning messages to [messages], if [messages] is
  * supplied.
  */
-FileInfo analyzeDefinitions(SourceFile file, Messages messages,
-    {bool isEntryPoint: false}) {
+FileInfo analyzeDefinitions(SourceFile file, Path packageRoot,
+    Messages messages, {bool isEntryPoint: false}) {
   var result = new FileInfo(file.path, isEntryPoint);
-  var loader = new _ElementLoader(result, messages);
+  var loader = new _ElementLoader(result, packageRoot, messages);
   loader.visit(file.document);
   return result;
 }
@@ -703,6 +703,7 @@ class _Analyzer extends TreeVisitor {
 class _ElementLoader extends TreeVisitor {
   final FileInfo _fileInfo;
   LibraryInfo _currentInfo;
+  Path _packageRoot;
   bool _inHead = false;
   Messages _messages;
 
@@ -710,7 +711,7 @@ class _ElementLoader extends TreeVisitor {
    * Adds emitted warning/error messages to [_messages]. [_messages]
    * must not be null.
    */
-  _ElementLoader(this._fileInfo, this._messages) {
+  _ElementLoader(this._fileInfo, this._packageRoot, this._messages) {
     assert(this._messages != null);
     _currentInfo = _fileInfo;
   }
@@ -730,23 +731,35 @@ class _ElementLoader extends TreeVisitor {
     }
   }
 
+  /**
+   * Process `link rel="component"` as specified in:
+   * <https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/components/index.html#link-type-component>
+   */
   void visitLinkElement(Element node) {
-    if (node.attributes['rel'] != 'components') return;
+    // TODO(jmesserly): deprecate the plural form, it is singular in the spec.
+    var rel = node.attributes['rel'];
+    if (rel != 'component' && rel != 'components') return;
 
     if (!_inHead) {
-      _messages.warning('link rel="components" only valid in '
+      _messages.warning('link rel="$rel" only valid in '
           'head.', node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
     var href = node.attributes['href'];
     if (href == null || href == '') {
-      _messages.warning('link rel="components" missing href.',
+      _messages.warning('link rel="$rel" missing href.',
           node.sourceSpan, file: _fileInfo.path);
       return;
     }
 
-    var path = _fileInfo.path.directoryPath.join(new Path(href));
+    var path;
+    if (href.startsWith('package:')) {
+      path = _packageRoot.join(new Path(href.substring(8)));
+    } else {
+      path = _fileInfo.path.directoryPath.join(new Path(href));
+    }
+
     _fileInfo.componentLinks.add(path);
   }
 

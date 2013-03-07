@@ -36,13 +36,16 @@ class PathInfo {
   /** Base path where all output is generated. */
   final Path _outputDir;
 
+  /** The package root directory. */
+  final Path packageRoot;
+
   /** Whether to add prefixes and to output file names. */
   final bool _mangleFilenames;
 
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
-  PathInfo(Path baseDir, Path outputDir, bool forceMangle)
+  PathInfo(Path baseDir, Path outputDir, this.packageRoot, bool forceMangle)
       : _baseDir = baseDir,
         _outputDir = outputDir,
         _mangleFilenames = forceMangle || (baseDir == outputDir);
@@ -111,13 +114,14 @@ class PathInfo {
    * code in a special directory called `_from_packages/`.
    */
   Path _rewritePackages(Path outputPath) {
+    // TODO(jmesserly): this should match against packageRoot instead.
     if (!outputPath.toString().contains('packages')) return outputPath;
     var segments = outputPath.segments().map(
         (segment) => segment == 'packages' ? '_from_packages' : segment);
     var rewrittenPath = segments.join('/');
     if (outputPath.isAbsolute) {
-      // TODO(jmesserly): this is probably broken on Windows
-      // We need to switch to package:pathos
+      // TODO(jmesserly): this is probably broken on Windows.
+      // We need to switch to package:pathos.
       rewrittenPath = '/$rewrittenPath';
     }
     return new Path(rewrittenPath);

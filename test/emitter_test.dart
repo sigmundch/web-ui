@@ -330,7 +330,7 @@ main() {
       var doc = parseDocument(html);
       var fileInfo = analyzeNodeForTesting(doc, new Messages.silent());
       fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
-      var pathInfo = new PathInfo(new Path('a'), new Path('b'), true);
+      var pathInfo = _newPathInfo('a', 'b', true);
 
       var emitter = new MainPageEmitter(fileInfo);
       emitter.run(doc, pathInfo, null, true);
@@ -351,7 +351,7 @@ main() {
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
-        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../a.css'));
@@ -365,7 +365,7 @@ main() {
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
-        var pathInfo = new PathInfo(new Path('dir/'), new Path('out'), true);
+        var pathInfo = _newPathInfo('dir/', 'out', true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../dir/a.css'));
@@ -379,7 +379,7 @@ main() {
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
-        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../../dir/a.css'));
@@ -391,7 +391,7 @@ main() {
             filepath: 'a.html');
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         fileInfo.externalFile = new Path('dir/a.dart');
-        var pathInfo = new PathInfo(new Path(''), new Path('out'), true);
+        var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo);
         emitter.run(doc, pathInfo, null, false);
         expect(doc.outerHtml, html);
@@ -435,3 +435,7 @@ Context _recurse(Element elem, bool isClass, int child) {
   new RecursiveEmitter(null, context).visit(info);
   return context;
 }
+
+_newPathInfo(String baseDir, String outDir, bool forceMangle) =>
+    new PathInfo(new Path(baseDir), new Path(outDir), new Path('packages'),
+        forceMangle);

@@ -26,8 +26,8 @@ main() {
 
   analyzeElement(elem) => testing.analyzeElement(elem, messages);
 
-  analyzeDefinitionsInTree(doc) =>
-      testing.analyzeDefinitionsInTree(doc, messages);
+  analyzeDefinitionsInTree(doc, {packageRoot: 'packages'}) =>
+      testing.analyzeDefinitionsInTree(doc, messages, packageRoot: packageRoot);
 
   analyzeFiles(files) => testing.analyzeFiles(files, messages: messages);
 
@@ -567,6 +567,19 @@ main() {
           new Path('foo.html'), new Path('quux.html')]));
     });
 
+    test('package links are resolved against package root', () {
+      var info = analyzeDefinitionsInTree(parse(
+        '<head>'
+          '<link rel="components" href="package:foo/foo.html">'
+          '<link rel="components" href="package:quux/quux.html">'
+        '</head>'
+        '<body><link rel="components" href="quuux.html">'
+      ), packageRoot: '/my/packages');
+      expect(info.componentLinks, equals([
+          new Path('/my/packages/foo/foo.html'),
+          new Path('/my/packages/quux/quux.html')]));
+    });
+
     test('elements', () {
       var doc = parse(
         '<body>'
@@ -629,7 +642,7 @@ main() {
         '</body>'
       );
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, messages);
+      var info = analyzeDefinitions(srcFile, new Path(''), messages);
       expect(info.declaredComponents.length, equals(2));
 
       // no conflicts yet.
@@ -779,7 +792,7 @@ main() {
     test('binds components in same file', () {
       var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, messages);
+      var info = analyzeDefinitions(srcFile, new Path(''), messages);
       expect(info.declaredComponents.length, equals(1));
 
       analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
@@ -873,7 +886,7 @@ main() {
       );
 
       var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, messages);
+      var info = analyzeDefinitions(srcFile, new Path(''), messages);
       analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
           messages);
     });
