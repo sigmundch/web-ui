@@ -105,14 +105,14 @@ void _handleCleanCommand(List<Directory> trackDirs) {
   for (var dir in trackDirs) {
     dir.exists().then((exists) {
       if (!exists) return;
-      dir.list(recursive: false).listen((FileSystemEntity fse) {
-        if (fse is File) {
-          if (_isGeneratedFile(fse.path, trackDirs)) {
+      dir.list(recursive: false).listen((f) {
+        if (f is File) {
+          if (_isGeneratedFile(f.path, trackDirs)) {
             // TODO(jmesserly): we need a cleaner way to do this with dart:io.
             // The bug is that DirectoryLister returns native paths, so you need
             // to use Path.fromNative to work around this. Ideally we could just
             // write: new File(path).delete();
-            new File.fromPath(new Path(fse.path)).delete();
+            new File.fromPath(new Path(f.path)).delete();
           }
         }
       });
