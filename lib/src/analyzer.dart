@@ -299,6 +299,24 @@ class _Analyzer extends TreeVisitor {
       return null;
     }
 
+    if (node.parent != null && node.parent.tagName == 'element' &&
+        (condition != null || iterate != null)) {
+
+      // TODO(jmesserly): would be cool if we could just refactor this, or offer
+      // a quick fix in the Editor.
+      var example = new Element.html('<element><template><template>');
+      node.parent.attributes.forEach((k, v) { example.attributes[k] = v; });
+      var nestedTemplate = example.nodes.first.nodes.first;
+      node.attributes.forEach((k, v) { nestedTemplate.attributes[k] = v; });
+
+      _messages.warning('the <template> of a custom element does not support '
+          '"if" or "iterate". However, you can create another template node '
+          'that is a child node, for example:\n'
+          '${example.outerHtml}',
+          node.parent.sourceSpan, file: _fileInfo.path);
+      return null;
+    }
+
     if (condition != null) {
       var result = new TemplateInfo(node, _parent, ifCondition: condition);
       result.removeAttributes.add('if');

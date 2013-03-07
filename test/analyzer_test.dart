@@ -500,6 +500,27 @@ main() {
       expect(messages[0].span, equals(elem.sourceSpan));
     });
 
+    test("warn about if or iterate on element's template", () {
+      var files = parseFiles({
+        'index.html': '<body>'
+          '<element name="x-foo">'
+            '<template iterate="foo in bar"></template>'
+          '</element>'
+          '<element name="x-bar">'
+            '<template if="baz"></template>'
+          '</element>'
+        '</body>'
+      });
+      analyzeFiles(files);
+      expect(messages.warnings.length, 2);
+      expect(messages[0].message, contains('for example:\n'
+          '<element name="x-foo"><template><template iterate="foo in bar">'
+          '</template></template></element>'));
+      expect(messages[1].message, contains('for example:\n'
+          '<element name="x-bar"><template><template if="baz">'
+          '</template></template></element>'));
+    });
+
     test('extends not found - warning', () {
       var files = parseFiles({
         'index.html': '<body><element name="x-quux3" extends="x-foo" '
