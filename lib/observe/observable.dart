@@ -622,7 +622,7 @@ class _ExpressionObserver {
     try {
       if (oldValue == _value) return null;
     } catch (e, trace) {
-      onObserveUnhandledError(e, trace, key, 'operator == from $this');
+      onObserveUnhandledError(e, trace, oldValue, 'operator == from $this');
       return null;
     }
 
@@ -669,7 +669,7 @@ void defaultObserveUnhandledError(error, trace, obj, String message) {
   // TODO(jmesserly): using Logger seems better, but by default it doesn't do
   // anything, which leads to unobserved errors.
   // Ideally we could make this show up as an error in the browser's console.
-  print('web_ui.observe: unhandled error calling $object $message.\n'
+  print('web_ui.observe: unhandled error calling $obj $message.\n'
       'error:\n$error\n\nstack trace:\n$trace');
 }
 

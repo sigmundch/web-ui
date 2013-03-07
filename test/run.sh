@@ -111,12 +111,7 @@ if [[ `ls $OUT_PATTERN 2>/dev/null` != "" ]]; then
   # TODO(sigmund): remove the filtering when darbug.com/8132 is fixed
   analyzer_summary=$DIR/data/output/_analyzer
   ls $OUT_PATTERN | dart_analyzer --fatal-warnings --fatal-type-errors \
-    --work $DIR/data/output/analyzer/ -batch &> $analyzer_summary || \
-    (cat $analyzer_summary | grep -v dartium | grep -v "^ *~*$" | \
-        grep -v "^ *[0-9]\+:" | grep -v "^>>>";  \
-     echo -en "\nIgnoring analyzer errors"; \
-     echo -e " ([36mdartbug.com/8132[0m)")
-  rm $analyzer_summary
+    --work $DIR/data/output/analyzer/ -batch
   rm -r $DIR/data/output/analyzer/
 fi
 

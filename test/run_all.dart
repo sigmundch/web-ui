@@ -95,6 +95,8 @@ main() {
       // TODO(sigmund): remove this extra variable dartbug.com/8698
       int j = i;
       test('verify $filename', () {
+        expect(outs, isNotNull, reason:
+          'Output not available, maybe DumpRenderTree failed to run.');
         var output = outs[j];
         var outPath = outDir.append('$filename.txt').toString();
         var expectedPath = expectedDir.append('$filename.txt').toString();

@@ -9,7 +9,7 @@ dependencies:
   browser: ">=0.3.5+1"
   # Pin html5lib so we don't get unexpected API breaks.
   html5lib: ">=0.3.3 <0.3.4"
-  csslib: ">=0.3.4 <0.3.5"
+  csslib: ">=0.4.0 <0.4.1"
   logging: ">=0.3.5+1"
   unittest: ">=0.3.5+1"
   source_maps: ">=0.3.2 <0.3.3"
