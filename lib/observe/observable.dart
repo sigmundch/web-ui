@@ -21,7 +21,7 @@ import 'reference.dart';
 import 'set.dart';
 // TODO(jmesserly): see if we can switch to Future.immediate. We need it to be
 // fast (next microtask) like our version, though. http://dartbug.com/8757
-import 'package:web_ui/src/utils.dart' show setImmediate;
+import 'package:web_ui/src/utils.dart' show setImmediate, hash3, hash4;
 import 'package:web_ui/src/linked_list.dart';
 
 /**
@@ -80,6 +80,8 @@ class ChangeNotification {
     return other is ChangeNotification && oldValue == other.oldValue &&
         newValue == other.newValue && changes == other.changes;
   }
+
+  int get hashCode => hash3(oldValue, newValue, changes);
 
   String toString() {
     if (changes != null) return '#<ChangeNotification to $newValue: $changes>';
@@ -141,6 +143,8 @@ class ChangeRecord {
     return other is ChangeRecord && type == other.type && key == other.key &&
         oldValue == other.oldValue && newValue == other.newValue;
   }
+
+  int get hashCode => hash4(type, key, oldValue, newValue);
 
   String toString() {
     // TODO(jmesserly): const map would be nice here, but it must be string

@@ -26,6 +26,13 @@ String toCamelCase(String hyphenedName, {bool startUppercase: false}) {
   return segments.join('');
 }
 
+// TODO(jmesserly): helpers to combine hash codes. Reuse these from somewhere.
+hash2(x, y) => x.hashCode * 31 + y.hashCode;
+
+hash3(x, y, z) => hash2(hash2(x, y), z);
+
+hash4(w, x, y, z) => hash2(hash2(w, x), hash2(y, z));
+
 /**
  * Invokes [callback], logs how long it took to execute in ms, and returns
  * whatever [callback] returns. The log message will be printed if [printTime]

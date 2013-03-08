@@ -853,6 +853,24 @@ main() {
       });
     });
   });
+
+  // We only really support equality on these for testing purposes.
+  // However we need .hashCode because we've implemented operator ==.
+  test('ChangeRecord.hashCode', () {
+    var a = _record(ChangeRecord.REMOVE, 'a',  1, null);
+    var b = _record(ChangeRecord.REMOVE, 'a',  1, null);
+    var c = _record(ChangeRecord.REMOVE, 'b',  1, null);
+    expect(a.hashCode, b.hashCode, reason: 'a == b');
+    expect(b.hashCode, isNot(equals(c.hashCode)), reason: 'b != c');
+  });
+
+  test('ChangeNotification.hashCode', () {
+    var a = _change(123, 42);
+    var b = _change(123, 42);
+    var c = _change(123, 43);
+    expect(a.hashCode, b.hashCode, reason: 'a == b');
+    expect(b.hashCode, isNot(equals(c.hashCode)), reason: 'b != c');
+  });
 }
 
 _change(oldValue, newValue) => new ChangeNotification(oldValue, newValue);
