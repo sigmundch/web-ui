@@ -184,14 +184,13 @@ abstract class WebComponent implements Element {
     for (int i = 0; i < shadowInsertionPoints.length; i++) {
       var point = shadowInsertionPoints[i];
       var tree = shadowInsertionTrees[i];
-      // Note: defensive copy is a workaround for http://dartbug.com/6684
-      _distribute(point, new List.from(tree.nodes));
+      // Remove toList once Node supports insertAllBefore 8882,
+      _distribute(point, tree.nodes.toList());
     }
 
     // Replace our child nodes with the ones in the youngest root.
     nodes.clear();
-    // Note: defensive copy is a workaround for http://dartbug.com/6684
-    nodes.addAll(new List.from(youngestRoot.nodes));
+    nodes.addAll(youngestRoot.nodes);
   }
 
 

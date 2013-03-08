@@ -479,14 +479,24 @@ class Template extends TemplateItem {
   void addAll(List<Node> list) => nodes.addAll(list);
 
   /** Create this template and its children (templates are [TemplateItem]s). */
-  void create() => children.forEach((t) => t.create());
+  void create() {
+    for (var i = 0, len = children.length; i < len; i++) {
+      children[i].create();
+    }
+  }
 
   /** Insert this template and its children. */
-  void insert() => children.forEach((t) => t.insert());
+  void insert() {
+    for (var i = 0, len = children.length; i < len; i++) {
+      children[i].insert();
+    }
+  }
 
   /** Remove this template and its children. */
   void remove() {
-    children.reversed.forEach((t) => t.remove());
+    for (var i = children.length - 1; i >= 0; i--) {
+      children[i].remove();
+    }
     children.clear();
   }
 }
@@ -537,8 +547,8 @@ abstract class PlaceholderTemplate extends Template {
     if (nodes.length > 0) {
       var parent = node.parentNode;
       var reference = node.nextNode;
-      for (var n in nodes) {
-        parent.insertBefore(n, reference);
+      for (var i = 0, len = nodes.length; i < len; i++) {
+        parent.insertBefore(nodes[i], reference);
       }
     }
     super.insert();
@@ -546,12 +556,8 @@ abstract class PlaceholderTemplate extends Template {
 
   void remove() {
     super.remove();
-    var parent = node.parentNode;
-    // TODO(sigmund): use `end.remove()` after dartbug.com/7173 is fixed
-    if (parent != null) {
-      for (var n in nodes) {
-        parent.$dom_removeChild(n);
-      }
+    for (var i = nodes.length - 1; i >= 0; i--) {
+      nodes[i].remove();
     }
     nodes.clear();
   }
