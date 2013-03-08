@@ -3,6 +3,16 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.4.1+4 - Mar 7 2013 (integration SDK 0.4.1+0 r19425)
+  * Scoped styles are on by default.
+  * Custom tags no longer need to start with x-, but must contain a dash.
+  * Observable objects now have a change record API. You can listen to all
+    changes on an object using `observeChanges`.
+  * Importing Dart files that define web components should work even if
+    they aren't used on the page.
+  * Warning for incorrect use of if/iterate on the element's template.
+  * Support "package:" URI scheme for link rel=component tag.
+  * Various bug fixes and fixes to run on latest SDK.
 
 #### Pub version 0.4.0 - Feb 27 2013 (integration SDK 0.3.7+5 r18669)
   * Performance improvements: cache HTML fragments and use .clone in templates
