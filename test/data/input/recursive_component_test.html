@@ -11,7 +11,7 @@
 </head>
 <body>
   Expect nested divs 0 then 1.
-  <element name='x-rec' extends="div">
+  <element name='x-rec' extends="div" constructor="Rec">
     <template>
       {{check(pos)}}
       <template if="pos < len">

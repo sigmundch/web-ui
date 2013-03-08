@@ -11,7 +11,7 @@ BSD-style license that can be found in the LICENSE file.
   <script type='application/javascript' src="testing.js"></script>
 </head>
 <body>
-  <element name="x-my-input" extends="input">
+  <element name="my-input" extends="input">
     <template></template>
     <script type="application/dart">
     import 'package:web_ui/web_ui.dart';
@@ -28,9 +28,9 @@ BSD-style license that can be found in the LICENSE file.
   </element>
   <form>
   <!-- TODO(jmesserly): if fix #82 we can use <x-my-input> tags. -->
-  <input is="x-my-input" name="a" type="radio" value="Foo" bind-value="name">
+  <input is="my-input" name="a" type="radio" value="Foo" bind-value="name">
   Foo!
-  <input is="x-my-input" name="a" type="radio" value="Bar" bind-value="name">
+  <input is="my-input" name="a" type="radio" value="Bar" bind-value="name">
   Bar!
   </form>
   <pre>You picked {{name}}. Final value should be 'Bar'</pre>

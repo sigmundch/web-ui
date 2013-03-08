@@ -61,7 +61,7 @@ layer at (126,283) size 548x19 layerType: foreground only
         RenderText {#text} at (0,1) size 8x16
           text run at (0,1) width 8: "1"
 layer at (126,283) size 548x19
-  RenderBlock (positioned) {X-ROUTER-OPTIONS} at (0,0) size 548x19
+  RenderBlock (positioned) {ROUTER-OPTIONS} at (0,0) size 548x19
     RenderInline {LI} at (0,0) size 26x16
       RenderText {#text} at (0,0) size 0x0
       RenderInline {A} at (0,0) size 18x16 [color=#83756F]
@@ -100,11 +100,11 @@ layer at (126,211) size 548x60
   RenderBlock (relative positioned) zI: 2 {SECTION} at (1,81) size 548x60 [border: (1px dotted #ADADAD) none]
     RenderBlock {UL} at (0,1) size 548x59
       RenderBlock (anonymous) at (0,0) size 548x0
-        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderInline {TODO-ROW} at (0,0) size 0x0
           RenderText {#text} at (0,0) size 0x0
       RenderBlock (anonymous) at (0,0) size 548x59
       RenderBlock (anonymous) at (0,59) size 548x0
-        RenderInline {X-TODO-ROW} at (0,0) size 0x0
+        RenderInline {TODO-ROW} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
         RenderText {#text} at (0,0) size 0x0
@@ -115,7 +115,7 @@ layer at (115,159) size 65x41
         text run at (25,0) width 16: "\x{BB}"
 layer at (126,212) size 548x59
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x59 [border: none (1px dotted #CCCCCC) none]
-    RenderInline {X-EDITABLE-LABEL} at (0,0) size 121x27
+    RenderInline {EDITABLE-LABEL} at (0,0) size 121x27
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
       RenderBlock {LABEL} at (60,15) size 46x28

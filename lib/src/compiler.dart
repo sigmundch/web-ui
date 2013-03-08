@@ -506,6 +506,9 @@ class Compiler {
    */
   void _emitFileAndSourceMaps(
       LibraryInfo lib, CodePrinter printer, Path inputPath) {
+    // Bail if we had an error generating the code for the file.
+    if (printer == null) return;
+
     var path = _pathInfo.outputLibraryPath(lib);
     var dir = path.directoryPath;
     printer.add('\n//@ sourceMappingURL=${path.filename}.map');

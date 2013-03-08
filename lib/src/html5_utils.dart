@@ -7,6 +7,30 @@
 
 library html5_utils;
 
+// TODO(jmesserly): last I checked, const maps are slow in DartVM--O(N) lookup.
+// Do we care? An alternative is lazy initialized static fields.
+
+/**
+ * Returns true if this is a valid custom element name. See:
+ * <https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#dfn-custom-element-name>
+ */
+bool isCustomTag(String name) {
+  if (!name.contains('-')) return false;
+
+  // These names have meaning in SVG or MathML, so they aren't allowed as custom
+  // tags.
+  var invalidNames = const {
+    'annotation-xml': '',
+    'color-profile': '',
+    'font-face': '',
+    'font-face-src': '',
+    'font-face-uri': '',
+    'font-face-format': '',
+    'font-face-name': '',
+    'missing-glyph': '',
+  };
+  return !invalidNames.containsKey(name);
+}
 
 /**
  * Maps an HTML tag to a dart:html type. This uses [htmlElementNames] but it
@@ -15,7 +39,7 @@ library html5_utils;
 String typeForHtmlTag(String tag) {
   var type = htmlElementNames[tag];
   // Note: this will eventually be the component's class name if it is a
-  // known x-tag.
+  // known custom-tag.
   return type == null ? 'UnknownElement' : type;
 }
 

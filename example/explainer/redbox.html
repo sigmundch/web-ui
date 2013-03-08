@@ -12,7 +12,7 @@ BSD-style license that can be found in the LICENSE file.
     href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
 </head>
 <body>
-  <element name="x-redbox" constructor="RedBox" extends="div">
+  <element name="red-box" extends="div">
     <template>
       <div style='border: solid 2px red; text-align: center;'>
         <content></content>
@@ -21,9 +21,9 @@ BSD-style license that can be found in the LICENSE file.
   </element>
 
   <div class="well">
-    <x-redbox>
+    <red-box>
       <span>hi</span>
-    </x-redbox>
+    </red-box>
   </div>
   <script type="application/dart">
     main(){}

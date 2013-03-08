@@ -32,7 +32,7 @@ BSD-style license that can be found in the LICENSE file.
       <ul id="todo-list">
         <template iterate="x in app.todos">
           <template if="viewModel.isVisible(x)">
-            <x-todo-row todo="{{x}}"></x-todo-row>
+            <todo-row todo="{{x}}"></todo-row>
           </template>
         </template>
       </ul>
@@ -40,11 +40,11 @@ BSD-style license that can be found in the LICENSE file.
     <template if="app.todos.length > 0">
       <footer id="footer">
         <span id="todo-count"><strong>{{app.remaining}}</strong></span>
-        <x-router-options id="filters">
+        <router-options id="filters">
           <li> <a href="#/">All</a> </li>
           <li> <a href="#/active">Active</a> </li>
           <li> <a href="#/completed">Completed</a> </li>
-        </x-router-options>
+        </router-options>
         <template if="app.doneCount > 0">
           <button id="clear-completed" on-click="app.clearDone()">
             Clear completed ({{app.doneCount}})

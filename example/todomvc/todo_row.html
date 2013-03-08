@@ -10,7 +10,7 @@ BSD-style license that can be found in the LICENSE file.
   <link rel="components" href="editable_label.html">
 </head>
 <body>
-<element name="x-todo-row" extends="li" apply-author-styles>
+<element name="todo-row" extends="li" apply-author-styles>
   <template>
     <style scoped>
 .todo-item {
@@ -28,7 +28,7 @@ BSD-style license that can be found in the LICENSE file.
 TODO(jmesserly): the ".todo-item label" selector does not work with real
 ShadowRoot because it crosses the shadow boundary.
 */
-.todo-item.completed x-editable-label {
+.todo-item.completed editable-label {
   color: #a9a9a9;
   text-decoration: line-through;
 }
@@ -124,7 +124,7 @@ ShadowRoot because it crosses the shadow boundary.
     </style>
     <div class="todo-item {{_editingClass}} {{_completedClass}}">
       <input class="toggle" type="checkbox" bind-checked="todo.done">
-      <x-editable-label id="label" bind-value="todo.task"></x-editable-label>
+      <editable-label id="label" bind-value="todo.task"></editable-label>
       <button class="destroy" on-click="app.removeTodo(todo)"></button>
     </div>
   </template>

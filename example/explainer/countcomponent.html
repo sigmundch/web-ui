@@ -12,7 +12,7 @@ BSD-style license that can be found in the LICENSE file.
     href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
 </head>
 <body>
-  <element name="x-click-counter" constructor="CounterComponent" extends="div">
+  <element name="click-counter" constructor="CounterComponent" extends="div">
     <template>
       <button on-click="increment()">Click me</button>
       <span>(click count: {{count}})</span>
@@ -27,7 +27,7 @@ BSD-style license that can be found in the LICENSE file.
     </script>
   </element>
   <div class="well">
-    <div is="x-click-counter"></div>
+    <div is="click-counter"></div>
   </div>
   <script type="application/dart">
     main(){}

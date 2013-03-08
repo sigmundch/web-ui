@@ -188,7 +188,7 @@ label[for='toggle-all'] {
 /*
 TODO(jmesserly): fix this. It's broken in our sample.
 
-#todo-list x-todo-row:last-child .todo-item {
+#todo-list todo-row:last-child .todo-item {
   border-bottom: none;
 }
 */

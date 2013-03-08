@@ -163,7 +163,7 @@ class _Analyzer extends TreeVisitor {
       // Associate ElementInfo of the <element> tag with its component.
       component.elemInfo = info;
 
-      _bindExtends(component);
+      _analyzeComponent(component);
 
       _currentInfo = component;
     }
@@ -232,27 +232,31 @@ class _Analyzer extends TreeVisitor {
        info.events.length > 0;
   }
 
-  void _bindExtends(ComponentInfo component) {
+  void _analyzeComponent(ComponentInfo component) {
     component.extendsComponent = _fileInfo.components[component.extendsTag];
     if (component.extendsComponent == null &&
-        component.extendsTag.startsWith('x-')) {
+        isCustomTag(component.extendsTag)) {
       _messages.warning(
           'custom element with tag name ${component.extendsTag} not found.',
           component.element.sourceSpan, file: _fileInfo.path);
     }
+
+    // Now that the component's code has been loaded, we can validate that the
+    // class exists.
+    component.findClassDeclaration(_messages);
   }
 
   void _bindCustomElement(Element node, ElementInfo info) {
-    // <x-fancy-button>
+    // <fancy-button>
     var component = _fileInfo.components[node.tagName];
     if (component == null) {
       // TODO(jmesserly): warn for unknown element tags?
 
-      // <button is="x-fancy-button">
+      // <button is="fancy-button">
       var componentName = node.attributes['is'];
       if (componentName != null) {
         component = _fileInfo.components[componentName];
-      } else if (node.tagName.startsWith('x-')) {
+      } else if (isCustomTag(node.tagName)) {
         componentName = node.tagName;
       }
       if (component == null && componentName != null) {
@@ -793,12 +797,11 @@ class _ElementLoader extends TreeVisitor {
 
     var tagName = node.attributes['name'];
     var extendsTag = node.attributes['extends'];
-    var constructor = node.attributes['constructor'];
     var templateNodes = node.nodes.where((n) => n.tagName == 'template');
 
     if (tagName == null) {
       _messages.error('Missing tag name of the component. Please include an '
-          'attribute like \'name="x-your-tag-name"\'.',
+          'attribute like \'name="your-tag-name"\'.',
           node.sourceSpan, file: _fileInfo.path);
       return;
     }
@@ -819,14 +822,8 @@ class _ElementLoader extends TreeVisitor {
           node.sourceSpan, file: _fileInfo.path);
     }
 
-    if (constructor == null) {
-      var name = tagName;
-      if (name.startsWith('x-')) name = name.substring(2);
-      constructor = toCamelCase(name, startUppercase: true);
-    }
-
     var component = new ComponentInfo(node, _fileInfo, tagName, extendsTag,
-        constructor, template);
+        template);
 
     _fileInfo.declaredComponents.add(component);
 

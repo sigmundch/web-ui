@@ -601,17 +601,22 @@ main() {
           new Path('/my/packages/quux/quux.html')]));
     });
 
-    test('elements', () {
-      var doc = parse(
-        '<body>'
+    test('custom element definitions', () {
+      // TODO(jmesserly): consider moving this test to analyzeFile section;
+      // it now depends on analyzeFile instead of just analyzeDefinitions.
+      var files = parseFiles({
+        'index.html': '<body>'
           '<element name="x-foo" constructor="Foo"></element>'
           '<element name="x-bar" constructor="Bar42"></element>'
         '</body>'
-      );
+      });
+      var doc = files[0].document;
+
+      var info = analyzeFiles(files)['index.html'];
+
       var foo = doc.body.queryAll('element')[0];
       var bar = doc.body.queryAll('element')[1];
 
-      var info = analyzeDefinitionsInTree(doc);
       expect(info.declaredComponents.length, equals(2));
 
       var compInfo = info.declaredComponents[0];
@@ -636,15 +641,16 @@ main() {
     });
 
     test('element without constructor', () {
-      var doc = parse(
-        '<body>'
+      var files = parseFiles({
+        'index.html': '<body>'
           '<element name="x-baz"></element>'
           '<element name="my-quux"></element>'
         '</body>'
-      );
-      var info = analyzeDefinitionsInTree(doc);
+      });
+      var doc = files[0].document;
+      var info = analyzeFiles(files)['index.html'];
       expect(info.declaredComponents.length, equals(2));
-      expect(info.declaredComponents[0].constructor, equals('Baz'));
+      expect(info.declaredComponents[0].constructor, equals('XBaz'));
       expect(info.declaredComponents[1].constructor, equals('MyQuux'));
     });
 
@@ -684,13 +690,14 @@ main() {
     });
 
     test('duplicate constructor name - is valid', () {
-      var doc = parse(
-        '<body>'
+      var files = parseFiles({
+        'index.html': '<body>'
           '<element name="x-quux" constructor="Quux"></element>'
           '<element name="x-quux2" constructor="Quux"></element>'
         '</body>'
-      );
-      var info = analyzeDefinitionsInTree(doc);
+      });
+      var doc = files[0].document;
+      var info = analyzeFiles(files)['index.html'];
 
       var quux = doc.body.queryAll('element')[0];
       var quux2 = doc.body.queryAll('element')[1];
