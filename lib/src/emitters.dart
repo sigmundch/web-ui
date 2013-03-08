@@ -594,12 +594,6 @@ void emitImports(DartCodeInfo codeInfo, LibraryInfo info, PathInfo pathInfo,
     }
   }
 
-  // Add existing import, export, and part directives.
-  var file = codeInfo.sourceFile;
-  for (var d in codeInfo.directives) {
-    addUnique(d.toString(), file != null ? file.location(d.offset) : null);
-  }
-
   // Add imports only for those components used by this component.
   info.usedComponents.keys.forEach(
       (c) => addUnique("import '${pathInfo.relativePath(info, c)}';"));
@@ -611,6 +605,12 @@ void emitImports(DartCodeInfo codeInfo, LibraryInfo info, PathInfo pathInfo,
     if (base != null) {
       addUnique("import '${pathInfo.relativePath(info, base)}';");
     }
+  }
+
+  // Add existing import, export, and part directives.
+  var file = codeInfo.sourceFile;
+  for (var d in codeInfo.directives) {
+    addUnique(d.toString(), file != null ? file.location(d.offset) : null);
   }
 }
 
