@@ -47,9 +47,24 @@ class DartCodeInfo extends Hashable {
         this.compilationUnit = compilationUnit == null
           ? parseCompilationUnit(code) : compilationUnit;
 
+  bool get isPart =>
+      compilationUnit.directives.any((d) => d is PartOfDirective);
+
   int get directivesEnd {
     if (compilationUnit.directives.length == 0) return 0;
-    return compilationUnit.directives.map((d) => d.end).max();
+    return compilationUnit.directives.last.end;
+  }
+
+  /**
+   * The position of the first "part" directive. If none is found,
+   * this behaves like [directivesEnd].
+   */
+  int get firstPartOffset {
+    for (var directive in compilationUnit.directives) {
+      if (directive is PartDirective) return directive.offset;
+    }
+    // No part directives, just return directives end.
+    return directivesEnd;
   }
 
   /** Gets the code after the [directives]. */

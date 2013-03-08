@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+for details. All rights reserved. Use of this source code is governed by a
+BSD-style license that can be found in the LICENSE file.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <script type="application/javascript" src="testing.js"></script>
+</head>
+<body>
+  <span>{{message}}</span>
+  <script type="application/dart">
+    library observe_in_part_test;
+    import 'dart:async';
+    import 'dart:html';
+    part 'observe_in_part.dart';
+    main() {
+      Timer.run(() {
+        message = '$message, this test passed!';
+        window.postMessage('done', '*');
+      });
+    }
+  </script>
+</body>
+</html>
