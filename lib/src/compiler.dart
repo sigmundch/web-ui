@@ -266,8 +266,10 @@ class Compiler {
       if (transaction != null) {
         _edits[lib.userCode] = transaction;
         if (transaction.hasEdits) {
-          // TODO(jmesserly): what about ObservableList/Map/Set?
           _useObservers = true;
+          transformed.add(lib);
+        } else if (lib.htmlFile != null) {
+          // All web components will be transformed too. Track that.
           transformed.add(lib);
         }
       }

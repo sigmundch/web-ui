@@ -29,7 +29,6 @@ import 'refactor.dart';
  * any fields that are set into the object.
  */
 TextEditTransaction transformObservables(DartCodeInfo userCode) {
-
   if (userCode == null || userCode.compilationUnit == null) return null;
   var transaction = new TextEditTransaction(userCode.code, userCode.sourceFile);
   transformCompilationUnit(userCode.compilationUnit, transaction);

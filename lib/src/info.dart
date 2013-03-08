@@ -413,6 +413,9 @@ class ComponentInfo extends LibraryInfo {
     var componentSegment = tagName.toLowerCase().replaceAll('-', '_');
     return mangle('${prefix}_$componentSegment', '.dart', true);
   }
+
+  String toString() => '#<ComponentInfo $tagName '
+      '${inlinedCode != null ? "inline" : "from $inputPath"}>';
 }
 
 /** Base tree visitor for the Analyzer infos. */
