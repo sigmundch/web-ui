@@ -6,23 +6,14 @@ BSD-style license that can be found in the LICENSE file.
 -->
 <html lang="en">
 <head>
-<!--
-This test runs the TodoMVC app and evaluates that it renders correctly.
--->
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <link rel="components" href="example/todomvc/app.html">
-  <link rel="stylesheet" href="example/todomvc/base.css">
-  <script type="application/javascript" src="testing.js"></script>
+  <link rel="components" href="app.html">
+  <link rel="stylesheet" href="base.css">
   <title>Dart • TodoMVC</title>
-</head><body>
+</head>
+<body>
   <todo-app></todo-app>
-  <script type="application/dart">
-import 'dart:html';
-
-main() {
-  window.postMessage('done', '*');
-}
-  </script>
+  <script type="application/dart">main() {}</script>
 </body>
 </html>

@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <!--
-Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 for details. All rights reserved. Use of this source code is governed by a
 BSD-style license that can be found in the LICENSE file.
 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <link rel="components" href="router_options.html">
   <link rel="components" href="todo_row.html">
-  <link rel="stylesheet" href="base.css">
-  <title>dart - TodoMVC</title>
 </head>
 <body>
+<element name="todo-app" apply-author-styles>
+<template>
   <section id="todoapp">
     <header id="header">
       <h1 class='title'>todos</h1>
@@ -60,6 +59,25 @@ BSD-style license that can be found in the LICENSE file.
     </p>
     <p>Part of <a href="http://todomvc.com">TodoMVC</a>.</p>
   </footer>
-  <script type="application/dart" src="main.dart"></script>
+</template>
+<script type="application/dart">
+import 'dart:html';
+import 'model.dart';
+import 'package:web_ui/web_ui.dart';
+
+class TodoApp extends WebComponent {
+  void addTodo(Event e) {
+    e.preventDefault(); // don't submit the form
+    var input = query('#new-todo');
+    if (input.value == '') return;
+    app.todos.add(new Todo(input.value));
+    input.value = '';
+  }
+
+  // For testing purposes, we expose the Shadow DOM.
+  get shadowRoot => _root;
+}
+</script>
+</element>
 </body>
 </html>
