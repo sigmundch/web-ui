@@ -28,17 +28,24 @@ void main() {
 /** Contains the result of a compiler run. */
 class CompilerResult {
   final bool success;
+  
   /** Map of output path to source, if there is one */
   final Map<String, String> outputs;
+  
+  /** List of files read during compilation */
+  final List<String> inputs;
+  
   final List<String> messages;
   String bootstrapFile;
 
   CompilerResult([this.success = true,
                   this.outputs,
+                  this.inputs,
                   this.messages = const [],
                   this.bootstrapFile]);
 
-  factory CompilerResult._(Messages messages, List<OutputFile> outputs) {
+  factory CompilerResult._(Messages messages, List<OutputFile> outputs,
+      List<SourceFile> files) {
     var success = !messages.messages.any((m) => m.level == Level.SEVERE);
     var file;
     var outs = new Map<String, String>();
@@ -50,8 +57,9 @@ class CompilerResult {
       var outputPath = out.path.toString();
       outs[outputPath] = sourcePath;
     }
+    var inputs = files.map((f) => f.path.toString()).toList();
     var msgs = messages.messages.map((m) => m.toString()).toList();
-    return new CompilerResult(success, outs, msgs, file);
+    return new CompilerResult(success, outs, inputs, msgs, file);
   }
 }
 
@@ -74,7 +82,9 @@ Future<CompilerResult> run(List<String> args, {bool printTime: true}) {
         currentDir: currentDir);
     var res;
     return compiler.run()
-      .then((_) => (res = new CompilerResult._(messages, compiler.output)))
+      .then((_) {
+        res = new CompilerResult._(messages, compiler.output, compiler.files);
+      })
       .then((_) => symlinkPubPackages(res, options, messages))
       .then((_) => emitFiles(compiler.output, options.clean))
       .then((_) => res);
