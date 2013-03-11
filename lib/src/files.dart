@@ -10,13 +10,23 @@ import 'info.dart';
 
 /** An input file to process by the template compiler. */
 class SourceFile {
-  final Path path;
+  static const int HTML = 1;
+  static const int DART = 2;
+  static const int STYLESHEET = 3;
 
-  final bool isDart;
+  final Path path;
+  final int type;
+
   Document document;
+
+  /** Dart code or contents of a linked style sheet. */
   String code;
 
-  SourceFile(this.path, {this.isDart: false});
+  SourceFile(this.path, {this.type: HTML});
+
+  bool get isDart => type == DART;
+  bool get isHtml => type == HTML;
+  bool get isStyleSheet => type == STYLESHEET;
 
   String toString() => "<#SourceFile $path>";
 }

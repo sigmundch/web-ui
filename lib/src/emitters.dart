@@ -415,19 +415,16 @@ class WebComponentEmitter extends RecursiveEmitter {
     if (info.template != null && !elemInfo.childrenCreatedInCode) {
       // TODO(jmesserly): scoped styles probably don't work when
       // childrenCreatedInCode is true.
-      if (info.styleSheet != null) {
-        var tag = cssPolyfill ? info.tagName : null;
+      if (!info.styleSheets.isEmpty && !cssPolyfill) {
         // TODO(jmesserly): csslib+html5lib should work together.  We shouldn't
         //                  need to call a different function to serialize CSS.
         //                  Calling innerHTML on a StyleElement should be
         //                  enought - like a real browser.  CSSOM and DOM
         //                  should work together in the same tree.
-        // TODO(terry): Consider not emitting <style> tag inside of component.
-        //              Maybe we can generate a .css file that has all the CSS
-        //              polyfill.  The style tag can change the rendering a bit.
+        // TODO(terry): Only one style tag per component.
         var styleSheet =
-            '<style>\n'
-            '${emitStyleSheet(info.styleSheet, tag)}'
+            '<style scoped>\n'
+            '${emitStyleSheet(info.styleSheets[0])}'
             '\n</style>';
         var template = elemInfo.node;
         template.insertBefore(new Element.html(styleSheet),
@@ -522,7 +519,10 @@ class WebComponentEmitter extends RecursiveEmitter {
 
 /** Generates the class corresponding to the main html page. */
 class MainPageEmitter extends RecursiveEmitter {
-  MainPageEmitter(FileInfo fileInfo) : super(fileInfo, new Context(indent: 1));
+  final bool _cssPolyfill;
+
+  MainPageEmitter(FileInfo fileInfo, [bool cssPolyfill = false]) :
+      this._cssPolyfill = cssPolyfill, super(fileInfo, new Context(indent: 1));
 
   CodePrinter run(Document document, PathInfo pathInfo,
       TextEditTransaction transaction, bool rewriteUrls) {
@@ -539,13 +539,24 @@ class MainPageEmitter extends RecursiveEmitter {
     });
     document.queryAll('link').forEach((tag) {
       var href = tag.attributes['href'];
-      if (tag.attributes['rel'] == 'components') {
+      var rel = tag.attributes['rel'];
+      if (rel == 'component' || rel == 'components') {
        tag.remove();
+      } else if (_cssPolyfill &&
+          rel == 'stylesheet' && !href.startsWith('http')) {
+        tag.remove();
       } else if (href != null && rewriteUrls) {
        tag.attributes['href'] = pathInfo.transformUrl(_fileInfo.path, href);
       }
     });
 
+    if (_cssPolyfill) {
+      var linkElem = new Element.html('<link rel="stylesheet" type="text/css"'
+          ' href="${_fileInfo.path.filename}.css">');
+      var head = document.head;
+      head.insertBefore(linkElem,
+          head.hasChildNodes() ? head.nodes.first : null);
+    }
 
     var codeInfo = _fileInfo.userCode;
     if (codeInfo == null) {

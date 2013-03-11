@@ -1,0 +1,11 @@
+/*
+ * Example to test URI fixup of url of all consolidated CSS linked and scoped
+ * styles.
+ */
+.left-glyph {
+  background:red url('glyph.png');
+  float: left;
+  width: 14px;
+  height: 14px;
+  margin-top: 5px;
+}

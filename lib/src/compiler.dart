@@ -163,6 +163,14 @@ class Compiler {
       }
     }
 
+    // Load stylesheet files referenced by [file].
+    for (var href in fileInfo.styleSheetHref) {
+      if (!_processed.contains(href)) {
+        _processed.add(href);
+        _tasks.add(_parseStyleSheetFile(href).then(_processStyleSheetFile));
+      }
+    }
+
     // Load .dart files being referenced in the page.
     var src = fileInfo.externalFile;
     if (src != null && !_processed.contains(src)) {
@@ -196,7 +204,8 @@ class Compiler {
   /** Parse [filename] and treat it as a .dart file. */
   Future<SourceFile> _parseDartFile(Path path) {
     return fileSystem.readText(path)
-        .then((code) => new SourceFile(path, isDart: true)..code = code)
+        .then((code) => new SourceFile(path, type: SourceFile.DART)
+            ..code = code)
         .catchError((e) => _readError(e, path));
   }
 
@@ -234,6 +243,31 @@ class Compiler {
         _processed.add(src);
         _tasks.add(_parseDartFile(src).then(_processDartFile));
       }
+    }
+  }
+
+  /** Parse [filename] and treat it as a .dart file. */
+  Future<SourceFile> _parseStyleSheetFile(Path path) {
+    return fileSystem.readText(path)
+        .then((code) =>
+            new SourceFile(path, type: SourceFile.STYLESHEET)..code = code)
+        .catchError((e) => _readError(e, path));
+  }
+
+  void _processStyleSheetFile(SourceFile cssFile) {
+    if (!_shouldProcessFile(cssFile)) return;
+
+    files.add(cssFile);
+
+    var fileInfo = new FileInfo(cssFile.path);
+    info[cssFile.path] = fileInfo;
+
+    var uriVisitor = new UriVisitor(_pathInfo, _mainPath, fileInfo.path,
+        options.rewriteUrls);
+    var styleSheet = _parseCss(cssFile.path.toString(),
+        cssFile.code, uriVisitor, options);
+    if (styleSheet != null) {
+      fileInfo.styleSheets.add(styleSheet);
     }
   }
 
@@ -417,20 +451,26 @@ class Compiler {
   void _analyze() {
     var uniqueIds = new IntIterator();
     for (var file in files) {
-      if (file.isDart) continue;
-      _time('Analyzed contents', file.path, () =>
-          analyzeFile(file, info, uniqueIds, _messages));
+      if (file.isHtml) {
+        _time('Analyzed contents', file.path, () =>
+            analyzeFile(file, info, uniqueIds, _messages));
+      }
     }
   }
 
   /** Emit the generated code corresponding to each input file. */
   void _emit() {
     for (var file in files) {
-      if (file.isDart) continue;
+      if (file.isDart || file.isStyleSheet) continue;
       _time('Codegen', file.path, () {
         var fileInfo = info[file.path];
         cleanHtmlNodes(fileInfo);
-        _processStylesheet(fileInfo, options: options);
+        if (!fileInfo.isEntryPoint) {
+          // Check all components files for <style> tags and parse the CSS.
+          var uriVisitor = new UriVisitor(_pathInfo, _mainPath, fileInfo.path,
+              options.rewriteUrls);
+          _processStylesheet(uriVisitor, fileInfo, options: options);
+        }
         fixupHtmlCss(fileInfo, options);
         _emitComponents(fileInfo);
         if (fileInfo.isEntryPoint) {
@@ -439,12 +479,16 @@ class Compiler {
         }
       });
     }
+
+    if (options.processCss) {
+      _emitAllCss();
+    }
   }
 
   /** Emit the main .dart file. */
   void _emitMainDart(SourceFile file) {
     var fileInfo = info[file.path];
-    var printer = new MainPageEmitter(fileInfo)
+    var printer = new MainPageEmitter(fileInfo, options.processCss)
         .run(file.document, _pathInfo, _edits[fileInfo.userCode],
             options.rewriteUrls);
     _emitFileAndSourceMaps(fileInfo, printer, fileInfo.inputPath);
@@ -496,9 +540,62 @@ class Compiler {
         document.outerHtml, source: file.path));
   }
 
+  /** Generate an CSS file for all style sheets (main and components). */
+  void _emitAllCss() {
+    var allCssBuff = new StringBuffer();
+    var mainFile;
+
+    // Emit all linked style sheet files first.
+    for (var file in files) {
+      var fileInfo = info[file.path];
+      if (fileInfo.isEntryPoint) mainFile = file;
+      if (file.isStyleSheet) {
+        for (var styleSheet in fileInfo.styleSheets) {
+          allCssBuff.write(
+              '/* ==================================================== */\n'
+              '/* Linked style sheet href = ${file.path.filename} */\n'
+              '/* ==================================================== */\n');
+          allCssBuff.write(emitStyleSheet(styleSheet));
+          allCssBuff.write('\n\n');
+        }
+      }
+    }
+
+    // Emit all CSS in each component (style scoped).
+    for (var file in files) {
+      if (file.isHtml) {
+        var fileInfo = info[file.path];
+        for (var component in fileInfo.declaredComponents) {
+          for (var styleSheet in component.styleSheets) {
+            allCssBuff.write(
+                '/* ==================================================== */\n'
+                '/* Component ${component.tagName} stylesheet */\n'
+                '/* ==================================================== */\n');
+            allCssBuff.write(emitStyleSheet(styleSheet, component.tagName));
+            allCssBuff.write('\n\n');
+          }
+        }
+      }
+    }
+
+    var allCss = allCssBuff.toString();
+    if (!allCss.isEmpty) {
+      var allCssFile = '${mainFile.path.filename}.css';
+      var allCssPath = mainFile.path.directoryPath.append(allCssFile);
+      var allCssOutPath = _pathInfo.outputPath(allCssPath, '');
+      output.add(new OutputFile(allCssOutPath, allCss));
+    }
+  }
+
   /** Emits the Dart code for all components in [fileInfo]. */
   void _emitComponents(FileInfo fileInfo) {
     for (var component in fileInfo.declaredComponents) {
+      // TODO(terry): Handle one stylesheet per component see fixupHtmlCss.
+      if (component.styleSheets.length > 1 && options.processCss) {
+        _messages.warning(
+            'Component has more than one stylesheet'
+            ' - first stylesheet used.', null, file: component.externalFile);
+      }
       var printer = new WebComponentEmitter(fileInfo, _messages)
           .run(component, _pathInfo, _edits[component.userCode]);
       _emitFileAndSourceMaps(component, printer, component.externalFile);
@@ -568,33 +665,57 @@ class Compiler {
 }
 
 /** Parse all stylesheet for polyfilling assciated with [info]. */
-void _processStylesheet(info, {CompilerOptions options : null}) {
-  new _ProcessCss(options).visit(info);
+void _processStylesheet(uriVisitor, info, {CompilerOptions options : null}) {
+  new _ProcessCss(uriVisitor, options).visit(info);
+}
+
+StyleSheet _parseCss(String src, String content, UriVisitor uriVisitor,
+                     CompilerOptions options) {
+  if (!content.trim().isEmpty) {
+    // TODO(terry): Add --checked when fully implemented and error handling.
+    var styleSheet = css.parse(content, options:
+      [options.warningsAsErrors ? '--warnings_as_errors' : '', 'memory']);
+    uriVisitor.visitTree(styleSheet);
+    if (options.debugCss) {
+      print('\nCSS source: $src');
+      print('==========\n');
+      print(treeToDebugString(styleSheet));
+    }
+    return styleSheet;
+  }
 }
 
 /** Post-analysis of style sheet; parsed ready for emitting with polyfill. */
 class _ProcessCss extends InfoVisitor {
+  final UriVisitor uriVisitor;
   final CompilerOptions options;
+  ComponentInfo component;
 
-  _ProcessCss(this.options);
-
-  // TODO(terry): Add --checked when fully implemented and error handling too.
-  StyleSheet _parseCss(String cssInput, CompilerOptions option) =>
-      css.parse(cssInput, options:
-        [option.warningsAsErrors ? '--warnings_as_errors' : '', 'memory']);
+  _ProcessCss(this.uriVisitor, this.options);
 
   void visitComponentInfo(ComponentInfo info) {
-    if (!info.cssSource.isEmpty) {
-      info.styleSheet = _parseCss(info.cssSource.toString(), options);
-      info.cssSource = null;    // Once CSS parsed original not needed.
+    var oldComponent = component;
+    component = info;
 
-      if (options.debugCss) {
-        print('\nComponent: ${info.tagName}');
-        print('==========\n');
-        print(treeToDebugString(info.styleSheet));
+    super.visitComponentInfo(info);
+
+    component = oldComponent;
+  }
+
+  void visitElementInfo(ElementInfo info) {
+    if (component != null) {
+      var node = info.node;
+      if (node.tagName == 'style' && node.attributes.containsKey("scoped")) {
+        // Get contents of style tag.
+        var content = node.nodes.single.value;
+        var styleSheet = _parseCss(component.tagName, content, uriVisitor,
+            options);
+        if (styleSheet != null) {
+          component.styleSheets.add(styleSheet);
+        }
       }
     }
 
-    super.visitComponentInfo(info);
+    super.visitElementInfo(info);
   }
 }

@@ -198,11 +198,8 @@ abstract class LibraryInfo extends Hashable {
   /** File where the top-level code was defined. */
   Path get inputPath;
 
-  /** Stylesheet with <style>...</style> */
-  StringBuffer cssSource = new StringBuffer();
-
   /** Parsed cssSource. */
-  StyleSheet styleSheet;
+  List<StyleSheet> styleSheets = [];
 
   /**
    * Name of the file that will hold any generated Dart code for this library
@@ -275,6 +272,9 @@ class FileInfo extends LibraryInfo {
 
   /** Files imported with `<link rel="component">` */
   final List<Path> componentLinks = <Path>[];
+
+  /** Files imported with `<link rel="stylesheet">` */
+  final List<Path> styleSheetHref = <Path>[];
 
   /** Root is associated with the body info. */
   ElementInfo bodyInfo;

@@ -8,6 +8,7 @@
  */
 library analyzer;
 
+import 'dart:uri';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 import 'package:source_maps/span.dart';
@@ -117,18 +118,6 @@ class _Analyzer extends TreeVisitor {
       // don't need a parent.
       var parent = node.tagName == 'element' ? null : _parent;
       info = new ElementInfo(node, parent);
-    }
-
-    // TODO(terry): How to handle <link rel="stylesheet" href="...">
-    //              - What if multiple stylesheet links for a component?
-    //              - What if a stylesheet link for all component and particular
-    //                stylesheet links for each component?
-    //              - What if multiple <style> tags for the same component?
-    if (node.tagName == 'style' && node.attributes.containsKey("scoped")) {
-      // TODO(terry): Faster to parse the CSS tags separately instead of
-      //              concatenating all styles.
-      // Get contents of style tag.
-      _currentInfo.cssSource.write(node.nodes.single.value);
     }
 
     visitElementInfo(info);
@@ -760,7 +749,8 @@ class _ElementLoader extends TreeVisitor {
   void visitLinkElement(Element node) {
     // TODO(jmesserly): deprecate the plural form, it is singular in the spec.
     var rel = node.attributes['rel'];
-    if (rel != 'component' && rel != 'components') return;
+    if (rel != 'component' && rel != 'components' &&
+        rel != 'stylesheet') return;
 
     if (!_inHead) {
       _messages.warning('link rel="$rel" only valid in '
@@ -782,7 +772,16 @@ class _ElementLoader extends TreeVisitor {
       path = _fileInfo.path.directoryPath.join(new Path(href));
     }
 
-    _fileInfo.componentLinks.add(path);
+    if (rel == 'component' || rel == 'components') {
+      _fileInfo.componentLinks.add(path);
+    } else {
+      assert(rel == 'stylesheet');
+      // Local stylesheets only are handled.
+      var scheme = Uri.parse(href).scheme;
+      if (scheme != 'http' && scheme != 'https') {
+        _fileInfo.styleSheetHref.add(path);
+      }
+    }
   }
 
   void visitElementElement(Element node) {

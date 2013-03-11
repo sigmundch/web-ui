@@ -332,7 +332,7 @@ main() {
       fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
       var pathInfo = _newPathInfo('a', 'b', true);
 
-      var emitter = new MainPageEmitter(fileInfo);
+      var emitter = new MainPageEmitter(fileInfo, false);
       emitter.run(doc, pathInfo, null, true);
       expect(doc.outerHtml, equals(html));
     });
@@ -352,7 +352,7 @@ main() {
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = _newPathInfo('', 'out', true);
-        var emitter = new MainPageEmitter(fileInfo);
+        var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../a.css'));
       });
@@ -366,7 +366,7 @@ main() {
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = _newPathInfo('dir/', 'out', true);
-        var emitter = new MainPageEmitter(fileInfo);
+        var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../dir/a.css'));
       });
@@ -380,7 +380,7 @@ main() {
         // the external file when transforming the urls in the html file.
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = _newPathInfo('', 'out', true);
-        var emitter = new MainPageEmitter(fileInfo);
+        var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
         expect(doc.outerHtml, html.replaceAll('a.css', '../../dir/a.css'));
       });
@@ -392,7 +392,7 @@ main() {
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         fileInfo.externalFile = new Path('dir/a.dart');
         var pathInfo = _newPathInfo('', 'out', true);
-        var emitter = new MainPageEmitter(fileInfo);
+        var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, false);
         expect(doc.outerHtml, html);
       });

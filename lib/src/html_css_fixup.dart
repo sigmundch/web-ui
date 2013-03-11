@@ -10,6 +10,7 @@ import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
 import 'package:csslib/visitor.dart';
 
+import 'file_system/path.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'options.dart';
@@ -27,12 +28,15 @@ void fixupHtmlCss(FileInfo fileInfo, CompilerOptions opts) {
   // component.
   if (opts.verbose) print("  CSS fixup ${fileInfo.path.filename}");
   for (var component in fileInfo.declaredComponents) {
-    if (component.styleSheet != null) {
+    // TODO(terry): Consider allowing more than one style sheet per component.
+    // For components only 1 stylesheet allowed.
+    if (!component.styleSheets.isEmpty && component.styleSheets.length == 1) {
+      var styleSheet = component.styleSheets[0];
       // If polyfill is on prefix component name to all CSS classes and ids
       // referenced in the scoped style.
       var prefix = opts.processCss ? component.tagName : null;
       // List of referenced #id and .class in CSS.
-      var knownCss = new IdClassVisitor()..visitTree(component.styleSheet);
+      var knownCss = new IdClassVisitor()..visitTree(styleSheet);
       // Prefix all id and class refs in CSS selectors and HTML attributes.
       new _ScopedStyleRenamer(knownCss, prefix, opts.debugCss).visit(component);
     }
@@ -75,10 +79,15 @@ Map createCssSimpleSelectors(IdClassVisitor visitedCss, ComponentInfo info,
  */
 String createCssSelectorsDefinition(ComponentInfo info, bool cssPolyfill) {
   var cssVisited = new IdClassVisitor();
-  if (info.styleSheet != null) cssVisited..visitTree(info.styleSheet);
+
+  // For components only 1 stylesheet allowed.
+  if (!info.styleSheets.isEmpty && info.styleSheets.length == 1) {
+    var styleSheet = info.styleSheets[0];
+    cssVisited..visitTree(styleSheet);
+  }
+
   var css = json.stringify(createCssSimpleSelectors(cssVisited, info,
       scopedStyles: cssPolyfill));
-
   return 'static Map<String, String> _css = $css;';
 }
 
@@ -164,5 +173,21 @@ class _ScopedStyleRenamer extends InfoVisitor {
         node.attributes['id'] = mangledName;
       }
     }
+  }
+}
+
+/** Compute each CSS URI resource relative from the generated CSS file. */
+class UriVisitor extends Visitor {
+  final Path _relativePath;
+
+  UriVisitor(PathInfo pathInfo, Path mainFile, Path cssFile, bool rewriteUrl)
+      : _relativePath = cssFile.relativeTo(
+          rewriteUrl ? pathInfo.outputDirPath(mainFile) : mainFile.directoryPath
+          ).directoryPath;
+
+
+  void visitUriTerm(UriTerm node) {
+    // TODO(terry): Needs to use pathos.
+    node.text = _relativePath.join(new Path(node.text)).toString();
   }
 }

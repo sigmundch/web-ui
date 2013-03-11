@@ -151,7 +151,6 @@ layer at (115,148) size 65x41
         text run at (25,0) width 17: "\x{BB}"
 layer at (126,201) size 548x50
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x50 [border: none (1px dotted #CCCCCC) none]
-    RenderText {#text} at (0,0) size 0x0
     RenderInline {EDITABLE-LABEL} at (0,0) size 225x18
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
@@ -170,7 +169,6 @@ layer at (126,201) size 40x49
         text run at (11,10) width 18: "\x{2714}"
 layer at (126,251) size 548x50
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x50 [border: none (1px dotted #CCCCCC) none]
-    RenderText {#text} at (0,0) size 0x0
     RenderInline {EDITABLE-LABEL} at (0,0) size 205x18 [color=#A9A9A9]
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0
@@ -190,7 +188,6 @@ layer at (126,250) size 18x22
       text run at (11,10) width 18: "\x{2714}"
 layer at (126,301) size 548x50
   RenderBlock (relative positioned) {DIV} at (0,0) size 548x50 [border: none (1px dotted #CCCCCC) none]
-    RenderText {#text} at (0,0) size 0x0
     RenderInline {EDITABLE-LABEL} at (0,0) size 245x18
       RenderText {#text} at (0,0) size 0x0
       RenderText {#text} at (0,0) size 0x0

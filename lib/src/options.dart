@@ -50,7 +50,6 @@ class CompilerOptions {
    */
   final bool jsonFormat;
 
-  // TODO(terry): Make polyfill the default maybe add --no_css_polyfill. */
   /** Emulate scoped styles using a CSS polyfill. */
   final bool processCss;
 
