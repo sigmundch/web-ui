@@ -3,6 +3,9 @@
 This file contains highlights of what changes on each version of the web_ui
 package. This file is normally updated whenever we push a new version to pub.
 
+#### Pub version 0.4.1+6 - Mar 11 2013 (integration SDK 0.4.1+0 r19425)
+  * Work around for dart2js "internal error" in LinkedListIterator.
+
 #### Pub version 0.4.1+4 - Mar 7 2013 (integration SDK 0.4.1+0 r19425)
   * Scoped styles are on by default.
   * Custom tags no longer need to start with x-, but must contain a dash.
