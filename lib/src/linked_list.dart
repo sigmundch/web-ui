@@ -104,10 +104,13 @@ class LinkedListIterator<E> implements Iterator<E> {
   // number of subsequent nodes are removed.
   List<LinkedListNode<E>> _copy;
   LinkedList<E> _list;
+  E _current;
   int _pos = -1;
 
   LinkedListIterator(this._list) {
-    _copy = new List<LinkedListNode<E>>.fixedLength(_list.length);
+    // TODO(jmesserly): removed type annotation here to work around
+    // http://dartbug.com/9050.
+    _copy = new List<LinkedListNode>.fixedLength(_list.length);
     int i = 0;
     var node = _list.head;
     while (node != null) {
@@ -116,14 +119,20 @@ class LinkedListIterator<E> implements Iterator<E> {
     }
   }
 
-  E get current =>
-      (_pos >= 0 && _pos < _copy.length) ? _copy[_pos].value : null;
+  E get current => _current;
 
   bool moveNext() {
     do {
       _pos++;
       // Skip nodes that no longer are part of the list.
     } while (_pos < _copy.length && _copy[_pos]._list != _list);
-    return _pos < _copy.length;
+
+    if (_pos < _copy.length) {
+      _current = _copy[_pos].value;
+      return true;
+    } else {
+      _current = null;
+      return false;
+    }
   }
 }
