@@ -19,6 +19,7 @@ import 'files.dart';
 import 'html5_utils.dart';
 import 'info.dart';
 import 'messages.dart';
+import 'summary.dart';
 import 'utils.dart';
 
 /**
@@ -146,7 +147,7 @@ class _Analyzer extends TreeVisitor {
       var name = node.attributes['name'];
       if (name == null) return;
 
-      var component = _fileInfo.components[name];
+      ComponentInfo component = _fileInfo.components[name];
       if (component == null) return;
 
       // Associate ElementInfo of the <element> tag with its component.
@@ -665,18 +666,17 @@ class _Analyzer extends TreeVisitor {
   }
 
   /** Adds a component's tag name to the names in scope for [fileInfo]. */
-  void _addComponent(FileInfo fileInfo, ComponentInfo componentInfo) {
-    var existing = fileInfo.components[componentInfo.tagName];
+  void _addComponent(FileInfo fileInfo, ComponentSummary component) {
+    var existing = fileInfo.components[component.tagName];
     if (existing != null) {
-      if (existing == componentInfo) {
+      if (existing == component) {
         // This is the same exact component as the existing one.
         return;
       }
 
-      if (existing.declaringFile == fileInfo &&
-          componentInfo.declaringFile != fileInfo) {
-        // Components declared in [fileInfo] are allowed to shadow component
-        // names declared in imported files.
+      if (existing is ComponentInfo && component is! ComponentInfo) {
+        // Components declared in [fileInfo] shadow component names declared in
+        // imported files.
         return;
       }
 
@@ -687,25 +687,20 @@ class _Analyzer extends TreeVisitor {
 
       existing.hasConflict = true;
 
-      if (componentInfo.declaringFile == fileInfo) {
+      if (component is ComponentInfo) {
         _messages.error('duplicate custom element definition for '
-            '"${componentInfo.tagName}".',
-            existing.element.sourceSpan, file: fileInfo.path);
+            '"${component.tagName}".', existing.sourceSpan);
         _messages.error('duplicate custom element definition for '
-            '"${componentInfo.tagName}" (second location).',
-            componentInfo.element.sourceSpan, file: fileInfo.path);
+            '"${component.tagName}" (second location).', component.sourceSpan);
       } else {
         _messages.error('imported duplicate custom element definitions '
-            'for "${componentInfo.tagName}".',
-            existing.element.sourceSpan,
-            file: existing.declaringFile.path);
+            'for "${component.tagName}".', existing.sourceSpan);
         _messages.error('imported duplicate custom element definitions '
-            'for "${componentInfo.tagName}" (second location).',
-            componentInfo.element.sourceSpan,
-            file: componentInfo.declaringFile.path);
+            'for "${component.tagName}" (second location).',
+            component.sourceSpan);
       }
     } else {
-      fileInfo.components[componentInfo.tagName] = componentInfo;
+      fileInfo.components[component.tagName] = component;
     }
   }
 }

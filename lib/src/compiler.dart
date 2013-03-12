@@ -153,6 +153,7 @@ class Compiler {
             isEntryPoint: isEntryPoint));
     info[file.path] = fileInfo;
 
+    _setOutputFilenames(fileInfo);
     _processImports(fileInfo);
 
     // Load component files referenced by [file].
@@ -187,6 +188,31 @@ class Compiler {
       } else if (component.userCode != null) {
         _processImports(component);
       }
+    }
+  }
+
+  void _setOutputFilenames(FileInfo fileInfo) {
+    var path = fileInfo.inputPath;
+    fileInfo.outputFilename =
+        _pathInfo.mangle(path.filename, '.dart', path.extension == 'html');
+    for (var component in fileInfo.declaredComponents) {
+      var externalFile = component.externalFile;
+      var name = null;
+      if (externalFile != null) {
+        name = _pathInfo.mangle(externalFile.filename, '.dart');
+      } else {
+        var declaringFile = component.declaringFile;
+        var prefix = declaringFile.path.filename;
+        if (declaringFile.declaredComponents.length == 1
+            && !declaringFile.codeAttached && !declaringFile.isEntryPoint) {
+          name = _pathInfo.mangle(prefix, '.dart', true);
+        } else {
+          var componentSegment = component.tagName
+              .toLowerCase().replaceAll('-', '_');
+          name = _pathInfo.mangle('${prefix}_$componentSegment', '.dart', true);
+        }
+      }
+      component.outputFilename = name;
     }
   }
 
@@ -225,6 +251,8 @@ class Compiler {
     info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode =
         parseDartCode(fileInfo.path, dartFile.code, _messages);
+    fileInfo.outputFilename =
+        _pathInfo.mangle(dartFile.path.filename, '.dart', false);
 
     _processImports(fileInfo);
   }
