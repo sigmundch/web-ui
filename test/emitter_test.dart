@@ -15,7 +15,6 @@ import 'package:web_ui/src/analyzer.dart';
 import 'package:web_ui/src/code_printer.dart';
 import 'package:web_ui/src/dart_parser.dart';
 import 'package:web_ui/src/emitters.dart';
-import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/messages.dart';
@@ -350,7 +349,7 @@ main() {
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
-        fileInfo.externalFile = new Path('dir/a.dart');
+        fileInfo.externalFile = 'dir/a.dart';
         var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
@@ -364,7 +363,7 @@ main() {
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
-        fileInfo.externalFile = new Path('dir/a.dart');
+        fileInfo.externalFile = 'dir/a.dart';
         var pathInfo = _newPathInfo('dir/', 'out', true);
         var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
@@ -378,7 +377,7 @@ main() {
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
         // Issue #207 happened because we used to mistakenly take the path of
         // the external file when transforming the urls in the html file.
-        fileInfo.externalFile = new Path('dir/a.dart');
+        fileInfo.externalFile = 'dir/a.dart';
         var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, true);
@@ -390,7 +389,7 @@ main() {
         var fileInfo = analyzeNodeForTesting(doc, new Messages.silent(),
             filepath: 'a.html');
         fileInfo.inlinedCode = new DartCodeInfo('main', null, [], '', null);
-        fileInfo.externalFile = new Path('dir/a.dart');
+        fileInfo.externalFile = 'dir/a.dart';
         var pathInfo = _newPathInfo('', 'out', true);
         var emitter = new MainPageEmitter(fileInfo, false);
         emitter.run(doc, pathInfo, null, false);
@@ -437,5 +436,4 @@ Context _recurse(Element elem, bool isClass, int child) {
 }
 
 _newPathInfo(String baseDir, String outDir, bool forceMangle) =>
-    new PathInfo(new Path(baseDir), new Path(outDir), new Path('packages'),
-        forceMangle);
+    new PathInfo(baseDir, outDir, 'packages', forceMangle);

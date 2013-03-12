@@ -7,7 +7,6 @@ library browser;
 import 'dart:async';
 import 'dart:math';
 import 'dart:html';
-import 'path.dart';
 import 'package:web_ui/src/file_system.dart' as fs;
 import 'package:js/js.dart' as js;
 
@@ -45,15 +44,15 @@ class BrowserFileSystem implements fs.FileSystem {
     return new Future.immediate(null);
   }
 
-  void writeString(Path path, String text) {
+  void writeString(String path, String text) {
     _filesToProxy['$_uriScheme://$path'] = text;
   }
 
   // TODO(jmesserly): read bytes on browsers that support XHR v2
   // Or restructure the code to use the browser's builtin HTML parser :)
-  Future readTextOrBytes(Path path) => readText(path);
+  Future readTextOrBytes(String path) => readText(path);
 
-  Future<String> readText(Path path) {
+  Future<String> readText(String path) {
     // We must add a random id or a timestamp to defeat proxy servers and Chrome
     // caching when accessing file urls.
     var uniqueUrl = '$_uriScheme://$path?random_id=${_random.nextDouble()}';

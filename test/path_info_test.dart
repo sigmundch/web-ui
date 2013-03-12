@@ -8,10 +8,10 @@
  */
 library path_info_test;
 
+import 'package:pathos/path.dart' as path;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/info.dart';
-import 'package:web_ui/src/file_system/path.dart' show Path;
 import 'testing.dart';
 
 
@@ -22,16 +22,16 @@ main() {
       test('mangle automatic', () {
         var paths = _newPathInfo('a', 'a', false);
         var file = _mockFile('a/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'a/_b.dart.dart');
       });
 
       test('within packages/', () {
         var paths = _newPathInfo('a', 'a', false);
         var file = _mockFile('a/packages/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/packages/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/packages/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'a/_from_packages/_b.dart.dart');
       });
     });
@@ -71,8 +71,8 @@ main() {
 
     test('transformUrl simple paths', () {
       var paths = _newPathInfo('a', 'a', false);
-      var file1 = new Path('a/b.dart');
-      var file2 = new Path('a/c/d.html');
+      var file1 = 'a/b.dart';
+      var file2 = 'a/c/d.html';
       // when the output == input directory, no paths should be rewritten
       expect(paths.transformUrl(file1, '/a.dart'), '/a.dart');
       expect(paths.transformUrl(file1, 'c.dart'), 'c.dart');
@@ -88,7 +88,7 @@ main() {
 
     test('transformUrl with source in packages/', () {
       var paths = _newPathInfo('a', 'a', false);
-      var file = new Path('a/packages/e.html');
+      var file = 'a/packages/e.html';
       // Even when output == base, files under packages/ are moved to
       // _from_packages, so all imports are affected:
       expect(paths.transformUrl(file, 'e.css'), '../packages/e.css');
@@ -105,32 +105,32 @@ main() {
       test('no force mangle', () {
         var paths = _newPathInfo('a', 'out', false);
         var file = _mockFile('a/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'out/b.dart');
       });
 
       test('force mangling', () {
         var paths = _newPathInfo('a', 'out', true);
         var file = _mockFile('a/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'out/_b.dart.dart');
       });
 
       test('within packages/, no mangle', () {
         var paths = _newPathInfo('a', 'out', false);
         var file = _mockFile('a/packages/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/packages/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/packages/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'out/_from_packages/b.dart');
       });
 
       test('within packages/, mangle', () {
         var paths = _newPathInfo('a', 'out', true);
         var file = _mockFile('a/packages/b.dart', paths);
-        expect(file.inputPath.toString(), 'a/packages/b.dart');
-        expect(paths.outputPath(file.inputPath, '.dart').toString(),
+        expect(file.dartCodePath, 'a/packages/b.dart');
+        expect(paths.outputPath(file.dartCodePath, '.dart').toString(),
             'out/_from_packages/_b.dart.dart');
       });
     });
@@ -199,8 +199,8 @@ main() {
     group('transformUrl', () {
       test('simple source, not in packages/', () {
         var paths = _newPathInfo('a', 'out', false);
-        var file1 = new Path('a/b.dart');
-        var file2 = new Path('a/c/d.html');
+        var file1 = 'a/b.dart';
+        var file2 = 'a/c/d.html';
         // when the output == input directory, no paths should be rewritten
         expect(paths.transformUrl(file1, '/a.dart'), '/a.dart');
         expect(paths.transformUrl(file1, 'c.dart'), '../a/c.dart');
@@ -229,7 +229,7 @@ main() {
 
       test('input in packages/', () {
         var paths = _newPathInfo('a', 'out', true);
-        var file = new Path('a/packages/e.html');
+        var file = 'a/packages/e.html';
         expect(paths.transformUrl(file, 'e.css'), '../../a/packages/e.css');
         expect(paths.transformUrl(file, '../packages/e.css'),
             '../../a/packages/e.css');
@@ -242,16 +242,14 @@ main() {
 }
 
 _newPathInfo(String baseDir, String outDir, bool forceMangle) =>
-    new PathInfo(new Path(baseDir), new Path(outDir), new Path('packages'),
-        forceMangle);
+    new PathInfo(baseDir, outDir, 'packages', forceMangle);
 
-_mockFile(String path, PathInfo paths) {
-  var filePath = new Path(path);
+_mockFile(String filePath, PathInfo paths) {
   var file = new FileInfo(filePath);
-  file.outputFilename = paths.mangle(filePath.filename, '.dart', false);
+  file.outputFilename = paths.mangle(path.basename(filePath), '.dart', false);
   return file;
 }
 
-_checkPath(String path, String expected) {
-  expect(new Path(path).canonicalize().toString(), expected);
+_checkPath(String filePath, String expected) {
+  expect(path.normalize(filePath), expected);
 }

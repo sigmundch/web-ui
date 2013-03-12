@@ -14,7 +14,6 @@
 library web_ui.src.summary;
 
 import 'package:source_maps/span.dart' show Span;
-import 'file_system/path.dart';
 
 /**
  * Summary information from other library-like objects, which includes HTML
@@ -22,12 +21,12 @@ import 'file_system/path.dart';
  */
 class LibrarySummary {
   /** Path to the sources represented by this summary. */
-  final Path inputPath;
+  final String dartCodePath;
 
   /** Name given to this source after it was compiled. */
   final String outputFilename;
 
-  LibrarySummary(this.inputPath, this.outputFilename);
+  LibrarySummary(this.dartCodePath, this.outputFilename);
 }
 
 /** Summary information for an HTML file that defines custom elements. */
@@ -38,8 +37,8 @@ class HtmlFileSummary extends LibrarySummary {
    */
   final Map<String, ComponentSummary> components;
 
-  HtmlFileSummary(Path inputPath, String outputFilename, this.components)
-      : super(inputPath, outputFilename);
+  HtmlFileSummary(String dartCodePath, String outputFilename, this.components)
+      : super(dartCodePath, outputFilename);
 }
 
 /** Information about a web component definition. */
@@ -71,10 +70,10 @@ class ComponentSummary extends LibrarySummary {
   /** Original span where this component is declared. */
   final Span sourceSpan;
 
-  ComponentSummary(Path inputPath, String outputFilename,
+  ComponentSummary(String dartCodePath, String outputFilename,
       this.tagName, this.extendsTag, this.className, this.extendsComponent,
       this.sourceSpan, [this.hasConflict = false])
-      : super(inputPath, outputFilename);
+      : super(dartCodePath, outputFilename);
 
   /**
    * Gets the HTML tag extended by the base of the component hierarchy.

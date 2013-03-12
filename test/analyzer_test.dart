@@ -10,7 +10,6 @@ import 'package:logging/logging.dart';
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/analyzer.dart';
-import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/files.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/messages.dart';
@@ -585,8 +584,7 @@ main() {
         '</head>'
         '<body><link rel="components" href="quuux.html">'
       ));
-      expect(info.componentLinks, equals([
-          new Path('foo.html'), new Path('quux.html')]));
+      expect(info.componentLinks, equals(['foo.html', 'quux.html']));
     });
 
     test('package links are resolved against package root', () {
@@ -598,8 +596,8 @@ main() {
         '<body><link rel="components" href="quuux.html">'
       ), packageRoot: '/my/packages');
       expect(info.componentLinks, equals([
-          new Path('/my/packages/foo/foo.html'),
-          new Path('/my/packages/quux/quux.html')]));
+          '/my/packages/foo/foo.html',
+          '/my/packages/quux/quux.html']));
     });
 
     test('custom element definitions', () {
@@ -669,8 +667,8 @@ main() {
           '<element name="x-quux" constructor="Quux2"></element>'
         '</body>'
       );
-      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, new Path(''), messages);
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile, '', messages);
       expect(info.declaredComponents.length, equals(2));
 
       // no conflicts yet.
@@ -679,7 +677,7 @@ main() {
 
       var quuxElement = doc.query('element');
       expect(quuxElement, isNotNull);
-      analyzeFile(srcFile, toPathMap({'main.html': info }), new IntIterator(),
+      analyzeFile(srcFile, {'main.html': info }, new IntIterator(),
           messages);
 
       expect(info.components.length, equals(1));
@@ -820,11 +818,11 @@ main() {
 
     test('binds components in same file', () {
       var doc = parse('<body><x-foo><element name="x-foo" constructor="Foo">');
-      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, new Path(''), messages);
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile, '', messages);
       expect(info.declaredComponents.length, equals(1));
 
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
+      analyzeFile(srcFile, { 'main.html': info }, new IntIterator(),
           messages);
       expect(info.components.keys, equals(['x-foo']));
       expect(info.query('x-foo').component, equals(info.declaredComponents[0]));
@@ -838,7 +836,6 @@ main() {
       });
 
       var fileInfo = analyzeFiles(files);
-
       var info = fileInfo['index.html'];
       expect(info.declaredComponents.length, isZero);
       expect(info.components.keys, equals(['x-foo']));
@@ -918,10 +915,9 @@ main() {
         '</body>'
       );
 
-      var srcFile = new SourceFile(new Path('main.html'))..document = doc;
-      var info = analyzeDefinitions(srcFile, new Path(''), messages);
-      analyzeFile(srcFile, toPathMap({ 'main.html': info }), new IntIterator(),
-          messages);
+      var srcFile = new SourceFile('main.html')..document = doc;
+      var info = analyzeDefinitions(srcFile, '', messages);
+      analyzeFile(srcFile, { 'main.html': info }, new IntIterator(), messages);
     });
 
     test('components extends another component', () {
@@ -969,7 +965,7 @@ _compareSummary(ComponentSummary summary, ComponentSummary other) {
     expect(other, isNull);
     return;
   }
-  expect(summary.inputPath, equals(other.inputPath));
+  expect(summary.dartCodePath, equals(other.dartCodePath));
   expect(summary.outputFilename, equals(other.outputFilename));
   expect(summary.tagName, equals(other.tagName));
   expect(summary.extendsTag, equals(other.extendsTag));

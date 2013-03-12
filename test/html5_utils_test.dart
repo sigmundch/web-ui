@@ -12,17 +12,18 @@ library html_type_test;
 
 import 'dart:io';
 import 'package:html5lib/dom.dart';
+import 'package:pathos/path.dart' as path;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
-import 'package:web_ui/src/html5_utils.dart';
 import 'package:web_ui/src/html5_setters.g.dart';
+import 'package:web_ui/src/html5_utils.dart';
+
 import 'testing.dart';
 
 main() {
   useCompactVMConfiguration();
-  var cwd = new Path(new Directory.current().path);
-  var dir = cwd.join(new Path(new Options().script).directoryPath)
-      .append('data').append('output');
+  var dir = path.join(
+      path.absolute(path.dirname(new Options().script)), 'data', 'output');
 
   test('generate type test for tag -> element mapping', () {
     var code = new StringBuffer();
@@ -33,7 +34,7 @@ main() {
 
     // Note: name is important for this to get picked up by run.sh
     // We don't analyze here, but run.sh will analyze it.
-    new File.fromPath(dir.append('html5_utils_test_tag_bootstrap.dart'))
+    new File(path.join(dir, 'html5_utils_test_tag_bootstrap.dart'))
         .writeAsStringSync(code.toString());
   });
 
@@ -54,7 +55,7 @@ main() {
 
     // Note: name is important for this to get picked up by run.sh
     // We don't analyze here, but run.sh will analyze it.
-    new File.fromPath(dir.append('html5_utils_test_attr_bootstrap.dart'))
+    new File(path.join(dir, 'html5_utils_test_attr_bootstrap.dart'))
         .writeAsStringSync(code.toString());
   });
 }

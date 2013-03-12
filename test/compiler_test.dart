@@ -11,7 +11,6 @@ import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/compiler.dart';
 import 'package:web_ui/src/file_system.dart';
-import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/options.dart';
 import 'testing.dart';
 import 'package:web_ui/src/messages.dart';
@@ -28,7 +27,7 @@ main() {
     var options = CompilerOptions.parse([
         '--no-colors', '-o', 'out', 'index.html']);
     var fs = new MockFileSystem(files);
-    return new Compiler(fs, options, messages, currentDir: '.');
+    return new Compiler(fs, options, messages);
   }
 
   test('recursive dependencies', () {
@@ -54,7 +53,7 @@ main() {
         'bar.html': 1
       }), reason: 'Actual:\n  ${fs.readCount}');
 
-      var outputs = compiler.output.map((o) => o.path.toString());
+      var outputs = compiler.output.map((o) => o.path);
       expect(outputs, equals([
         'out/index.html.dart',
         'out/index.html.dart.map',
@@ -79,15 +78,14 @@ class MockFileSystem extends FileSystem {
 
   MockFileSystem(this._files);
 
-  Future readTextOrBytes(Path filename) => readText(filename);
+  Future readTextOrBytes(String filename) => readText(filename);
 
-  Future<String> readText(Path filename) {
-    var path = filename.toString();
+  Future<String> readText(String path) {
     readCount[path] = readCount.putIfAbsent(path, () => 0) + 1;
     return new Future.immediate(_files[path]);
   }
 
   // Compiler doesn't call these
-  void writeString(Path outfile, String text) {}
+  void writeString(String outfile, String text) {}
   Future flush() {}
 }

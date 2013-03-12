@@ -13,6 +13,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' show min;
 import 'dart:utf' show encodeUtf8;
+import 'package:pathos/path.dart' as path;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/dwc.dart' as dwc;
@@ -51,21 +52,20 @@ main() {
   addGroup('utils_test.dart', utils_test.main);
   addGroup('watcher_test.dart', watcher_test.main);
 
-  var cwd = new Path(new Directory.current().path);
-  var scriptDir = cwd.join(new Path(new Options().script).directoryPath);
-  var dataDir = scriptDir.append('data');
-  var inputDir = dataDir.append('input');
-  var expectedDir = dataDir.append('expected');
-  var outDir = dataDir.append('output');
+  var scriptDir = path.absolute(path.dirname(new Options().script));
+  var dataDir = path.join(scriptDir, 'data');
+  var inputDir = path.join(dataDir, 'input');
+  var expectedDir = path.join(dataDir, 'expected');
+  var outDir = path.join(dataDir, 'output');
 
-  var paths = new Directory.fromPath(inputDir).listSync()
+  var paths = new Directory(inputDir).listSync()
       .where((f) => f is File).map((f) => f.path)
       .where((p) => p.endsWith('_test.html') && pattern.hasMatch(p));
 
-  for (var path in paths) {
-    var filename = new Path(path).filename;
+  for (var filePath in paths) {
+    var filename = path.basename(filePath);
     test('drt-compile $filename', () {
-      expect(dwc.run(['-o', '$outDir', path], printTime: false)
+      expect(dwc.run(['-o', outDir, filePath], printTime: false)
         .then((res) {
           expect(res.messages.length, 0, reason: res.messages.join('\n'));
         }), completes);
@@ -73,14 +73,14 @@ main() {
   }
 
   if (!paths.isEmpty) {
-    var filenames = paths.map((p) => new Path(p).filename).toList();
+    var filenames = paths.map(path.basename).toList();
     // Sort files to match the order in which run.sh runs diff.
     filenames.sort();
     var outs;
 
     test('drt-run', () {
       var inputUrls = filenames.map(
-          (name) => 'file://${outDir.append(name)}').toList();
+          (name) => 'file://${path.join(outDir, name)}').toList();
       expect(Process.run('DumpRenderTree', inputUrls).then((res) {
         expect(res.exitCode, 0, reason: 'DumpRenderTree exit code: '
           '${res.exitCode}. Contents of stderr: \n${res.stderr}');
@@ -98,8 +98,8 @@ main() {
         expect(outs, isNotNull, reason:
           'Output not available, maybe DumpRenderTree failed to run.');
         var output = outs[j];
-        var outPath = outDir.append('$filename.txt').toString();
-        var expectedPath = expectedDir.append('$filename.txt').toString();
+        var outPath = path.join(outDir, '$filename.txt');
+        var expectedPath = path.join(expectedDir, '$filename.txt');
         new File(outPath).writeAsStringSync(output);
         var expected = new File(expectedPath).readAsStringSync();
         expect(output, new SmartStringMatcher(expected),

@@ -9,7 +9,6 @@ import 'dart:json' as json;
 import 'package:source_maps/span.dart' show Span;
 import 'package:logging/logging.dart' show Level;
 
-import 'file_system/path.dart';
 import 'options.dart';
 import 'utils.dart';
 
@@ -26,7 +25,7 @@ final Map<Level, String> _ERROR_COLORS = (() {
 class Message {
   final Level level;
   final String message;
-  final Path file;
+  final String file;
   final Span span;
   final bool useColors;
 
@@ -60,7 +59,7 @@ class Message {
     var value = {
       'method': kind,
       'params': {
-        'file': file.toString(),
+        'file': file,
         'message': message,
         'line': span == null ? 1 : span.start.line + 1,
       }
@@ -100,7 +99,7 @@ class Messages {
   }
 
   /** [message] is considered a static compile-time error by the Dart lang. */
-  void error(String message, Span span, {Path file}) {
+  void error(String message, Span span, {String file}) {
     var msg = new Message(Level.SEVERE, message, file: file, span: span,
         useColors: options.useColors);
 
@@ -109,7 +108,7 @@ class Messages {
   }
 
   /** [message] is considered a type warning by the Dart lang. */
-  void warning(String message, Span span, {Path file}) {
+  void warning(String message, Span span, {String file}) {
     if (options.warningsAsErrors) {
       error(message, span, file: file);
     } else {
@@ -133,7 +132,7 @@ class Messages {
    * [message] at [file] will tell the user about what the compiler
    * is doing.
    */
-  void info(String message, Span span, {Path file}) {
+  void info(String message, Span span, {String file}) {
     var msg = new Message(Level.INFO, message, file: file, span: span,
         useColors: options.useColors);
 

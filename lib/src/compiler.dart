@@ -12,6 +12,7 @@ import 'package:csslib/parser.dart' as css;
 import 'package:csslib/visitor.dart' show InfoVisitor, StyleSheet, treeToDebugString;
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/parser.dart';
+import 'package:pathos/path.dart' as path;
 
 import 'analyzer.dart';
 import 'code_printer.dart';
@@ -19,7 +20,6 @@ import 'codegen.dart' as codegen;
 import 'dart_parser.dart';
 import 'emitters.dart';
 import 'file_system.dart';
-import 'file_system/path.dart';
 import 'files.dart';
 import 'html_cleaner.dart';
 import 'html_css_fixup.dart';
@@ -37,7 +37,7 @@ import 'utils.dart';
  *
  * Adds emitted error/warning to [messages], if [messages] is supplied.
  */
-Document parseHtml(contents, Path sourcePath, Messages messages) {
+Document parseHtml(contents, String sourcePath, Messages messages) {
   var parser = new HtmlParser(contents, generateSpans: true,
       sourceUrl: sourcePath.toString());
   var document = parser.parse();
@@ -57,7 +57,7 @@ class Compiler {
   final List<SourceFile> files = <SourceFile>[];
   final List<OutputFile> output = <OutputFile>[];
 
-  Path _mainPath;
+  String _mainPath;
   PathInfo _pathInfo;
   Messages _messages;
 
@@ -67,7 +67,7 @@ class Compiler {
   bool _useObservers = false;
 
   /** Information about source [files] given their href. */
-  final Map<Path, FileInfo> info = new SplayTreeMap<Path, FileInfo>();
+  final Map<String, FileInfo> info = new SplayTreeMap<String, FileInfo>();
   final _edits = new Map<DartCodeInfo, TextEditTransaction>();
 
  /**
@@ -76,44 +76,31 @@ class Compiler {
   * Adds emitted error/warning messages to [messages], if [messages] is
   * supplied.
   */
-  Compiler(this.fileSystem, this.options, this._messages, {String currentDir}) {
-    _mainPath = new Path(options.inputFile);
-    var mainDir = _mainPath.directoryPath;
-    var basePath =
-        options.baseDir != null ? new Path(options.baseDir) : mainDir;
-    var outputPath =
-        options.outputDir != null ? new Path(options.outputDir) : mainDir;
-    var packageRoot = options.packageRoot != null
-        ? new Path(options.packageRoot)
-        : _mainPath.directoryPath.join(new Path('packages'));
+  Compiler(this.fileSystem, this.options, this._messages) {
+    _mainPath = options.inputFile;
+    var mainDir = path.dirname(_mainPath);
+    var baseDir = options.baseDir != null ? options.baseDir : mainDir;
+    var outputDir = options.outputDir != null ? options.outputDir : mainDir;
+    var packageRoot = options.packageRoot != null ? options.packageRoot
+        : path.join(path.dirname(_mainPath), 'packages');
 
     // Normalize paths - all should be relative or absolute paths.
-    bool anyAbsolute = _mainPath.isAbsolute || basePath.isAbsolute ||
-        outputPath.isAbsolute || packageRoot.isAbsolute;
-    bool allAbsolute = _mainPath.isAbsolute && basePath.isAbsolute &&
-        outputPath.isAbsolute || packageRoot.isAbsolute;
-    if (anyAbsolute && !allAbsolute) {
-      if (currentDir == null)  {
-        _messages.error('internal error: could not normalize paths. Please '
-            'make the input, base, and output paths all absolute or relative, '
-            'or specify "currentDir" to the Compiler constructor', null);
-        return;
-      }
-      var currentPath = new Path(currentDir);
-      if (!_mainPath.isAbsolute) _mainPath = currentPath.join(_mainPath);
-      if (!basePath.isAbsolute) basePath = currentPath.join(basePath);
-      if (!outputPath.isAbsolute) outputPath = currentPath.join(outputPath);
-      if (!packageRoot.isAbsolute) {
-        packageRoot = currentPath.join(packageRoot);
+    if (path.isAbsolute(_mainPath) || path.isAbsolute(baseDir) ||
+        path.isAbsolute(outputDir) || path.isAbsolute(packageRoot)) {
+      if (path.isRelative(_mainPath)) _mainPath = path.absolute(_mainPath);
+      if (path.isRelative(baseDir)) baseDir = path.absolute(baseDir);
+      if (path.isRelative(outputDir)) outputDir = path.absolute(outputDir);
+      if (path.isRelative(packageRoot)) {
+        packageRoot = path.absolute(packageRoot);
       }
     }
-    _pathInfo = new PathInfo(basePath, outputPath, packageRoot,
+    _pathInfo = new PathInfo(baseDir, outputDir, packageRoot,
         options.forceMangle);
   }
 
   /** Compile the application starting from the given [mainFile]. */
   Future run() {
-    if (_mainPath.filename.endsWith('.dart')) {
+    if (path.basename(_mainPath).endsWith('.dart')) {
       _messages.error("Please provide an HTML file as your entry point.",
           null, file: _mainPath);
       return new Future.immediate(null);
@@ -130,7 +117,7 @@ class Compiler {
    * to load and parse. Returns a future that completes when all files are
    * processed.
    */
-  Future _parseAndDiscover(Path inputFile) {
+  Future _parseAndDiscover(String inputFile) {
     _tasks = new FutureGroup();
     _processed = new Set();
     _processed.add(inputFile);
@@ -192,17 +179,17 @@ class Compiler {
   }
 
   void _setOutputFilenames(FileInfo fileInfo) {
-    var path = fileInfo.inputPath;
-    fileInfo.outputFilename =
-        _pathInfo.mangle(path.filename, '.dart', path.extension == 'html');
+    var filePath = fileInfo.dartCodePath;
+    fileInfo.outputFilename = _pathInfo.mangle(path.basename(filePath),
+        '.dart', path.extension(filePath) == '.html');
     for (var component in fileInfo.declaredComponents) {
       var externalFile = component.externalFile;
       var name = null;
       if (externalFile != null) {
-        name = _pathInfo.mangle(externalFile.filename, '.dart');
+        name = _pathInfo.mangle(path.basename(externalFile), '.dart');
       } else {
         var declaringFile = component.declaringFile;
-        var prefix = declaringFile.path.filename;
+        var prefix = path.basename(declaringFile.inputPath);
         if (declaringFile.declaredComponents.length == 1
             && !declaringFile.codeAttached && !declaringFile.isEntryPoint) {
           name = _pathInfo.mangle(prefix, '.dart', true);
@@ -217,27 +204,27 @@ class Compiler {
   }
 
   /** Asynchronously parse [path] as an .html file. */
-  Future<SourceFile> _parseHtmlFile(Path path) {
-    return fileSystem.readTextOrBytes(path).then((source) {
-          var file = new SourceFile(path);
-          file.document = _time('Parsed', path,
-              () => parseHtml(source, path, _messages));
+  Future<SourceFile> _parseHtmlFile(String filePath) {
+    return fileSystem.readTextOrBytes(filePath).then((source) {
+          var file = new SourceFile(filePath);
+          file.document = _time('Parsed', filePath,
+              () => parseHtml(source, filePath, _messages));
           return file;
         })
-        .catchError((e) => _readError(e, path));
+        .catchError((e) => _readError(e, filePath));
   }
 
   /** Parse [filename] and treat it as a .dart file. */
-  Future<SourceFile> _parseDartFile(Path path) {
-    return fileSystem.readText(path)
-        .then((code) => new SourceFile(path, type: SourceFile.DART)
+  Future<SourceFile> _parseDartFile(String filePath) {
+    return fileSystem.readText(filePath)
+        .then((code) => new SourceFile(filePath, type: SourceFile.DART)
             ..code = code)
-        .catchError((e) => _readError(e, path));
+        .catchError((e) => _readError(e, filePath));
   }
 
-  SourceFile _readError(error, Path path) {
+  SourceFile _readError(error, String filePath) {
     _messages.error('exception while reading file, original message:\n $error',
-        null, file: path);
+        null, file: filePath);
 
     return null;
   }
@@ -250,9 +237,9 @@ class Compiler {
     var fileInfo = new FileInfo(dartFile.path);
     info[dartFile.path] = fileInfo;
     fileInfo.inlinedCode =
-        parseDartCode(fileInfo.path, dartFile.code, _messages);
+        parseDartCode(fileInfo.inputPath, dartFile.code, _messages);
     fileInfo.outputFilename =
-        _pathInfo.mangle(dartFile.path.filename, '.dart', false);
+        _pathInfo.mangle(path.basename(dartFile.path), '.dart', false);
 
     _processImports(fileInfo);
   }
@@ -275,11 +262,11 @@ class Compiler {
   }
 
   /** Parse [filename] and treat it as a .dart file. */
-  Future<SourceFile> _parseStyleSheetFile(Path path) {
-    return fileSystem.readText(path)
+  Future<SourceFile> _parseStyleSheetFile(String filePath) {
+    return fileSystem.readText(filePath)
         .then((code) =>
-            new SourceFile(path, type: SourceFile.STYLESHEET)..code = code)
-        .catchError((e) => _readError(e, path));
+            new SourceFile(filePath, type: SourceFile.STYLESHEET)..code = code)
+        .catchError((e) => _readError(e, filePath));
   }
 
   void _processStyleSheetFile(SourceFile cssFile) {
@@ -290,16 +277,15 @@ class Compiler {
     var fileInfo = new FileInfo(cssFile.path);
     info[cssFile.path] = fileInfo;
 
-    var uriVisitor = new UriVisitor(_pathInfo, _mainPath, fileInfo.path,
+    var uriVisitor = new UriVisitor(_pathInfo, _mainPath, fileInfo.inputPath,
         options.rewriteUrls);
-    var styleSheet = _parseCss(cssFile.path.toString(),
-        cssFile.code, uriVisitor, options);
+    var styleSheet = _parseCss(cssFile.path, cssFile.code, uriVisitor, options);
     if (styleSheet != null) {
       fileInfo.styleSheets.add(styleSheet);
     }
   }
 
-  Path _getDirectivePath(LibraryInfo libInfo, Directive directive) {
+  String _getDirectivePath(LibraryInfo libInfo, Directive directive) {
     var uriDirective = (directive as UriBasedDirective).uri;
     var uri = uriDirective.value;
     if (uri.startsWith('dart:')) return null;
@@ -308,9 +294,10 @@ class Compiler {
       // Don't process our own package -- we'll implement @observable manually.
       if (uri.startsWith('package:web_ui/')) return null;
 
-      return _pathInfo.packageRoot.join(new Path(uri.substring(8)));
+      return path.join(_pathInfo.packageRoot, uri.substring(8));
     } else {
-      return libInfo.inputPath.directoryPath.join(new Path(uri));
+      return path.normalize(
+          path.join(path.dirname(libInfo.dartCodePath), uri));
     }
   }
 
@@ -371,7 +358,7 @@ class Compiler {
     for (var lib in libs) {
       if (seen.contains(lib.inlinedCode)) {
         throw new StateError('internal error: '
-            'duplicate user code for ${lib.inputPath}. Files were: $files');
+            'duplicate user code for ${lib.dartCodePath}. Files were: $files');
       }
       seen.add(lib.inlinedCode);
     }
@@ -406,7 +393,7 @@ class Compiler {
           transaction.edit(pos, pos, "\nimport "
               "'package:web_ui/observe/observable.dart' as __observe;\n");
         }
-        _emitFileAndSourceMaps(lib, transaction.commit(), lib.inputPath);
+        _emitFileAndSourceMaps(lib, transaction.commit(), lib.dartCodePath);
       }
     }
   }
@@ -467,7 +454,8 @@ class Compiler {
         newUri = _pathInfo.relativePath(library, importInfo).toString();
       } else if (options.rewriteUrls) {
         // Get the relative path to the input file.
-        newUri = _pathInfo.transformUrl(library.inputPath, directive.uri.value);
+        newUri = _pathInfo.transformUrl(library.dartCodePath,
+            directive.uri.value);
       }
       if (newUri != null) {
         directive.uri = createStringLiteral(newUri);
@@ -495,8 +483,8 @@ class Compiler {
         cleanHtmlNodes(fileInfo);
         if (!fileInfo.isEntryPoint) {
           // Check all components files for <style> tags and parse the CSS.
-          var uriVisitor = new UriVisitor(_pathInfo, _mainPath, fileInfo.path,
-              options.rewriteUrls);
+          var uriVisitor = new UriVisitor(_pathInfo, _mainPath,
+              fileInfo.inputPath, options.rewriteUrls);
           _processStylesheet(uriVisitor, fileInfo, options: options);
         }
         fixupHtmlCss(fileInfo, options);
@@ -519,16 +507,17 @@ class Compiler {
     var printer = new MainPageEmitter(fileInfo, options.processCss)
         .run(file.document, _pathInfo, _edits[fileInfo.userCode],
             options.rewriteUrls);
-    _emitFileAndSourceMaps(fileInfo, printer, fileInfo.inputPath);
+    _emitFileAndSourceMaps(fileInfo, printer, fileInfo.dartCodePath);
   }
 
   /** Generate an html file with the (trimmed down) main html page. */
   void _emitMainHtml(SourceFile file) {
     var fileInfo = info[file.path];
 
-    var bootstrapName = '${file.path.filename}_bootstrap.dart';
-    var bootstrapPath = file.path.directoryPath.append(bootstrapName);
+    var bootstrapName = '${path.basename(file.path)}_bootstrap.dart';
+    var bootstrapPath = path.join(path.dirname(file.path), bootstrapName);
     var bootstrapOutPath = _pathInfo.outputPath(bootstrapPath, '');
+    var bootstrapOutName = path.basename(bootstrapOutPath);
     output.add(new OutputFile(bootstrapOutPath, codegen.bootstrapCode(
           _pathInfo.relativePath(new FileInfo(bootstrapPath), fileInfo),
           _useObservers)));
@@ -553,7 +542,7 @@ class Compiler {
           '</script>\n'));
     }
     document.body.nodes.add(parseFragment(
-      '<script type="application/dart" src="${bootstrapOutPath.filename}">'
+      '<script type="application/dart" src="$bootstrapOutName">'
       '</script>'
     ));
 
@@ -570,21 +559,19 @@ class Compiler {
 
   /** Generate an CSS file for all style sheets (main and components). */
   void _emitAllCss() {
-    var allCssBuff = new StringBuffer();
-    var mainFile;
+    var buff = new StringBuffer();
 
     // Emit all linked style sheet files first.
     for (var file in files) {
       var fileInfo = info[file.path];
-      if (fileInfo.isEntryPoint) mainFile = file;
       if (file.isStyleSheet) {
         for (var styleSheet in fileInfo.styleSheets) {
-          allCssBuff.write(
+          buff.write(
               '/* ==================================================== */\n'
-              '/* Linked style sheet href = ${file.path.filename} */\n'
+              '/* Linked style sheet href = ${path.basename(file.path)} */\n'
               '/* ==================================================== */\n');
-          allCssBuff.write(emitStyleSheet(styleSheet));
-          allCssBuff.write('\n\n');
+          buff.write(emitStyleSheet(styleSheet));
+          buff.write('\n\n');
         }
       }
     }
@@ -595,23 +582,21 @@ class Compiler {
         var fileInfo = info[file.path];
         for (var component in fileInfo.declaredComponents) {
           for (var styleSheet in component.styleSheets) {
-            allCssBuff.write(
+            buff.write(
                 '/* ==================================================== */\n'
                 '/* Component ${component.tagName} stylesheet */\n'
                 '/* ==================================================== */\n');
-            allCssBuff.write(emitStyleSheet(styleSheet, component.tagName));
-            allCssBuff.write('\n\n');
+            buff.write(emitStyleSheet(styleSheet, component.tagName));
+            buff.write('\n\n');
           }
         }
       }
     }
 
-    var allCss = allCssBuff.toString();
-    if (!allCss.isEmpty) {
-      var allCssFile = '${mainFile.path.filename}.css';
-      var allCssPath = mainFile.path.directoryPath.append(allCssFile);
-      var allCssOutPath = _pathInfo.outputPath(allCssPath, '');
-      output.add(new OutputFile(allCssOutPath, allCss));
+    if (!buff.isEmpty) {
+      var cssPath = path.join(_pathInfo.outputDirPath(_mainPath),
+          _pathInfo.mangle(path.basename(_mainPath), '.css', true));
+      output.add(new OutputFile(cssPath, buff.toString()));
     }
   }
 
@@ -635,32 +620,35 @@ class Compiler {
    * source map file.
    */
   void _emitFileAndSourceMaps(
-      LibraryInfo lib, CodePrinter printer, Path inputPath) {
+      LibraryInfo lib, CodePrinter printer, String dartCodePath) {
     // Bail if we had an error generating the code for the file.
     if (printer == null) return;
 
-    var path = _pathInfo.outputLibraryPath(lib);
-    var dir = path.directoryPath;
-    printer.add('\n//@ sourceMappingURL=${path.filename}.map');
-    printer.build(path.toString());
-    output.add(new OutputFile(path, printer.text, source: inputPath));
+    var libPath = _pathInfo.outputLibraryPath(lib);
+    var dir = path.dirname(libPath);
+    var filename = path.basename(libPath);
+    printer.add('\n//@ sourceMappingURL=$filename.map');
+    printer.build(libPath);
+    output.add(new OutputFile(libPath, printer.text, source: dartCodePath));
     // Fix-up the paths in the source map file
     var sourceMap = json.parse(printer.map);
     var urls = sourceMap['sources'];
     for (int i = 0; i < urls.length; i++) {
-      urls[i] = new Path(urls[i]).relativeTo(dir).toString();
+      urls[i] = path.relative(urls[i], from: dir);
     }
-    output.add(new OutputFile(dir.append('${path.filename}.map'),
+    output.add(new OutputFile(path.join(dir, '$filename.map'),
           json.stringify(sourceMap)));
   }
 
-  _time(String logMessage, Path path, callback(), {bool printTime: false}) {
+  _time(String logMessage, String filePath, callback(),
+      {bool printTime: false}) {
     var message = new StringBuffer();
     message.write(logMessage);
-    for (int i = (60 - logMessage.length - path.filename.length); i > 0 ; i--) {
+    var filename = path.basename(filePath);
+    for (int i = (60 - logMessage.length - filename.length); i > 0 ; i--) {
       message.write(' ');
     }
-    message.write(path.filename);
+    message.write(filename);
     return time(message.toString(), callback,
         printTime: options.verbose || printTime);
   }

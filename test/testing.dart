@@ -12,7 +12,6 @@ import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/options.dart';
 import 'package:web_ui/src/files.dart';
-import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/utils.dart';
 
 
@@ -28,8 +27,8 @@ ElementInfo analyzeElement(Element elem, Messages messages) {
 FileInfo analyzeDefinitionsInTree(Document doc, Messages messages,
     {String packageRoot: 'packages'}) {
 
-  return analyzeDefinitions(new SourceFile(new Path(''))..document = doc,
-      new Path(packageRoot), messages);
+  return analyzeDefinitions(new SourceFile('')..document = doc,
+      packageRoot, messages);
 }
 
 /** Parses files in [fileContents], with [mainHtmlFile] being the main file. */
@@ -38,7 +37,7 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 
   var result = <SourceFile>[];
   fileContents.forEach((filename, contents) {
-    var src = new SourceFile(new Path(filename));
+    var src = new SourceFile(filename);
     src.document = parse(contents);
     result.add(src);
   });
@@ -50,12 +49,11 @@ List<SourceFile> parseFiles(Map<String, String> fileContents,
 Map<String, FileInfo> analyzeFiles(List<SourceFile> files,
     {Messages messages, String packageRoot: 'packages'}) {
   messages = messages == null ? new Messages.silent() : messages;
-  var result = new Map<Path, FileInfo>();
-  var pkgRoot = new Path(packageRoot);
+  var result = new Map<String, FileInfo>();
 
   // analyze definitions
   for (var file in files) {
-    result[file.path] = analyzeDefinitions(file, pkgRoot, messages);
+    result[file.path] = analyzeDefinitions(file, packageRoot, messages);
   }
 
   // analyze file contents
@@ -63,21 +61,5 @@ Map<String, FileInfo> analyzeFiles(List<SourceFile> files,
   for (var file in files) {
     analyzeFile(file, result, uniqueIds, messages);
   }
-  return _toStringMap(result);
-}
-
-Map<Path, FileInfo> toPathMap(Map<String, FileInfo> map) {
-  var res = new Map<Path, FileInfo>();
-  for (var k in map.keys) {
-    res[new Path(k)] = map[k];
-  }
-  return res;
-}
-
-Map<String, FileInfo> _toStringMap(Map<Path, FileInfo> map) {
-  var res = new Map<String, FileInfo>();
-  for (var k in map.keys) {
-    res[k.toString()] = map[k];
-  }
-  return res;
+  return result;
 }

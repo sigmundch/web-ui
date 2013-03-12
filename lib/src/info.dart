@@ -16,9 +16,9 @@ import 'package:csslib/parser.dart' as css;
 import 'package:csslib/visitor.dart';
 import 'package:html5lib/dom.dart';
 import 'package:source_maps/span.dart' show Span;
+import 'package:pathos/path.dart' as path;
 
 import 'dart_parser.dart' show DartCodeInfo;
-import 'file_system/path.dart';
 import 'files.dart';
 import 'messages.dart';
 import 'summary.dart';
@@ -33,13 +33,13 @@ class PathInfo {
    * [_outputDir] is `g/h/`, then the corresponding output file for
    * `a/b/c/e/f.html` will be under `g/h/e/f.html.dart`.
    */
-  final Path _baseDir;
+  final String _baseDir;
 
   /** Base path where all output is generated. */
-  final Path _outputDir;
+  final String _outputDir;
 
   /** The package root directory. */
-  final Path packageRoot;
+  final String packageRoot;
 
   /** Whether to add prefixes and to output file names. */
   final bool _mangleFilenames;
@@ -47,7 +47,7 @@ class PathInfo {
   /** Default prefix added to all filenames. */
   static const String _DEFAULT_PREFIX = '_';
 
-  PathInfo(Path baseDir, Path outputDir, this.packageRoot, bool forceMangle)
+  PathInfo(String baseDir, String outputDir, this.packageRoot, bool forceMangle)
       : _baseDir = baseDir,
         _outputDir = outputDir,
         _mangleFilenames = forceMangle || (baseDir == outputDir);
@@ -64,17 +64,17 @@ class PathInfo {
    * Adds emitted error/warning messages to [messages], if [messages] is
    * supplied.
    */
-  bool checkInputPath(Path input, Messages messages) {
+  bool checkInputPath(String input, Messages messages) {
     if (_mangleFilenames) return true;
-    var canonicalized = input.canonicalize();
-    if (!canonicalized.relativeTo(_outputDir).toString().startsWith('../')) {
+    var canonicalized = path.normalize(input);
+    if (!path.relative(canonicalized, from: _outputDir).startsWith('../')) {
       messages.error(
           'The file ${input} cannot be processed. '
           'Files cannot be under the output folder (${_outputDir}).',
           null, file: input);
       return false;
     }
-    if (canonicalized.relativeTo(_baseDir).toString().startsWith('../')) {
+    if (path.relative(canonicalized, from: _baseDir).startsWith('../')) {
       messages.error(
           'The file ${input} cannot be processed. '
           'All processed files must be under the base folder (${_baseDir}), you'
@@ -89,17 +89,18 @@ class PathInfo {
    * The path to the output file corresponding to [input], by adding
    * [_DEFAULT_PREFIX] and a [suffix] to its file name.
    */
-  Path outputPath(Path input, String suffix) =>
-      outputDirPath(input).append(mangle(input.filename, suffix));
+  String outputPath(String input, String suffix) =>
+      path.join(outputDirPath(input), mangle(path.basename(input), suffix));
 
   /** The path to the output file corresponding to [info]. */
-  Path outputLibraryPath(LibrarySummary lib) =>
-      outputDirPath(lib.inputPath).append(lib.outputFilename);
+  String outputLibraryPath(LibrarySummary lib) =>
+      path.join(outputDirPath(lib.dartCodePath), lib.outputFilename);
 
   /** The corresponding output directory for [input]'s directory. */
-  Path outputDirPath(Path input) {
-    var outputSubdir = input.directoryPath.relativeTo(_baseDir);
-    return _rewritePackages(_outputDir.join(outputSubdir).canonicalize());
+  String outputDirPath(String input) {
+    return _rewritePackages(path.normalize(
+          path.join(_outputDir, path.relative(
+              path.dirname(input), from: _baseDir))));
   }
 
   /**
@@ -115,18 +116,12 @@ class PathInfo {
    * inside `packages/` for those components.  Instead we will generate such
    * code in a special directory called `_from_packages/`.
    */
-  Path _rewritePackages(Path outputPath) {
+  String _rewritePackages(String outputPath) {
     // TODO(jmesserly): this should match against packageRoot instead.
-    if (!outputPath.toString().contains('packages')) return outputPath;
-    var segments = outputPath.segments().map(
+    if (!outputPath.contains('packages')) return outputPath;
+    var segments = path.split(outputPath).map(
         (segment) => segment == 'packages' ? '_from_packages' : segment);
-    var rewrittenPath = segments.join('/');
-    if (outputPath.isAbsolute) {
-      // TODO(jmesserly): this is probably broken on Windows.
-      // We need to switch to package:pathos.
-      rewrittenPath = '/$rewrittenPath';
-    }
-    return new Path(rewrittenPath);
+    return path.joinAll(segments);
   }
 
   /**
@@ -134,11 +129,12 @@ class PathInfo {
    * [target] from the output library of [src]. In other words, a path to import
    * or export `target.outputFilename` from `src.outputFilename`.
    */
-  Path relativePath(LibrarySummary src, LibrarySummary target) {
-    var srcDir = src.inputPath.directoryPath;
-    var relDir = target.inputPath.directoryPath.relativeTo(srcDir);
-    return _rewritePackages(
-        relDir.append(target.outputFilename).canonicalize());
+  String relativePath(LibrarySummary src, LibrarySummary target) {
+    var srcDir = path.dirname(src.dartCodePath);
+    var relDir = path.relative(
+        path.dirname(target.dartCodePath), from: srcDir);
+    return _rewritePackages(path.normalize(
+          path.join(relDir, target.outputFilename)));
   }
 
   /**
@@ -149,13 +145,11 @@ class PathInfo {
    * directory back to the input directory. An exception will be thrown if
    * [target] is not under [_baseDir].
    */
-  String transformUrl(Path src, String target) {
+  String transformUrl(String src, String target) {
     if (new Uri.fromString(target).isAbsolute) return target;
-    var path = new Path(target);
-    if (path.isAbsolute) return target;
-    var pathToTarget = src.directoryPath.join(path);
-    var outputLibraryDir = outputDirPath(src);
-    return pathToTarget.relativeTo(outputLibraryDir).canonicalize().toString();
+    if (path.isAbsolute(target)) return target;
+    return path.normalize(path.relative(
+          path.join(path.dirname(src), target), from: outputDirPath(src)));
   }
 }
 
@@ -186,7 +180,7 @@ abstract class LibraryInfo extends Hashable implements LibrarySummary {
   DartCodeInfo inlinedCode;
 
   /** The name of the file sourced in a script tag, if any. */
-  Path externalFile;
+  String externalFile;
 
   /** Info asscociated with [externalFile], if any. */
   FileInfo externalCode;
@@ -198,7 +192,7 @@ abstract class LibraryInfo extends Hashable implements LibrarySummary {
   LibraryInfo htmlFile;
 
   /** File where the top-level code was defined. */
-  Path get inputPath;
+  String get dartCodePath;
 
   /**
    * Name of the file that will hold any generated Dart code for this library
@@ -237,7 +231,7 @@ abstract class LibraryInfo extends Hashable implements LibrarySummary {
 /** Information extracted at the file-level. */
 class FileInfo extends LibraryInfo implements HtmlFileSummary {
   /** Relative path to this file from the compiler's base directory. */
-  final Path path;
+  final String inputPath;
 
   /**
    * Whether this file should be treated as the entry point of the web app, i.e.
@@ -249,10 +243,10 @@ class FileInfo extends LibraryInfo implements HtmlFileSummary {
 
   // TODO(terry): Ensure that that the libraryName is a valid identifier:
   //              a..z || A..Z || _ [a..z || A..Z || 0..9 || _]*
-  String get libraryName => path.filename.replaceAll('.', '_');
+  String get libraryName => path.basename(inputPath).replaceAll('.', '_');
 
   /** File where the top-level code was defined. */
-  Path get inputPath => externalFile != null ? externalFile : path;
+  String get dartCodePath => externalFile != null ? externalFile : inputPath;
 
   /**
    * All custom element definitions in this file. This may contain duplicates.
@@ -269,15 +263,15 @@ class FileInfo extends LibraryInfo implements HtmlFileSummary {
       new SplayTreeMap<String, ComponentSummary>();
 
   /** Files imported with `<link rel="component">` */
-  final List<Path> componentLinks = <Path>[];
+  final List<String> componentLinks = <String>[];
 
   /** Files imported with `<link rel="stylesheet">` */
-  final List<Path> styleSheetHref = <Path>[];
+  final List<String> styleSheetHref = <String>[];
 
   /** Root is associated with the body info. */
   ElementInfo bodyInfo;
 
-  FileInfo(this.path, [this.isEntryPoint = false]);
+  FileInfo(this.inputPath, [this.isEntryPoint = false]);
 
   /**
    * Query for an ElementInfo matching the provided [tag], starting from the
@@ -326,8 +320,8 @@ class ComponentInfo extends LibraryInfo implements ComponentSummary {
   final Node template;
 
   /** File where this component was defined. */
-  Path get inputPath =>
-      externalFile != null ? externalFile : declaringFile.path;
+  String get dartCodePath =>
+      externalFile != null ? externalFile : declaringFile.inputPath;
 
   /**
    * True if [tagName] was defined by more than one component. If this happened
@@ -379,21 +373,21 @@ class ComponentInfo extends LibraryInfo implements ComponentSummary {
               'constructor="$oldCtor" attribute to the element declaration. '
               'Also custom tags are not required to start with "x-" if their '
               'name has at least one dash.',
-              element.sourceSpan, file: inputPath);
+              element.sourceSpan, file: dartCodePath);
         }
       }
 
       if (_classDeclaration == null) {
         messages.error('please provide a class definition '
             'for $className:\n $code', element.sourceSpan,
-            file: inputPath);
+            file: dartCodePath);
         return;
       }
     }
   }
 
   String toString() => '#<ComponentInfo $tagName '
-      '${inlinedCode != null ? "inline" : "from $inputPath"}>';
+      '${inlinedCode != null ? "inline" : "from $dartCodePath"}>';
 }
 
 /** Base tree visitor for the Analyzer infos. */

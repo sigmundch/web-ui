@@ -11,7 +11,6 @@ import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/html_cleaner.dart';
 import 'package:web_ui/src/info.dart';
 import 'package:web_ui/src/files.dart';
-import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/messages.dart';
 import 'testing.dart';
 
@@ -81,7 +80,7 @@ main() {
       '<element name="x-bar" constructor="Bar42"></element>'
       '</body></html>';
     var doc = parse(input);
-    var file = new SourceFile(new Path('main.html'))..document = doc;
+    var file = new SourceFile('main.html')..document = doc;
     var info = analyzeFiles([file])['main.html'];
     expect(doc.outerHtml, input);
     cleanHtmlNodes(info);

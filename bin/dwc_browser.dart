@@ -14,7 +14,6 @@ import 'dart:uri';
 import 'package:web_ui/src/compiler.dart';
 import 'package:web_ui/src/file_system.dart' as fs;
 import 'package:web_ui/src/file_system/browser.dart';
-import 'package:web_ui/src/file_system/path.dart';
 import 'package:web_ui/src/messages.dart';
 import 'package:web_ui/src/options.dart';
 import 'package:web_ui/src/utils.dart';

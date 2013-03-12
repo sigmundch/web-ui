@@ -14,7 +14,6 @@ import 'package:analyzer_experimental/src/generated/error.dart';
 import 'package:analyzer_experimental/src/generated/parser.dart';
 import 'package:analyzer_experimental/src/generated/scanner.dart';
 import 'package:source_maps/span.dart' show File, FileSegment, Location;
-import 'file_system/path.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'refactor.dart' show $CR, $LF;
@@ -93,7 +92,7 @@ SimpleStringLiteral createStringLiteral(String contents) {
  * Adds emitted error/warning messages to [messages], if [messages] is
  * supplied.
  */
-DartCodeInfo parseDartCode(Path path, String code, Messages messages,
+DartCodeInfo parseDartCode(String path, String code, Messages messages,
     [Location offset]) {
   var unit = parseCompilationUnit(code, path: path, messages: messages);
 
@@ -119,14 +118,14 @@ DartCodeInfo parseDartCode(Path path, String code, Messages messages,
   }
 
   var sourceFile = offset == null
-      ? new File.text(path.toString(), code)
-      : new FileSegment(path.toString(), code, offset);
+      ? new File.text(path, code)
+      : new FileSegment(path, code, offset);
 
   return new DartCodeInfo(libraryName, partName, directives, code,
       sourceFile, unit);
 }
 
-CompilationUnit parseCompilationUnit(String code, {Path path,
+CompilationUnit parseCompilationUnit(String code, {String path,
     Messages messages}) {
 
   var errorListener = new _ErrorCollector();
@@ -142,7 +141,7 @@ CompilationUnit parseCompilationUnit(String code, {Path path,
   // This used to convert parser messages into our messages. Enable this
   // once analyzer is fixed.
   if (false) {
-    var file = new File.text(path.toString(), code);
+    var file = new File.text(path, code);
     for (var e in errorListener.errors) {
       var span = file.span(e.offset, e.offset + e.length);
 

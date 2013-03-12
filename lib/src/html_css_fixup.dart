@@ -6,11 +6,11 @@ library html_css_fixup;
 
 import 'dart:json' as json;
 
+import 'package:csslib/visitor.dart';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
-import 'package:csslib/visitor.dart';
+import 'package:pathos/path.dart' as path;
 
-import 'file_system/path.dart';
 import 'info.dart';
 import 'messages.dart';
 import 'options.dart';
@@ -26,7 +26,7 @@ void fixupHtmlCss(FileInfo fileInfo, CompilerOptions opts) {
   // Walk the HTML tree looking for class names or id that are in our parsed
   // stylesheet selectors and making those CSS classes and ids unique to that
   // component.
-  if (opts.verbose) print("  CSS fixup ${fileInfo.path.filename}");
+  if (opts.verbose) print("  CSS fixup ${path.basename(fileInfo.inputPath)}");
   for (var component in fileInfo.declaredComponents) {
     // TODO(terry): Consider allowing more than one style sheet per component.
     // For components only 1 stylesheet allowed.
@@ -178,16 +178,23 @@ class _ScopedStyleRenamer extends InfoVisitor {
 
 /** Compute each CSS URI resource relative from the generated CSS file. */
 class UriVisitor extends Visitor {
-  final Path _relativePath;
+  /**
+   * Relative path from the output css file to the location of the original
+   * css file that contained the URI to each resource.
+   */
+  final String _pathToOriginalCss;
 
-  UriVisitor(PathInfo pathInfo, Path mainFile, Path cssFile, bool rewriteUrl)
-      : _relativePath = cssFile.relativeTo(
-          rewriteUrl ? pathInfo.outputDirPath(mainFile) : mainFile.directoryPath
-          ).directoryPath;
+  factory UriVisitor(
+      PathInfo pathInfo, String mainPath, String cssPath, bool rewriteUrl) {
+    var cssDir = path.dirname(cssPath);
+    var outCssDir = rewriteUrl ? pathInfo.outputDirPath(mainPath)
+        : path.dirname(mainPath);
+    return new UriVisitor._internal(path.relative(cssDir, from: outCssDir));
+  }
 
+  UriVisitor._internal(this._pathToOriginalCss);
 
   void visitUriTerm(UriTerm node) {
-    // TODO(terry): Needs to use pathos.
-    node.text = _relativePath.join(new Path(node.text)).toString();
+    node.text = path.join(_pathToOriginalCss, node.text);
   }
 }

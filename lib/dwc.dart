@@ -8,10 +8,11 @@ library dwc;
 import 'dart:async';
 import 'dart:io';
 import 'package:logging/logging.dart' show Level;
+import 'package:pathos/path.dart' as path;
+
 import 'src/compiler.dart';
 import 'src/file_system.dart';
 import 'src/file_system/console.dart';
-import 'src/file_system/path.dart' as fs;
 import 'src/files.dart';
 import 'src/messages.dart';
 import 'src/options.dart';
@@ -50,12 +51,10 @@ class CompilerResult {
     var file;
     var outs = new Map<String, String>();
     for (var out in outputs) {
-      if (out.path.filename.endsWith('_bootstrap.dart')) {
-        file = out.path.toString();
+      if (path.basename(out.path).endsWith('_bootstrap.dart')) {
+        file = out.path;
       }
-      var sourcePath = (out.source == null) ? null : out.source.toString();
-      var outputPath = out.path.toString();
-      outs[outputPath] = sourcePath;
+      outs[out.path] = out.source;
     }
     var inputs = files.map((f) => f.path.toString()).toList();
     var msgs = messages.messages.map((m) => m.toString()).toList();
@@ -77,9 +76,7 @@ Future<CompilerResult> run(List<String> args, {bool printTime: true}) {
   var messages = new Messages(options: options, shouldPrint: true);
 
   return asyncTime('Total time spent on ${options.inputFile}', () {
-    var currentDir = new Directory.current().path;
-    var compiler = new Compiler(fileSystem, options, messages,
-        currentDir: currentDir);
+    var compiler = new Compiler(fileSystem, options, messages);
     var res;
     return compiler.run()
       .then((_) {
@@ -96,23 +93,23 @@ Future emitFiles(List<OutputFile> outputs, bool clean) {
   return fileSystem.flush();
 }
 
-void writeFile(fs.Path path, String contents, bool clean) {
+void writeFile(String filePath, String contents, bool clean) {
   if (clean) {
-    File fileOut = new File.fromPath(_convert(path));
+    File fileOut = new File(filePath);
     if (fileOut.existsSync()) {
       fileOut.deleteSync();
     }
   } else {
-    _createIfNeeded(_convert(path.directoryPath));
-    fileSystem.writeString(path, contents);
+    _createIfNeeded(path.dirname(filePath));
+    fileSystem.writeString(filePath, contents);
   }
 }
 
-void _createIfNeeded(Path outdir) {
+void _createIfNeeded(String outdir) {
   if (outdir.isEmpty) return;
-  var outDirectory = new Directory.fromPath(outdir);
+  var outDirectory = new Directory(outdir);
   if (!outDirectory.existsSync()) {
-    _createIfNeeded(outdir.directoryPath);
+    _createIfNeeded(path.dirname(outdir));
     outDirectory.createSync();
   }
 }
@@ -133,30 +130,29 @@ Future symlinkPubPackages(CompilerResult result, CompilerOptions options,
     return new Future.immediate(null);
   }
 
-  var linkDir = new Path(result.bootstrapFile).directoryPath;
+  var linkDir = path.dirname(result.bootstrapFile);
   _createIfNeeded(linkDir);
-  var linkPath = linkDir.append('packages');
+  var linkPath = path.join(linkDir, 'packages');
   // A resolved symlink works like a directory
   // TODO(sigmund): replace this with something smarter once we have good
   // symlink support in dart:io
-  if (new Directory.fromPath(linkPath).existsSync()) {
+  if (new Directory(linkPath).existsSync()) {
     // Packages directory already exists.
     return new Future.immediate(null);
   }
 
   // A broken symlink works like a file
-  var toFile = new File.fromPath(linkPath);
+  var toFile = new File(linkPath);
   if (toFile.existsSync()) {
     toFile.deleteSync();
   }
 
-  var targetPath = new Path(options.inputFile).directoryPath.append('packages');
+  var targetPath = path.join(path.dirname(options.inputFile), 'packages');
   // [fullPathSync] will canonicalize the path, resolving any symlinks.
   // TODO(sigmund): once it's possible in dart:io, we just want to use a full
   // path, but not necessarily resolve symlinks.
-  var target = new File.fromPath(targetPath).fullPathSync().toString();
-  var link = linkPath.toNativePath().toString();
-  return createSymlink(target, link, messages: messages);
+  var target = new File(targetPath).fullPathSync().toString();
+  return createSymlink(target, linkPath, messages: messages);
 }
 
 
@@ -196,8 +192,3 @@ Future createSymlink(String target, String link, {Messages messages: null}) {
     return null;
   });
 }
-
-
-// TODO(sigmund): this conversion from dart:io paths to internal paths should
-// go away when dartbug.com/5818 is fixed.
-Path _convert(fs.Path path) => new Path(path.toString());

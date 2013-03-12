@@ -9,6 +9,7 @@ import 'package:csslib/parser.dart' as css;
 import 'package:csslib/visitor.dart';
 import 'package:html5lib/dom.dart';
 import 'package:html5lib/dom_parsing.dart';
+import 'package:pathos/path.dart' as path;
 import 'package:source_maps/span.dart' show Span, FileLocation;
 
 import 'code_printer.dart';
@@ -457,7 +458,8 @@ class WebComponentEmitter extends RecursiveEmitter {
         ? codeInfo.libraryName
         : info.tagName.replaceAll(new RegExp('[-./]'), '_');
     var header = new CodePrinter(0);
-    header.add(codegen.header(info.declaringFile.path, libraryName));
+    header.add(codegen.header(path.basename(info.declaringFile.inputPath),
+        libraryName));
     emitImports(codeInfo, info, pathInfo, header);
     header.addLine('');
     transaction.edit(0, codeInfo.directivesEnd, header);
@@ -526,6 +528,7 @@ class MainPageEmitter extends RecursiveEmitter {
 
   CodePrinter run(Document document, PathInfo pathInfo,
       TextEditTransaction transaction, bool rewriteUrls) {
+    var filePath = _fileInfo.inputPath;
     visit(_fileInfo.bodyInfo);
 
     // fix up the URLs to content that is not modified by the compiler
@@ -534,7 +537,7 @@ class MainPageEmitter extends RecursiveEmitter {
       if (tag.attributes['type'] == 'application/dart') {
         tag.remove();
       } else if (src != null && rewriteUrls) {
-        tag.attributes["src"] = pathInfo.transformUrl(_fileInfo.path, src);
+        tag.attributes["src"] = pathInfo.transformUrl(filePath, src);
       }
     });
     document.queryAll('link').forEach((tag) {
@@ -546,13 +549,14 @@ class MainPageEmitter extends RecursiveEmitter {
           rel == 'stylesheet' && !href.startsWith('http')) {
         tag.remove();
       } else if (href != null && rewriteUrls) {
-       tag.attributes['href'] = pathInfo.transformUrl(_fileInfo.path, href);
+       tag.attributes['href'] = pathInfo.transformUrl(filePath, href);
       }
     });
 
     if (_cssPolyfill) {
-      var linkElem = new Element.html('<link rel="stylesheet" type="text/css"'
-          ' href="${_fileInfo.path.filename}.css">');
+      var newCss = pathInfo.mangle(path.basename(filePath), '.css', true);
+      var linkElem = new Element.html(
+          '<link rel="stylesheet" type="text/css" href="$newCss">');
       var head = document.head;
       head.insertBefore(linkElem,
           head.hasChildNodes() ? head.nodes.first : null);
@@ -571,7 +575,7 @@ class MainPageEmitter extends RecursiveEmitter {
     var libraryName = codeInfo.libraryName != null
         ? codeInfo.libraryName : _fileInfo.libraryName;
     var header = new CodePrinter(0);
-    header.add(codegen.header(_fileInfo.path, libraryName));
+    header.add(codegen.header(path.basename(filePath), libraryName));
     emitImports(codeInfo, _fileInfo, pathInfo, header);
     header..addLine('')
           ..addLine('')
