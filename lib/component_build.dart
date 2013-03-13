@@ -33,7 +33,7 @@ import 'src/utils.dart';
  */
 // TODO(jmesserly): we need a better way to automatically detect input files
 Future<List<dwc.CompilerResult>> build(List<String> arguments,
-    List<String> entryPoints, {String baseDir}) {
+    List<String> entryPoints) {
   bool useColors = stdioType(stdout) == StdioType.TERMINAL;
   return asyncTime('Total time', () {
     var args = _processArgs(arguments);
@@ -61,13 +61,14 @@ Future<List<dwc.CompilerResult>> build(List<String> arguments,
         || removedFiles.any((f) => _isInputFile(f, trackDirs))) {
       for (var file in entryPoints) {
         var outDir = _outDir(file);
-        var args = [];
-        if (machineFormat) args.add('--json_format');
-        if (!useColors) args.add('--no-colors');
-        if (baseDir != null) args.addAll(['--basedir', baseDir]);
-        args.addAll(['-o', outDir.toString(), file]);
+        var dwcArgs = [];
+        // Any arguments passed to build.dart after the '--'
+        dwcArgs.addAll(args.rest);
+        if (machineFormat) dwcArgs.add('--json_format');
+        if (!useColors) dwcArgs.add('--no-colors');
+        dwcArgs.addAll(['-o', outDir.toString(), file]);
         // Chain tasks to that we run one at a time.
-        lastTask = lastTask.then((_) => dwc.run(args));
+        lastTask = lastTask.then((_) => dwc.run(dwcArgs));
         tasks.add(lastTask);
 
         if (machineFormat) {
@@ -119,11 +120,16 @@ ArgResults _processArgs(List<String> arguments) {
     ..addFlag("full", negatable: false, help: "perform a full build")
     ..addFlag("machine", negatable: false,
         help: "produce warnings in a machine parseable format")
-    ..addFlag("help", negatable: false, help: "displays this help and exit");
+    ..addFlag("help", abbr: 'h',
+        negatable: false, help: "displays this help and exit");
   var args = parser.parse(arguments);
   if (args["help"]) {
+    print('A build script that invokes the web-ui compiler (dwc).');
+    print('Usage: dart build.dart [options] [-- [dwc-options]]');
+    print('\nThese are valid options expected by build.dart:');
     print(parser.getUsage());
-    exit(0);
+    print('\nThese are valid options expected by dwc:');
+    dwc.run(['-h']).then((_) => exit(0));
   }
   return args;
 }

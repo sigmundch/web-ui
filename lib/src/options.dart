@@ -88,13 +88,13 @@ class CompilerOptions {
           defaultsTo: true)
       ..addFlag('rewrite-urls',
           help: 'Adjust every resource url to point to the original location in'
-          ' the filesystem. This on by default during development and can be '
+          ' the filesystem.\nThis on by default during development and can be'
           ' disabled to make the generated code easier to deploy.',
           defaultsTo: true)
       ..addFlag('unique_output_filenames', abbr: 'u',
           help: 'Use unique names for all generated files, so they will not '
-                'have the same name as your input files, even if they are in a '
-                'different directory',
+                'have the\nsame name as your input files, even if they are in a'
+                ' different directory',
           defaultsTo: false, negatable: false)
       ..addFlag('json_format',
           help: 'Print error messsages in a json format easy to parse by tools,'
