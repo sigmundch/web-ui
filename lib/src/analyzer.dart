@@ -662,7 +662,7 @@ class _Analyzer extends TreeVisitor {
     var filePath = info.externalFile;
     if (filePath != null) {
       info.externalCode = files[filePath];
-      info.externalCode.htmlFile = info;
+      if (info.externalCode != null) info.externalCode.htmlFile = info;
     }
   }
 

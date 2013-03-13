@@ -32,12 +32,15 @@ class Message {
   Message(this.level, this.message, {this.file, this.span,
       this.useColors: false});
 
+  String get kind => level == Level.SEVERE ? 'error' :
+      (level == Level.WARNING ? 'warning' : 'info');
+
   String toString() {
     var output = new StringBuffer();
     bool colors = useColors && _ERROR_COLORS.containsKey(level);
     var levelColor =  _ERROR_COLORS[level];
     if (colors) output.write(levelColor);
-    output..write(level.name)..write(' ');
+    output..write(kind)..write(' ');
     if (colors) output.write(NO_COLOR);
 
     if (span == null) {
@@ -54,8 +57,6 @@ class Message {
   String toJson() {
     if (file == null) return toString();
 
-    var kind = (level == Level.SEVERE ? 'error' :
-        (level == Level.WARNING ? 'warning' : 'info'));
     var value = {
       'method': kind,
       'params': {
@@ -91,9 +92,17 @@ class Messages {
    */
   Messages.silent(): this(shouldPrint: false);
 
+  /**
+   * True if we have an error that prevents correct codegen.
+   * For example, if we failed to read an input file.
+   */
+  bool get hasErrors => messages.any((m) => m.level == Level.SEVERE);
+
   // Convenience methods for testing
   int get length => messages.length;
+
   Message operator[](int index) => messages[index];
+
   void clear() {
     messages.clear();
   }

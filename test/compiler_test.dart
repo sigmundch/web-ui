@@ -6,7 +6,9 @@
 library compiler_test;
 
 import 'dart:async';
+import 'dart:io';
 import 'package:html5lib/dom.dart';
+import 'package:logging/logging.dart' show Level;
 import 'package:unittest/compact_vm_config.dart';
 import 'package:unittest/unittest.dart';
 import 'package:web_ui/src/compiler.dart';
@@ -19,14 +21,12 @@ main() {
   useCompactVMConfiguration();
 
   var messages;
-  setUp(() {
-    messages = new Messages.silent();
-  });
 
   Compiler createCompiler(Map files) {
     var options = CompilerOptions.parse([
         '--no-colors', '-o', 'out', 'index.html']);
     var fs = new MockFileSystem(files);
+    messages = new Messages.silent();
     return new Compiler(fs, options, messages);
   }
 
@@ -66,6 +66,84 @@ main() {
       ]));
     }));
   });
+
+  group('missing files', () {
+    test('main script', () {
+      var compiler = createCompiler({
+        'index.html': '<head></head><body>'
+            '<script type="application/dart" src="notfound.dart"></script>'
+            '</body>',
+      });
+
+      compiler.run().then(expectAsync1((e) {
+        var msgs = messages.messages.where((m) =>
+            m.message.contains('notfound.dart')).toList();
+
+        expect(msgs.length, 1);
+        expect(msgs[0].level, Level.SEVERE);
+        expect(msgs[0].message, contains('exception while reading file'));
+
+        MockFileSystem fs = compiler.fileSystem;
+        expect(fs.readCount, { 'index.html': 1, 'notfound.dart': 1 });
+
+        var outputs = compiler.output.map((o) => o.path.toString());
+        expect(outputs, []);
+      }));
+    });
+
+    test('component html', () {
+      var compiler = createCompiler({
+        'index.html': '<head>'
+            '<link rel="components" href="notfound.html">'
+            '<body><x-foo>'
+            '<script type="application/dart">main() {}</script>',
+      });
+
+      compiler.run().then(expectAsync1((e) {
+        var msgs = messages.messages.where((m) =>
+            m.message.contains('notfound.html')).toList();
+
+        expect(msgs.length, 1);
+        expect(msgs[0].level, Level.SEVERE);
+        expect(msgs[0].message, contains('exception while reading file'));
+
+        MockFileSystem fs = compiler.fileSystem;
+        expect(fs.readCount, { 'index.html': 1, 'notfound.html': 1 });
+
+        var outputs = compiler.output.map((o) => o.path.toString());
+        expect(outputs, []);
+      }));
+    });
+
+    test('component script', () {
+      var compiler = createCompiler({
+        'index.html': '<head>'
+            '<link rel="components" href="foo.html">'
+            '<body><x-foo></x-foo>'
+            '<script type="application/dart">main() {}</script>'
+            '</body>',
+        'foo.html': '<body><element name="x-foo" constructor="Foo">'
+            '<template></template>'
+            '<script type="application/dart" src="notfound.dart"></script>',
+      });
+
+      compiler.run().then(expectAsync1((e) {
+        var msgs = messages.messages.where((m) =>
+            m.message.contains('notfound.dart')).toList();
+
+        expect(msgs.length, 1);
+        expect(msgs[0].level, Level.SEVERE);
+        expect(msgs[0].message, contains('exception while reading file'));
+
+        MockFileSystem fs = compiler.fileSystem;
+        expect(fs.readCount,
+            { 'index.html': 1, 'foo.html': 1, 'notfound.dart': 1  });
+
+        var outputs = compiler.output.map((o) => o.path.toString());
+        expect(outputs, []);
+      }));
+    });
+  });
 }
 
 /**
@@ -82,7 +160,13 @@ class MockFileSystem extends FileSystem {
 
   Future<String> readText(String path) {
     readCount[path] = readCount.putIfAbsent(path, () => 0) + 1;
-    return new Future.immediate(_files[path]);
+    var file = _files[path];
+    if (file != null) {
+      return new Future.immediate(file);
+    } else {
+      return new Future.immediateError(
+          new FileIOException('MockFileSystem: $path not found'));
+    }
   }
 
   // Compiler doesn't call these

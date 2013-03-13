@@ -109,6 +109,9 @@ class Compiler {
       _analyze();
       _transformDart();
       _emit();
+      // TODO(jmesserly): need to go through our errors, and figure out if some
+      // of them should be warnings instead.
+      if (_messages.hasErrors) output.clear();
     });
   }
 
